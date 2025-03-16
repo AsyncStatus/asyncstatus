@@ -20,5 +20,9 @@
     "@asyncstatus/typescript-config": "workspace:*",
     "@cloudflare/workers-types": "4.20250313.0",
     "wrangler": "4.0.0"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22 <23"
   }
 }

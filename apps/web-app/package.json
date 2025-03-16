@@ -32,5 +32,9 @@
     "prettier": "3.5.3",
     "typescript": "5.8.2",
     "vite": "6.2.2"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22 <23"
   }
 }
