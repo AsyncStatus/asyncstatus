@@ -1,0 +1,8 @@
+{
+  "name": "@asyncstatus/typescript-config",
+  "type": "module",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "5.8.2"
+  }
+}

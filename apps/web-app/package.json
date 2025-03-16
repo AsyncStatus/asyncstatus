@@ -2,25 +2,34 @@
   "name": "web-app",
   "private": true,
   "type": "module",
+  "prettier": "@asyncstatus/prettier-config",
   "scripts": {
     "dev": "vite --port 3000",
     "build": "vite build && tsc",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --max-warnings 0 --fix",
+    "format": "prettier --write .",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@asyncstatus/ui": "workspace:*",
-    "@tailwindcss/vite": "4.0.14",
-    "@tanstack/react-router": "1.114.17",
-    "@tanstack/react-router-devtools": "1.114.21",
-    "@tanstack/router-plugin": "1.114.17",
+    "@tanstack/react-router": "1.114.22",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "tailwindcss": "^4.0.14"
+    "react-dom": "19.0.0"
   },
   "devDependencies": {
+    "@asyncstatus/eslint-config": "workspace:*",
+    "@asyncstatus/prettier-config": "workspace:*",
+    "@asyncstatus/typescript-config": "workspace:*",
+    "@tailwindcss/vite": "4.0.14",
+    "@tanstack/react-router-devtools": "1.114.22",
+    "@tanstack/router-plugin": "1.114.22",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@vitejs/plugin-react": "4.3.4",
+    "eslint": "9.22.0",
+    "prettier": "3.5.3",
     "typescript": "5.8.2",
     "vite": "6.2.2"
   }
