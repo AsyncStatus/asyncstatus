@@ -4,23 +4,23 @@
   "type": "module",
   "prettier": "@asyncstatus/prettier-config",
   "scripts": {
-    "dev": "bunx --bun wrangler dev",
-    "deploy": "bunx --bun wrangler deploy --minify",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
     "format": "prettier --write .",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "4.7.4"
+    "hono": "4.7.4",
+    "wrangler": "4.0.0"
   },
   "devDependencies": {
     "@asyncstatus/eslint-config": "workspace:*",
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
     "@cloudflare/workers-types": "4.20250313.0",
-    "@types/bun": "1.2.5",
-    "wrangler": "4.0.0"
+    "@types/bun": "1.2.5"
   },
   "packageManager": "bun@1.2.5"
 }
