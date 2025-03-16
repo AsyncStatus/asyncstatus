@@ -1,14 +1,17 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "api",
-  "main": "src/index.ts",
   "compatibility_date": "2025-03-16",
+  "name": "web-app",
+  "pages_build_output_dir": "dist",
   "env": {
     "production": {
       "vars": {
-        "SKIP_DEPENDENCIES_INSTALL": "true",
+        "SKIP_DEPENDENCY_INSTALL": "true",
         "UNSTABLE_PRE_BUILD": "bun install",
       },
     },
+  },
+  "placement": {
+    "mode": "off",
   },
 }
