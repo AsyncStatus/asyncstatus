@@ -19,10 +19,8 @@
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
     "@cloudflare/workers-types": "4.20250313.0",
+    "@types/bun": "1.2.5",
     "wrangler": "4.0.0"
   },
-  "packageManager": "npm@10.9.2",
-  "engines": {
-    "node": ">=22 <23"
-  }
+  "packageManager": "npm@10.9.2"
 }
