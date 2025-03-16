@@ -1,0 +1,24 @@
+{
+  "name": "api",
+  "private": true,
+  "type": "module",
+  "prettier": "@asyncstatus/prettier-config",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --max-warnings 0 --fix",
+    "format": "prettier --write .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "4.7.4"
+  },
+  "devDependencies": {
+    "@asyncstatus/eslint-config": "workspace:*",
+    "@asyncstatus/prettier-config": "workspace:*",
+    "@asyncstatus/typescript-config": "workspace:*",
+    "@cloudflare/workers-types": "4.20250313.0",
+    "wrangler": "4.0.0"
+  }
+}
