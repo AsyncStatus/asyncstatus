@@ -1,0 +1,8 @@
+{
+  "name": "@asyncstatus/monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
