@@ -1,8 +1,13 @@
 {
-  "name": "api",
+  "name": "@asyncstatus/api",
   "private": true,
   "type": "module",
   "prettier": "@asyncstatus/prettier-config",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
   "scripts": {
     "dev": "npx wrangler dev",
     "deploy": "npx wrangler deploy --minify",
@@ -12,6 +17,9 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@libsql/client": "0.14.0",
+    "better-auth": "^1.2.4",
+    "drizzle-orm": "0.40.0",
     "hono": "4.7.4"
   },
   "devDependencies": {
@@ -20,6 +28,7 @@
     "@asyncstatus/typescript-config": "workspace:*",
     "@cloudflare/workers-types": "4.20250313.0",
     "@types/bun": "1.2.5",
+    "drizzle-kit": "0.30.5",
     "wrangler": "4.0.0"
   },
   "packageManager": "bun@1.2.5"

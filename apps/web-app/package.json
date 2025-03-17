@@ -1,5 +1,5 @@
 {
-  "name": "web-app",
+  "name": "@asyncstatus/web-app",
   "private": true,
   "type": "module",
   "prettier": "@asyncstatus/prettier-config",
@@ -13,8 +13,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@asyncstatus/api": "workspace:*",
     "@asyncstatus/ui": "workspace:*",
     "@tanstack/react-router": "1.114.22",
+    "hono": "4.7.4",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
