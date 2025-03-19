@@ -4,11 +4,12 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "@cloudflare/workers-types/2023-07-01"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@asyncstatus/ui/*": ["../../packages/ui/src/*"]
+      "@asyncstatus/ui/*": ["../../packages/ui/src/*"],
+      "@asyncstatus/api/*": ["../api/src/*"]
     }
   }
 }

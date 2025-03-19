@@ -24,6 +24,7 @@
     "@asyncstatus/eslint-config": "workspace:*",
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
+    "@cloudflare/workers-types": "4.20250313.0",
     "@tailwindcss/vite": "4.0.14",
     "@tanstack/react-router-devtools": "1.114.22",
     "@tanstack/router-plugin": "1.114.22",

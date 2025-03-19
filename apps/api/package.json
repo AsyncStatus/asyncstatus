@@ -5,7 +5,7 @@
   "prettier": "@asyncstatus/prettier-config",
   "exports": {
     ".": {
-      "types": "./src/index.tsx"
+      "types": "./src/rpc.ts"
     }
   },
   "scripts": {

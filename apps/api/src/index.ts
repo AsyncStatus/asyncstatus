@@ -1,11 +1,10 @@
-import { createDb } from "@/db";
-import { authRouter } from "@/routers/auth";
+import { createDb } from "@asyncstatus/api/db";
+import { createAuth } from "@asyncstatus/api/lib/auth";
+import type { HonoEnv } from "@asyncstatus/api/lib/env";
+import { authRouter } from "@asyncstatus/api/routers/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Resend } from "resend";
-
-import { createAuth } from "@/lib/auth";
-import type { HonoEnv } from "@/lib/env";
 
 const app = new Hono<HonoEnv>()
   .use("*", cors({ origin: (origin) => origin, credentials: true }))
