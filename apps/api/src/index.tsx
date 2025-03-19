@@ -1,30 +1,21 @@
+import { createDb } from "@/db";
+import { authRouter } from "@/routers/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { Resend } from "resend";
 
+import { createAuth } from "@/lib/auth";
 import type { HonoEnv } from "@/lib/env";
 
-import { createDb } from "./db";
-import { createAuth } from "./lib/auth";
-import { authRouter } from "./routers/auth";
-
 const app = new Hono<HonoEnv>()
-  .use(
-    "*",
-    cors({
-      origin: "*",
-      allowHeaders: ["Content-Type", "Authorization"],
-      allowMethods: ["POST", "GET", "OPTIONS"],
-      exposeHeaders: ["Content-Length"],
-      maxAge: 600,
-      credentials: true,
-    }),
-  )
+  .use("*", cors({ origin: (origin) => origin, credentials: true }))
   .use("*", async (c, next) => {
     const db = createDb(c.env);
     c.set("db", db);
-    const auth = createAuth(c.env, db);
+    const resend = new Resend(c.env.RESEND_API_KEY);
+    c.set("resend", resend);
+    const auth = createAuth(c.env, db, resend);
     c.set("auth", auth);
-
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
     if (!session) {
@@ -37,10 +28,7 @@ const app = new Hono<HonoEnv>()
     c.set("session", session.session);
     return next();
   })
-  .route("/auth", authRouter)
-  .get("/", (c) => {
-    return c.text("Hello Hono!");
-  });
+  .route("/auth", authRouter);
 
 export default app;
 export type App = typeof app;

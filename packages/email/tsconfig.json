@@ -1,12 +1,12 @@
 {
   "extends": "@asyncstatus/typescript-config/base.json",
   "compilerOptions": {
-    "types": ["@cloudflare/workers-types/2023-07-01"],
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@asyncstatus/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

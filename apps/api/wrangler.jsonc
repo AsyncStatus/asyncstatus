@@ -1,9 +1,15 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "api",
-  "main": "src/index.ts",
+  "main": "src/index.tsx",
   "minify": true,
   "compatibility_date": "2025-03-16",
+  "kv_namespaces": [
+    {
+      "binding": "AS_PROD_AUTH_KV",
+      "id": "380a39bf817b489db941d31f17184104",
+    },
+  ],
   "env": {
     "production": {
       "vars": {

@@ -5,22 +5,24 @@
   "prettier": "@asyncstatus/prettier-config",
   "exports": {
     ".": {
-      "types": "./src/index.ts"
+      "types": "./src/index.tsx"
     }
   },
   "scripts": {
-    "dev": "npx wrangler dev",
-    "deploy": "npx wrangler deploy --minify",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
     "format": "prettier --write .",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@asyncstatus/email": "workspace:*",
     "@libsql/client": "0.14.0",
-    "better-auth": "^1.2.4",
+    "better-auth": "1.2.4",
     "drizzle-orm": "0.40.0",
-    "hono": "4.7.4"
+    "hono": "4.7.4",
+    "resend": "4.1.2"
   },
   "devDependencies": {
     "@asyncstatus/eslint-config": "workspace:*",
@@ -29,7 +31,7 @@
     "@cloudflare/workers-types": "4.20250313.0",
     "@types/bun": "1.2.5",
     "drizzle-kit": "0.30.5",
-    "wrangler": "4.0.0"
+    "wrangler": "4.2.0"
   },
   "packageManager": "bun@1.2.5"
 }

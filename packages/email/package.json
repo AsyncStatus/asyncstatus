@@ -1,0 +1,22 @@
+{
+  "name": "@asyncstatus/email",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./auth/*": "./src/auth/*.tsx"
+  },
+  "scripts": {
+    "dev": "email dev --dir src --port 3010"
+  },
+  "dependencies": {
+    "@react-email/components": "0.0.34",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.2.5",
+    "react-email": "3.0.7",
+    "typescript": "5.5.4"
+  }
+}
