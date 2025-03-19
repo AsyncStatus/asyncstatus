@@ -5,7 +5,7 @@
   "prettier": "@asyncstatus/prettier-config",
   "scripts": {
     "dev": "vite --port 3000",
-    "build": "vite build && tsc",
+    "build": "bunx --bun vite build && tsc",
     "serve": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
