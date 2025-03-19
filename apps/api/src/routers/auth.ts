@@ -1,5 +1,6 @@
-import type { HonoEnv } from "@asyncstatus/api/lib/env";
 import { Hono } from "hono";
+
+import type { HonoEnv } from "../lib/env";
 
 export const authRouter = new Hono<HonoEnv>()
   .get("/session", (c) => {

@@ -1,6 +1,7 @@
-import type { Auth } from "@asyncstatus/api/lib/auth";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type { Resend } from "resend";
+
+import type { Auth } from "./auth";
 
 export type Bindings = {
   TURSO_URL: string;

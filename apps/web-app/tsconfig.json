@@ -8,8 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@asyncstatus/ui/*": ["../../packages/ui/src/*"],
-      "@asyncstatus/api/*": ["../api/src/*"]
+      "@asyncstatus/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

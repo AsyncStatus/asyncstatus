@@ -1,11 +1,12 @@
-import * as schema from "@asyncstatus/api/db/schema";
-import type { Bindings } from "@asyncstatus/api/lib/env";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type { Resend } from "resend";
+
+import * as schema from "../db/schema";
+import type { Bindings } from "./env";
 
 export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
   return betterAuth({
