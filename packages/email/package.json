@@ -17,6 +17,6 @@
   "devDependencies": {
     "@types/bun": "1.2.5",
     "react-email": "3.0.7",
-    "typescript": "5.5.4"
+    "typescript": "5.8.2"
   }
 }
