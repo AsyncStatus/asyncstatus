@@ -11,25 +11,13 @@ import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Label } from "@asyncstatus/ui/components/label";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
 import { authClient } from "@/lib/auth";
 
-export const Route = createFileRoute("/sign-in")({
+export const Route = createFileRoute("/(auth)/_layout/sign-in")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await authClient.getSession();
-    console.log(session);
-    if (session.data) {
-      throw redirect({ to: "/" });
-    }
-  },
 });
 
 function RouteComponent() {

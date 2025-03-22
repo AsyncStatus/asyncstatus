@@ -8,101 +8,358 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SignUpImport } from './routes/sign-up'
-import { Route as SignInImport } from './routes/sign-in'
-import { Route as IndexImport } from './routes/index'
+import { Route as LayoutImport } from './routes/_layout'
+import { Route as LayoutIndexImport } from './routes/_layout.index'
+import { Route as CreateOrganizationLayoutImport } from './routes/create-organization/_layout'
+import { Route as authLayoutImport } from './routes/(auth)/_layout'
+import { Route as OrganizationSlugLayoutImport } from './routes/$organizationSlug/_layout'
+import { Route as CreateOrganizationLayoutIndexImport } from './routes/create-organization/_layout.index'
+import { Route as OrganizationSlugLayoutIndexImport } from './routes/$organizationSlug/_layout.index'
+import { Route as authLayoutSignUpImport } from './routes/(auth)/_layout.sign-up'
+import { Route as authLayoutSignInImport } from './routes/(auth)/_layout.sign-in'
+
+// Create Virtual Routes
+
+const CreateOrganizationImport = createFileRoute('/create-organization')()
+const authImport = createFileRoute('/(auth)')()
+const OrganizationSlugImport = createFileRoute('/$organizationSlug')()
 
 // Create/Update Routes
 
-const SignUpRoute = SignUpImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
+const CreateOrganizationRoute = CreateOrganizationImport.update({
+  id: '/create-organization',
+  path: '/create-organization',
   getParentRoute: () => rootRoute,
 } as any)
 
-const SignInRoute = SignInImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
+const authRoute = authImport.update({
+  id: '/(auth)',
   getParentRoute: () => rootRoute,
 } as any)
 
-const IndexRoute = IndexImport.update({
+const OrganizationSlugRoute = OrganizationSlugImport.update({
+  id: '/$organizationSlug',
+  path: '/$organizationSlug',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LayoutRoute = LayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LayoutIndexRoute = LayoutIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const CreateOrganizationLayoutRoute = CreateOrganizationLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => CreateOrganizationRoute,
+} as any)
+
+const authLayoutRoute = authLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => authRoute,
+} as any)
+
+const OrganizationSlugLayoutRoute = OrganizationSlugLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => OrganizationSlugRoute,
+} as any)
+
+const CreateOrganizationLayoutIndexRoute =
+  CreateOrganizationLayoutIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CreateOrganizationLayoutRoute,
+  } as any)
+
+const OrganizationSlugLayoutIndexRoute =
+  OrganizationSlugLayoutIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+
+const authLayoutSignUpRoute = authLayoutSignUpImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => authLayoutRoute,
+} as any)
+
+const authLayoutSignInRoute = authLayoutSignInImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => authLayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutImport
+      parentRoute: typeof rootRoute
+    }
+    '/$organizationSlug': {
+      id: '/$organizationSlug'
+      path: '/$organizationSlug'
+      fullPath: '/$organizationSlug'
+      preLoaderRoute: typeof OrganizationSlugImport
+      parentRoute: typeof rootRoute
+    }
+    '/$organizationSlug/_layout': {
+      id: '/$organizationSlug/_layout'
+      path: '/$organizationSlug'
+      fullPath: '/$organizationSlug'
+      preLoaderRoute: typeof OrganizationSlugLayoutImport
+      parentRoute: typeof OrganizationSlugRoute
+    }
+    '/(auth)': {
+      id: '/(auth)'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+      preLoaderRoute: typeof authImport
       parentRoute: typeof rootRoute
     }
-    '/sign-in': {
-      id: '/sign-in'
+    '/(auth)/_layout': {
+      id: '/(auth)/_layout'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof authLayoutImport
+      parentRoute: typeof authRoute
+    }
+    '/create-organization': {
+      id: '/create-organization'
+      path: '/create-organization'
+      fullPath: '/create-organization'
+      preLoaderRoute: typeof CreateOrganizationImport
+      parentRoute: typeof rootRoute
+    }
+    '/create-organization/_layout': {
+      id: '/create-organization/_layout'
+      path: '/create-organization'
+      fullPath: '/create-organization'
+      preLoaderRoute: typeof CreateOrganizationLayoutImport
+      parentRoute: typeof CreateOrganizationRoute
+    }
+    '/_layout/': {
+      id: '/_layout/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof LayoutIndexImport
+      parentRoute: typeof LayoutImport
+    }
+    '/(auth)/_layout/sign-in': {
+      id: '/(auth)/_layout/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof authLayoutSignInImport
+      parentRoute: typeof authLayoutImport
     }
-    '/sign-up': {
-      id: '/sign-up'
+    '/(auth)/_layout/sign-up': {
+      id: '/(auth)/_layout/sign-up'
       path: '/sign-up'
       fullPath: '/sign-up'
-      preLoaderRoute: typeof SignUpImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof authLayoutSignUpImport
+      parentRoute: typeof authLayoutImport
+    }
+    '/$organizationSlug/_layout/': {
+      id: '/$organizationSlug/_layout/'
+      path: '/'
+      fullPath: '/$organizationSlug/'
+      preLoaderRoute: typeof OrganizationSlugLayoutIndexImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
+    '/create-organization/_layout/': {
+      id: '/create-organization/_layout/'
+      path: '/'
+      fullPath: '/create-organization/'
+      preLoaderRoute: typeof CreateOrganizationLayoutIndexImport
+      parentRoute: typeof CreateOrganizationLayoutImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface LayoutRouteChildren {
+  LayoutIndexRoute: typeof LayoutIndexRoute
+}
+
+const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutIndexRoute: LayoutIndexRoute,
+}
+
+const LayoutRouteWithChildren =
+  LayoutRoute._addFileChildren(LayoutRouteChildren)
+
+interface OrganizationSlugLayoutRouteChildren {
+  OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
+}
+
+const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
+  {
+    OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
+  }
+
+const OrganizationSlugLayoutRouteWithChildren =
+  OrganizationSlugLayoutRoute._addFileChildren(
+    OrganizationSlugLayoutRouteChildren,
+  )
+
+interface OrganizationSlugRouteChildren {
+  OrganizationSlugLayoutRoute: typeof OrganizationSlugLayoutRouteWithChildren
+}
+
+const OrganizationSlugRouteChildren: OrganizationSlugRouteChildren = {
+  OrganizationSlugLayoutRoute: OrganizationSlugLayoutRouteWithChildren,
+}
+
+const OrganizationSlugRouteWithChildren =
+  OrganizationSlugRoute._addFileChildren(OrganizationSlugRouteChildren)
+
+interface authLayoutRouteChildren {
+  authLayoutSignInRoute: typeof authLayoutSignInRoute
+  authLayoutSignUpRoute: typeof authLayoutSignUpRoute
+}
+
+const authLayoutRouteChildren: authLayoutRouteChildren = {
+  authLayoutSignInRoute: authLayoutSignInRoute,
+  authLayoutSignUpRoute: authLayoutSignUpRoute,
+}
+
+const authLayoutRouteWithChildren = authLayoutRoute._addFileChildren(
+  authLayoutRouteChildren,
+)
+
+interface authRouteChildren {
+  authLayoutRoute: typeof authLayoutRouteWithChildren
+}
+
+const authRouteChildren: authRouteChildren = {
+  authLayoutRoute: authLayoutRouteWithChildren,
+}
+
+const authRouteWithChildren = authRoute._addFileChildren(authRouteChildren)
+
+interface CreateOrganizationLayoutRouteChildren {
+  CreateOrganizationLayoutIndexRoute: typeof CreateOrganizationLayoutIndexRoute
+}
+
+const CreateOrganizationLayoutRouteChildren: CreateOrganizationLayoutRouteChildren =
+  {
+    CreateOrganizationLayoutIndexRoute: CreateOrganizationLayoutIndexRoute,
+  }
+
+const CreateOrganizationLayoutRouteWithChildren =
+  CreateOrganizationLayoutRoute._addFileChildren(
+    CreateOrganizationLayoutRouteChildren,
+  )
+
+interface CreateOrganizationRouteChildren {
+  CreateOrganizationLayoutRoute: typeof CreateOrganizationLayoutRouteWithChildren
+}
+
+const CreateOrganizationRouteChildren: CreateOrganizationRouteChildren = {
+  CreateOrganizationLayoutRoute: CreateOrganizationLayoutRouteWithChildren,
+}
+
+const CreateOrganizationRouteWithChildren =
+  CreateOrganizationRoute._addFileChildren(CreateOrganizationRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '': typeof LayoutRouteWithChildren
+  '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
+  '/': typeof LayoutIndexRoute
+  '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
+  '/sign-in': typeof authLayoutSignInRoute
+  '/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
+  '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
+  '/': typeof LayoutIndexRoute
+  '/create-organization': typeof CreateOrganizationLayoutIndexRoute
+  '/sign-in': typeof authLayoutSignInRoute
+  '/sign-up': typeof authLayoutSignUpRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/_layout': typeof LayoutRouteWithChildren
+  '/$organizationSlug': typeof OrganizationSlugRouteWithChildren
+  '/$organizationSlug/_layout': typeof OrganizationSlugLayoutRouteWithChildren
+  '/(auth)': typeof authRouteWithChildren
+  '/(auth)/_layout': typeof authLayoutRouteWithChildren
+  '/create-organization': typeof CreateOrganizationRouteWithChildren
+  '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
+  '/_layout/': typeof LayoutIndexRoute
+  '/(auth)/_layout/sign-in': typeof authLayoutSignInRoute
+  '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
+  '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/sign-up'
+  fullPaths:
+    | ''
+    | '/$organizationSlug'
+    | '/'
+    | '/create-organization'
+    | '/sign-in'
+    | '/sign-up'
+    | '/$organizationSlug/'
+    | '/create-organization/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sign-in' | '/sign-up'
-  id: '__root__' | '/' | '/sign-in' | '/sign-up'
+  to:
+    | '/$organizationSlug'
+    | '/'
+    | '/create-organization'
+    | '/sign-in'
+    | '/sign-up'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/$organizationSlug'
+    | '/$organizationSlug/_layout'
+    | '/(auth)'
+    | '/(auth)/_layout'
+    | '/create-organization'
+    | '/create-organization/_layout'
+    | '/_layout/'
+    | '/(auth)/_layout/sign-in'
+    | '/(auth)/_layout/sign-up'
+    | '/$organizationSlug/_layout/'
+    | '/create-organization/_layout/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SignInRoute: typeof SignInRoute
-  SignUpRoute: typeof SignUpRoute
+  LayoutRoute: typeof LayoutRouteWithChildren
+  OrganizationSlugRoute: typeof OrganizationSlugRouteWithChildren
+  authRoute: typeof authRouteWithChildren
+  CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SignInRoute: SignInRoute,
-  SignUpRoute: SignUpRoute,
+  LayoutRoute: LayoutRouteWithChildren,
+  OrganizationSlugRoute: OrganizationSlugRouteWithChildren,
+  authRoute: authRouteWithChildren,
+  CreateOrganizationRoute: CreateOrganizationRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -115,19 +372,77 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/sign-in",
-        "/sign-up"
+        "/_layout",
+        "/$organizationSlug",
+        "/(auth)",
+        "/create-organization"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_layout": {
+      "filePath": "_layout.tsx",
+      "children": [
+        "/_layout/"
+      ]
     },
-    "/sign-in": {
-      "filePath": "sign-in.tsx"
+    "/$organizationSlug": {
+      "filePath": "$organizationSlug",
+      "children": [
+        "/$organizationSlug/_layout"
+      ]
     },
-    "/sign-up": {
-      "filePath": "sign-up.tsx"
+    "/$organizationSlug/_layout": {
+      "filePath": "$organizationSlug/_layout.tsx",
+      "parent": "/$organizationSlug",
+      "children": [
+        "/$organizationSlug/_layout/"
+      ]
+    },
+    "/(auth)": {
+      "filePath": "(auth)",
+      "children": [
+        "/(auth)/_layout"
+      ]
+    },
+    "/(auth)/_layout": {
+      "filePath": "(auth)/_layout.tsx",
+      "parent": "/(auth)",
+      "children": [
+        "/(auth)/_layout/sign-in",
+        "/(auth)/_layout/sign-up"
+      ]
+    },
+    "/create-organization": {
+      "filePath": "create-organization",
+      "children": [
+        "/create-organization/_layout"
+      ]
+    },
+    "/create-organization/_layout": {
+      "filePath": "create-organization/_layout.tsx",
+      "parent": "/create-organization",
+      "children": [
+        "/create-organization/_layout/"
+      ]
+    },
+    "/_layout/": {
+      "filePath": "_layout.index.tsx",
+      "parent": "/_layout"
+    },
+    "/(auth)/_layout/sign-in": {
+      "filePath": "(auth)/_layout.sign-in.tsx",
+      "parent": "/(auth)/_layout"
+    },
+    "/(auth)/_layout/sign-up": {
+      "filePath": "(auth)/_layout.sign-up.tsx",
+      "parent": "/(auth)/_layout"
+    },
+    "/$organizationSlug/_layout/": {
+      "filePath": "$organizationSlug/_layout.index.tsx",
+      "parent": "/$organizationSlug/_layout"
+    },
+    "/create-organization/_layout/": {
+      "filePath": "create-organization/_layout.index.tsx",
+      "parent": "/create-organization/_layout"
     }
   }
 }

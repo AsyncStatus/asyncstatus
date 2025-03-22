@@ -9,20 +9,14 @@ import {
 } from "@asyncstatus/ui/components/card";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Label } from "@asyncstatus/ui/components/label";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth";
 
-export const Route = createFileRoute("/sign-up")({
+export const Route = createFileRoute("/(auth)/_layout/sign-up")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await authClient.getSession();
-    if (session.data) {
-      throw redirect({ to: "/" });
-    }
-  },
 });
 
 function RouteComponent() {

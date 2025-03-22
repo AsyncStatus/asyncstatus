@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@asyncstatus/email": "workspace:*",
+    "@hono/zod-validator": "^0.4.3",
     "@libsql/client": "0.15.0",
     "better-auth": "1.2.4",
     "drizzle-orm": "0.41.0",

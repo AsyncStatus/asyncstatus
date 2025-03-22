@@ -58,6 +58,15 @@ export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
     rateLimit: {
       enabled: true,
       storage: "secondary-storage",
+      customRules: {
+        "/get-session": {
+          max: 200,
+          window: 60,
+        },
+      },
+    },
+    advanced: {
+      cookiePrefix: "as",
     },
     plugins: [
       organization({ teams: { enabled: true, allowRemovingAllTeams: false } }),
