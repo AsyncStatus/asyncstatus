@@ -6,6 +6,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -150,6 +151,8 @@ export function AppSidebarSkeleton(props: { organizationSlug: string }) {
         <AppSidebarSecondaryLinks />
         <UserMenuSkeleton />
       </SidebarFooter>
+
+      <SidebarInset />
     </SidebarProvider>
   );
 }
