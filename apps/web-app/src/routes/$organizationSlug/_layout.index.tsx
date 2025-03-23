@@ -1,3 +1,5 @@
+import { getOrganizationQueryOptions } from "@/rpc/organization";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
@@ -5,5 +7,10 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/$organizationSlug/_layout/"!</div>;
+  const { organizationSlug } = Route.useParams();
+  const organization = useSuspenseQuery(
+    getOrganizationQueryOptions(organizationSlug),
+  );
+
+  return <div>{organization.data?.name}</div>;
 }

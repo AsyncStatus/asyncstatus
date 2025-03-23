@@ -113,6 +113,8 @@ export function UserMenu() {
               </div>
             </DropdownMenuLabel>
 
+            <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <a

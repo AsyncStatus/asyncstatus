@@ -8,14 +8,13 @@ import { rpc } from "./rpc";
 export function getOrganizationQueryOptions(idOrSlug?: string) {
   return queryOptions({
     queryKey: ["organization", idOrSlug],
-    queryFn: idOrSlug
-      ? async () => {
-          const response = await rpc.organization[":idOrSlug"].$get({
-            param: { idOrSlug },
-          });
-          return response.json();
-        }
-      : skipToken,
+    queryFn: async () => {
+      const response = await rpc.organization[":idOrSlug"].$get({
+        param: { idOrSlug: idOrSlug! },
+      });
+      return response.json();
+    },
+    enabled: !!idOrSlug,
   });
 }
 
@@ -87,5 +86,20 @@ export function checkOrganizationSlugQueryOptions(slug: string) {
           return data;
         }
       : skipToken,
+  });
+}
+
+export function setActiveOrganizationMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["setActiveOrganization"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.organization.setActive>[0],
+    ) => {
+      const { data, error } = await authClient.organization.setActive(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
   });
 }

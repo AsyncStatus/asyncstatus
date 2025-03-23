@@ -5,7 +5,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -14,7 +13,7 @@ import {
   SidebarRail,
 } from "@asyncstatus/ui/components/sidebar";
 import { Link } from "@tanstack/react-router";
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { Home, Settings, Users } from "lucide-react";
 
 import {
   OrganizationMenu,
@@ -22,33 +21,47 @@ import {
 } from "./organization-menu";
 import { UserMenu, UserMenuSkeleton } from "./user-menu";
 
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-];
+function AppSidebarLinks(props: { organizationSlug: string }) {
+  return (
+    <>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to="/$organizationSlug"
+            params={{ organizationSlug: props.organizationSlug }}
+          >
+            <Home />
+            <span>Status updates</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to={"/$organizationSlug/users" as any}
+            params={{ organizationSlug: props.organizationSlug } as any}
+          >
+            <Users />
+            <span>Users</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to={"/$organizationSlug/settings" as any}
+            params={{ organizationSlug: props.organizationSlug } as any}
+          >
+            <Settings />
+            <span>Settings</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </>
+  );
+}
 
 export function AppSidebar(props: { organizationSlug: string }) {
   return (
@@ -61,19 +74,9 @@ export function AppSidebar(props: { organizationSlug: string }) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <AppSidebarLinks organizationSlug={props.organizationSlug} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -90,7 +93,7 @@ export function AppSidebar(props: { organizationSlug: string }) {
   );
 }
 
-export function AppSidebarSkeleton() {
+export function AppSidebarSkeleton(props: { organizationSlug: string }) {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -100,19 +103,9 @@ export function AppSidebarSkeleton() {
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Application</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <AppSidebarLinks organizationSlug={props.organizationSlug} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
