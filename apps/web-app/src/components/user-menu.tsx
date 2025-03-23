@@ -10,7 +10,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@asyncstatus/ui/components/dropdown-menu";
 import {
@@ -113,8 +112,6 @@ export function UserMenu() {
               </div>
             </DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
-
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <a
@@ -127,8 +124,6 @@ export function UserMenu() {
                 </a>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
 
             <DropdownMenuItem
               onClick={() => logout.mutate()}
