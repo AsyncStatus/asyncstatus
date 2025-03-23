@@ -17,15 +17,16 @@ export const config = [
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
-    rules: {
-      "react/prop-types": "off",
-    },
     languageOptions: {
       ...pluginReact.configs.flat.recommended.languageOptions,
       globals: {
         ...globals.serviceworker,
         ...globals.browser,
       },
+    },
+    rules: {
+      "react/prop-types": "off",
+      "react/no-unescaped-entities": "off",
     },
   },
   {

@@ -9,7 +9,16 @@ import { authRouter } from "./routers/auth";
 import { organizationRouter } from "./routers/organization";
 
 const app = new Hono<HonoEnv>()
-  .use(cors({ origin: (origin) => origin, credentials: true }))
+  .use(
+    cors({
+      origin: [
+        "http://localhost:3000",
+        "https://app.asyncstatus.com",
+        "https://app.dev.asyncstatus.com",
+      ],
+      credentials: true,
+    }),
+  )
   .use(async (c, next) => {
     const db = createDb(c.env);
     c.set("db", db);

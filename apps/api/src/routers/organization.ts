@@ -24,7 +24,7 @@ export const organizationRouter = new Hono<HonoEnv>()
         .limit(1);
 
       if (!org || !org[0]) {
-        return c.body(null, 404);
+        return c.json(null, 404);
       }
 
       return c.json(org[0]);

@@ -1,5 +1,6 @@
-import { signUpEmailMutationOptions } from "@/rpc/auth";
+import { loginEmailMutationOptions } from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
+import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import {
   Form,
   FormControl,
@@ -9,43 +10,43 @@ import {
   FormMessage,
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
-import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export const Route = createFileRoute("/(auth)/_layout/sign-up")({
+export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,
 });
 
-const schema = z
-  .object({
-    email: z.string().email(),
-    password: z.string().min(8).max(128),
-    passwordConfirmation: z.string().min(8).max(128),
-  })
-  .refine((data) => data.password === data.passwordConfirmation, {
-    path: ["passwordConfirmation"],
-    message: "Passwords do not match",
-  });
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  rememberMe: z.boolean().default(false),
+});
 
 function RouteComponent() {
+  const router = useRouter();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", passwordConfirmation: "" },
+    defaultValues: { email: "", password: "", rememberMe: false },
   });
 
-  const signUpEmail = useMutation({
-    ...signUpEmailMutationOptions(),
-    onSuccess() {
-      toast.success(
-        "We've sent you a verification link, please check your email.",
-      );
-      navigate({ to: "/" });
+  const loginEmail = useMutation({
+    ...loginEmailMutationOptions(),
+    async onSuccess() {
+      await router.invalidate();
+      queryClient.clear();
+      await navigate({ to: "/" });
     },
   });
 
@@ -54,20 +55,15 @@ function RouteComponent() {
       <form
         className="mx-auto w-full max-w-xs space-y-24"
         onSubmit={form.handleSubmit((data) => {
-          signUpEmail.mutate({
-            email: data.email,
-            password: data.password,
-            name: data.email.split("@")[0] ?? data.email,
-            callbackURL: `${import.meta.env.VITE_WEB_APP_URL}`,
-          });
+          loginEmail.mutate(data);
         })}
       >
         <div className="space-y-1.5 text-center">
-          <h1 className="text-2xl">Create an account</h1>
+          <h1 className="text-2xl">Login to your account</h1>
           <h2 className="text-muted-foreground text-sm text-balance">
-            Already have an account?{" "}
-            <Link className="underline" to="/login">
-              Login
+            Don't have an account?{" "}
+            <Link className="underline" to="/sign-up">
+              Create an account
             </Link>
             .
           </h2>
@@ -97,12 +93,21 @@ function RouteComponent() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <div className="flex items-end justify-between">
+                  <FormLabel>Password</FormLabel>
+                  <Link
+                    tabIndex={1}
+                    to="/forgot-password"
+                    className="text-muted-foreground text-xs hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
                 <FormControl>
                   <Input
                     type="password"
-                    autoComplete="new-password"
                     placeholder="********"
+                    autoComplete="password"
                     {...field}
                   />
                 </FormControl>
@@ -113,35 +118,33 @@ function RouteComponent() {
 
           <FormField
             control={form.control}
-            name="passwordConfirmation"
+            name="rememberMe"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+              <FormItem className="flex flex-row items-center space-x-1">
                 <FormControl>
-                  <Input
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="********"
-                    {...field}
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
                   />
                 </FormControl>
+                <FormLabel>Remember me</FormLabel>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {signUpEmail.error && (
+          {loginEmail.error && (
             <div className="text-destructive text-sm text-pretty">
-              {signUpEmail.error.message}
+              {loginEmail.error.message}
             </div>
           )}
 
           <Button
             type="submit"
             className="w-full"
-            disabled={signUpEmail.isPending}
+            disabled={loginEmail.isPending}
           >
-            Create an account
+            Login
           </Button>
         </div>
       </form>

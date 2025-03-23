@@ -1,19 +1,11 @@
+import { ensureValidSession } from "@/routes/-lib/common";
 import { SimpleLayout } from "@asyncstatus/ui/components/simple-layout";
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-
-import { authClient } from "@/lib/auth";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/create-organization/_layout")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await authClient.getSession();
-    if (session.error || !session.data) {
-      throw redirect({ to: "/sign-in" });
-    }
-
-    // if (session.data.session.activeOrganizationId) {
-    //   throw redirect({ to: "/" });
-    // }
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await ensureValidSession(queryClient);
   },
 });
 

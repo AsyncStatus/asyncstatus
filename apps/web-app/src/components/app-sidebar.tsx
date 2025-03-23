@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -10,14 +11,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
+  SidebarRail,
 } from "@asyncstatus/ui/components/sidebar";
 import { Link } from "@tanstack/react-router";
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 
 import {
-  OrganizationSelect,
-  OrganizationSelectSkeleton,
-} from "./organization-select";
+  OrganizationMenu,
+  OrganizationMenuSkeleton,
+} from "./organization-menu";
+import { UserMenu, UserMenuSkeleton } from "./user-menu";
 
 const items = [
   {
@@ -47,12 +50,12 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar(props: { organizationSlug: string }) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Suspense fallback={<OrganizationSelectSkeleton />}>
-          <OrganizationSelect />
+        <Suspense fallback={<OrganizationMenuSkeleton />}>
+          <OrganizationMenu organizationSlug={props.organizationSlug} />
         </Suspense>
       </SidebarHeader>
 
@@ -75,6 +78,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <Suspense fallback={<UserMenuSkeleton />}>
+          <UserMenu />
+        </Suspense>
+      </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   );
 }
@@ -83,6 +94,10 @@ export function AppSidebarSkeleton() {
   return (
     <SidebarProvider>
       <Sidebar>
+        <SidebarHeader>
+          <OrganizationMenuSkeleton />
+        </SidebarHeader>
+
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -103,6 +118,12 @@ export function AppSidebarSkeleton() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
+
+      <SidebarFooter>
+        <UserMenuSkeleton />
+      </SidebarFooter>
+
+      <SidebarRail />
     </SidebarProvider>
   );
 }

@@ -1,11 +1,11 @@
 import { Layout } from "@/layout";
 import { Button, Img, Link, Section, Text } from "@react-email/components";
 
-export function VerificationEmail(props: {
+export function ResetPasswordEmail(props: {
   preview: string;
   firstName: string;
   expiration: string;
-  verificationLink: string;
+  resetLink: string;
 }) {
   return (
     <Layout preview={props.preview}>
@@ -23,12 +23,13 @@ export function VerificationEmail(props: {
           Hi {props.firstName},
         </Text>
         <Text style={{ fontSize: 20, lineHeight: 1.5 }}>
-          Welcome to AsyncStatus. Verify your email to continue.
+          We've received a request to reset your password. Please click the
+          button below to reset your password.
         </Text>
       </Section>
 
       <Button
-        href={props.verificationLink}
+        href={props.resetLink}
         style={{
           display: "block",
           padding: 16,
@@ -42,7 +43,7 @@ export function VerificationEmail(props: {
           fontSize: 16,
         }}
       >
-        Verify email
+        Reset password
       </Button>
 
       <Text
@@ -54,11 +55,13 @@ export function VerificationEmail(props: {
           color: "oklch(0.68 0 0)",
         }}
       >
+        If you did not request a password reset, please ignore this email.{" "}
+        <br />
         This link will expire in {props.expiration}.
       </Text>
 
       <Text style={{ fontSize: 20, lineHeight: 1.5, margin: "64px 0 128px" }}>
-        Happy to have you!
+        Hope to see you soon!
         <br />- AsyncStatus Team
       </Text>
 
@@ -91,10 +94,12 @@ export function VerificationEmail(props: {
   );
 }
 
-VerificationEmail.PreviewProps = {
-  preview: "Verify your email with https://app.asyncstatus.com/verify-email",
+ResetPasswordEmail.PreviewProps = {
+  preview:
+    "Reset your password with https://app.asyncstatus.com/reset-password",
   firstName: "Michael",
-  verificationLink: "https://app.asyncstatus.com/verify-email",
+  expiration: "24 hours",
+  resetLink: "https://app.asyncstatus.com/reset-password",
 };
 
-export default VerificationEmail;
+export default ResetPasswordEmail;

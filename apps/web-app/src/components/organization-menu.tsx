@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { listOrganizationsQueryOptions } from "@/rpc/organization";
 import {
   Avatar,
   AvatarFallback,
@@ -21,21 +22,17 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { ChevronsUpDown, Plus } from "@asyncstatus/ui/icons";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { authClient } from "@/lib/auth";
 import { getInitials } from "@/lib/utils";
 
-export function OrganizationSelect() {
+export function OrganizationMenu(props: { organizationSlug: string }) {
   const { isMobile } = useSidebar();
-  const session = authClient.useSession();
-  const organizations = authClient.useListOrganizations();
+  const organizations = useSuspenseQuery(listOrganizationsQueryOptions());
   const activeOrganization = useMemo(
-    () =>
-      organizations.data?.find(
-        (o) => o.id === session.data?.session.activeOrganizationId,
-      ),
-    [organizations.data, session.data?.session.activeOrganizationId],
+    () => organizations.data?.find((o) => o.slug === props.organizationSlug),
+    [organizations.data, props.organizationSlug],
   );
 
   return (
@@ -58,7 +55,7 @@ export function OrganizationSelect() {
                 <span className="truncate">{activeOrganization?.name}</span>
               </div>
 
-              <ChevronsUpDown className="ml-auto" />
+              <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
@@ -118,11 +115,11 @@ export function OrganizationSelect() {
   );
 }
 
-export function OrganizationSelectSkeleton() {
+export function OrganizationMenuSkeleton() {
   return (
     <div className="flex items-center p-1">
       <Skeleton className="size-8 rounded-full" />
-      <ChevronsUpDown className="ml-auto" />
+      <ChevronsUpDown className="ml-auto size-4" />
     </div>
   );
 }

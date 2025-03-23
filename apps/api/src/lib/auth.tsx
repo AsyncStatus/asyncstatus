@@ -1,3 +1,4 @@
+import ResetPassword from "@asyncstatus/email/auth/reset-password";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -13,7 +14,26 @@ export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
     appName: "AsyncStatus",
     url: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
-    emailAndPassword: { enabled: true },
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: true,
+      async sendResetPassword(data) {
+        await resend.emails.send({
+          from: "AsyncStatus <onboarding@a.asyncstatus.com>",
+          to: data.user.email,
+          subject: "Reset your password",
+          text: `Reset your password ${data.url}`,
+          react: (
+            <ResetPassword
+              firstName={data.user.name}
+              resetLink={data.url}
+              expiration="1 hour"
+              preview={`Reset your password ${data.url}`}
+            />
+          ),
+        });
+      },
+    },
     trustedOrigins: [
       "http://localhost:3000",
       "https://app.asyncstatus.com",
@@ -27,11 +47,13 @@ export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
           from: "AsyncStatus <onboarding@a.asyncstatus.com>",
           to: data.user.email,
           subject: "Verify your email",
+          text: `Verify your email ${data.url}`,
           react: (
             <VerificationEmail
               firstName={data.user.name}
               preview={`Verify your email ${data.url}`}
               verificationLink={data.url}
+              expiration="1 hour"
             />
           ),
         });

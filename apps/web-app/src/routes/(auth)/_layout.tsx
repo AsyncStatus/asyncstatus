@@ -1,17 +1,19 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { SimpleLayout } from "@asyncstatus/ui/components/simple-layout";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { authClient } from "@/lib/auth";
+import { ensureNotLoggedIn } from "../-lib/common";
 
 export const Route = createFileRoute("/(auth)/_layout")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await authClient.getSession();
-    if (session.data) {
-      throw redirect({ to: "/" });
-    }
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await ensureNotLoggedIn(queryClient);
   },
 });
 
 function RouteComponent() {
-  return <Outlet />;
+  return (
+    <SimpleLayout href="/">
+      <Outlet />
+    </SimpleLayout>
+  );
 }

@@ -1,4 +1,4 @@
-import { signUpEmailMutationOptions } from "@/rpc/auth";
+import { resetPasswordMutationOptions } from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Form,
@@ -10,41 +10,42 @@ import {
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
+import { ChevronLeft } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export const Route = createFileRoute("/(auth)/_layout/sign-up")({
+export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,
+  validateSearch: z.object({
+    token: z.string(),
+  }),
 });
 
 const schema = z
   .object({
-    email: z.string().email(),
-    password: z.string().min(8).max(128),
-    passwordConfirmation: z.string().min(8).max(128),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
   })
-  .refine((data) => data.password === data.passwordConfirmation, {
-    path: ["passwordConfirmation"],
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
     message: "Passwords do not match",
   });
 
 function RouteComponent() {
+  const { token } = Route.useSearch();
   const navigate = useNavigate();
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", passwordConfirmation: "" },
+    defaultValues: { password: "", confirmPassword: "" },
   });
 
-  const signUpEmail = useMutation({
-    ...signUpEmailMutationOptions(),
+  const resetPassword = useMutation({
+    ...resetPasswordMutationOptions(),
     onSuccess() {
-      toast.success(
-        "We've sent you a verification link, please check your email.",
-      );
       navigate({ to: "/" });
     },
   });
@@ -54,50 +55,23 @@ function RouteComponent() {
       <form
         className="mx-auto w-full max-w-xs space-y-24"
         onSubmit={form.handleSubmit((data) => {
-          signUpEmail.mutate({
-            email: data.email,
-            password: data.password,
-            name: data.email.split("@")[0] ?? data.email,
-            callbackURL: `${import.meta.env.VITE_WEB_APP_URL}`,
-          });
+          resetPassword.mutate({ newPassword: data.password, token: token });
         })}
       >
         <div className="space-y-1.5 text-center">
-          <h1 className="text-2xl">Create an account</h1>
+          <h1 className="text-2xl">Reset your password</h1>
           <h2 className="text-muted-foreground text-sm text-balance">
-            Already have an account?{" "}
-            <Link className="underline" to="/login">
-              Login
-            </Link>
-            .
+            Reset your password to continue using AsyncStatus.
           </h2>
         </div>
 
         <div className="grid gap-5">
           <FormField
             control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="john.doe@example.com"
-                    autoComplete="work email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>New password</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -113,10 +87,10 @@ function RouteComponent() {
 
           <FormField
             control={form.control}
-            name="passwordConfirmation"
+            name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>Confirm new password</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -130,19 +104,32 @@ function RouteComponent() {
             )}
           />
 
-          {signUpEmail.error && (
-            <div className="text-destructive text-sm text-pretty">
-              {signUpEmail.error.message}
-            </div>
-          )}
+          <div className="grid gap-2">
+            {resetPassword.error && (
+              <div className="text-destructive text-sm text-pretty">
+                {resetPassword.error.message}
+              </div>
+            )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={signUpEmail.isPending}
-          >
-            Create an account
-          </Button>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={resetPassword.isPending}
+            >
+              Reset password
+            </Button>
+
+            <Button
+              asChild
+              variant="ghost"
+              className="text-muted-foreground gap-0.5"
+            >
+              <Link to="/login">
+                <ChevronLeft />
+                Go back to login
+              </Link>
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
