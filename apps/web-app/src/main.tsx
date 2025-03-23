@@ -3,13 +3,24 @@ import "./globals.css";
 import { StrictMode } from "react";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Toaster } from "@asyncstatus/ui/components/sonner";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
-import { queryClient } from "./query-client";
+import { DefaultErrorBoundary } from "./components/default-error-boundary";
+import { NotFound } from "./components/not-found";
 import { routeTree } from "./routeTree.gen";
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      throwOnError: true,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 const router = createRouter({
   routeTree,
   context: { queryClient },
@@ -24,6 +35,8 @@ const router = createRouter({
       </div>
     );
   },
+  defaultErrorComponent: DefaultErrorBoundary,
+  defaultNotFoundComponent: NotFound,
 });
 
 declare module "@tanstack/react-router" {

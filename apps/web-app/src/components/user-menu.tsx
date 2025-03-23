@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
+import { toast } from "@asyncstatus/ui/components/sonner";
 import { ChevronsUpDown, CreditCard, LogOut } from "@asyncstatus/ui/icons";
 import {
   useMutation,
@@ -28,6 +29,8 @@ import {
 import { useNavigate, useRouter } from "@tanstack/react-router";
 
 import { getInitials } from "@/lib/utils";
+
+import { ThemeToggle } from "./toggle-theme";
 
 export function UserMenu() {
   const { isMobile } = useSidebar();
@@ -41,6 +44,9 @@ export function UserMenu() {
       await router.invalidate();
       queryClient.clear();
       await navigate({ to: "/login" });
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
   return (
@@ -108,6 +114,10 @@ export function UserMenu() {
                   <span className="text-muted-foreground truncate text-xs">
                     {session.data.user.email}
                   </span>
+                </div>
+
+                <div className="ml-2">
+                  <ThemeToggle />
                 </div>
               </div>
             </DropdownMenuLabel>

@@ -67,9 +67,13 @@ function AppSidebarSecondaryLinks() {
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="flex-row gap-1 max-md:flex-col">
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm">
+            <SidebarMenuButton
+              asChild
+              size="sm"
+              className="text-muted-foreground"
+            >
               <a
                 href="mailto:support@asyncstatus.com"
                 target="_blank"
@@ -82,7 +86,11 @@ function AppSidebarSecondaryLinks() {
           </SidebarMenuItem>
 
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm">
+            <SidebarMenuButton
+              asChild
+              size="sm"
+              className="text-muted-foreground"
+            >
               <a
                 href="mailto:kacper@asyncstatus.com"
                 target="_blank"

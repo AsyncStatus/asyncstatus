@@ -5,7 +5,18 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
-  component: () => (
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "AsyncStatus" },
+    ],
+  }),
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  return (
     <>
       <Outlet />
       <Suspense>
@@ -15,8 +26,8 @@ export const Route = createRootRouteWithContext<{
         <ReactQueryDevtools />
       </Suspense>
     </>
-  ),
-});
+  );
+}
 
 const TanStackRouterDevtools =
   import.meta.env.NODE_ENV === "production"

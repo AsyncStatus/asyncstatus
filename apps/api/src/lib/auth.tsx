@@ -61,7 +61,6 @@ export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
     },
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
     session: {
-      cookieCache: { enabled: true },
       expiresIn: 60 * 60 * 24 * 30, // 30 days
     },
     secondaryStorage: {

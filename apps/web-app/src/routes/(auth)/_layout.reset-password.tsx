@@ -9,7 +9,6 @@ import {
   FormMessage,
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
-import { toast } from "@asyncstatus/ui/components/sonner";
 import { ChevronLeft } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -19,9 +18,7 @@ import { z } from "zod";
 
 export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,
-  validateSearch: z.object({
-    token: z.string(),
-  }),
+  validateSearch: z.object({ token: z.string() }),
 });
 
 const schema = z

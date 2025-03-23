@@ -1,11 +1,12 @@
 {
   "name": "@asyncstatus/web-app",
   "private": true,
+  "sideEffects": false,
   "type": "module",
   "prettier": "@asyncstatus/prettier-config",
   "scripts": {
     "dev": "vite --port 3000",
-    "build": "bunx --bun vite build && tsc",
+    "build": "vite build && tsc",
     "serve": "vite preview",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
