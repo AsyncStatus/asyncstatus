@@ -122,7 +122,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
               className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
               align="start"
               side={isMobile ? "bottom" : "right"}
-              sideOffset={18}
+              sideOffset={4}
             >
               <DropdownMenuLabel className="text-muted-foreground text-xs">
                 Organizations

@@ -2,7 +2,10 @@ import {
   ensureValidOrganization,
   ensureValidSession,
 } from "@/routes/-lib/common";
-import { SidebarProvider } from "@asyncstatus/ui/components/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -24,7 +27,9 @@ function RouteComponent() {
   return (
     <SidebarProvider>
       <AppSidebar organizationSlug={organizationSlug} />
-      <Outlet />
+      <SidebarInset>
+        <Outlet />
+      </SidebarInset>
     </SidebarProvider>
   );
 }

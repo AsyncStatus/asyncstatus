@@ -10,10 +10,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
 } from "@asyncstatus/ui/components/sidebar";
 import { Link } from "@tanstack/react-router";
-import { Home, Settings, Users } from "lucide-react";
+import { Home, LifeBuoy, Send, Settings, Users } from "lucide-react";
 
 import {
   OrganizationMenu,
@@ -63,9 +62,45 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
   );
 }
 
+function AppSidebarSecondaryLinks() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm">
+              <a
+                href="mailto:support@asyncstatus.com"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <LifeBuoy />
+                <span>Support</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm">
+              <a
+                href="mailto:kacper@asyncstatus.com"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Send />
+                <span>Feedback</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
 export function AppSidebar(props: { organizationSlug: string }) {
   return (
-    <Sidebar>
+    <Sidebar variant="inset">
       <SidebarHeader>
         <Suspense fallback={<OrganizationMenuSkeleton />}>
           <OrganizationMenu organizationSlug={props.organizationSlug} />
@@ -83,12 +118,11 @@ export function AppSidebar(props: { organizationSlug: string }) {
       </SidebarContent>
 
       <SidebarFooter>
+        <AppSidebarSecondaryLinks />
         <Suspense fallback={<UserMenuSkeleton />}>
           <UserMenu />
         </Suspense>
       </SidebarFooter>
-
-      <SidebarRail />
     </Sidebar>
   );
 }
@@ -96,7 +130,7 @@ export function AppSidebar(props: { organizationSlug: string }) {
 export function AppSidebarSkeleton(props: { organizationSlug: string }) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar variant="inset">
         <SidebarHeader>
           <OrganizationMenuSkeleton />
         </SidebarHeader>
@@ -113,10 +147,9 @@ export function AppSidebarSkeleton(props: { organizationSlug: string }) {
       </Sidebar>
 
       <SidebarFooter>
+        <AppSidebarSecondaryLinks />
         <UserMenuSkeleton />
       </SidebarFooter>
-
-      <SidebarRail />
     </SidebarProvider>
   );
 }
