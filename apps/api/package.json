@@ -6,7 +6,8 @@
   "exports": {
     ".": {
       "types": "./src/rpc.ts"
-    }
+    },
+    "./schema/*": "./src/schema/*.ts"
   },
   "scripts": {
     "dev": "wrangler dev",
@@ -21,6 +22,7 @@
     "@hono/zod-validator": "^0.4.3",
     "@libsql/client": "0.15.0",
     "better-auth": "1.2.4",
+    "dayjs": "^1.11.13",
     "drizzle-orm": "0.41.0",
     "hono": "4.7.5",
     "resend": "4.1.2"

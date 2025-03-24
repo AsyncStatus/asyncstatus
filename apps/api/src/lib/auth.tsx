@@ -1,15 +1,17 @@
 import ResetPassword from "@asyncstatus/email/auth/reset-password";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
+import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import dayjs from "dayjs";
 import type { Resend } from "resend";
 
+import type { Db } from "../db";
 import * as schema from "../db/schema";
 import type { Bindings } from "./env";
 
-export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
+export function createAuth(env: Bindings, db: Db, resend: Resend) {
   return betterAuth({
     appName: "AsyncStatus",
     url: env.BETTER_AUTH_URL,
@@ -90,7 +92,30 @@ export function createAuth(env: Bindings, db: LibSQLDatabase, resend: Resend) {
       cookiePrefix: "as",
     },
     plugins: [
-      organization({ teams: { enabled: true, allowRemovingAllTeams: false } }),
+      organization({
+        teams: { enabled: true, allowRemovingAllTeams: false },
+        async sendInvitationEmail(data, request) {
+          const inviteLink = `${env.WEB_APP_URL}/invitation?invitationId=${data.invitation.id}`;
+          await resend.emails.send({
+            from: "AsyncStatus <onboarding@a.asyncstatus.com>",
+            to: data.email,
+            subject: `${data.inviter.user.name} invites you to ${data.organization.name}`,
+            react: (
+              <OrganizationInvitationEmail
+                invitedByUsername={data.inviter.user.name}
+                invitedByEmail={data.inviter.user.email}
+                teamName={data.organization.name}
+                inviteLink={inviteLink}
+                expiration={`${dayjs().add(
+                  dayjs(data.invitation.expiresAt).diff(dayjs(), "days"),
+                  "days",
+                )} days`}
+                preview={`Join ${data.organization.name}: ${inviteLink}`}
+              />
+            ),
+          });
+        },
+      }),
     ],
   });
 }

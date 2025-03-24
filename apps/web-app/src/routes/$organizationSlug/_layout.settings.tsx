@@ -8,7 +8,7 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/$organizationSlug/_layout/")({
+export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
 });
 
@@ -22,7 +22,7 @@ function RouteComponent() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Status updates</BreadcrumbPage>
+                <BreadcrumbPage>Settings</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

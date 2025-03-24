@@ -1,6 +1,6 @@
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type { Resend } from "resend";
 
+import type { Db } from "../db";
 import type { Auth } from "./auth";
 
 export type Bindings = {
@@ -14,17 +14,28 @@ export type Bindings = {
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
   RESEND_API_KEY: string;
+  WEB_APP_URL: string;
 };
 
 export type Variables = {
   auth: Auth;
-  db: LibSQLDatabase;
+  db: Db;
   resend: Resend;
-  user: Auth["$Infer"]["Session"]["user"] | null;
-  session: Auth["$Infer"]["Session"]["session"] | null;
+  session: Auth["$Infer"]["Session"] | null;
 };
 
 export type HonoEnv = {
   Bindings: Bindings;
   Variables: Variables;
+};
+
+export type HonoEnvWithSession = HonoEnv & {
+  Variables: Variables & { session: Auth["$Infer"]["Session"] };
+};
+
+export type HonoEnvWithOrganization = HonoEnvWithSession & {
+  Variables: Variables & {
+    organization: Auth["$Infer"]["Organization"];
+    member: Auth["$Infer"]["Member"];
+  };
 };

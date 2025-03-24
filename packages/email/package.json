@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./auth/*": "./src/auth/*.tsx"
+    "./auth/*": "./src/auth/*.tsx",
+    "./organization/*": "./src/organization/*.tsx"
   },
   "scripts": {
     "dev": "email dev --dir src --port 3010"

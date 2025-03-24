@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable(
@@ -13,6 +14,14 @@ export const user = sqliteTable(
   },
   (t) => [index("email_user_index").on(t.email)],
 );
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+  organizations: many(organization),
+  members: many(member),
+  invitations: many(invitation),
+}));
 
 export const session = sqliteTable(
   "session",
@@ -34,6 +43,13 @@ export const session = sqliteTable(
     index("token_session_index").on(t.token),
   ],
 );
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
 
 export const account = sqliteTable(
   "account",
@@ -61,6 +77,13 @@ export const account = sqliteTable(
   (t) => [index("user_account_id_index").on(t.userId)],
 );
 
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
 export const verification = sqliteTable(
   "verification",
   {
@@ -87,6 +110,12 @@ export const organization = sqliteTable(
   (t) => [index("slug_index").on(t.slug)],
 );
 
+export const organizationRelations = relations(organization, ({ many }) => ({
+  members: many(member),
+  teams: many(team),
+  invitations: many(invitation),
+}));
+
 export const member = sqliteTable(
   "member",
   {
@@ -106,6 +135,21 @@ export const member = sqliteTable(
     index("user_member_id_index").on(t.userId),
   ],
 );
+
+export const memberRelations = relations(member, ({ one }) => ({
+  user: one(user, {
+    fields: [member.userId],
+    references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [member.organizationId],
+    references: [organization.id],
+  }),
+  team: one(team, {
+    fields: [member.teamId],
+    references: [team.id],
+  }),
+}));
 
 export const invitation = sqliteTable(
   "invitation",
@@ -129,6 +173,21 @@ export const invitation = sqliteTable(
   ],
 );
 
+export const invitationRelations = relations(invitation, ({ one }) => ({
+  inviter: one(user, {
+    fields: [invitation.inviterId],
+    references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [invitation.organizationId],
+    references: [organization.id],
+  }),
+  team: one(team, {
+    fields: [invitation.teamId],
+    references: [team.id],
+  }),
+}));
+
 export const team = sqliteTable("team", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -138,3 +197,10 @@ export const team = sqliteTable("team", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
+
+export const teamRelations = relations(team, ({ one }) => ({
+  organization: one(organization, {
+    fields: [team.organizationId],
+    references: [organization.id],
+  }),
+}));

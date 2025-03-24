@@ -1,4 +1,9 @@
+import {
+  zOrganizationCreateInvite,
+  zOrganizationIdOrSlug,
+} from "@asyncstatus/api/schema/organization";
 import { queryOptions, skipToken } from "@tanstack/react-query";
+import type { z } from "zod";
 
 import { authClient } from "@/lib/auth";
 import { mutationOptions } from "@/lib/utils";
@@ -100,6 +105,81 @@ export function setActiveOrganizationMutationOptions() {
         throw new Error(error.message);
       }
       return data;
+    },
+  });
+}
+
+export function getActiveMemberQueryOptions() {
+  return queryOptions({
+    queryKey: ["activeMember"],
+    queryFn: async () => {
+      return authClient.organization.getActiveMember();
+    },
+  });
+}
+
+export function listMembersQueryOptions(idOrSlug: string) {
+  return queryOptions({
+    queryKey: ["members", idOrSlug],
+    queryFn: async () => {
+      const response = await rpc.organization[":idOrSlug"].members.$get({
+        param: { idOrSlug },
+      });
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json();
+    },
+  });
+}
+
+export function removeMemberMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["removeMember"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.organization.removeMember>[0],
+    ) => {
+      const { data, error } = await authClient.organization.removeMember(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
+export function inviteMemberMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["inviteMember"],
+    mutationFn: async (data: {
+      param: z.infer<typeof zOrganizationIdOrSlug>;
+      json: z.infer<typeof zOrganizationCreateInvite>;
+    }) => {
+      const res = await rpc.organization[":idOrSlug"].members.invitations.$post(
+        {
+          param: data.param,
+          json: data.json,
+        },
+      );
+      if (!res.ok) {
+        throw new Error(res.statusText);
+      }
+      return res.json();
+    },
+  });
+}
+
+export function cancelInvitationMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["cancelInvitation"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.organization.cancelInvitation>[0],
+    ) => {
+      const res = await authClient.organization.cancelInvitation(input);
+      if (res.error) {
+        throw new Error(res.error.message);
+      }
+      return res.data;
     },
   });
 }
