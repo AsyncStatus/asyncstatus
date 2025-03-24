@@ -155,16 +155,17 @@ export function inviteMemberMutationOptions() {
       param: z.infer<typeof zOrganizationIdOrSlug>;
       json: z.infer<typeof zOrganizationCreateInvite>;
     }) => {
-      const res = await rpc.organization[":idOrSlug"].members.invitations.$post(
-        {
-          param: data.param,
-          json: data.json,
-        },
-      );
-      if (!res.ok) {
-        throw new Error(res.statusText);
+      const response = await rpc.organization[
+        ":idOrSlug"
+      ].members.invitations.$post({ param: data.param, json: data.json });
+      if (response.status === 400) {
+        const message = await response.json();
+        throw new Error(message as string);
       }
-      return res.json();
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json();
     },
   });
 }

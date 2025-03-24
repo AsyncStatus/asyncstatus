@@ -94,6 +94,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     plugins: [
       organization({
         teams: { enabled: true, allowRemovingAllTeams: false },
+        invitationExpiresIn: 3 * 24 * 60 * 60, // 3 days
         async sendInvitationEmail(data, request) {
           const inviteLink = `${env.WEB_APP_URL}/invitation?invitationId=${data.invitation.id}`;
           await resend.emails.send({
@@ -106,10 +107,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
                 invitedByEmail={data.inviter.user.email}
                 teamName={data.organization.name}
                 inviteLink={inviteLink}
-                expiration={`${dayjs().add(
-                  dayjs(data.invitation.expiresAt).diff(dayjs(), "days"),
-                  "days",
-                )} days`}
+                expiration="3 days"
                 preview={`Join ${data.organization.name}: ${inviteLink}`}
               />
             ),

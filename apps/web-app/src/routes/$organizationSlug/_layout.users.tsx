@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   cancelInvitationMutationOptions,
   getActiveMemberQueryOptions,
@@ -35,7 +36,7 @@ import {
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { Pencil, Plus, Send, Trash, UserRound } from "@asyncstatus/ui/icons";
+import { Pencil, Plus, Trash, UserRound } from "@asyncstatus/ui/icons";
 import {
   useMutation,
   useQueryClient,
@@ -64,6 +65,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/users")({
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
   const queryClient = useQueryClient();
+  const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [activeMember, members] = useSuspenseQueries({
     queries: [
       getActiveMemberQueryOptions(),
@@ -110,7 +112,10 @@ function RouteComponent() {
           </Breadcrumb>
 
           {isAdmin && (
-            <Dialog>
+            <Dialog
+              open={inviteMemberDialogOpen}
+              onOpenChange={setInviteMemberDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button className="ml-auto">
                   <Plus className="h-4 w-4" />
@@ -125,7 +130,12 @@ function RouteComponent() {
                   </DialogDescription>
                 </DialogHeader>
 
-                <InviteMemberForm organizationSlug={organizationSlug} />
+                <InviteMemberForm
+                  organizationSlug={organizationSlug}
+                  onSuccess={() => {
+                    setInviteMemberDialogOpen(false);
+                  }}
+                />
               </DialogContent>
             </Dialog>
           )}
@@ -136,18 +146,19 @@ function RouteComponent() {
         {members.data.invitations?.map((invitation) => (
           <Card key={invitation.id} className="gap-0 p-2">
             <CardHeader className="p-2">
-              <CardTitle className="flex items-center gap-2 p-0 font-normal">
+              <CardTitle className="flex flex-wrap items-center gap-2 p-0 font-normal">
                 <p className="text-lg font-normal">{invitation.email}</p>
                 <Badge variant="secondary">
                   {upperFirst(invitation.role ?? "member")}
                 </Badge>
+              </CardTitle>
+              <CardDescription className="flex items-center gap-2">
+                <p>
+                  Expires {dayjs(invitation.expiresAt).format("DD/MM/YYYY")}
+                </p>
                 <Badge variant="secondary">
                   {upperFirst(invitation.status)}
                 </Badge>
-              </CardTitle>
-              <CardDescription>
-                Expires in {dayjs(invitation.expiresAt).diff(dayjs(), "days")}{" "}
-                days
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-2 p-2">

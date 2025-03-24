@@ -34,6 +34,7 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           where: and(
             eq(invitation.organizationId, c.var.organization.id),
             not(eq(invitation.status, "accepted")),
+            not(eq(invitation.status, "canceled")),
           ),
         }),
       ]);
@@ -58,11 +59,27 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         return c.body(null, 403);
       }
 
-      const invitation = await c.var.auth.api.createInvitation({
-        body: { role, email, organizationId: c.var.organization.id },
+      const existingInvitation = await c.var.db.query.invitation.findFirst({
+        where: and(
+          eq(invitation.organizationId, c.var.organization.id),
+          eq(invitation.email, email),
+        ),
+      });
+
+      if (existingInvitation) {
+        return c.json("Invitation already exists", 400);
+      }
+
+      const newInvitation = await c.var.auth.api.createInvitation({
+        body: {
+          role,
+          email,
+          organizationId: c.var.organization.id,
+          resend: true,
+        },
         headers: c.req.raw.headers,
       });
 
-      return c.json(invitation);
+      return c.json(newInvitation);
     },
   );
