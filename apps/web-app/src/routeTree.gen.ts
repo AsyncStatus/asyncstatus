@@ -24,8 +24,9 @@ import { Route as authLayoutSignUpImport } from './routes/(auth)/_layout.sign-up
 import { Route as authLayoutResetPasswordImport } from './routes/(auth)/_layout.reset-password'
 import { Route as authLayoutLoginImport } from './routes/(auth)/_layout.login'
 import { Route as authLayoutForgotPasswordImport } from './routes/(auth)/_layout.forgot-password'
-import { Route as OrganizationSlugLayoutUsersImport } from './routes/$organizationSlug/_layout.users'
 import { Route as OrganizationSlugLayoutSettingsImport } from './routes/$organizationSlug/_layout.settings'
+import { Route as OrganizationSlugLayoutUsersIndexImport } from './routes/$organizationSlug/_layout.users/index'
+import { Route as OrganizationSlugLayoutUsersUserIdImport } from './routes/$organizationSlug/_layout.users/$userId'
 
 // Create Virtual Routes
 
@@ -116,17 +117,24 @@ const authLayoutForgotPasswordRoute = authLayoutForgotPasswordImport.update({
   getParentRoute: () => authLayoutRoute,
 } as any)
 
-const OrganizationSlugLayoutUsersRoute =
-  OrganizationSlugLayoutUsersImport.update({
-    id: '/users',
-    path: '/users',
-    getParentRoute: () => OrganizationSlugLayoutRoute,
-  } as any)
-
 const OrganizationSlugLayoutSettingsRoute =
   OrganizationSlugLayoutSettingsImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+
+const OrganizationSlugLayoutUsersIndexRoute =
+  OrganizationSlugLayoutUsersIndexImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+
+const OrganizationSlugLayoutUsersUserIdRoute =
+  OrganizationSlugLayoutUsersUserIdImport.update({
+    id: '/users/$userId',
+    path: '/users/$userId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
 
@@ -197,13 +205,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutSettingsImport
       parentRoute: typeof OrganizationSlugLayoutImport
     }
-    '/$organizationSlug/_layout/users': {
-      id: '/$organizationSlug/_layout/users'
-      path: '/users'
-      fullPath: '/$organizationSlug/users'
-      preLoaderRoute: typeof OrganizationSlugLayoutUsersImport
-      parentRoute: typeof OrganizationSlugLayoutImport
-    }
     '/(auth)/_layout/forgot-password': {
       id: '/(auth)/_layout/forgot-password'
       path: '/forgot-password'
@@ -246,6 +247,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateOrganizationLayoutIndexImport
       parentRoute: typeof CreateOrganizationLayoutImport
     }
+    '/$organizationSlug/_layout/users/$userId': {
+      id: '/$organizationSlug/_layout/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/$organizationSlug/users/$userId'
+      preLoaderRoute: typeof OrganizationSlugLayoutUsersUserIdImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
+    '/$organizationSlug/_layout/users/': {
+      id: '/$organizationSlug/_layout/users/'
+      path: '/users'
+      fullPath: '/$organizationSlug/users'
+      preLoaderRoute: typeof OrganizationSlugLayoutUsersIndexImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
   }
 }
 
@@ -264,15 +279,19 @@ const LayoutRouteWithChildren =
 
 interface OrganizationSlugLayoutRouteChildren {
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
-  OrganizationSlugLayoutUsersRoute: typeof OrganizationSlugLayoutUsersRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
+  OrganizationSlugLayoutUsersUserIdRoute: typeof OrganizationSlugLayoutUsersUserIdRoute
+  OrganizationSlugLayoutUsersIndexRoute: typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
 const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
   {
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,
-    OrganizationSlugLayoutUsersRoute: OrganizationSlugLayoutUsersRoute,
     OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
+    OrganizationSlugLayoutUsersUserIdRoute:
+      OrganizationSlugLayoutUsersUserIdRoute,
+    OrganizationSlugLayoutUsersIndexRoute:
+      OrganizationSlugLayoutUsersIndexRoute,
   }
 
 const OrganizationSlugLayoutRouteWithChildren =
@@ -350,13 +369,14 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
   '/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
+  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -364,11 +384,12 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
   '/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
 export interface FileRoutesById {
@@ -382,13 +403,14 @@ export interface FileRoutesById {
   '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/$organizationSlug/_layout/users': typeof OrganizationSlugLayoutUsersRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
   '/(auth)/_layout/login': typeof authLayoutLoginRoute
   '/(auth)/_layout/reset-password': typeof authLayoutResetPasswordRoute
   '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
+  '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -399,24 +421,26 @@ export interface FileRouteTypes {
     | '/'
     | '/create-organization'
     | '/$organizationSlug/settings'
-    | '/$organizationSlug/users'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/sign-up'
     | '/$organizationSlug/'
     | '/create-organization/'
+    | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$organizationSlug'
     | '/'
     | '/create-organization'
     | '/$organizationSlug/settings'
-    | '/$organizationSlug/users'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/sign-up'
+    | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/users'
   id:
     | '__root__'
     | '/_layout'
@@ -428,13 +452,14 @@ export interface FileRouteTypes {
     | '/create-organization/_layout'
     | '/_layout/'
     | '/$organizationSlug/_layout/settings'
-    | '/$organizationSlug/_layout/users'
     | '/(auth)/_layout/forgot-password'
     | '/(auth)/_layout/login'
     | '/(auth)/_layout/reset-password'
     | '/(auth)/_layout/sign-up'
     | '/$organizationSlug/_layout/'
     | '/create-organization/_layout/'
+    | '/$organizationSlug/_layout/users/$userId'
+    | '/$organizationSlug/_layout/users/'
   fileRoutesById: FileRoutesById
 }
 
@@ -485,8 +510,9 @@ export const routeTree = rootRoute
       "parent": "/$organizationSlug",
       "children": [
         "/$organizationSlug/_layout/settings",
-        "/$organizationSlug/_layout/users",
-        "/$organizationSlug/_layout/"
+        "/$organizationSlug/_layout/",
+        "/$organizationSlug/_layout/users/$userId",
+        "/$organizationSlug/_layout/users/"
       ]
     },
     "/(auth)": {
@@ -526,10 +552,6 @@ export const routeTree = rootRoute
       "filePath": "$organizationSlug/_layout.settings.tsx",
       "parent": "/$organizationSlug/_layout"
     },
-    "/$organizationSlug/_layout/users": {
-      "filePath": "$organizationSlug/_layout.users.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
     "/(auth)/_layout/forgot-password": {
       "filePath": "(auth)/_layout.forgot-password.tsx",
       "parent": "/(auth)/_layout"
@@ -553,6 +575,14 @@ export const routeTree = rootRoute
     "/create-organization/_layout/": {
       "filePath": "create-organization/_layout.index.tsx",
       "parent": "/create-organization/_layout"
+    },
+    "/$organizationSlug/_layout/users/$userId": {
+      "filePath": "$organizationSlug/_layout.users/$userId.tsx",
+      "parent": "/$organizationSlug/_layout"
+    },
+    "/$organizationSlug/_layout/users/": {
+      "filePath": "$organizationSlug/_layout.users/index.tsx",
+      "parent": "/$organizationSlug/_layout"
     }
   }
 }

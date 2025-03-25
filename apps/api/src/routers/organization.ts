@@ -2,12 +2,13 @@ import { zValidator } from "@hono/zod-validator";
 import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
 
-import { invitation, member } from "../db/schema";
+import * as schema from "../db/schema";
 import type { HonoEnvWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "../lib/middleware";
 import {
   zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
+  zOrganizationMemberId,
 } from "../schema/organization";
 
 export const organizationRouter = new Hono<HonoEnvWithOrganization>()
@@ -27,18 +28,49 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     async (c) => {
       const [membersWithUsers, invitations] = await Promise.all([
         c.var.db.query.member.findMany({
-          where: eq(member.organizationId, c.var.organization.id),
+          where: eq(schema.member.organizationId, c.var.organization.id),
           with: { user: true },
         }),
         c.var.db.query.invitation.findMany({
           where: and(
-            eq(invitation.organizationId, c.var.organization.id),
-            not(eq(invitation.status, "accepted")),
-            not(eq(invitation.status, "canceled")),
+            eq(schema.invitation.organizationId, c.var.organization.id),
+            not(eq(schema.invitation.status, "accepted")),
+            not(eq(schema.invitation.status, "canceled")),
           ),
         }),
       ]);
       return c.json({ members: membersWithUsers, invitations });
+    },
+  )
+  .get(
+    "/:idOrSlug/members/:memberId",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug.and(zOrganizationMemberId)),
+    async (c) => {
+      const { memberId } = c.req.valid("param");
+      const hasPermissionResponse = await c.var.auth.api.hasPermission({
+        body: {
+          permission: { member: ["update"] },
+          organizationId: c.var.organization.id,
+        },
+        headers: c.req.raw.headers,
+      });
+      if (!hasPermissionResponse.success) {
+        return c.json(null, 403);
+      }
+
+      const member = await c.var.db.query.member.findFirst({
+        where: and(
+          eq(schema.member.organizationId, c.var.organization.id),
+          eq(schema.member.id, memberId),
+        ),
+        with: { user: true },
+      });
+      if (!member) {
+        return c.json("Member not found", 404);
+      }
+
+      return c.json(member);
     },
   )
   .post(
@@ -56,18 +88,32 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         headers: c.req.raw.headers,
       });
       if (!hasPermissionResponse.success) {
-        return c.body(null, 403);
+        return c.json(null, 403);
       }
 
-      const existingInvitation = await c.var.db.query.invitation.findFirst({
-        where: and(
-          eq(invitation.organizationId, c.var.organization.id),
-          eq(invitation.email, email),
-        ),
-      });
-
-      if (existingInvitation) {
-        return c.json("Invitation already exists", 400);
+      const [existingInvitation, existingUser] = await Promise.all([
+        c.var.db.query.invitation.findFirst({
+          where: and(
+            eq(schema.invitation.organizationId, c.var.organization.id),
+            eq(schema.invitation.email, email),
+          ),
+        }),
+        c.var.db.query.member.findFirst({
+          where: and(
+            eq(schema.member.organizationId, c.var.organization.id),
+            eq(
+              schema.member.userId,
+              c.var.db
+                .select({ id: schema.user.id })
+                .from(schema.user)
+                .where(eq(schema.user.email, email)),
+            ),
+          ),
+          with: { user: true },
+        }),
+      ]);
+      if (existingInvitation || existingUser?.user) {
+        return c.json("User already a member or has an invitation", 400);
       }
 
       const newInvitation = await c.var.auth.api.createInvitation({

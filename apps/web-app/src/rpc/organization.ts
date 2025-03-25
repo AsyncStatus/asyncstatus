@@ -1,6 +1,7 @@
 import {
   zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
+  zOrganizationMemberId,
 } from "@asyncstatus/api/schema/organization";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import type { z } from "zod";
@@ -181,6 +182,24 @@ export function cancelInvitationMutationOptions() {
         throw new Error(res.error.message);
       }
       return res.data;
+    },
+  });
+}
+
+export function getMemberQueryOptions(
+  param: z.infer<typeof zOrganizationIdOrSlug> &
+    z.infer<typeof zOrganizationMemberId>,
+) {
+  return queryOptions({
+    queryKey: ["member", param.idOrSlug, param.memberId],
+    queryFn: async () => {
+      const response = await rpc.organization[":idOrSlug"].members[
+        ":memberId"
+      ].$get({ param });
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json();
     },
   });
 }
