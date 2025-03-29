@@ -1,3 +1,4 @@
 [install]
 # cloudflare pages only detect lockb
 saveTextLockfile = false
+exact = true

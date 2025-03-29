@@ -21,7 +21,7 @@
     "@tanstack/react-query": "5.69.0",
     "@tanstack/react-router": "1.114.27",
     "better-auth": "1.2.4",
-    "dayjs": "^1.11.13",
+    "dayjs": "1.11.13",
     "hono": "4.7.5",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -37,7 +37,7 @@
     "@tanstack/react-query-devtools": "5.69.0",
     "@tanstack/react-router-devtools": "1.114.27",
     "@tanstack/router-plugin": "1.114.27",
-    "@types/bun": "1.2.5",
+    "@types/bun": "1.2.8",
     "@types/react": "19.0.12",
     "@types/react-dom": "19.0.4",
     "@vitejs/plugin-react": "4.3.4",
@@ -47,5 +47,5 @@
     "vite": "6.2.2",
     "vite-tsconfig-paths": "5.1.4"
   },
-  "packageManager": "bun@1.2.5"
+  "packageManager": "bun@1.2.7"
 }

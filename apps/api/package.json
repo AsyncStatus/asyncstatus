@@ -19,10 +19,10 @@
   },
   "dependencies": {
     "@asyncstatus/email": "workspace:*",
-    "@hono/zod-validator": "^0.4.3",
+    "@hono/zod-validator": "0.4.3",
     "@libsql/client": "0.15.0",
     "better-auth": "1.2.4",
-    "dayjs": "^1.11.13",
+    "dayjs": "1.11.13",
     "drizzle-orm": "0.41.0",
     "hono": "4.7.5",
     "resend": "4.1.2"
@@ -31,10 +31,10 @@
     "@asyncstatus/eslint-config": "workspace:*",
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
-    "@cloudflare/workers-types": "4.20250321.0",
-    "@types/bun": "1.2.5",
+    "@cloudflare/workers-types": "4.20250327.0",
+    "@types/bun": "1.2.8",
     "drizzle-kit": "0.30.5",
     "wrangler": "4.4.0"
   },
-  "packageManager": "bun@1.2.5"
+  "packageManager": "bun@1.2.7"
 }

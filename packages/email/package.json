@@ -16,7 +16,7 @@
     "react-dom": "19.0.0"
   },
   "devDependencies": {
-    "@types/bun": "1.2.5",
+    "@types/bun": "1.2.7",
     "react-email": "3.0.7",
     "typescript": "5.8.2"
   }
