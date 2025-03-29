@@ -20,12 +20,12 @@
   "dependencies": {
     "@asyncstatus/email": "workspace:*",
     "@hono/zod-validator": "0.4.3",
-    "@libsql/client": "0.15.0",
-    "better-auth": "1.2.4",
+    "@libsql/client": "0.15.1",
+    "better-auth": "1.2.5",
     "dayjs": "1.11.13",
     "drizzle-orm": "0.41.0",
     "hono": "4.7.5",
-    "resend": "4.1.2"
+    "resend": "4.2.0"
   },
   "devDependencies": {
     "@asyncstatus/eslint-config": "workspace:*",
@@ -33,8 +33,8 @@
     "@asyncstatus/typescript-config": "workspace:*",
     "@cloudflare/workers-types": "4.20250327.0",
     "@types/bun": "1.2.8",
-    "drizzle-kit": "0.30.5",
-    "wrangler": "4.4.0"
+    "drizzle-kit": "0.30.6",
+    "wrangler": "4.6.0"
   },
   "packageManager": "bun@1.2.7"
 }
