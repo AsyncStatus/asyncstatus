@@ -310,61 +310,74 @@ function RouteComponent() {
                   </p>
                 </div>
               ) : (
-                filteredInvitations?.map((invitation) => (
-                  <Card key={invitation.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="bg-primary/10 text-primary size-12">
-                          <AvatarFallback className="text-lg">
-                            {getInitials(invitation.email.split("@")[0] ?? "")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="font-medium">
-                            {invitation.email}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-2">
-                            <Badge variant="outline">
-                              {upperFirst(invitation.status)}
-                            </Badge>
-                          </CardDescription>
+                filteredInvitations?.map((invitation) => {
+                  const isExpired = dayjs(invitation.expiresAt).isBefore(
+                    dayjs(),
+                  );
+                  const status = isExpired ? "Expired" : invitation.status;
+
+                  return (
+                    <Card key={invitation.id} className="overflow-hidden">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="bg-primary/10 text-primary size-12">
+                            <AvatarFallback className="text-lg">
+                              {getInitials(
+                                invitation.email.split("@")[0] ?? "",
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="font-medium">
+                              {invitation.email}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2">
+                              <Badge variant="outline">
+                                {upperFirst(status)}
+                              </Badge>
+                            </CardDescription>
+                          </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0 pb-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary">
-                          {upperFirst(invitation.role ?? "member")}
-                        </Badge>
-                        <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                          <Calendar className="size-3" />
-                          <span>
-                            Expires{" "}
-                            {dayjs(invitation.expiresAt).format("MMM D, YYYY")}
-                          </span>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary">
+                            {upperFirst(invitation.role ?? "member")}
+                          </Badge>
+                          {!isExpired && (
+                            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <Calendar className="size-3" />
+                              <span>
+                                Expires{" "}
+                                {dayjs(invitation.expiresAt).format(
+                                  "MMM D, YYYY",
+                                )}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="bg-muted/20 border-t pt-3">
-                      {canCancelInvitation && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          disabled={cancelInvitation.isPending}
-                          onClick={() => {
-                            cancelInvitation.mutate({
-                              invitationId: invitation.id,
-                            });
-                          }}
-                          className="w-full"
-                        >
-                          <Trash className="mr-1 h-4 w-4" />
-                          Cancel Invitation
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                ))
+                      </CardContent>
+                      <CardFooter className="bg-muted/20 border-t pt-3">
+                        {canCancelInvitation && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={cancelInvitation.isPending}
+                            onClick={() => {
+                              cancelInvitation.mutate({
+                                invitationId: invitation.id,
+                              });
+                            }}
+                            className="w-full"
+                          >
+                            <Trash className="mr-1 h-4 w-4" />
+                            Cancel Invitation
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </TabsContent>

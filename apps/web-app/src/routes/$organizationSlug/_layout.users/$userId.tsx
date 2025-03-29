@@ -30,7 +30,6 @@ import {
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
 import {
-  AtSign,
   Calendar,
   Copy,
   Mail,
