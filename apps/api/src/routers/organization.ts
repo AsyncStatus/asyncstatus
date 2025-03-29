@@ -64,7 +64,7 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           eq(schema.member.organizationId, c.var.organization.id),
           eq(schema.member.id, memberId),
         ),
-        with: { user: true },
+        with: { user: true, team: true },
       });
       if (!member) {
         return c.json("Member not found", 404);

@@ -22,6 +22,7 @@ import {
 } from "@asyncstatus/ui/components/card";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
+import { toast } from "@asyncstatus/ui/components/sonner";
 import {
   Tabs,
   TabsContent,
@@ -31,10 +32,10 @@ import {
 import {
   AtSign,
   Calendar,
+  Copy,
   Mail,
   MapPin,
   Phone,
-  Shield,
   Users,
 } from "@asyncstatus/ui/icons";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -65,7 +66,7 @@ function RouteComponent() {
     getMemberQueryOptions({ idOrSlug: organizationSlug, memberId: userId }),
   );
 
-  const { user, role, createdAt } = member.data;
+  const { user, role, createdAt, team } = member.data;
   const joinDate = createdAt ? format(new Date(createdAt), "PPP") : "N/A";
 
   // Function to render the appropriate badge based on role
@@ -129,24 +130,24 @@ function RouteComponent() {
               </Avatar>
               <h2 className="text-2xl font-bold">{user.name}</h2>
               <div className="text-muted-foreground mt-1 flex items-center gap-2">
-                <AtSign className="size-4" />
-                <span>{user.email}</span>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    toast.promise(navigator.clipboard.writeText(user.email), {
+                      loading: "Copying email...",
+                      success: "Email copied to clipboard",
+                      error: "Failed to copy email",
+                    });
+                  }}
+                >
+                  <Copy className="size-3" />
+                  {user.email}
+                </Button>
               </div>
               <div className="mt-3">{getRoleBadge(role)}</div>
               <div className="mt-4 flex items-center gap-2 text-sm">
-                <Calendar className="text-muted-foreground size-4" />
+                <Calendar className="text-muted-foreground size-3" />
                 <span>Joined on {joinDate}</span>
-              </div>
-              <Separator className="my-6" />
-              <div className="flex w-full flex-col gap-4">
-                <Button variant="outline" className="w-full">
-                  <Mail className="mr-2 size-4" />
-                  Send Email
-                </Button>
-                <Button variant="secondary" className="w-full">
-                  <Shield className="mr-2 size-4" />
-                  Edit Permissions
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -230,10 +231,10 @@ function RouteComponent() {
                     <CardTitle>Team Memberships</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {member.data.teamId ? (
+                    {team ? (
                       <div className="flex items-center gap-2">
                         <Users className="size-5" />
-                        <span>{member.data.teamId}</span>
+                        <span>{team.name}</span>
                       </div>
                     ) : (
                       <div className="text-muted-foreground py-6 text-center">

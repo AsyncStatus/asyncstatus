@@ -35,7 +35,6 @@ import {
   DialogTrigger,
 } from "@asyncstatus/ui/components/dialog";
 import { Input } from "@asyncstatus/ui/components/input";
-import { ScrollArea } from "@asyncstatus/ui/components/scroll-area";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { toast } from "@asyncstatus/ui/components/sonner";
@@ -48,7 +47,6 @@ import {
 import {
   Calendar,
   Mail,
-  Pencil,
   Plus,
   Search,
   Trash,
