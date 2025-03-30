@@ -12,6 +12,8 @@ jobs:
         with:
           bun-version: 1.2.7
       - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: bun install
       - name: Deploy API
         uses: cloudflare/wrangler-action@v3
         with:
@@ -19,8 +21,8 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/api
           packageManager: bun
-      - name: Build
-        run: bun install && cd apps/web-app && bun run build
+      - name: Build Web App
+        run: cd apps/web-app && bun run build
       - name: Deploy Web App
         uses: cloudflare/wrangler-action@v3
         with:
