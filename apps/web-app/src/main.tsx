@@ -1,8 +1,9 @@
 import "./globals.css";
 
 import { StrictMode } from "react";
+import { isAsyncStatusApiError } from "@asyncstatus/api/errors";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
-import { Toaster } from "@asyncstatus/ui/components/sonner";
+import { toast, Toaster } from "@asyncstatus/ui/components/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
@@ -18,6 +19,16 @@ const queryClient = new QueryClient({
       throwOnError: true,
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      onError(error) {
+        if (isAsyncStatusApiError(error)) {
+          console.log(error);
+          toast.error(error.message);
+        } else {
+          toast.error("An unexpected error occurred. Please try again later.");
+        }
+      },
     },
   },
 });

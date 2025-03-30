@@ -83,6 +83,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [tab, setTab] = useState<string>("members");
   const [activeMember, members] = useSuspenseQueries({
     queries: [
       getActiveMemberQueryOptions(),
@@ -95,7 +96,6 @@ function RouteComponent() {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(organizationSlug).queryKey,
       });
-      toast.success("Member removed successfully");
     },
   });
   const cancelInvitation = useMutation({
@@ -104,7 +104,6 @@ function RouteComponent() {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(organizationSlug).queryKey,
       });
-      toast.success("Invitation cancelled successfully");
     },
   });
   const isAdmin = authClient.organization.checkRolePermission({
@@ -128,8 +127,8 @@ function RouteComponent() {
   );
 
   return (
-    <div className="space-y-6">
-      <header className="flex shrink-0 items-center justify-between gap-2 pb-2">
+    <>
+      <header className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex items-center gap-0">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
@@ -143,9 +142,10 @@ function RouteComponent() {
         </div>
 
         <div className="flex gap-2">
-          <div className="relative w-64">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <div className="relative">
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
             <Input
+              name="search"
               placeholder="Search users..."
               className="pl-8"
               value={searchQuery}
@@ -160,7 +160,7 @@ function RouteComponent() {
             >
               <DialogTrigger asChild>
                 <Button>
-                  <Plus className="mr-1 h-4 w-4" />
+                  <Plus className="size-4" />
                   Invite user
                 </Button>
               </DialogTrigger>
@@ -176,6 +176,7 @@ function RouteComponent() {
                   organizationSlug={organizationSlug}
                   onSuccess={() => {
                     setInviteMemberDialogOpen(false);
+                    setTab("invitations");
                   }}
                 />
               </DialogContent>
@@ -185,18 +186,21 @@ function RouteComponent() {
       </header>
 
       <div className="py-4">
-        <Tabs defaultValue="members" className="w-full">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList>
-            <TabsTrigger value="members" className="flex items-center gap-1">
-              <Users className="size-4" />
-              Members ({members.data.members?.length || 0})
+            <TabsTrigger value="members">
+              <Users className="size-3" />
+              <span>Users</span>
+              <span className="text-muted-foreground/60 text-xs">
+                {members.data.members?.length ?? 0}
+              </span>
             </TabsTrigger>
-            <TabsTrigger
-              value="invitations"
-              className="flex items-center gap-1"
-            >
-              <Mail className="size-4" />
-              Invitations ({members.data.invitations?.length || 0})
+            <TabsTrigger value="invitations">
+              <Mail className="size-3" />
+              <span>Invitations</span>
+              <span className="text-muted-foreground/60 text-xs">
+                {members.data.invitations?.length ?? 0}
+              </span>
             </TabsTrigger>
           </TabsList>
 
@@ -214,8 +218,8 @@ function RouteComponent() {
                 </div>
               ) : (
                 filteredMembers?.map((member) => (
-                  <Card key={member.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
+                  <Card key={member.id} className="overflow-hidden pb-0">
+                    <CardHeader>
                       <div className="flex items-center gap-3">
                         <Avatar className="size-12">
                           <AvatarImage src={member.user.image ?? undefined} />
@@ -233,7 +237,7 @@ function RouteComponent() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0 pb-2">
+                    <CardContent>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="secondary">
                           {upperFirst(member.role)}
@@ -247,7 +251,7 @@ function RouteComponent() {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="bg-muted/20 border-t pt-3">
+                    <CardFooter className="bg-muted/20 border-t pb-3.5">
                       <div className="flex w-full gap-2">
                         <Button
                           asChild
@@ -259,7 +263,7 @@ function RouteComponent() {
                             to="/$organizationSlug/users/$userId"
                             params={{ organizationSlug, userId: member.id }}
                           >
-                            <UserRound className="mr-1 h-4 w-4" />
+                            <UserRound className="size-4" />
                             View Profile
                           </Link>
                         </Button>
@@ -268,10 +272,7 @@ function RouteComponent() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            disabled={
-                              removeMember.isPending ||
-                              activeMember.data?.data?.id === member.id
-                            }
+                            disabled={removeMember.isPending}
                             onClick={() => {
                               if (activeMember.data?.data?.id === member.id) {
                                 toast.info(
@@ -286,7 +287,7 @@ function RouteComponent() {
                             }}
                             className="flex-initial"
                           >
-                            <Trash className="h-4 w-4" />
+                            <Trash className="size-4" />
                           </Button>
                         )}
                       </div>
@@ -311,16 +312,11 @@ function RouteComponent() {
                 </div>
               ) : (
                 filteredInvitations?.map((invitation) => {
-                  const isExpired = dayjs(invitation.expiresAt).isBefore(
-                    dayjs(),
-                  );
-                  const status = isExpired ? "Expired" : invitation.status;
-
                   return (
-                    <Card key={invitation.id} className="overflow-hidden">
-                      <CardHeader className="pb-2">
+                    <Card key={invitation.id} className="overflow-hidden pb-0">
+                      <CardHeader>
                         <div className="flex items-center gap-3">
-                          <Avatar className="bg-primary/10 text-primary size-12">
+                          <Avatar className="size-12">
                             <AvatarFallback className="text-lg">
                               {getInitials(
                                 invitation.email.split("@")[0] ?? "",
@@ -329,35 +325,40 @@ function RouteComponent() {
                           </Avatar>
                           <div>
                             <CardTitle className="font-medium">
-                              {invitation.email}
+                              {invitation.name}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-2">
-                              <Badge variant="outline">
-                                {upperFirst(status)}
-                              </Badge>
+                              {invitation.email}
                             </CardDescription>
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-2">
+                      <CardContent>
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">
                             {upperFirst(invitation.role ?? "member")}
                           </Badge>
-                          {!isExpired && (
-                            <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                              <Calendar className="size-3" />
-                              <span>
-                                Expires{" "}
-                                {dayjs(invitation.expiresAt).format(
-                                  "MMM D, YYYY",
-                                )}
-                              </span>
-                            </div>
-                          )}
+                          <Badge
+                            variant={
+                              invitation.status === "rejected"
+                                ? "destructive"
+                                : "outline"
+                            }
+                          >
+                            {upperFirst(invitation.status)}
+                          </Badge>
+                          <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                            <Calendar className="size-3" />
+                            <span>
+                              Expires{" "}
+                              {dayjs(invitation.expiresAt).format(
+                                "MMMM DD, YYYY",
+                              )}
+                            </span>
+                          </div>
                         </div>
                       </CardContent>
-                      <CardFooter className="bg-muted/20 border-t pt-3">
+                      <CardFooter className="bg-muted/20 border-t pb-3.5">
                         {canCancelInvitation && (
                           <Button
                             size="sm"
@@ -370,8 +371,8 @@ function RouteComponent() {
                             }}
                             className="w-full"
                           >
-                            <Trash className="mr-1 h-4 w-4" />
-                            Cancel Invitation
+                            <Trash className="size-4" />
+                            Remove Invitation
                           </Button>
                         )}
                       </CardFooter>
@@ -383,6 +384,6 @@ function RouteComponent() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </>
   );
 }

@@ -48,6 +48,20 @@ export function signUpEmailMutationOptions() {
   });
 }
 
+export function sendVerificationEmailMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["sendVerificationEmail"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.sendVerificationEmail>[0],
+    ) => {
+      const { data, error } = await authClient.sendVerificationEmail(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
 export function forgotPasswordMutationOptions() {
   return mutationOptions({
     mutationKey: ["forgotPassword"],

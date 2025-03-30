@@ -16,7 +16,7 @@ function RouteComponent() {
   return (
     <>
       <header className="flex shrink-0 items-center gap-2 pb-4">
-        <div className="flex items-center gap-0 px-4">
+        <div className="flex items-center gap-0">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
@@ -29,7 +29,7 @@ function RouteComponent() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-4 pt-0">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="bg-muted/50 aspect-video rounded-xl" />
           <div className="bg-muted/50 aspect-video rounded-xl" />

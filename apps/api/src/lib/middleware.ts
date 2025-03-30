@@ -2,6 +2,11 @@ import { eq, or } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 
 import { member, organization } from "../db/schema";
+import {
+  AsyncStatusBadRequestError,
+  AsyncStatusForbiddenError,
+  AsyncStatusNotFoundError,
+} from "../errors";
 import type { HonoEnv, HonoEnvWithOrganization } from "./env";
 
 export const requiredSession = createMiddleware<HonoEnv>(async (c, next) => {
@@ -16,7 +21,9 @@ export const requiredOrganization = createMiddleware<HonoEnvWithOrganization>(
   async (c, next) => {
     const orgOrSlug = c.req.param("idOrSlug");
     if (!orgOrSlug) {
-      return c.body(null, 400);
+      throw new AsyncStatusBadRequestError({
+        message: "Organization ID or slug is required",
+      });
     }
 
     const org = await c.var.db.query.organization.findFirst({
@@ -32,11 +39,15 @@ export const requiredOrganization = createMiddleware<HonoEnvWithOrganization>(
       },
     });
     if (!org) {
-      return c.body(null, 404);
+      throw new AsyncStatusNotFoundError({
+        message: "Organization not found",
+      });
     }
     const { members, ...restOrg } = org;
     if (!members[0]) {
-      return c.body(null, 403);
+      throw new AsyncStatusForbiddenError({
+        message: "You are not a member of this organization",
+      });
     }
 
     c.set("organization", { ...restOrg, slug: org.slug! });

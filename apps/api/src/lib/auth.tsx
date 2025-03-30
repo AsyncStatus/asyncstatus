@@ -4,7 +4,6 @@ import OrganizationInvitationEmail from "@asyncstatus/email/organization/organiz
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
-import dayjs from "dayjs";
 import type { Resend } from "resend";
 
 import type { Db } from "../db";
@@ -18,7 +17,6 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     secret: env.BETTER_AUTH_SECRET,
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
       async sendResetPassword(data) {
         await resend.emails.send({
           from: "AsyncStatus <onboarding@a.asyncstatus.com>",
@@ -43,7 +41,6 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     ],
     emailVerification: {
       autoSignInAfterVerification: true,
-      sendOnSignUp: true,
       async sendVerificationEmail(data) {
         await resend.emails.send({
           from: "AsyncStatus <onboarding@a.asyncstatus.com>",
@@ -94,21 +91,24 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     plugins: [
       organization({
         teams: { enabled: true, allowRemovingAllTeams: false },
-        invitationExpiresIn: 3 * 24 * 60 * 60, // 3 days
         async sendInvitationEmail(data, request) {
-          const inviteLink = `${env.WEB_APP_URL}/invitation?invitationId=${data.invitation.id}`;
+          const params = new URLSearchParams();
+          params.set("invitationId", data.invitation.id);
+          params.set("invitationEmail", data.email);
+          const inviteLink = `${env.WEB_APP_URL}/invitation?${params.toString()}`;
           await resend.emails.send({
             from: "AsyncStatus <onboarding@a.asyncstatus.com>",
             to: data.email,
-            subject: `${data.inviter.user.name} invites you to ${data.organization.name}`,
+            subject: `${data.inviter.user.name} invited you to ${data.organization.name}`,
+            text: `Invitation to ${data.organization.name} ${inviteLink}`,
             react: (
               <OrganizationInvitationEmail
                 invitedByUsername={data.inviter.user.name}
                 invitedByEmail={data.inviter.user.email}
                 teamName={data.organization.name}
                 inviteLink={inviteLink}
-                expiration="3 days"
-                preview={`Join ${data.organization.name}: ${inviteLink}`}
+                expiration="48 hours"
+                preview={`${data.inviter.user.name} invited you to ${data.organization.name}, accept invitation before it expires.`}
               />
             ),
           });

@@ -18,6 +18,9 @@ export function getOrganizationQueryOptions(idOrSlug?: string) {
       const response = await rpc.organization[":idOrSlug"].$get({
         param: { idOrSlug: idOrSlug! },
       });
+      if (!response.ok) {
+        throw await response.json();
+      }
       return response.json();
     },
     enabled: !!idOrSlug,
@@ -127,7 +130,7 @@ export function listMembersQueryOptions(idOrSlug: string) {
         param: { idOrSlug },
       });
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw await response.json();
       }
       return response.json();
     },
@@ -159,12 +162,8 @@ export function inviteMemberMutationOptions() {
       const response = await rpc.organization[
         ":idOrSlug"
       ].members.invitations.$post({ param: data.param, json: data.json });
-      if (response.status === 400) {
-        const message = await response.json();
-        throw new Error(message as string);
-      }
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw await response.json();
       }
       return response.json();
     },
@@ -186,6 +185,74 @@ export function cancelInvitationMutationOptions() {
   });
 }
 
+export function acceptInvitationMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["acceptInvitation"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.organization.acceptInvitation>[0],
+    ) => {
+      const res = await authClient.organization.acceptInvitation(input);
+      if (res.error) {
+        throw new Error(res.error.message);
+      }
+      return res.data;
+    },
+  });
+}
+
+export function rejectInvitationMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["rejectInvitation"],
+    mutationFn: async (
+      input: Parameters<typeof authClient.organization.rejectInvitation>[0],
+    ) => {
+      const res = await authClient.organization.rejectInvitation(input);
+      if (res.error) {
+        throw new Error(res.error.message);
+      }
+      return res.data;
+    },
+  });
+}
+export function getInvitationQueryOptions(invitationId: string) {
+  return queryOptions({
+    queryKey: ["invitation", invitationId],
+    queryFn: async () => {
+      const response = await authClient.organization.getInvitation({
+        query: { id: invitationId },
+      });
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      return response.data;
+    },
+  });
+}
+
+export function getInvitationByEmailQueryOptions(
+  invitationId?: string,
+  email?: string,
+  throwOnError = true,
+) {
+  return queryOptions({
+    queryKey: ["invitation", invitationId, email],
+    queryFn: async () => {
+      const response = await rpc.invitation[":id"].$get({
+        param: { id: invitationId! },
+        query: { email: email! },
+      });
+      if (response.status === 404 && !throwOnError) {
+        return null;
+      }
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+    enabled: !!invitationId && !!email,
+  });
+}
+
 export function getMemberQueryOptions(
   param: z.infer<typeof zOrganizationIdOrSlug> &
     z.infer<typeof zOrganizationMemberId>,
@@ -197,7 +264,7 @@ export function getMemberQueryOptions(
         ":memberId"
       ].$get({ param });
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw await response.json();
       }
       return response.json();
     },

@@ -4,25 +4,36 @@ import {
   listOrganizationsQueryOptions,
 } from "@/rpc/organization";
 import type { QueryClient } from "@tanstack/react-query";
-import { redirect } from "@tanstack/react-router";
+import { redirect, type ParsedLocation } from "@tanstack/react-router";
 
-export async function ensureValidSession(queryClient: QueryClient) {
+export async function ensureValidSession(
+  queryClient: QueryClient,
+  location: ParsedLocation,
+) {
   const session = await queryClient
     .fetchQuery(sessionQueryOptions())
     .catch(() => {});
   if (!session?.session) {
-    throw redirect({ to: "/login" });
+    throw redirect({
+      to: location.href.includes("/invitation?invitationId=")
+        ? "/sign-up"
+        : "/login",
+      search: location.href === "/" ? undefined : { redirect: location.href },
+    });
   }
 
   return session;
 }
 
-export async function ensureNotLoggedIn(queryClient: QueryClient) {
+export async function ensureNotLoggedIn(
+  queryClient: QueryClient,
+  search: { redirect?: string },
+) {
   const session = await queryClient
     .fetchQuery(sessionQueryOptions())
     .catch(() => {});
   if (session?.session) {
-    throw redirect({ to: "/" });
+    throw redirect({ to: search.redirect ?? "/" });
   }
 }
 export async function getDefaultOrganization(queryClient: QueryClient) {

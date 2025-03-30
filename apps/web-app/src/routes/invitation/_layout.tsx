@@ -2,17 +2,12 @@ import { SimpleLayout } from "@asyncstatus/ui/components/simple-layout";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { ensureNotLoggedIn } from "../-lib/common";
-
-export const Route = createFileRoute("/(auth)/_layout")({
+export const Route = createFileRoute("/invitation/_layout")({
   component: RouteComponent,
   validateSearch: z.object({
-    invitationId: z.string().optional(),
-    invitationEmail: z.string().email().optional(),
+    invitationId: z.string(),
+    invitationEmail: z.string().email(),
   }),
-  beforeLoad: async ({ context: { queryClient }, search }) => {
-    await ensureNotLoggedIn(queryClient, search);
-  },
 });
 
 function RouteComponent() {

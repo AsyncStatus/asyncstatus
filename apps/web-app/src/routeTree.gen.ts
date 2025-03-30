@@ -15,9 +15,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout.index'
+import { Route as InvitationLayoutImport } from './routes/invitation/_layout'
 import { Route as CreateOrganizationLayoutImport } from './routes/create-organization/_layout'
 import { Route as authLayoutImport } from './routes/(auth)/_layout'
 import { Route as OrganizationSlugLayoutImport } from './routes/$organizationSlug/_layout'
+import { Route as InvitationLayoutIndexImport } from './routes/invitation/_layout.index'
 import { Route as CreateOrganizationLayoutIndexImport } from './routes/create-organization/_layout.index'
 import { Route as OrganizationSlugLayoutIndexImport } from './routes/$organizationSlug/_layout.index'
 import { Route as authLayoutSignUpImport } from './routes/(auth)/_layout.sign-up'
@@ -30,11 +32,18 @@ import { Route as OrganizationSlugLayoutUsersUserIdImport } from './routes/$orga
 
 // Create Virtual Routes
 
+const InvitationImport = createFileRoute('/invitation')()
 const CreateOrganizationImport = createFileRoute('/create-organization')()
 const authImport = createFileRoute('/(auth)')()
 const OrganizationSlugImport = createFileRoute('/$organizationSlug')()
 
 // Create/Update Routes
+
+const InvitationRoute = InvitationImport.update({
+  id: '/invitation',
+  path: '/invitation',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const CreateOrganizationRoute = CreateOrganizationImport.update({
   id: '/create-organization',
@@ -64,6 +73,11 @@ const LayoutIndexRoute = LayoutIndexImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const InvitationLayoutRoute = InvitationLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => InvitationRoute,
+} as any)
+
 const CreateOrganizationLayoutRoute = CreateOrganizationLayoutImport.update({
   id: '/_layout',
   getParentRoute: () => CreateOrganizationRoute,
@@ -77,6 +91,12 @@ const authLayoutRoute = authLayoutImport.update({
 const OrganizationSlugLayoutRoute = OrganizationSlugLayoutImport.update({
   id: '/_layout',
   getParentRoute: () => OrganizationSlugRoute,
+} as any)
+
+const InvitationLayoutIndexRoute = InvitationLayoutIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InvitationLayoutRoute,
 } as any)
 
 const CreateOrganizationLayoutIndexRoute =
@@ -191,6 +211,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateOrganizationLayoutImport
       parentRoute: typeof CreateOrganizationRoute
     }
+    '/invitation': {
+      id: '/invitation'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationImport
+      parentRoute: typeof rootRoute
+    }
+    '/invitation/_layout': {
+      id: '/invitation/_layout'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationLayoutImport
+      parentRoute: typeof InvitationRoute
+    }
     '/_layout/': {
       id: '/_layout/'
       path: '/'
@@ -246,6 +280,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/create-organization/'
       preLoaderRoute: typeof CreateOrganizationLayoutIndexImport
       parentRoute: typeof CreateOrganizationLayoutImport
+    }
+    '/invitation/_layout/': {
+      id: '/invitation/_layout/'
+      path: '/'
+      fullPath: '/invitation/'
+      preLoaderRoute: typeof InvitationLayoutIndexImport
+      parentRoute: typeof InvitationLayoutImport
     }
     '/$organizationSlug/_layout/users/$userId': {
       id: '/$organizationSlug/_layout/users/$userId'
@@ -363,11 +404,35 @@ const CreateOrganizationRouteChildren: CreateOrganizationRouteChildren = {
 const CreateOrganizationRouteWithChildren =
   CreateOrganizationRoute._addFileChildren(CreateOrganizationRouteChildren)
 
+interface InvitationLayoutRouteChildren {
+  InvitationLayoutIndexRoute: typeof InvitationLayoutIndexRoute
+}
+
+const InvitationLayoutRouteChildren: InvitationLayoutRouteChildren = {
+  InvitationLayoutIndexRoute: InvitationLayoutIndexRoute,
+}
+
+const InvitationLayoutRouteWithChildren =
+  InvitationLayoutRoute._addFileChildren(InvitationLayoutRouteChildren)
+
+interface InvitationRouteChildren {
+  InvitationLayoutRoute: typeof InvitationLayoutRouteWithChildren
+}
+
+const InvitationRouteChildren: InvitationRouteChildren = {
+  InvitationLayoutRoute: InvitationLayoutRouteWithChildren,
+}
+
+const InvitationRouteWithChildren = InvitationRoute._addFileChildren(
+  InvitationRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '': typeof LayoutRouteWithChildren
   '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
+  '/invitation': typeof InvitationLayoutRouteWithChildren
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -375,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation/': typeof InvitationLayoutIndexRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
   '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
 }
@@ -383,6 +449,7 @@ export interface FileRoutesByTo {
   '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation': typeof InvitationLayoutIndexRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -401,6 +468,8 @@ export interface FileRoutesById {
   '/(auth)/_layout': typeof authLayoutRouteWithChildren
   '/create-organization': typeof CreateOrganizationRouteWithChildren
   '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
+  '/invitation': typeof InvitationRouteWithChildren
+  '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -409,6 +478,7 @@ export interface FileRoutesById {
   '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation/_layout/': typeof InvitationLayoutIndexRoute
   '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
   '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
 }
@@ -420,6 +490,7 @@ export interface FileRouteTypes {
     | '/$organizationSlug'
     | '/'
     | '/create-organization'
+    | '/invitation'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -427,6 +498,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/$organizationSlug/'
     | '/create-organization/'
+    | '/invitation/'
     | '/$organizationSlug/users/$userId'
     | '/$organizationSlug/users'
   fileRoutesByTo: FileRoutesByTo
@@ -434,6 +506,7 @@ export interface FileRouteTypes {
     | '/$organizationSlug'
     | '/'
     | '/create-organization'
+    | '/invitation'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -450,6 +523,8 @@ export interface FileRouteTypes {
     | '/(auth)/_layout'
     | '/create-organization'
     | '/create-organization/_layout'
+    | '/invitation'
+    | '/invitation/_layout'
     | '/_layout/'
     | '/$organizationSlug/_layout/settings'
     | '/(auth)/_layout/forgot-password'
@@ -458,6 +533,7 @@ export interface FileRouteTypes {
     | '/(auth)/_layout/sign-up'
     | '/$organizationSlug/_layout/'
     | '/create-organization/_layout/'
+    | '/invitation/_layout/'
     | '/$organizationSlug/_layout/users/$userId'
     | '/$organizationSlug/_layout/users/'
   fileRoutesById: FileRoutesById
@@ -468,6 +544,7 @@ export interface RootRouteChildren {
   OrganizationSlugRoute: typeof OrganizationSlugRouteWithChildren
   authRoute: typeof authRouteWithChildren
   CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
+  InvitationRoute: typeof InvitationRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -475,6 +552,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrganizationSlugRoute: OrganizationSlugRouteWithChildren,
   authRoute: authRouteWithChildren,
   CreateOrganizationRoute: CreateOrganizationRouteWithChildren,
+  InvitationRoute: InvitationRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -490,7 +568,8 @@ export const routeTree = rootRoute
         "/_layout",
         "/$organizationSlug",
         "/(auth)",
-        "/create-organization"
+        "/create-organization",
+        "/invitation"
       ]
     },
     "/_layout": {
@@ -544,6 +623,19 @@ export const routeTree = rootRoute
         "/create-organization/_layout/"
       ]
     },
+    "/invitation": {
+      "filePath": "invitation",
+      "children": [
+        "/invitation/_layout"
+      ]
+    },
+    "/invitation/_layout": {
+      "filePath": "invitation/_layout.tsx",
+      "parent": "/invitation",
+      "children": [
+        "/invitation/_layout/"
+      ]
+    },
     "/_layout/": {
       "filePath": "_layout.index.tsx",
       "parent": "/_layout"
@@ -575,6 +667,10 @@ export const routeTree = rootRoute
     "/create-organization/_layout/": {
       "filePath": "create-organization/_layout.index.tsx",
       "parent": "/create-organization/_layout"
+    },
+    "/invitation/_layout/": {
+      "filePath": "invitation/_layout.index.tsx",
+      "parent": "/invitation/_layout"
     },
     "/$organizationSlug/_layout/users/$userId": {
       "filePath": "$organizationSlug/_layout.users/$userId.tsx",

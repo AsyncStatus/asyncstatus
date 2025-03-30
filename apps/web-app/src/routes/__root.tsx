@@ -1,10 +1,15 @@
 import { lazy, Suspense } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { z } from "zod";
+
+const searchSchema = z.object({ redirect: z.string().optional() });
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
+  validateSearch: searchSchema,
+  component: RouteComponent,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -12,7 +17,6 @@ export const Route = createRootRouteWithContext<{
       { title: "AsyncStatus" },
     ],
   }),
-  component: RouteComponent,
 });
 
 function RouteComponent() {

@@ -7,7 +7,8 @@
     ".": {
       "types": "./src/rpc.ts"
     },
-    "./schema/*": "./src/schema/*.ts"
+    "./schema/*": "./src/schema/*.ts",
+    "./errors": "./src/errors/index.ts"
   },
   "scripts": {
     "dev": "wrangler dev",

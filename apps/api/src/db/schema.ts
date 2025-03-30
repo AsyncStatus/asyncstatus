@@ -160,6 +160,7 @@ export const invitation = sqliteTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     email: text("email").notNull(),
     role: text("role"),
+    name: text("name"),
     teamId: text("team_id"),
     status: text("status").notNull(),
     expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),

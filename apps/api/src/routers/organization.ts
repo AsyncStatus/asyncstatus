@@ -1,8 +1,15 @@
 import { zValidator } from "@hono/zod-validator";
+import { generateId } from "better-auth";
 import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
 
 import * as schema from "../db/schema";
+import {
+  AsyncStatusBadRequestError,
+  AsyncStatusForbiddenError,
+  AsyncStatusNotFoundError,
+  AsyncStatusUnexpectedApiError,
+} from "../errors";
 import type { HonoEnvWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "../lib/middleware";
 import {
@@ -48,16 +55,6 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("param", zOrganizationIdOrSlug.and(zOrganizationMemberId)),
     async (c) => {
       const { memberId } = c.req.valid("param");
-      const hasPermissionResponse = await c.var.auth.api.hasPermission({
-        body: {
-          permission: { member: ["update"] },
-          organizationId: c.var.organization.id,
-        },
-        headers: c.req.raw.headers,
-      });
-      if (!hasPermissionResponse.success) {
-        return c.json(null, 403);
-      }
 
       const member = await c.var.db.query.member.findFirst({
         where: and(
@@ -67,10 +64,30 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         with: { user: true, team: true },
       });
       if (!member) {
-        return c.json("Member not found", 404);
+        throw new AsyncStatusNotFoundError({ message: "Member not found" });
       }
 
       return c.json(member);
+    },
+  )
+  .patch(
+    "/:idOrSlug/members/:memberId",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug.and(zOrganizationMemberId)),
+    async (c) => {
+      const { memberId } = c.req.valid("param");
+      const hasPermissionResponse = await c.var.auth.api.hasPermission({
+        body: {
+          permission: { member: ["update"] },
+          organizationId: c.var.organization.id,
+        },
+        headers: c.req.raw.headers,
+      });
+      if (!hasPermissionResponse.success) {
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to update members",
+        });
+      }
     },
   )
   .post(
@@ -79,7 +96,7 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("param", zOrganizationIdOrSlug),
     zValidator("json", zOrganizationCreateInvite),
     async (c) => {
-      const { email, role } = c.req.valid("json");
+      const { firstName, lastName, email, role } = c.req.valid("json");
       const hasPermissionResponse = await c.var.auth.api.hasPermission({
         body: {
           permission: { invitation: ["create"] },
@@ -88,10 +105,12 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         headers: c.req.raw.headers,
       });
       if (!hasPermissionResponse.success) {
-        return c.json(null, 403);
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to create invitations",
+        });
       }
 
-      const [existingInvitation, existingUser] = await Promise.all([
+      let [existingInvitation, existingUser] = await Promise.all([
         c.var.db.query.invitation.findFirst({
           where: and(
             eq(schema.invitation.organizationId, c.var.organization.id),
@@ -112,8 +131,22 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           with: { user: true },
         }),
       ]);
+      if (
+        (existingInvitation?.expiresAt &&
+          existingInvitation.expiresAt < new Date()) ||
+        existingInvitation?.status === "canceled" ||
+        existingInvitation?.status === "rejected"
+      ) {
+        await c.var.db
+          .delete(schema.invitation)
+          .where(eq(schema.invitation.id, existingInvitation.id));
+        existingInvitation = undefined;
+        existingUser = undefined;
+      }
       if (existingInvitation || existingUser?.user) {
-        return c.json("User already a member or has an invitation", 400);
+        throw new AsyncStatusBadRequestError({
+          message: "User already a member or has an invitation",
+        });
       }
 
       const newInvitation = await c.var.auth.api.createInvitation({
@@ -121,11 +154,26 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           role,
           email,
           organizationId: c.var.organization.id,
-          resend: true,
         },
         headers: c.req.raw.headers,
       });
+      await c.var.db
+        .update(schema.invitation)
+        .set({ name: `${firstName} ${lastName}` })
+        .where(eq(schema.invitation.id, newInvitation.id));
+      const updatedInvitation = await c.var.db.query.invitation.findFirst({
+        where: eq(schema.invitation.id, newInvitation.id),
+        with: {
+          inviter: { columns: { id: true, name: true, email: true } },
+          organization: { columns: { id: true, slug: true, name: true } },
+        },
+      });
+      if (!updatedInvitation) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to create invitation",
+        });
+      }
 
-      return c.json(newInvitation);
+      return c.json(updatedInvitation);
     },
   );

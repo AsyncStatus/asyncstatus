@@ -4,8 +4,8 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/create-organization/_layout")({
   component: RouteComponent,
-  beforeLoad: async ({ context: { queryClient } }) => {
-    await ensureValidSession(queryClient);
+  beforeLoad: async ({ context: { queryClient }, location }) => {
+    await ensureValidSession(queryClient, location);
   },
 });
 

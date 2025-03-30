@@ -44,100 +44,77 @@
 /* https://oxidus.vercel.app/ */
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.13 0.04 254.05);
-
-  --primary: oklch(0.5 0.21 261.87);
-  --primary-foreground: oklch(0.95 0.02 263.01);
-
-  --card: oklch(0.97 0.01 267.36);
-  --card-foreground: oklch(0.13 0.04 254.05);
-
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.32 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.04 254.05);
-
-  --secondary: oklch(0.92 0.03 264.42);
-  --secondary-foreground: oklch(0 0 0);
-
-  --muted: oklch(0.95 0.02 263.01);
-  --muted-foreground: oklch(0.51 0 0);
-
-  --accent: oklch(0.95 0.02 263.01);
-  --accent-foreground: oklch(0.16 0.05 257.27);
-
-  --destructive: oklch(0.64 0.21 25.33);
-  --destructive-foreground: oklch(0.98 0 247.86);
-
-  --border: oklch(0.9 0.04 262.92);
-
-  --input: oklch(0.84 0.02 262.08);
-
-  --ring: oklch(0.5 0.21 261.87);
-
-  --chart-1: oklch(0.5 0.21 261.87);
-  --chart-2: oklch(0.56 0.18 261.37);
-  --chart-3: oklch(0.66 0.14 261.98);
-  --chart-4: oklch(0.71 0.12 262.32);
-  --chart-5: oklch(0.76 0.09 262.63);
-
-  --sidebar: oklch(0.99 0 247.86);
-  --sidebar-foreground: oklch(0.13 0.04 254.05);
-  --sidebar-primary: oklch(0.5 0.21 261.87);
-  --sidebar-primary-foreground: oklch(0.95 0.02 263.01);
-  --sidebar-accent: oklch(0.5 0.21 261.87);
-  --sidebar-accent-foreground: oklch(0.95 0.02 263.01);
-  --sidebar-border: oklch(0.9 0.04 262.92);
-  --sidebar-ring: oklch(0.5 0.21 261.87);
-
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.92 0.03 264.42);
-
+  --popover-foreground: oklch(0.32 0 0);
   --primary: oklch(0.5 0.21 261.87);
-  --primary-foreground: oklch(0.95 0.02 263.01);
-
-  --card: oklch(0.16 0.01 260.62);
-  --card-foreground: oklch(0.92 0.03 264.42);
-
-  --popover: oklch(0 0 0);
-  --popover-foreground: oklch(0.92 0.03 264.42);
-
-  --secondary: oklch(0.25 0.09 261.55);
-  --secondary-foreground: oklch(1 0 0);
-
-  --muted: oklch(0.21 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-
-  --accent: oklch(0.25 0.09 261.55);
-  --accent-foreground: oklch(0.92 0.03 264.42);
-
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.45 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.55 0 0);
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.38 0 0);
   --destructive: oklch(0.64 0.21 25.33);
-  --destructive-foreground: oklch(0.98 0 247.86);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.94 0 264.53);
+  --input: oklch(0.93 0 264.53);
+  --ring: oklch(0.62 0.19 259.81);
+  --chart-1: oklch(0.62 0.19 259.81);
+  --chart-2: oklch(0.55 0.22 262.88);
+  --chart-3: oklch(0.49 0.22 264.38);
+  --chart-4: oklch(0.42 0.18 265.64);
+  --chart-5: oklch(0.38 0.14 265.52);
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.32 0 0);
+  --sidebar-primary: oklch(0.62 0.19 259.81);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0 236.82);
+  --sidebar-accent-foreground: oklch(0.38 0 265.52);
+  --sidebar-border: oklch(0.93 0 264.53);
+  --sidebar-ring: oklch(0.62 0.19 259.81);
 
-  --border: oklch(0.18 0.06 259.44);
+  --font-sans: "ABCFavorit", system-ui, sans-serif;
+  --font-serif: Source Serif 4, serif;
+  --font-mono: JetBrains Mono, monospace;
 
-  --input: oklch(0.3 0.03 262.71);
-
-  --ring: oklch(0.5 0.21 261.87);
-
-  --chart-1: oklch(0.5 0.21 261.87);
-  --chart-2: oklch(0.44 0.19 261.85);
-  --chart-3: oklch(0.37 0.15 261.52);
-  --chart-4: oklch(0.33 0.13 261.59);
-  --chart-5: oklch(0.29 0.11 261.44);
-
-  --sidebar: oklch(0.17 0.01 271.03);
-  --sidebar-foreground: oklch(0.92 0.03 264.42);
-  --sidebar-primary: oklch(0.5 0.21 261.87);
-  --sidebar-primary-foreground: oklch(0.95 0.02 263.01);
-  --sidebar-accent: oklch(0.5 0.21 261.87);
-  --sidebar-accent-foreground: oklch(0.95 0.02 263.01);
-  --sidebar-border: oklch(0.18 0.06 259.44);
-  --sidebar-ring: oklch(0.5 0.21 261.87);
-
-  --radius: 0.5rem;
+  --radius: 0.575rem;
+}
+.dark {
+  --background: oklch(0.18 0 0);
+  --foreground: oklch(0.92 0 0);
+  --card: oklch(0.2 0 0);
+  --card-foreground: oklch(0.92 0 0);
+  --popover: oklch(0.27 0 0);
+  --popover-foreground: oklch(0.92 0 0);
+  --primary: oklch(0.5 0.21 261.87);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.29 0 0);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.64 0.21 25.33);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.29 0 0);
+  --input: oklch(0.29 0 0);
+  --ring: oklch(0.62 0.19 259.81);
+  --chart-1: oklch(0.71 0.14 254.62);
+  --chart-2: oklch(0.62 0.19 259.81);
+  --chart-3: oklch(0.55 0.22 262.88);
+  --chart-4: oklch(0.49 0.22 264.38);
+  --chart-5: oklch(0.42 0.18 265.64);
+  --sidebar: oklch(0.15 0 0);
+  --sidebar-foreground: oklch(0.92 0 0);
+  --sidebar-primary: oklch(0.62 0.19 259.81);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.25 0 265.52);
+  --sidebar-accent-foreground: oklch(0.82 0 254.13);
+  --sidebar-border: oklch(0.29 0 0);
+  --sidebar-ring: oklch(0.62 0.19 259.81);
 }
 
 @theme inline {
@@ -165,10 +142,6 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -177,6 +150,13 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 

@@ -1,4 +1,8 @@
-import { signUpEmailMutationOptions } from "@/rpc/auth";
+import {
+  sendVerificationEmailMutationOptions,
+  signUpEmailMutationOptions,
+} from "@/rpc/auth";
+import { getInvitationByEmailQueryOptions } from "@/rpc/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Form,
@@ -11,17 +15,40 @@ import {
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export const Route = createFileRoute("/(auth)/_layout/sign-up")({
   component: RouteComponent,
+  beforeLoad: async ({ context: { queryClient }, search }) => {
+    if (search.invitationId && search.invitationEmail) {
+      const data = await queryClient
+        .ensureQueryData({
+          ...getInvitationByEmailQueryOptions(
+            search.invitationId,
+            search.invitationEmail,
+            false,
+          ),
+          retry: false,
+        })
+        .catch(() => {});
+      if (data && data?.hasUser) {
+        throw redirect({ to: "/login", search });
+      }
+    }
+  },
 });
-
 const schema = z
   .object({
+    firstName: z.string().min(1).max(128).trim(),
+    lastName: z.string().min(1).max(128).trim(),
     email: z.string().email(),
     password: z.string().min(8).max(128),
     passwordConfirmation: z.string().min(8).max(128),
@@ -33,19 +60,33 @@ const schema = z
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const invitation = useSuspenseQuery(
+    getInvitationByEmailQueryOptions(
+      search.invitationId,
+      search.invitationEmail,
+      false,
+    ),
+  );
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", passwordConfirmation: "" },
+    defaultValues: {
+      firstName: invitation.data?.name?.split(" ")[0] ?? "",
+      lastName: invitation.data?.name?.split(" ")[1] ?? "",
+      email: invitation.data?.email ?? "",
+      password: "",
+      passwordConfirmation: "",
+    },
   });
 
-  const signUpEmail = useMutation({
-    ...signUpEmailMutationOptions(),
+  const signUpEmail = useMutation(signUpEmailMutationOptions());
+  const sendVerificationEmail = useMutation({
+    ...sendVerificationEmailMutationOptions(),
     onSuccess() {
       toast.success(
         "We've sent you a verification link, please check your email.",
       );
-      navigate({ to: "/" });
     },
   });
 
@@ -53,30 +94,67 @@ function RouteComponent() {
     <Form {...form}>
       <form
         className="mx-auto w-full max-w-xs space-y-24"
-        onSubmit={form.handleSubmit((data) => {
-          signUpEmail.mutate({
+        onSubmit={form.handleSubmit(async (data) => {
+          await signUpEmail.mutateAsync({
             email: data.email,
             password: data.password,
-            name: data.email.split("@")[0] ?? data.email,
-            callbackURL: `${import.meta.env.VITE_WEB_APP_URL}`,
+            name: `${data.firstName} ${data.lastName}`,
+            callbackURL: import.meta.env.VITE_WEB_APP_URL,
           });
+          navigate({ to: search.redirect ?? "/" });
+          if (!invitation.data) {
+            await sendVerificationEmail.mutateAsync({
+              email: data.email,
+              callbackURL: import.meta.env.VITE_WEB_APP_URL,
+            });
+          }
         })}
       >
         <div className="space-y-1.5 text-center">
           <h1 className="text-2xl">Create an account</h1>
           <h2 className="text-muted-foreground text-sm text-balance">
-            Already have an account?{" "}
-            <Link className="underline" to="/login">
-              Login
+            Already have one?{" "}
+            <Link className="underline" to="/login" search={search}>
+              Login to your account
             </Link>
             .
           </h2>
         </div>
 
         <div className="grid gap-5">
+          <div className="grid grid-cols-2 gap-5">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
             name="email"
+            disabled={Boolean(invitation.data)}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>

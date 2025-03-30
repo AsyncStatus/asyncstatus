@@ -1,4 +1,12 @@
 import { Suspense } from "react";
+import { Button } from "@asyncstatus/ui/components/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@asyncstatus/ui/components/card";
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +21,7 @@ import {
   SidebarProvider,
 } from "@asyncstatus/ui/components/sidebar";
 import { Link } from "@tanstack/react-router";
-import { Home, LifeBuoy, Send, Settings, Users } from "lucide-react";
+import { Home, LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 
 import {
   OrganizationMenu,
@@ -30,7 +38,7 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
             to="/$organizationSlug"
             params={{ organizationSlug: props.organizationSlug }}
           >
-            <Home />
+            <Sun />
             <span>Status updates</span>
           </Link>
         </SidebarMenuButton>
@@ -39,8 +47,8 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <Link
-            to={"/$organizationSlug/users" as any}
-            params={{ organizationSlug: props.organizationSlug } as any}
+            to={"/$organizationSlug/users"}
+            params={{ organizationSlug: props.organizationSlug }}
           >
             <Users />
             <span>Users</span>
@@ -51,8 +59,8 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <Link
-            to={"/$organizationSlug/settings" as any}
-            params={{ organizationSlug: props.organizationSlug } as any}
+            to={"/$organizationSlug/settings"}
+            params={{ organizationSlug: props.organizationSlug }}
           >
             <Settings />
             <span>Settings</span>
@@ -63,47 +71,46 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
   );
 }
 
-function AppSidebarSecondaryLinks() {
+function AppSidebarBetaNotice() {
   return (
-    <SidebarGroup>
-      <SidebarGroupContent>
-        <SidebarMenu className="flex-row gap-1 max-md:flex-col">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size="sm"
-              className="text-muted-foreground"
+    <Card className="p-2">
+      <CardHeader className="px-0">
+        <CardTitle className="text-md">We're in beta</CardTitle>
+        <CardDescription className="text-xs text-pretty">
+          We're working hard to bring you the best experience but there are some
+          features that are still under development or not available.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="px-0">
+        <div className="flex w-full flex-col items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            asChild
+          >
+            <a
+              href="mailto:support@asyncstatus.com"
+              target="_blank"
+              rel="noreferrer"
             >
-              <a
-                href="mailto:support@asyncstatus.com"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <LifeBuoy />
-                <span>Support</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size="sm"
-              className="text-muted-foreground"
+              <LifeBuoy className="size-3" />
+              <span>Report an issue</span>
+            </a>
+          </Button>
+          <Button size="sm" className="w-full text-xs" asChild>
+            <a
+              href="mailto:kacper@asyncstatus.com"
+              target="_blank"
+              rel="noreferrer"
             >
-              <a
-                href="mailto:kacper@asyncstatus.com"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Send />
-                <span>Feedback</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+              <Send className="size-3" />
+              <span>Give feedback</span>
+            </a>
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -126,8 +133,8 @@ export function AppSidebar(props: { organizationSlug: string }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <AppSidebarSecondaryLinks />
+      <SidebarFooter className="p-0 max-sm:p-2">
+        <AppSidebarBetaNotice />
         <Suspense fallback={<UserMenuSkeleton />}>
           <UserMenu />
         </Suspense>
@@ -156,7 +163,7 @@ export function AppSidebarSkeleton(props: { organizationSlug: string }) {
       </Sidebar>
 
       <SidebarFooter>
-        <AppSidebarSecondaryLinks />
+        <AppSidebarBetaNotice />
         <UserMenuSkeleton />
       </SidebarFooter>
 

@@ -3,9 +3,14 @@ import { cors } from "hono/cors";
 import { Resend } from "resend";
 
 import { createDb } from "./db";
+import {
+  AsyncStatusExpectedApiError,
+  AsyncStatusUnexpectedApiError,
+} from "./errors";
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { authRouter } from "./routers/auth";
+import { invitationRouter } from "./routers/invitation";
 import { organizationRouter } from "./routers/organization";
 
 const app = new Hono<HonoEnv>()
@@ -36,7 +41,17 @@ const app = new Hono<HonoEnv>()
     return next();
   })
   .route("/auth", authRouter)
-  .route("/organization", organizationRouter);
+  .route("/organization", organizationRouter)
+  .route("/invitation", invitationRouter)
+  .onError((err, c) => {
+    if (err instanceof AsyncStatusUnexpectedApiError) {
+      return c.json({ message: err.message }, err.status);
+    }
+    if (err instanceof AsyncStatusExpectedApiError) {
+      return c.json({ message: err.message }, err.status);
+    }
+    return c.json({ message: "Internal Server Error" }, 500);
+  });
 
 export default app;
 export type App = typeof app;

@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const zOrganizationIdOrSlug = z.object({ idOrSlug: z.string().min(1) });
 export const zOrganizationCreateInvite = z.object({
+  firstName: z.string().min(1).trim(),
+  lastName: z.string().min(1).trim(),
   email: z.string().email(),
   role: z.enum(["member", "admin"]),
 });

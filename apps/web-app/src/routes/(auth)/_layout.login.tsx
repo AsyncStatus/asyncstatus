@@ -1,4 +1,5 @@
 import { loginEmailMutationOptions } from "@/rpc/auth";
+import { getInvitationByEmailQueryOptions } from "@/rpc/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import {
@@ -11,10 +12,15 @@ import {
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
+  redirect,
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
@@ -23,6 +29,23 @@ import { z } from "zod";
 
 export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,
+  beforeLoad: async ({ context: { queryClient }, search }) => {
+    if (search.invitationId && search.invitationEmail) {
+      const data = await queryClient
+        .ensureQueryData({
+          ...getInvitationByEmailQueryOptions(
+            search.invitationId,
+            search.invitationEmail,
+            false,
+          ),
+          retry: false,
+        })
+        .catch(() => {});
+      if (data && !data?.hasUser) {
+        throw redirect({ to: "/sign-up", search });
+      }
+    }
+  },
 });
 
 const schema = z.object({
@@ -33,12 +56,24 @@ const schema = z.object({
 
 function RouteComponent() {
   const router = useRouter();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const invitation = useSuspenseQuery(
+    getInvitationByEmailQueryOptions(
+      search.invitationId,
+      search.invitationEmail,
+      false,
+    ),
+  );
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", rememberMe: false },
+    defaultValues: {
+      email: invitation.data?.email ?? "",
+      password: "",
+      rememberMe: false,
+    },
   });
 
   const loginEmail = useMutation({
@@ -46,7 +81,7 @@ function RouteComponent() {
     async onSuccess() {
       await router.invalidate();
       queryClient.clear();
-      await navigate({ to: "/" });
+      await navigate({ to: search.redirect ?? "/" });
     },
   });
 
@@ -61,8 +96,8 @@ function RouteComponent() {
         <div className="space-y-1.5 text-center">
           <h1 className="text-2xl">Login to your account</h1>
           <h2 className="text-muted-foreground text-sm text-balance">
-            Don't have an account?{" "}
-            <Link className="underline" to="/sign-up">
+            Don't have one?{" "}
+            <Link className="underline" to="/sign-up" search={search}>
               Create an account
             </Link>
             .
@@ -72,6 +107,7 @@ function RouteComponent() {
         <div className="grid gap-5">
           <FormField
             control={form.control}
+            disabled={Boolean(search.invitationEmail)}
             name="email"
             render={({ field }) => (
               <FormItem>

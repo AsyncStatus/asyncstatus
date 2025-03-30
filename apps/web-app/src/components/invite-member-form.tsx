@@ -1,9 +1,18 @@
+import { useState } from "react";
 import {
   inviteMemberMutationOptions,
   listMembersQueryOptions,
 } from "@/rpc/organization";
 import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@asyncstatus/ui/components/command";
 import {
   Form,
   FormControl,
@@ -14,17 +23,30 @@ import {
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@asyncstatus/ui/components/select";
-import { toast } from "@asyncstatus/ui/components/sonner";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@asyncstatus/ui/components/popover";
+import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
+import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
+const roles = [
+  {
+    label: "Member",
+    value: "member",
+    description:
+      "Can interact with status updates, teams, own profile and personal settings.",
+  },
+  {
+    label: "Admin",
+    value: "admin",
+    description:
+      "Everything a member can do, plus the ability to manage members, teams and organization settings.",
+  },
+];
 export function InviteMemberForm(props: {
   organizationSlug: string;
   onSuccess?: (data: {
@@ -39,9 +61,15 @@ export function InviteMemberForm(props: {
   }) => void;
 }) {
   const queryClient = useQueryClient();
+  const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const form = useForm({
     resolver: zodResolver(zOrganizationCreateInvite),
-    defaultValues: { email: "", role: "member" as const },
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      role: "member" as const,
+    },
   });
   const inviteMember = useMutation({
     ...inviteMemberMutationOptions(),
@@ -49,10 +77,7 @@ export function InviteMemberForm(props: {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(props.organizationSlug).queryKey,
       });
-      props.onSuccess?.(data);
-    },
-    onError(error) {
-      toast.error(error.message);
+      props.onSuccess?.(data.invitation);
     },
   });
 
@@ -62,20 +87,53 @@ export function InviteMemberForm(props: {
         onSubmit={form.handleSubmit((data) => {
           inviteMember.mutate({
             param: { idOrSlug: props.organizationSlug },
-            json: { email: data.email, role: data.role },
+            json: {
+              email: data.email,
+              role: data.role,
+              firstName: data.firstName,
+              lastName: data.lastName,
+            },
           });
         })}
         className="mx-auto w-full space-y-24"
       >
         <div className="grid gap-5">
+          <div className="grid grid-cols-2 gap-5">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-end justify-between">
-                  <FormLabel>Email</FormLabel>
-                </div>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="john@example.com" {...field} />
                 </FormControl>
@@ -91,19 +149,68 @@ export function InviteMemberForm(props: {
               <FormItem>
                 <FormLabel>Role</FormLabel>
                 <FormControl>
-                  <Select
-                    {...field}
-                    value={field.value}
-                    onValueChange={field.onChange}
+                  <Popover
+                    open={rolePopoverOpen}
+                    onOpenChange={setRolePopoverOpen}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={rolePopoverOpen}
+                        className="justify-between"
+                      >
+                        {field.value
+                          ? roles.find((role) => role.value === field.value)
+                              ?.label
+                          : "Select role..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search roles..."
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>No role found.</CommandEmpty>
+                          <CommandGroup>
+                            {roles.map((role) => (
+                              <CommandItem
+                                key={role.value}
+                                value={role.value}
+                                onSelect={(currentValue) => {
+                                  form.setValue(
+                                    "role",
+                                    (currentValue === field.value
+                                      ? ""
+                                      : currentValue) as any,
+                                  );
+                                  setRolePopoverOpen(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="font-medium">{role.label}</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {role.description}
+                                  </p>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "mt-0.5 ml-auto self-start",
+                                    role.value === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </FormControl>
               </FormItem>
             )}
@@ -113,7 +220,7 @@ export function InviteMemberForm(props: {
             className="w-full"
             disabled={inviteMember.isPending}
           >
-            Invite member
+            Invite user
           </Button>
         </div>
       </form>

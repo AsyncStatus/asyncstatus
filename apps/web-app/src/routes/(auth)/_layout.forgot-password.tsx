@@ -26,6 +26,7 @@ const schema = z.object({
 });
 
 function RouteComponent() {
+  const search = Route.useSearch();
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { email: "" },
@@ -98,7 +99,7 @@ function RouteComponent() {
               variant="ghost"
               className="text-muted-foreground gap-0.5"
             >
-              <Link to="/login">
+              <Link to="/login" search={search}>
                 <ChevronLeft />
                 Go back to login
               </Link>

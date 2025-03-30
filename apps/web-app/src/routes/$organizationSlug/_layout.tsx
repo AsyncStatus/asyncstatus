@@ -15,8 +15,9 @@ export const Route = createFileRoute("/$organizationSlug/_layout")({
   beforeLoad: async ({
     context: { queryClient },
     params: { organizationSlug },
+    location,
   }) => {
-    await ensureValidSession(queryClient);
+    await ensureValidSession(queryClient, location);
     await ensureValidOrganization(organizationSlug, queryClient);
   },
 });
@@ -27,7 +28,7 @@ function RouteComponent() {
   return (
     <SidebarProvider>
       <AppSidebar organizationSlug={organizationSlug} />
-      <SidebarInset className="px-4 py-3.5">
+      <SidebarInset className="px-4 py-2.5">
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
