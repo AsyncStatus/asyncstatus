@@ -292,3 +292,18 @@ export function updateMemberMutationOptions() {
     },
   });
 }
+
+export function updateOrganizationMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["updateOrganization"],
+    mutationFn: async (
+      input: Parameters<(typeof rpc.organization)[":idOrSlug"]["$patch"]>[0],
+    ) => {
+      const response = await rpc.organization[":idOrSlug"].$patch(input);
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+  });
+}

@@ -25,13 +25,10 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@asyncstatus/ui/components/sidebar";
-import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
-import { Home, LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
-
-import { authClient } from "@/lib/auth";
+import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 
 import {
   OrganizationMenu,
@@ -182,7 +179,7 @@ export function AppSidebar(props: { organizationSlug: string }) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel>Organization</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <AppSidebarLinks organizationSlug={props.organizationSlug} />
@@ -223,6 +220,7 @@ export function AppSidebarSkeleton() {
 
         <SidebarContent>
           <SidebarGroup>
+            <SidebarGroupLabel>Organization</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <AppSidebarLinks

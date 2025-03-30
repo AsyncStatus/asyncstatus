@@ -30,3 +30,21 @@ export const zOrganizationMemberUpdate = z
     }),
   })
   .partial();
+
+export const zOrganizationUpdate = z
+  .object({
+    name: z.string().min(1).trim(),
+    slug: z.string().min(1).trim(),
+    logo: z.any().transform((val) => {
+      if (val instanceof File) {
+        return val;
+      }
+
+      if (typeof val === "string") {
+        return val;
+      }
+
+      return null;
+    }),
+  })
+  .partial();

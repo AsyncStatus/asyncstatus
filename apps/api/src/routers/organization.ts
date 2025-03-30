@@ -18,6 +18,7 @@ import {
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
   zOrganizationMemberUpdate,
+  zOrganizationUpdate,
 } from "../schema/organization";
 
 export const organizationRouter = new Hono<HonoEnvWithOrganization>()
@@ -250,5 +251,64 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       }
 
       return c.json(updatedInvitation);
+    },
+  )
+  .patch(
+    "/:idOrSlug",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    zValidator("form", zOrganizationUpdate),
+    async (c) => {
+      const hasPermissionResponse = await c.var.auth.api.hasPermission({
+        body: {
+          permission: { organization: ["update"] },
+          organizationId: c.var.organization.id,
+        },
+        headers: c.req.raw.headers,
+      });
+      if (!hasPermissionResponse.success) {
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to update organization settings",
+        });
+      }
+
+      const updates = c.req.valid("form");
+
+      if (updates.logo instanceof File) {
+        const image = await c.env.PRIVATE_BUCKET.put(
+          generateId(),
+          updates.logo,
+        );
+        if (!image) {
+          throw new AsyncStatusUnexpectedApiError({
+            message: "Failed to upload image",
+          });
+        }
+        (updates as any).logo = image.key;
+      } else if (updates.logo === null && c.var.organization.image) {
+        await c.env.PRIVATE_BUCKET.delete(c.var.organization.image);
+        (updates as any).logo = null;
+      }
+
+      await c.var.db
+        .update(schema.organization)
+        .set(updates as any)
+        .where(eq(schema.organization.id, c.var.organization.id));
+
+      const updatedOrganization = await c.var.db.query.organization.findFirst({
+        where: eq(schema.organization.id, c.var.organization.id),
+      });
+      if (!updatedOrganization) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to update organization",
+        });
+      }
+
+      await c.var.auth.api.setActiveOrganization({
+        body: { organizationId: updatedOrganization.id },
+        headers: c.req.raw.headers,
+      });
+
+      return c.json(updatedOrganization);
     },
   );

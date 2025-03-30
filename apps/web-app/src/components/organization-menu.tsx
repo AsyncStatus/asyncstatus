@@ -40,7 +40,7 @@ import {
 } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { getInitials } from "@/lib/utils";
+import { getFileUrl, getInitials } from "@/lib/utils";
 
 import { CreateOrganizationForm } from "./create-organization-form";
 
@@ -104,7 +104,17 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-auto p-1"
               >
                 <Avatar className="size-8">
-                  <AvatarImage src={undefined} alt={activeOrganization?.name} />
+                  <AvatarImage
+                    src={
+                      activeOrganization?.logo
+                        ? getFileUrl({
+                            param: { idOrSlug: props.organizationSlug },
+                            query: { fileKey: activeOrganization.logo },
+                          })
+                        : undefined
+                    }
+                    alt={activeOrganization?.name}
+                  />
                   <AvatarFallback>
                     {getInitials(activeOrganization?.name ?? "")}
                   </AvatarFallback>
@@ -151,7 +161,14 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                       >
                         <Avatar className="size-8">
                           <AvatarImage
-                            src={undefined}
+                            src={
+                              organization.logo
+                                ? getFileUrl({
+                                    param: { idOrSlug: organization.slug },
+                                    query: { fileKey: organization.logo },
+                                  })
+                                : undefined
+                            }
                             alt={organization.name}
                           />
                           <AvatarFallback>
