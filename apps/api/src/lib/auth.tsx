@@ -1,4 +1,4 @@
-import ResetPassword from "@asyncstatus/email/auth/reset-password";
+import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { betterAuth } from "better-auth";
@@ -42,15 +42,16 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     emailVerification: {
       autoSignInAfterVerification: true,
       async sendVerificationEmail(data) {
+        const firstName = data.user.name?.split(" ")[0] ?? data.user.name;
         await resend.emails.send({
           from: "AsyncStatus <onboarding@a.asyncstatus.com>",
           to: data.user.email,
-          subject: "Verify your email",
-          text: `Verify your email ${data.url}`,
+          subject: "Verify your account",
+          text: `${firstName}, verify your AsyncStatus account ${data.url}`,
           react: (
             <VerificationEmail
-              firstName={data.user.name}
-              preview={`Verify your email ${data.url}`}
+              firstName={firstName}
+              preview={`${firstName}, verify your AsyncStatus account ${data.url}`}
               verificationLink={data.url}
               expiration="1 hour"
             />
@@ -96,19 +97,27 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           params.set("invitationId", data.invitation.id);
           params.set("invitationEmail", data.email);
           const inviteLink = `${env.WEB_APP_URL}/invitation?${params.toString()}`;
+          const invitedByUsername =
+            data.inviter.user.name?.split(" ")[0] ?? data.inviter.user.name;
+          const inviteeUsername =
+            (data.invitation as any).name?.split(" ")[0] ??
+            (data.invitation as any).name ??
+            "";
+
           await resend.emails.send({
             from: "AsyncStatus <onboarding@a.asyncstatus.com>",
             to: data.email,
             subject: `${data.inviter.user.name} invited you to ${data.organization.name}`,
-            text: `Invitation to ${data.organization.name} ${inviteLink}`,
+            text: `${invitedByUsername} invited you to ${data.organization.name}, accept invitation before it expires.`,
             react: (
               <OrganizationInvitationEmail
-                invitedByUsername={data.inviter.user.name}
+                inviteeFirstName={inviteeUsername}
+                invitedByUsername={invitedByUsername}
                 invitedByEmail={data.inviter.user.email}
                 teamName={data.organization.name}
                 inviteLink={inviteLink}
                 expiration="48 hours"
-                preview={`${data.inviter.user.name} invited you to ${data.organization.name}, accept invitation before it expires.`}
+                preview={`${invitedByUsername} invited you to ${data.organization.name}, accept invitation before it expires.`}
               />
             ),
           });

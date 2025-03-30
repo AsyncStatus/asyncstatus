@@ -15,6 +15,7 @@ export type Bindings = {
   GITHUB_CLIENT_SECRET: string;
   RESEND_API_KEY: string;
   WEB_APP_URL: string;
+  PRIVATE_BUCKET: R2Bucket;
 };
 
 export type Variables = {

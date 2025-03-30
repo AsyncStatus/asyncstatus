@@ -17,14 +17,11 @@ import {
   Heading,
 } from "@react-email/components";
 
-export function OrganizationInvitationEmail(props: {
+export function ResetPasswordEmail(props: {
   preview: string;
-  invitedByUsername: string;
-  invitedByEmail: string;
-  inviteeFirstName: string;
-  teamName: string;
-  inviteLink: string;
+  firstName: string;
   expiration: string;
+  resetLink: string;
 }) {
   return (
     <Layout preview={props.preview}>
@@ -39,23 +36,26 @@ export function OrganizationInvitationEmail(props: {
 
       <Section>
         <Heading as="h1" style={h1}>
-          Hi {props.inviteeFirstName},
+          Hi {props.firstName},
         </Heading>
         <Heading as="h2" style={h2}>
-          {props.invitedByUsername} invited you to join {props.teamName}.
+          We've received a request to reset your password. Please click the
+          button below to reset your password.
         </Heading>
-
-        <Button href={props.inviteLink} style={primaryButton}>
-          Join {props.teamName}
-        </Button>
-
-        <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
-          This invitation will expire in {props.expiration}
-        </Text>
       </Section>
 
+      <Button href={props.resetLink} style={primaryButton}>
+        Reset password
+      </Button>
+
+      <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
+        If you did not request a password reset, please ignore this email.{" "}
+        <br />
+        This link will expire in {props.expiration}.
+      </Text>
+
       <Text style={{ ...bodyText, margin: "64px 0 128px" }}>
-        Happy collaborating,
+        Hope to see you soon,
         <br />
         <span style={{ ...secondaryText, fontSize: 14 }}>
           The AsyncStatus Team
@@ -73,14 +73,12 @@ export function OrganizationInvitationEmail(props: {
   );
 }
 
-OrganizationInvitationEmail.PreviewProps = {
-  preview: "Join Michael on AsyncStatus https://app.asyncstatus.com/invitation",
-  invitedByUsername: "Michael",
-  invitedByEmail: "michael@asyncstatus.com",
-  inviteeFirstName: "John",
-  teamName: "AsyncStatus",
-  inviteLink: "https://app.asyncstatus.com/invitation",
-  expiration: "7 days",
+ResetPasswordEmail.PreviewProps = {
+  preview:
+    "Reset your password with https://app.asyncstatus.com/reset-password",
+  firstName: "Michael",
+  expiration: "24 hours",
+  resetLink: "https://app.asyncstatus.com/reset-password",
 };
 
-export default OrganizationInvitationEmail;
+export default ResetPasswordEmail;

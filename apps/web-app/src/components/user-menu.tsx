@@ -28,11 +28,11 @@ import {
 } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 
-import { getInitials } from "@/lib/utils";
+import { getFileUrl, getInitials } from "@/lib/utils";
 
 import { ThemeToggle } from "./toggle-theme";
 
-export function UserMenu() {
+export function UserMenu(props: { organizationSlug: string }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
   const navigate = useNavigate();
@@ -49,6 +49,7 @@ export function UserMenu() {
       toast.error(error.message);
     },
   });
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -62,7 +63,10 @@ export function UserMenu() {
                 <AvatarImage
                   src={
                     session.data.user.image
-                      ? `https://cdn.asyncstatus.com/${session.data.user.image}`
+                      ? getFileUrl({
+                          param: { idOrSlug: props.organizationSlug },
+                          query: { fileKey: session.data.user.image },
+                        })
                       : undefined
                   }
                   alt={session.data.user.name}
@@ -97,7 +101,10 @@ export function UserMenu() {
                   <AvatarImage
                     src={
                       session.data.user.image
-                        ? `https://cdn.asyncstatus.com/${session.data.user.image}`
+                        ? getFileUrl({
+                            param: { idOrSlug: props.organizationSlug },
+                            query: { fileKey: session.data.user.image },
+                          })
                         : undefined
                     }
                     alt={session.data.user.name}

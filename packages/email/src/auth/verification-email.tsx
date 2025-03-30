@@ -1,5 +1,21 @@
 import { Layout } from "@/layout";
-import { Button, Img, Link, Section, Text } from "@react-email/components";
+import {
+  h1,
+  h2,
+  bodyText,
+  secondaryText,
+  primaryButton,
+  footerLink,
+  divider,
+} from "@/styles";
+import {
+  Button,
+  Heading,
+  Img,
+  Link,
+  Section,
+  Text,
+} from "@react-email/components";
 
 export function VerificationEmail(props: {
   preview: string;
@@ -19,73 +35,36 @@ export function VerificationEmail(props: {
       </Section>
 
       <Section>
-        <Text style={{ fontSize: 32, lineHeight: 1.5 }}>
+        <Heading as="h1" style={h1}>
           Hi {props.firstName},
-        </Text>
-        <Text style={{ fontSize: 20, lineHeight: 1.5 }}>
-          Welcome to AsyncStatus. Verify your email to continue.
-        </Text>
+        </Heading>
+        <Heading as="h2" style={h2}>
+          Welcome to AsyncStatus. Verify your account to continue.
+        </Heading>
       </Section>
 
-      <Button
-        href={props.verificationLink}
-        style={{
-          display: "block",
-          padding: 16,
-          paddingLeft: 24,
-          paddingRight: 24,
-          margin: "32px 0",
-          borderRadius: 8,
-          textAlign: "center",
-          backgroundColor: "oklch(0.5 0.21 261.87)",
-          color: "white",
-          fontSize: 16,
-        }}
-      >
+      <Button href={props.verificationLink} style={primaryButton}>
         Verify email
       </Button>
 
-      <Text
-        style={{
-          fontSize: 12,
-          lineHeight: 1.5,
-          textAlign: "center",
-          marginTop: -16,
-          color: "oklch(0.68 0 0)",
-        }}
-      >
+      <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
         This link will expire in {props.expiration}.
       </Text>
 
-      <Text style={{ fontSize: 20, lineHeight: 1.5, margin: "64px 0 128px" }}>
-        Happy to have you!
-        <br />- AsyncStatus Team
+      <Text style={{ ...bodyText, margin: "64px 0 128px" }}>
+        Happy to have you on board,
+        <br />
+        <span style={{ ...secondaryText, fontSize: 14 }}>
+          The AsyncStatus Team
+        </span>
       </Text>
 
-      <hr
-        style={{
-          width: "100%",
-          border: "none",
-          borderTop: "1px solid oklch(0.90 0 0)",
-          marginTop: 48,
-          marginBottom: 16,
-        }}
-      />
+      <hr style={divider} />
 
-      <Link
-        href="https://asyncstatus.com"
-        style={{
-          display: "block",
-          fontSize: 12,
-          lineHeight: 1.85,
-          textAlign: "center",
-          color: "oklch(0.68 0 0)",
-        }}
-      >
-        AsyncStatus
+      <Link href="https://asyncstatus.com" style={footerLink}>
+        <strong>AsyncStatus</strong>
         <br />
-        Async status updates for remote startups, made for high-agency teams
-        that value their time.
+        Modern status updates for high-performing teams
       </Link>
     </Layout>
   );
@@ -95,6 +74,7 @@ VerificationEmail.PreviewProps = {
   preview: "Verify your email with https://app.asyncstatus.com/verify-email",
   firstName: "Michael",
   verificationLink: "https://app.asyncstatus.com/verify-email",
+  expiration: "7 days",
 };
 
 export default VerificationEmail;

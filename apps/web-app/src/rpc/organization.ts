@@ -117,7 +117,11 @@ export function getActiveMemberQueryOptions() {
   return queryOptions({
     queryKey: ["activeMember"],
     queryFn: async () => {
-      return authClient.organization.getActiveMember();
+      const { data, error } = await authClient.organization.getActiveMember();
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
     },
   });
 }
@@ -263,6 +267,24 @@ export function getMemberQueryOptions(
       const response = await rpc.organization[":idOrSlug"].members[
         ":memberId"
       ].$get({ param });
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+  });
+}
+
+export function updateMemberMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["updateMember"],
+    mutationFn: async (
+      input: Parameters<
+        (typeof rpc.organization)[":idOrSlug"]["members"][":memberId"]["$patch"]
+      >[0],
+    ) => {
+      const response =
+        await rpc.organization[":idOrSlug"].members[":memberId"].$patch(input);
       if (!response.ok) {
         throw await response.json();
       }

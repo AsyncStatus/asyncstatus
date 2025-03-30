@@ -57,7 +57,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
       }
 
       return data.sort((a) =>
-        session.data?.session.activeOrganizationId === a.id ? -1 : 1,
+        session.data.session.activeOrganizationId === a.id ? -1 : 1,
       );
     },
   });

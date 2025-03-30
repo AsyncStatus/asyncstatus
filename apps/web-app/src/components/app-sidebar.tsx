@@ -1,4 +1,8 @@
 import { Suspense, type PropsWithChildren } from "react";
+import {
+  sendVerificationEmailMutationOptions,
+  sessionQueryOptions,
+} from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -13,6 +17,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -21,8 +26,12 @@ import {
   SidebarProvider,
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
+import { toast } from "@asyncstatus/ui/components/sonner";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { Home, LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
+
+import { authClient } from "@/lib/auth";
 
 import {
   OrganizationMenu,
@@ -115,6 +124,52 @@ function AppSidebarBetaNotice() {
   );
 }
 
+function AppSidebarUserEmailNotVerified() {
+  const session = useSuspenseQuery(sessionQueryOptions());
+  const sendVerificationEmail = useMutation({
+    ...sendVerificationEmailMutationOptions(),
+    onSuccess() {
+      toast.success(
+        "We've sent you a verification link, please check your email.",
+      );
+    },
+  });
+
+  if (session.data.user.emailVerified) {
+    return null;
+  }
+
+  return (
+    <Card className="p-2">
+      <CardHeader className="px-0">
+        <CardTitle className="text-md">Email not verified</CardTitle>
+        <CardDescription className="text-xs text-pretty">
+          Your email is not verified. Please verify your email to unlock all
+          features.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="px-0">
+        <div className="flex w-full flex-col items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            onClick={() => {
+              sendVerificationEmail.mutate({
+                email: session.data.user.email,
+                callbackURL: import.meta.env.VITE_WEB_APP_URL,
+              });
+            }}
+          >
+            <Send className="size-3" />
+            <span>Send verification email</span>
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
 export function AppSidebar(props: { organizationSlug: string }) {
   return (
     <Sidebar variant="inset">
@@ -126,6 +181,7 @@ export function AppSidebar(props: { organizationSlug: string }) {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <AppSidebarLinks organizationSlug={props.organizationSlug} />
@@ -135,9 +191,14 @@ export function AppSidebar(props: { organizationSlug: string }) {
       </SidebarContent>
 
       <SidebarFooter className="p-0 max-sm:p-2">
+        <Suspense fallback={null}>
+          <AppSidebarUserEmailNotVerified />
+        </Suspense>
+
         <AppSidebarBetaNotice />
+
         <Suspense fallback={<UserMenuSkeleton />}>
-          <UserMenu />
+          <UserMenu organizationSlug={props.organizationSlug} />
         </Suspense>
       </SidebarFooter>
     </Sidebar>
@@ -173,8 +234,9 @@ export function AppSidebarSkeleton() {
 
         <SidebarFooter className="p-0 max-sm:p-2">
           <AppSidebarBetaNotice />
+
           <Suspense fallback={<UserMenuSkeleton />}>
-            <UserMenu />
+            <UserMenu organizationSlug={params?.organizationSlug ?? ""} />
           </Suspense>
         </SidebarFooter>
       </Sidebar>

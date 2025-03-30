@@ -10,4 +10,10 @@
       "id": "380a39bf817b489db941d31f17184104",
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "PRIVATE_BUCKET",
+      "bucket_name": "private",
+    },
+  ],
 }

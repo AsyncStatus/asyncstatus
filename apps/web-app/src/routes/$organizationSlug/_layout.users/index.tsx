@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import {
   cancelInvitationMutationOptions,
   getActiveMemberQueryOptions,
@@ -47,6 +47,7 @@ import {
 } from "@asyncstatus/ui/components/tabs";
 import {
   Calendar,
+  Edit,
   Mail,
   Plus,
   Search,
@@ -63,8 +64,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 
 import { authClient } from "@/lib/auth";
-import { getInitials, upperFirst } from "@/lib/utils";
+import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
 import { InviteMemberForm } from "@/components/invite-member-form";
+import { UpdateMemberForm } from "@/components/update-member-form";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   component: RouteComponent,
@@ -84,6 +86,7 @@ function RouteComponent() {
   const { organizationSlug } = Route.useParams();
   const queryClient = useQueryClient();
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
+  const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<string>("members");
   const [activeMember, members] = useSuspenseQueries({
@@ -224,7 +227,16 @@ function RouteComponent() {
                     <CardHeader>
                       <div className="flex items-center gap-3">
                         <Avatar className="size-12">
-                          <AvatarImage src={member.user.image ?? undefined} />
+                          <AvatarImage
+                            src={
+                              member.user.image
+                                ? getFileUrl({
+                                    param: { idOrSlug: organizationSlug },
+                                    query: { fileKey: member.user.image },
+                                  })
+                                : undefined
+                            }
+                          />
                           <AvatarFallback className="text-lg">
                             {getInitials(member.user.name ?? "")}
                           </AvatarFallback>
@@ -271,12 +283,46 @@ function RouteComponent() {
                         </Button>
 
                         {isAdmin && (
+                          <Dialog
+                            open={updateMemberDialogOpen}
+                            onOpenChange={setUpdateMemberDialogOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="secondary">
+                                <Edit className="size-4" />
+                                <span className="sr-only">Edit user</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Update user</DialogTitle>
+                                <DialogDescription>
+                                  Update user's role or other details.
+                                </DialogDescription>
+                              </DialogHeader>
+
+                              <Suspense
+                                fallback={<Skeleton className="h-[322px]" />}
+                              >
+                                <UpdateMemberForm
+                                  organizationSlug={organizationSlug}
+                                  memberId={member.id}
+                                  onSuccess={() => {
+                                    setUpdateMemberDialogOpen(false);
+                                  }}
+                                />
+                              </Suspense>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+
+                        {isAdmin && (
                           <Button
                             size="sm"
                             variant="destructive"
                             disabled={removeMember.isPending}
                             onClick={() => {
-                              if (activeMember.data?.data?.id === member.id) {
+                              if (activeMember.data.id === member.id) {
                                 toast.info(
                                   "You cannot remove your own account",
                                 );

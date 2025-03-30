@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 
 import * as schema from "../db/schema";
 import {
@@ -16,6 +17,7 @@ import {
   zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
+  zOrganizationMemberUpdate,
 } from "../schema/organization";
 
 export const organizationRouter = new Hono<HonoEnvWithOrganization>()
@@ -70,10 +72,31 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       return c.json(member);
     },
   )
+  .get(
+    "/:idOrSlug/file",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    zValidator("query", z.object({ fileKey: z.string() })),
+    async (c) => {
+      const { fileKey } = c.req.valid("query");
+      const object = await c.env.PRIVATE_BUCKET.get(fileKey);
+      if (!object) {
+        throw new AsyncStatusNotFoundError({ message: "File not found" });
+      }
+
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set("etag", object.httpEtag);
+      headers.set("cache-control", "private, max-age=600");
+
+      return new Response(object.body, { headers });
+    },
+  )
   .patch(
     "/:idOrSlug/members/:memberId",
     requiredOrganization,
     zValidator("param", zOrganizationIdOrSlug.and(zOrganizationMemberId)),
+    zValidator("form", zOrganizationMemberUpdate),
     async (c) => {
       const { memberId } = c.req.valid("param");
       const hasPermissionResponse = await c.var.auth.api.hasPermission({
@@ -83,11 +106,62 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         },
         headers: c.req.raw.headers,
       });
-      if (!hasPermissionResponse.success) {
+      if (!hasPermissionResponse.success && memberId !== c.var.member.id) {
         throw new AsyncStatusForbiddenError({
           message: "You do not have permission to update members",
         });
       }
+      const member = await c.var.db.query.member.findFirst({
+        where: eq(schema.member.id, memberId),
+        with: { user: true },
+      });
+      if (!member) {
+        throw new AsyncStatusNotFoundError({ message: "Member not found" });
+      }
+
+      const { role, ...userUpdates } = c.req.valid("form");
+      if (role) {
+        await c.var.auth.api.updateMemberRole({
+          body: { memberId, role, organizationId: c.var.organization.id },
+          headers: c.req.raw.headers,
+        });
+      }
+      if (userUpdates.image) {
+        const image = await c.env.PRIVATE_BUCKET.put(
+          generateId(),
+          userUpdates.image,
+        );
+        if (!image) {
+          throw new AsyncStatusUnexpectedApiError({
+            message: "Failed to upload image",
+          });
+        }
+        (userUpdates.image as any) = image.key;
+      } else {
+        (userUpdates.image as any) = null;
+      }
+      if (Object.keys(userUpdates).length > 0) {
+        const name =
+          userUpdates.firstName || userUpdates.lastName
+            ? `${userUpdates.firstName} ${userUpdates.lastName}`
+            : undefined;
+
+        await c.var.db
+          .update(schema.user)
+          .set({ name, ...(userUpdates as any) })
+          .where(eq(schema.user.id, member.userId));
+      }
+      const updatedMember = await c.var.db.query.member.findFirst({
+        where: eq(schema.member.id, memberId),
+        with: { user: true },
+      });
+      if (!updatedMember) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to update member",
+        });
+      }
+
+      return c.json(updatedMember);
     },
   )
   .post(
