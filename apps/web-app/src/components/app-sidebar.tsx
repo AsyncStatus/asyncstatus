@@ -88,7 +88,8 @@ function AppSidebarBetaNotice() {
         <CardTitle className="text-md">We're in beta</CardTitle>
         <CardDescription className="text-xs text-pretty">
           We're working hard to bring you the best experience but there are some
-          features that are still under development or not available.
+          features that are still under development or might not work as
+          expected.
         </CardDescription>
       </CardHeader>
       <CardFooter className="px-0">

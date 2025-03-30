@@ -283,6 +283,29 @@ function RouteComponent() {
                         </Button>
 
                         {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={removeMember.isPending}
+                            onClick={() => {
+                              if (activeMember.data.id === member.id) {
+                                toast.info(
+                                  "You cannot remove your own account",
+                                );
+                                return;
+                              }
+
+                              removeMember.mutate({
+                                memberIdOrEmail: member.id,
+                              });
+                            }}
+                            className="flex-initial"
+                          >
+                            <Trash className="size-4" />
+                          </Button>
+                        )}
+
+                        {isAdmin && (
                           <Dialog
                             open={updateMemberDialogOpen}
                             onOpenChange={setUpdateMemberDialogOpen}
@@ -314,29 +337,6 @@ function RouteComponent() {
                               </Suspense>
                             </DialogContent>
                           </Dialog>
-                        )}
-
-                        {isAdmin && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={removeMember.isPending}
-                            onClick={() => {
-                              if (activeMember.data.id === member.id) {
-                                toast.info(
-                                  "You cannot remove your own account",
-                                );
-                                return;
-                              }
-
-                              removeMember.mutate({
-                                memberIdOrEmail: member.id,
-                              });
-                            }}
-                            className="flex-initial"
-                          >
-                            <Trash className="size-4" />
-                          </Button>
                         )}
                       </div>
                     </CardFooter>

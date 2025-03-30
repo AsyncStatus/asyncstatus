@@ -1,4 +1,10 @@
-import { getMemberQueryOptions } from "@/rpc/organization";
+import { Suspense, useState } from "react";
+import {
+  getActiveMemberQueryOptions,
+  getMemberQueryOptions,
+  listMembersQueryOptions,
+  removeMemberMutationOptions,
+} from "@/rpc/organization";
 import {
   Avatar,
   AvatarFallback,
@@ -20,8 +26,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@asyncstatus/ui/components/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@asyncstatus/ui/components/dialog";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
+import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import {
   Tabs,
@@ -32,16 +47,25 @@ import {
 import {
   Calendar,
   Copy,
+  Edit,
   Mail,
   MapPin,
   Phone,
+  Trash,
   Users,
 } from "@asyncstatus/ui/icons";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQueries,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 
-import { getInitials } from "@/lib/utils";
+import { authClient } from "@/lib/auth";
+import { getFileUrl, getInitials } from "@/lib/utils";
+import { UpdateMemberForm } from "@/components/update-member-form";
 
 export const Route = createFileRoute(
   "/$organizationSlug/_layout/users/$userId",
@@ -61,10 +85,33 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { organizationSlug, userId } = Route.useParams();
-  const member = useSuspenseQuery(
-    getMemberQueryOptions({ idOrSlug: organizationSlug, memberId: userId }),
-  );
-
+  const queryClient = useQueryClient();
+  const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
+  const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
+  const [member, activeMember] = useSuspenseQueries({
+    queries: [
+      getMemberQueryOptions({ idOrSlug: organizationSlug, memberId: userId }),
+      getActiveMemberQueryOptions(),
+    ],
+  });
+  const removeMember = useMutation({
+    ...removeMemberMutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: listMembersQueryOptions(organizationSlug).queryKey,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getMemberQueryOptions({
+          idOrSlug: organizationSlug,
+          memberId: userId,
+        }).queryKey,
+      });
+    },
+  });
+  const isAdmin = authClient.organization.checkRolePermission({
+    role: "admin",
+    permission: { member: ["create", "update", "delete"] },
+  });
   const { user, role, createdAt, team } = member.data;
   const joinDate = createdAt ? format(new Date(createdAt), "PPP") : "N/A";
 
@@ -83,8 +130,8 @@ function RouteComponent() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex shrink-0 items-center gap-2 pb-2">
+    <>
+      <header className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex items-center gap-0">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
@@ -107,6 +154,61 @@ function RouteComponent() {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button
+              variant="destructive"
+              disabled={removeMember.isPending}
+              onClick={() => {
+                if (activeMember.data.id === member.data.id) {
+                  toast.info("You cannot remove your own account");
+                  return;
+                }
+
+                removeMember.mutate({
+                  memberIdOrEmail: member.data.id,
+                });
+              }}
+              className="flex-initial"
+            >
+              <Trash className="size-4" />
+              <span>Remove user</span>
+            </Button>
+          )}
+
+          {isAdmin && (
+            <Dialog
+              open={updateMemberDialogOpen}
+              onOpenChange={setUpdateMemberDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button variant="secondary">
+                  <Edit className="size-4" />
+                  <span>Edit user</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update user</DialogTitle>
+                  <DialogDescription>
+                    Update user's role or other details.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <Suspense fallback={<Skeleton className="h-[322px]" />}>
+                  <UpdateMemberForm
+                    organizationSlug={organizationSlug}
+                    memberId={member.data.id}
+                    onSuccess={() => {
+                      setUpdateMemberDialogOpen(false);
+                    }}
+                  />
+                </Suspense>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </header>
 
       <div className="container mx-auto space-y-8 py-6">
@@ -118,7 +220,10 @@ function RouteComponent() {
                 <AvatarImage
                   src={
                     user.image
-                      ? `https://cdn.asyncstatus.com/${user.image}`
+                      ? getFileUrl({
+                          param: { idOrSlug: organizationSlug },
+                          query: { fileKey: user.image },
+                        })
                       : undefined
                   }
                   alt={user.name}
@@ -186,26 +291,6 @@ function RouteComponent() {
                           </p>
                         </div>
                       </div>
-
-                      <div className="flex items-start gap-2">
-                        <MapPin className="text-muted-foreground mt-0.5 size-5" />
-                        <div>
-                          <p className="font-medium">Location</p>
-                          <p className="text-muted-foreground text-sm">
-                            Not specified
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-2">
-                        <Phone className="text-muted-foreground mt-0.5 size-5" />
-                        <div>
-                          <p className="font-medium">Phone</p>
-                          <p className="text-muted-foreground text-sm">
-                            Not specified
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -247,6 +332,6 @@ function RouteComponent() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
