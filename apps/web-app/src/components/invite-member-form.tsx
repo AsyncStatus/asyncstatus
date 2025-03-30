@@ -13,14 +13,6 @@ import {
   CommandItem,
   CommandList,
 } from "@asyncstatus/ui/components/command";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import {
   Popover,
@@ -34,6 +26,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import { authClient, roleOptions } from "@/lib/auth";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 export function InviteMemberForm(props: {
   organizationSlug: string;
@@ -65,7 +65,8 @@ export function InviteMemberForm(props: {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(props.organizationSlug).queryKey,
       });
-      props.onSuccess?.(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      props.onSuccess?.(data as any);
     },
   });
   const isOwner = authClient.organization.checkRolePermission({

@@ -5,15 +5,6 @@ import {
   listOrganizationsQueryOptions,
 } from "@/rpc/organization";
 import { Button } from "@asyncstatus/ui/components/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Check, X } from "@asyncstatus/ui/icons";
@@ -26,6 +17,15 @@ import { z } from "zod";
 
 import type { authClient } from "@/lib/auth";
 import useDebounce from "@/lib/use-debounce";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 const schema = z.object({ name: z.string().min(3).max(128) });
 

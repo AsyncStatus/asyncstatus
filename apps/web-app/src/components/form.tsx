@@ -1,5 +1,7 @@
 "use client";
 
+// it has to be here for some reason (not @asyncstatus/ui/components/form.tsx)
+// because of strange types issues
 import * as React from "react";
 import { Label } from "@asyncstatus/ui/components/label";
 import { cn } from "@asyncstatus/ui/lib/utils";

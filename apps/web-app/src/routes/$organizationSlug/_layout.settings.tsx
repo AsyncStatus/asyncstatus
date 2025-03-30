@@ -12,20 +12,7 @@ import {
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@asyncstatus/ui/components/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
+import { Card, CardContent } from "@asyncstatus/ui/components/card";
 import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Separator } from "@asyncstatus/ui/components/separator";
@@ -37,7 +24,6 @@ import {
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
 import { CreditCard } from "@asyncstatus/ui/icons";
-import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
 import {
@@ -49,12 +35,18 @@ import {
   createFileRoute,
   useNavigate,
   useParams,
-  useRouter,
 } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { getFileUrl } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,

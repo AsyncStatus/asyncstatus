@@ -2,14 +2,6 @@ import { loginEmailMutationOptions } from "@/rpc/auth";
 import { getInvitationByEmailQueryOptions } from "@/rpc/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,6 +18,15 @@ import {
 } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,

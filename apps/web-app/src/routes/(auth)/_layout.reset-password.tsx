@@ -1,13 +1,5 @@
 import { resetPasswordMutationOptions } from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { ChevronLeft } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +7,15 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,

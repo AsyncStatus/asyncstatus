@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getActiveMemberQueryOptions,
@@ -16,14 +16,6 @@ import {
   CommandItem,
   CommandList,
 } from "@asyncstatus/ui/components/command";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
 import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
 import {
@@ -43,6 +35,14 @@ import { useForm } from "react-hook-form";
 
 import { authClient, roleOptions } from "@/lib/auth";
 import { getFileUrl } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/form";
 
 export function UpdateMemberForm(props: {
   organizationSlug: string;

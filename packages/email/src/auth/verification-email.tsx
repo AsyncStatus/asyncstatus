@@ -1,4 +1,4 @@
-import { Layout } from "@/layout";
+import { Layout } from "../layout";
 import {
   h1,
   h2,
@@ -7,7 +7,7 @@ import {
   primaryButton,
   footerLink,
   divider,
-} from "@/styles";
+} from "../styles";
 import {
   Button,
   Heading,
