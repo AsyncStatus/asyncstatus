@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "bunx wrangler deploy --minify",
+    "deploy": "wrangler deploy --minify",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
     "format": "prettier --write .",
