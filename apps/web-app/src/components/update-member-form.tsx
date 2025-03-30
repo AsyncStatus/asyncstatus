@@ -253,7 +253,10 @@ export function UpdateMemberForm(props: {
                 <FormItem>
                   <FormLabel className="mb-2">Profile Image</FormLabel>
                   <FormControl>
-                    <ImageUpload value={value} onChange={field.onChange} />
+                    <ImageUpload
+                      value={value as any}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

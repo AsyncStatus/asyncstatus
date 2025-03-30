@@ -180,7 +180,7 @@ function RouteComponent() {
                               <FormLabel className="mb-2">Logo</FormLabel>
                               <FormControl>
                                 <ImageUpload
-                                  value={value}
+                                  value={value as any}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
