@@ -126,7 +126,7 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           headers: c.req.raw.headers,
         });
       }
-      if (userUpdates.image) {
+      if (userUpdates.image instanceof File) {
         const image = await c.env.PRIVATE_BUCKET.put(
           generateId(),
           userUpdates.image,
@@ -137,7 +137,8 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           });
         }
         (userUpdates.image as any) = image.key;
-      } else {
+      } else if (userUpdates.image === null && member.user.image) {
+        await c.env.PRIVATE_BUCKET.delete(member.user.image);
         (userUpdates.image as any) = null;
       }
       if (Object.keys(userUpdates).length > 0) {

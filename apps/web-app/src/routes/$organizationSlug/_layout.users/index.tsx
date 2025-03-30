@@ -87,6 +87,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
+  const [updateMemberId, setUpdateMemberId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<string>("members");
   const [activeMember, members] = useSuspenseQueries({
@@ -131,6 +132,8 @@ function RouteComponent() {
     invitation.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  console.log(filteredMembers);
+
   return (
     <>
       <header className="flex shrink-0 items-center justify-between gap-2">
@@ -169,6 +172,7 @@ function RouteComponent() {
                   Invite user
                 </Button>
               </DialogTrigger>
+
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Invite user</DialogTitle>
@@ -222,126 +226,147 @@ function RouteComponent() {
                   </p>
                 </div>
               ) : (
-                filteredMembers?.map((member) => (
-                  <Card key={member.id} className="overflow-hidden pb-0">
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-12">
-                          <AvatarImage
-                            src={
-                              member.user.image
-                                ? getFileUrl({
-                                    param: { idOrSlug: organizationSlug },
-                                    query: { fileKey: member.user.image },
-                                  })
-                                : undefined
-                            }
-                          />
-                          <AvatarFallback className="text-lg">
-                            {getInitials(member.user.name ?? "")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="font-medium">
-                            {member.user.name}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-2">
-                            {member.user.email}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary">
-                          {upperFirst(member.role)}
-                        </Badge>
-                        <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                          <Calendar className="size-3" />
-                          <span>
-                            Joined{" "}
-                            {dayjs(member.createdAt).format("MMM D, YYYY")}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="bg-muted/20 border-t pb-3.5">
-                      <div className="flex w-full gap-2">
-                        <Button
-                          asChild
-                          size="sm"
-                          variant="secondary"
-                          className="flex-1"
-                        >
-                          <Link
-                            to="/$organizationSlug/users/$userId"
-                            params={{ organizationSlug, userId: member.id }}
-                          >
-                            <UserRound className="size-4" />
-                            View Profile
-                          </Link>
-                        </Button>
+                filteredMembers?.map((member) => {
+                  console.log(member.id, member.user.name);
 
-                        {isAdmin && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={removeMember.isPending}
-                            onClick={() => {
-                              if (activeMember.data.id === member.id) {
-                                toast.info(
-                                  "You cannot remove your own account",
-                                );
-                                return;
+                  return (
+                    <Card key={member.id} className="overflow-hidden pb-0">
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-12">
+                            <AvatarImage
+                              src={
+                                member.user.image
+                                  ? getFileUrl({
+                                      param: { idOrSlug: organizationSlug },
+                                      query: { fileKey: member.user.image },
+                                    })
+                                  : undefined
                               }
-
-                              removeMember.mutate({
-                                memberIdOrEmail: member.id,
-                              });
-                            }}
-                            className="flex-initial"
+                            />
+                            <AvatarFallback className="text-lg">
+                              {getInitials(member.user.name ?? "")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="font-medium">
+                              {member.user.name}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2">
+                              {member.user.email}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary">
+                            {upperFirst(member.role)}
+                          </Badge>
+                          <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                            <Calendar className="size-3" />
+                            <span>
+                              Joined{" "}
+                              {dayjs(member.createdAt).format("MMM D, YYYY")}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="bg-muted/20 border-t pb-3.5">
+                        <div className="flex w-full gap-2">
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="secondary"
+                            className="flex-1"
                           >
-                            <Trash className="size-4" />
+                            <Link
+                              to="/$organizationSlug/users/$userId"
+                              params={{ organizationSlug, userId: member.id }}
+                            >
+                              <UserRound className="size-4" />
+                              View Profile
+                            </Link>
                           </Button>
-                        )}
 
-                        {isAdmin && (
-                          <Dialog
-                            open={updateMemberDialogOpen}
-                            onOpenChange={setUpdateMemberDialogOpen}
-                          >
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="secondary">
-                                <Edit className="size-4" />
-                                <span className="sr-only">Edit user</span>
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Update user</DialogTitle>
-                                <DialogDescription>
-                                  Update user's role or other details.
-                                </DialogDescription>
-                              </DialogHeader>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={removeMember.isPending}
+                              onClick={() => {
+                                if (activeMember.data.id === member.id) {
+                                  toast.info(
+                                    "You cannot remove your own account",
+                                  );
+                                  return;
+                                }
 
-                              <Suspense
-                                fallback={<Skeleton className="h-[322px]" />}
-                              >
-                                <UpdateMemberForm
-                                  organizationSlug={organizationSlug}
-                                  memberId={member.id}
-                                  onSuccess={() => {
-                                    setUpdateMemberDialogOpen(false);
+                                removeMember.mutate({
+                                  memberIdOrEmail: member.id,
+                                });
+                              }}
+                              className="flex-initial"
+                            >
+                              <Trash className="size-4" />
+                            </Button>
+                          )}
+
+                          {isAdmin && (
+                            <Dialog
+                              open={
+                                updateMemberId === member.id &&
+                                updateMemberDialogOpen
+                              }
+                              onOpenChange={(open) => {
+                                setUpdateMemberDialogOpen(open);
+                                if (!open) {
+                                  setUpdateMemberId(null);
+                                }
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setUpdateMemberId(member.id);
+                                    setUpdateMemberDialogOpen(true);
                                   }}
-                                />
-                              </Suspense>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))
+                                >
+                                  <Edit className="size-4" />
+                                  <span className="sr-only">Edit user</span>
+                                </Button>
+                              </DialogTrigger>
+
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Update user</DialogTitle>
+                                  <DialogDescription>
+                                    Update user's role or other details.
+                                  </DialogDescription>
+                                </DialogHeader>
+
+                                <Suspense
+                                  fallback={<Skeleton className="h-[322px]" />}
+                                >
+                                  <UpdateMemberForm
+                                    organizationSlug={organizationSlug}
+                                    memberId={member.id}
+                                    onSuccess={() => {
+                                      setUpdateMemberDialogOpen(false);
+                                      setUpdateMemberId(null);
+                                    }}
+                                  />
+                                </Suspense>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </TabsContent>

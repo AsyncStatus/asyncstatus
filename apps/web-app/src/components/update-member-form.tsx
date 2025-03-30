@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getActiveMemberQueryOptions,
@@ -81,7 +81,7 @@ export function UpdateMemberForm(props: {
     resolver: zodResolver(zOrganizationMemberUpdate),
     defaultValues: {
       firstName: member.data.user.name?.split(" ")[0] ?? "",
-      lastName: member.data.user.name?.split(" ")[1] ?? "",
+      lastName: member.data.user.name?.split(" ").slice(1).join(" ") ?? "",
       role: member.data.role as "member" | "admin" | "owner",
       image: member.data.user.image ?? null,
     },
@@ -241,7 +241,6 @@ export function UpdateMemberForm(props: {
             control={form.control}
             name="image"
             render={({ field }) => {
-              console.log(field.value);
               const value =
                 typeof field.value === "string"
                   ? getFileUrl({
