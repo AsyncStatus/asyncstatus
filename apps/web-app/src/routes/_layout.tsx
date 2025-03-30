@@ -11,7 +11,6 @@ export const Route = createFileRoute("/_layout")({
   component: RouteComponent,
   pendingComponent: AppSidebarSkeleton,
   beforeLoad: async ({ context: { queryClient }, location }) => {
-    console.log(location);
     const { session } = await ensureValidSession(queryClient, location);
     if (!session.activeOrganizationId) {
       const defaultOrganization = await getDefaultOrganization(queryClient);

@@ -37,6 +37,7 @@ import {
 import { Input } from "@asyncstatus/ui/components/input";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
+import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import {
   Tabs,
@@ -67,6 +68,7 @@ import { InviteMemberForm } from "@/components/invite-member-form";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   component: RouteComponent,
+  pendingComponent: PendingComponent,
   loader: async ({
     context: { queryClient },
     params: { organizationSlug },
@@ -385,5 +387,33 @@ function RouteComponent() {
         </Tabs>
       </div>
     </>
+  );
+}
+
+function PendingComponent() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-10 w-36" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-10 w-49" />
+          <Skeleton className="h-10 w-29" />
+        </div>
+      </div>
+      <Skeleton className="h-8 w-56" />
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+      </div>
+    </div>
   );
 }

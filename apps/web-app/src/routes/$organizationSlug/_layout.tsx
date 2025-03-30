@@ -8,10 +8,11 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/$organizationSlug/_layout")({
   component: RouteComponent,
+  pendingComponent: AppSidebarSkeleton,
   beforeLoad: async ({
     context: { queryClient },
     params: { organizationSlug },

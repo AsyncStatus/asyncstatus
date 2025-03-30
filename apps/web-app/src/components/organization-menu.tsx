@@ -226,6 +226,7 @@ export function OrganizationMenuSkeleton() {
   return (
     <div className="flex items-center p-1">
       <Skeleton className="size-8 rounded-full" />
+      <Skeleton className="ml-2 h-6 w-26 rounded-md" />
       <ChevronsUpDown className="ml-auto size-4" />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type PropsWithChildren } from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -20,7 +20,8 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@asyncstatus/ui/components/sidebar";
-import { Link } from "@tanstack/react-router";
+import { Skeleton } from "@asyncstatus/ui/components/skeleton";
+import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { Home, LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 
 import {
@@ -143,31 +144,44 @@ export function AppSidebar(props: { organizationSlug: string }) {
   );
 }
 
-export function AppSidebarSkeleton(props: { organizationSlug: string }) {
+export function AppSidebarSkeleton() {
+  const params = useParams({
+    from: "/$organizationSlug",
+    shouldThrow: false,
+  });
+
   return (
     <SidebarProvider>
       <Sidebar variant="inset">
         <SidebarHeader>
-          <OrganizationMenuSkeleton />
+          <Suspense fallback={<OrganizationMenuSkeleton />}>
+            <OrganizationMenuSkeleton />
+          </Suspense>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <AppSidebarLinks organizationSlug={props.organizationSlug} />
+                <AppSidebarLinks
+                  organizationSlug={params?.organizationSlug ?? ""}
+                />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+
+        <SidebarFooter className="p-0 max-sm:p-2">
+          <AppSidebarBetaNotice />
+          <Suspense fallback={<UserMenuSkeleton />}>
+            <UserMenu />
+          </Suspense>
+        </SidebarFooter>
       </Sidebar>
 
-      <SidebarFooter>
-        <AppSidebarBetaNotice />
-        <UserMenuSkeleton />
-      </SidebarFooter>
-
-      <SidebarInset />
+      <SidebarInset className="gap-4 px-4 py-2.5">
+        <Outlet />
+      </SidebarInset>
     </SidebarProvider>
   );
 }
