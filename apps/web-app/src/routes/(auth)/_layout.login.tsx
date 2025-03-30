@@ -72,7 +72,7 @@ function RouteComponent() {
     defaultValues: {
       email: invitation.data?.email ?? "",
       password: "",
-      rememberMe: false,
+      rememberMe: true,
     },
   });
 

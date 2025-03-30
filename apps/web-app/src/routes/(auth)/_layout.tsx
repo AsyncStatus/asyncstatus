@@ -17,7 +17,7 @@ export const Route = createFileRoute("/(auth)/_layout")({
 
 function RouteComponent() {
   return (
-    <SimpleLayout href="/">
+    <SimpleLayout href={import.meta.env.VITE_MARKETING_APP_URL}>
       <Outlet />
     </SimpleLayout>
   );

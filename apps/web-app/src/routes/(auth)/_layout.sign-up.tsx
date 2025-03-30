@@ -214,6 +214,32 @@ function RouteComponent() {
             </div>
           )}
 
+          <p className="text-muted-foreground text-xs">
+            By signing up, you agree to our{" "}
+            <a
+              className="underline"
+              href={
+                import.meta.env.VITE_MARKETING_APP_URL + "/terms-of-service"
+              }
+            >
+              Terms of Service
+            </a>
+            ,{" "}
+            <a
+              className="underline"
+              href={import.meta.env.VITE_MARKETING_APP_URL + "/acceptable-use"}
+            >
+              Acceptable Use
+            </a>{" "}
+            and{" "}
+            <a
+              className="underline"
+              href={import.meta.env.VITE_MARKETING_APP_URL + "/privacy-policy"}
+            >
+              Privacy Policy
+            </a>
+            .
+          </p>
           <Button
             type="submit"
             className="w-full"
