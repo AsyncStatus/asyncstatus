@@ -4,6 +4,7 @@ import OrganizationInvitationEmail from "@asyncstatus/email/organization/organiz
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import type { Resend } from "resend";
 
 import type { Db } from "../db";
@@ -99,19 +100,22 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           const inviteLink = `${env.WEB_APP_URL}/invitation?${params.toString()}`;
           const invitedByUsername =
             data.inviter.user.name?.split(" ")[0] ?? data.inviter.user.name;
-          const inviteeUsername =
-            (data.invitation as any).name?.split(" ")[0] ??
-            (data.invitation as any).name ??
-            "";
+          const invitation = await db.query.invitation.findFirst({
+            where: eq(schema.invitation.id, data.invitation.id),
+          });
+          if (!invitation) {
+            throw new Error("Invitation not found");
+          }
+          const firstName = invitation.name?.split(" ")[0] ?? "";
 
           await resend.emails.send({
             from: "AsyncStatus <onboarding@a.asyncstatus.com>",
             to: data.email,
-            subject: `${data.inviter.user.name} invited you to ${data.organization.name}`,
+            subject: `${invitedByUsername} invited you to ${data.organization.name}`,
             text: `${invitedByUsername} invited you to ${data.organization.name}, accept invitation before it expires.`,
             react: (
               <OrganizationInvitationEmail
-                inviteeFirstName={inviteeUsername}
+                inviteeFirstName={firstName}
                 invitedByUsername={invitedByUsername}
                 invitedByEmail={data.inviter.user.email}
                 teamName={data.organization.name}

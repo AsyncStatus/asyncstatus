@@ -33,20 +33,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-const roles = [
-  {
-    label: "Member",
-    value: "member",
-    description:
-      "Can interact with status updates, teams, own profile and personal settings.",
-  },
-  {
-    label: "Admin",
-    value: "admin",
-    description:
-      "Everything a member can do, plus the ability to manage members, teams and organization settings.",
-  },
-];
+import { authClient, roleOptions } from "@/lib/auth";
+
 export function InviteMemberForm(props: {
   organizationSlug: string;
   onSuccess?: (data: {
@@ -77,8 +65,12 @@ export function InviteMemberForm(props: {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(props.organizationSlug).queryKey,
       });
-      props.onSuccess?.(data.invitation);
+      props.onSuccess?.(data);
     },
+  });
+  const isOwner = authClient.organization.checkRolePermission({
+    role: "owner",
+    permission: { member: ["update"] },
   });
 
   return (
@@ -161,8 +153,9 @@ export function InviteMemberForm(props: {
                         className="justify-between"
                       >
                         {field.value
-                          ? roles.find((role) => role.value === field.value)
-                              ?.label
+                          ? roleOptions.find(
+                              (role) => role.value === field.value,
+                            )?.label
                           : "Select role..."}
                         <ChevronsUpDown className="opacity-50" />
                       </Button>
@@ -176,10 +169,11 @@ export function InviteMemberForm(props: {
                         <CommandList>
                           <CommandEmpty>No role found.</CommandEmpty>
                           <CommandGroup>
-                            {roles.map((role) => (
+                            {roleOptions.map((role) => (
                               <CommandItem
                                 key={role.value}
                                 value={role.value}
+                                disabled={role.value === "owner" && !isOwner}
                                 onSelect={(currentValue) => {
                                   form.setValue(
                                     "role",
@@ -212,6 +206,7 @@ export function InviteMemberForm(props: {
                     </PopoverContent>
                   </Popover>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

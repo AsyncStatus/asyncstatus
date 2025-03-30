@@ -5,7 +5,7 @@ export const zOrganizationCreateInvite = z.object({
   firstName: z.string().min(1).trim(),
   lastName: z.string().min(1).trim(),
   email: z.string().email(),
-  role: z.enum(["member", "admin"]),
+  role: z.enum(["member", "admin", "owner"]),
 });
 
 export const zOrganizationMemberId = z.object({

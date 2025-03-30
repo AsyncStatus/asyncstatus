@@ -57,9 +57,7 @@ export function ResetPasswordEmail(props: {
       <Text style={{ ...bodyText, margin: "64px 0 128px" }}>
         Hope to see you soon,
         <br />
-        <span style={{ ...secondaryText, fontSize: 14 }}>
-          The AsyncStatus Team
-        </span>
+        <span style={{ ...secondaryText, fontSize: 14 }}>AsyncStatus Team</span>
       </Text>
 
       <hr style={divider} />

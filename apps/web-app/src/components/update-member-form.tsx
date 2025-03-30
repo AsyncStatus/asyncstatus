@@ -6,7 +6,6 @@ import {
   listMembersQueryOptions,
   updateMemberMutationOptions,
 } from "@/rpc/organization";
-import type { rpc } from "@/rpc/rpc";
 import { zOrganizationMemberUpdate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -42,28 +41,8 @@ import {
 } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { authClient } from "@/lib/auth";
+import { authClient, roleOptions } from "@/lib/auth";
 import { getFileUrl } from "@/lib/utils";
-
-const roles = [
-  {
-    label: "Member",
-    value: "member",
-    description:
-      "Can interact with status updates, teams, own profile and personal settings.",
-  },
-  {
-    label: "Admin",
-    value: "admin",
-    description:
-      "Everything a member can do, plus the ability to manage members, teams and organization settings.",
-  },
-  {
-    label: "Owner",
-    value: "owner",
-    description: "Every permission.",
-  },
-];
 
 export function UpdateMemberForm(props: {
   organizationSlug: string;
@@ -200,8 +179,9 @@ export function UpdateMemberForm(props: {
                         className="justify-between"
                       >
                         {field.value
-                          ? roles.find((role) => role.value === field.value)
-                              ?.label
+                          ? roleOptions.find(
+                              (role) => role.value === field.value,
+                            )?.label
                           : "Select role..."}
                         <ChevronsUpDown className="opacity-50" />
                       </Button>
@@ -215,7 +195,7 @@ export function UpdateMemberForm(props: {
                         <CommandList>
                           <CommandEmpty>No role found.</CommandEmpty>
                           <CommandGroup>
-                            {roles.map((role) => (
+                            {roleOptions.map((role) => (
                               <CommandItem
                                 key={role.value}
                                 value={role.value}

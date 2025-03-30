@@ -21,7 +21,7 @@ export function OrganizationInvitationEmail(props: {
   preview: string;
   invitedByUsername: string;
   invitedByEmail: string;
-  inviteeFirstName: string;
+  inviteeFirstName?: string;
   teamName: string;
   inviteLink: string;
   expiration: string;
@@ -39,7 +39,7 @@ export function OrganizationInvitationEmail(props: {
 
       <Section>
         <Heading as="h1" style={h1}>
-          Hi {props.inviteeFirstName},
+          Hi{props.inviteeFirstName ? ` ${props.inviteeFirstName}` : ""},
         </Heading>
         <Heading as="h2" style={h2}>
           {props.invitedByUsername} invited you to join {props.teamName}.
@@ -57,9 +57,7 @@ export function OrganizationInvitationEmail(props: {
       <Text style={{ ...bodyText, margin: "64px 0 128px" }}>
         Happy collaborating,
         <br />
-        <span style={{ ...secondaryText, fontSize: 14 }}>
-          The AsyncStatus Team
-        </span>
+        <span style={{ ...secondaryText, fontSize: 14 }}>AsyncStatus Team</span>
       </Text>
 
       <hr style={divider} />
