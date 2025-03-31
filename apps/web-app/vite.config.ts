@@ -13,11 +13,11 @@ export default defineConfig({
     viteReact(),
   ],
   define: {
-    "import.meta.env.VITE_API_URL": process.env.VITE_API_URL,
-    "import.meta.env.VITE_WEB_APP_URL": process.env.VITE_WEB_APP_URL,
-    "import.meta.env.VITE_MARKETING_APP_URL":
-      process.env.VITE_MARKETING_APP_URL,
-    "import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL":
-      process.env.VITE_STRIPE_CUSTOMER_PORTAL,
+    "import.meta.env.VITE_API_URL": import.meta.env.VITE_API_URL,
+    "import.meta.env.VITE_WEB_APP_URL": import.meta.env.VITE_WEB_APP_URL,
+    "import.meta.env.VITE_MARKETING_APP_URL": import.meta.env
+      .VITE_MARKETING_APP_URL,
+    "import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL": import.meta.env
+      .VITE_STRIPE_CUSTOMER_PORTAL,
   },
 });
