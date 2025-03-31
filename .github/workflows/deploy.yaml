@@ -22,7 +22,12 @@ jobs:
           workingDirectory: apps/api
           packageManager: bun
       - name: Build Web App
-        run: cd apps/web-app && VITE_API_URL=${{ secrets.API_URL }} VITE_WEB_APP_URL=${{ secrets.WEB_APP_URL }} VITE_MARKETING_APP_URL=${{ secrets.MARKETING_APP_URL }} VITE_STRIPE_CUSTOMER_PORTAL=${{ secrets.STRIPE_CUSTOMER_PORTAL_URL }} bun run build
+        run: cd apps/web-app && bun run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_WEB_APP_URL: ${{ secrets.VITE_WEB_APP_URL }}
+          VITE_MARKETING_APP_URL: ${{ secrets.VITE_MARKETING_APP_URL }}
+          VITE_STRIPE_CUSTOMER_PORTAL: ${{ secrets.VITE_STRIPE_CUSTOMER_PORTAL }}
       - name: Deploy Web App
         uses: cloudflare/wrangler-action@v3
         with:
