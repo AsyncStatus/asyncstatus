@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@asyncstatus/ui/globals.css";
+@source "../../../../node_modules/@asyncstatus/ui";
+
+@layer base {
+  body {
+    letter-spacing: -0.0225em;
+    font-family: var(--font-favorit), system-ui, sans-serif;
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@asyncstatus/marketing-app",
+  "version": "0.1.0",
+  "private": true,
+  "prettier": "@asyncstatus/prettier-config",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@asyncstatus/ui": "workspace:*",
+    "next": "15.2.4",
+    "posthog-js": "1.234.5",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@asyncstatus/eslint-config": "workspace:*",
+    "@asyncstatus/prettier-config": "workspace:*",
+    "@asyncstatus/typescript-config": "workspace:*",
+    "@types/bun": "1.2.8",
+    "@types/node": "22.13.17",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "typescript": "5.8.2"
+  }
+}
