@@ -12,7 +12,9 @@
   },
   "scripts": {
     "dev": "wrangler dev",
+    "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
+    "dev:turso": "turso dev --db-file ./src/db/local-db",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
     "format": "prettier --write .",

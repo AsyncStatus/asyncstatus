@@ -31,3 +31,8 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+# turso dev
+src/db/local-db
+src/db/local-db-shm
+src/db/local-db-wal
