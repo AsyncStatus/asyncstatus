@@ -1,8 +1,11 @@
-name: Deploy
+name: Deploy Marketing App
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - apps/api/**
+      - apps/web-app/**
   workflow_dispatch:
 
 jobs:
@@ -16,32 +19,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: bun install
-
-      - name: Deploy API
-        id: deploy-api
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/api
-          packageManager: bun
-
-      - name: Build Web App
-        run: cd apps/web-app && bun run build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_WEB_APP_URL: ${{ secrets.VITE_WEB_APP_URL }}
-          VITE_MARKETING_APP_URL: ${{ secrets.VITE_MARKETING_APP_URL }}
-          VITE_STRIPE_CUSTOMER_PORTAL: ${{ secrets.VITE_STRIPE_CUSTOMER_PORTAL }}
-
-      - name: Deploy Web App
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=web-app
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          workingDirectory: apps/web-app
 
       - name: Build Marketing App
         run: cd apps/marketing-app && bun run build
