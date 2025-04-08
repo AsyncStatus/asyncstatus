@@ -11,6 +11,7 @@ import { zCreateWaitlistUser } from "../schema/waitlist";
 export const waitlistRouter = new Hono<HonoEnv>().post(
   "/",
   zValidator("json", zCreateWaitlistUser),
+  async (c, next) => {c.var.waitlistRateLimiter(c, next)},
   async (c) => {
     const { firstName, lastName, email } = c.req.valid("json");
     const existingUser = await c.var.db.query.user.findFirst({

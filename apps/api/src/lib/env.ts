@@ -4,6 +4,7 @@ import type { Resend } from "resend";
 import type { Db } from "../db";
 import * as schema from "../db/schema";
 import type { Auth } from "./auth";
+import type { RateLimiter } from "./rate-limiter";
 
 export type Bindings = {
   TURSO_URL: string;
@@ -18,6 +19,7 @@ export type Bindings = {
   RESEND_API_KEY: string;
   WEB_APP_URL: string;
   PRIVATE_BUCKET: R2Bucket;
+  RATE_LIMITER: KVNamespace;
 };
 
 export type Variables = {
@@ -25,6 +27,7 @@ export type Variables = {
   db: Db;
   resend: Resend;
   session: Auth["$Infer"]["Session"] | null;
+  waitlistRateLimiter: RateLimiter;
 };
 
 export type HonoEnv = {

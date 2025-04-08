@@ -14,6 +14,7 @@ import { invitationRouter } from "./routers/invitation";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
 import { waitlistRouter } from "./routers/waitlist";
+import { createRateLimiter } from "./lib/rate-limiter";
 
 const app = new Hono<HonoEnv>()
   .use(
@@ -35,6 +36,11 @@ const app = new Hono<HonoEnv>()
     const resend = new Resend(c.env.RESEND_API_KEY);
     c.set("resend", resend);
     const auth = createAuth(c.env, db, resend);
+    c.set("auth", auth);
+    const waitlistRateLimiter = createRateLimiter(c.env, {
+      windowMs: 60 * 60 * 1000, // 60 minutes
+      limit: 10, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    });
     c.set("auth", auth);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
