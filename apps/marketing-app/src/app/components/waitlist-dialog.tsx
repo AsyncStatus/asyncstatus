@@ -67,7 +67,6 @@ export function WaitlistDialog({
     if (response.status === 429) {
       const retryAfterSeconds = Number(response.headers.get("ratelimit-reset")) || 0;
       const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
-      console.log(retryAfterSeconds, retryAfterMinutes);
       setError(
       retryAfterMinutes < 1
         ? "Too many attempts, please try again in a moment."
