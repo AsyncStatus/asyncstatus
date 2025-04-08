@@ -27,25 +27,21 @@ export default async function Page(props: {
 
   return (
     <>
-      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 overflow-hidden p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
+      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
         {/* Progressive blur overlays - stronger towards top */}
-        <div className="pointer-events-none absolute -top-24 right-0 left-0 h-24">
-          <div className="from-background/80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[1px]" />
-          <div className="from-background/80 mask-top-20 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[2px]" />
-          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[4px]" />
-          <div className="from-background/80 mask-top-60 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px]" />
-          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px]" />
-          <div className="from-background/80 mask-top-100 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[32px]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 -translate-y-24">
+          <div className="from-background/80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[2px]" />
+          <div className="from-background/80 mask-top-20 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[4px]" />
+          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px]" />
+          <div className="from-background/80 mask-top-60 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px]" />
+          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[32px]" />
+          <div className="from-background/80 mask-top-100 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[48px]" />
         </div>
 
         {/* Bottom blur - subtle */}
-        {/* <div className="from-background/60 pointer-events-none absolute right-0 -bottom-4 left-0 h-4 bg-gradient-to-b to-transparent backdrop-blur-[1px]" /> */}
-
-        {/* Side blurs */}
-        <div className="to-background/60 pointer-events-none absolute top-0 bottom-0 -left-6 w-6 bg-gradient-to-r from-transparent backdrop-blur-[1px]" />
-        <div className="to-background/60 pointer-events-none absolute top-0 -right-6 bottom-0 w-6 bg-gradient-to-l from-transparent backdrop-blur-[1px]" />
+        <div className="from-background/60 pointer-events-none absolute right-0 -bottom-2 left-0 h-2 bg-gradient-to-b to-transparent backdrop-blur-[1px]" />
 
         <div className="z-10 flex items-center gap-8">
           <div className="flex flex-col">
