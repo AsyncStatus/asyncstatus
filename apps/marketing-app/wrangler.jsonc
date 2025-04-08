@@ -3,7 +3,6 @@
   "name": "marketing-app",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-03-16",
-  "pages_build_output_dir": "dist",
   "compatibility_flags": [
     "nodejs_compat"
   ],
