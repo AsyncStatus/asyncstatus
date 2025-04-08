@@ -1141,7 +1141,7 @@ export function ReviewCard() {
         <AnimatePresence>
           {currentStep > 0 && currentStep < editSequence.length - 1 && (
             <motion.div
-              className="pointer-events-none absolute z-[9999]"
+              className="pointer-events-none absolute z-30"
               initial={{ opacity: 0 }}
               animate={{
                 opacity: cursorVisible ? 1 : 0.7,

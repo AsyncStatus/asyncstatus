@@ -244,7 +244,7 @@ export function ConnectCard() {
         <AnimatePresence>
           {animationStep > 0 && animationStep <= 7 && (
             <motion.div
-              className="pointer-events-none absolute z-[9999]"
+              className="pointer-events-none absolute z-30"
               initial={{ opacity: 0 }}
               animate={{
                 opacity: 1,
