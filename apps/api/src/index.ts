@@ -25,6 +25,7 @@ const app = new Hono<HonoEnv>()
         "https://app-v2.asyncstatus.com",
         "https://app-v2.dev.asyncstatus.com",
         "https://v2.asyncstatus.com",
+        "https://asyncstatus.com",
         "https://v2.dev.asyncstatus.com",
       ],
       credentials: true,
