@@ -107,7 +107,7 @@ export function UpdateMemberForm(props: {
           queryKey: getActiveMemberQueryOptions().queryKey,
         });
       }
-      props.onSuccess?.(data);
+      props.onSuccess?.(data as any);
     },
   });
   const isOwner = authClient.organization.checkRolePermission({
