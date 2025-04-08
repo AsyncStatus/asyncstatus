@@ -57,6 +57,7 @@ const app = new Hono<HonoEnv>()
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .onError((err, c) => {
+    console.log(err);
     if (err instanceof AsyncStatusUnexpectedApiError) {
       return c.json({ message: err.message }, err.status);
     }
