@@ -21,6 +21,7 @@ jobs:
         run: bun install
 
       - name: Build And Deploy Marketing App
+        working-directory: apps/marketing-app
         run: bun run deploy
         env:
           NEXT_PUBLIC_STRIPE_LINK: ${{ vars.NEXT_PUBLIC_STRIPE_LINK }}
