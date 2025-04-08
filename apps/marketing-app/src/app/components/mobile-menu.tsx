@@ -50,7 +50,7 @@ export function MobileMenu() {
   return (
     <>
       <button
-        className="relative z-50 hidden h-6 w-6 flex-col justify-center gap-2 p-1 pr-8 max-sm:flex"
+        className="relative z-50 hidden h-6 w-6 touch-manipulation flex-col justify-center gap-2 p-1 max-sm:flex"
         aria-label="Toggle menu"
         onClick={() => setIsOpen(!isOpen)}
       >
