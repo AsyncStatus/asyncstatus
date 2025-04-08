@@ -27,7 +27,7 @@ export default async function Page(props: {
 
   return (
     <>
-      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
+      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 overflow-hidden p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
         {/* Progressive blur overlays - stronger towards top */}
