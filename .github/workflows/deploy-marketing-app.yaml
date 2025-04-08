@@ -20,17 +20,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build Marketing App
-        run: cd apps/marketing-app && bun run build
-        env:
-          NEXT_PUBLIC_STRIPE_LINK: ${{ vars.NEXT_PUBLIC_STRIPE_LINK }}
-          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
-          NEXT_PUBLIC_GAID: ${{ vars.NEXT_PUBLIC_GAID }}
-          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
-
-      - name: Deploy Marketing App
+      - name: Build And Deploy Marketing App
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -38,3 +28,17 @@ jobs:
           command: bun run deploy
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           workingDirectory: apps/marketing-app
+          secrets: |
+            NEXT_PUBLIC_STRIPE_LINK
+            NEXT_PUBLIC_POSTHOG_KEY
+            NEXT_PUBLIC_POSTHOG_HOST
+            NEXT_PUBLIC_GAID
+            NEXT_PUBLIC_APP_URL
+            NEXT_PUBLIC_API_URL
+        env:
+          NEXT_PUBLIC_STRIPE_LINK: ${{ vars.NEXT_PUBLIC_STRIPE_LINK }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+          NEXT_PUBLIC_GAID: ${{ vars.NEXT_PUBLIC_GAID }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
