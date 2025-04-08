@@ -69,6 +69,18 @@ export function WaitlistDialog({
       return;
     }
     const json = await response.json();
+    if (response.status === 429) {
+      const retryAfterSeconds = Number(response.headers.get("ratelimit-reset")) || 0;
+      const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
+
+      setError(
+      retryAfterMinutes === 1
+        ? "Too many attempts, please try again in a moment."
+        : `Too many attempts, please try again in ${retryAfterMinutes} minute(s).`
+      );
+      return;
+    }
+
     if (json.ok) {
       setError(null);
       setIsSuccess(true);
