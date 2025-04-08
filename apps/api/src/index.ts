@@ -20,8 +20,6 @@ const app = new Hono<HonoEnv>()
   .use(
     cors({
       origin: [
-        "http://localhost:3000",
-        "http://localhost:3001",
         "https://app-v2.asyncstatus.com",
         "https://app-v2.dev.asyncstatus.com",
         "https://v2.asyncstatus.com",
