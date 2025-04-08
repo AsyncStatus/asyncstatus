@@ -21,6 +21,7 @@ import {
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import posthog from "posthog-js";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -75,6 +76,7 @@ export function WaitlistDialog({
       return;
     }
     if (!response.ok) {
+      posthog.capture("waitlist_dialog_error");
       setError("Failed to join waitlist, please try again later.");
       return;
     }
@@ -83,6 +85,7 @@ export function WaitlistDialog({
     if (json.ok) {
       setError(null);
       setIsSuccess(true);
+      posthog.capture("waitlist_dialog_success");
     } else {
       setError("Failed to join waitlist, please try again later.");
     }
@@ -91,7 +94,13 @@ export function WaitlistDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size={buttonSize} className={className}>
+        <Button
+          size={buttonSize}
+          className={className}
+          onClick={() => {
+            posthog.capture("waitlist_dialog_open");
+          }}
+        >
           Join waitlist
         </Button>
       </DialogTrigger>
@@ -119,6 +128,7 @@ export function WaitlistDialog({
                     setIsSuccess(false);
                     setError(null);
                     form.reset();
+                    posthog.capture("waitlist_dialog_close_success");
                   }}
                 >
                   Close

@@ -1,20 +1,18 @@
 import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
-import { Button } from "@asyncstatus/ui/components/button";
-import { motion } from "framer-motion";
 
-import { BetaMessage } from "./components/beta-message";
-import { ConnectCard } from "./components/connect-card";
-import { CtaSection } from "./components/cta-section";
-import { FeaturesList } from "./components/features-list";
-import { Footer } from "./components/footer";
-import { GenerateCard } from "./components/generate-card";
-import { MobileMenu } from "./components/mobile-menu";
-import { ReviewCard } from "./components/review-card";
-import { TargetAudience } from "./components/target-audience";
-import { TrackCard } from "./components/track-card";
-import { UseItYourWay } from "./components/use-it-your-way";
-import { WaitlistDialog } from "./components/waitlist-dialog";
+import { BetaMessage } from "../components/beta-message";
+import { ConnectCard } from "../components/connect-card";
+import { CtaSection } from "../components/cta-section";
+import { FeaturesList } from "../components/features-list";
+import { Footer } from "../components/footer";
+import { GenerateCard } from "../components/generate-card";
+import { MobileMenu } from "../components/mobile-menu";
+import { ReviewCard } from "../components/review-card";
+import { TargetAudience } from "../components/target-audience";
+import { TrackCard } from "../components/track-card";
+import { UseItYourWay } from "../components/use-it-your-way";
+import { WaitlistDialog } from "../components/waitlist-dialog";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
 
@@ -29,7 +27,7 @@ export default async function Page(props: {
 
   return (
     <>
-      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5">
+      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
         {/* Progressive blur overlays - stronger towards top */}
@@ -49,29 +47,31 @@ export default async function Page(props: {
         <div className="to-background/60 pointer-events-none absolute top-0 bottom-0 -left-6 w-6 bg-gradient-to-r from-transparent backdrop-blur-[1px]" />
         <div className="to-background/60 pointer-events-none absolute top-0 -right-6 bottom-0 w-6 bg-gradient-to-l from-transparent backdrop-blur-[1px]" />
 
-        <div className="z-10 flex flex-col">
-          <Link href="/" className="flex items-center gap-2">
-            <AsyncStatusLogo className="h-3.5 w-auto" />
-            <h1 className="text-lg font-medium max-sm:text-base">
-              AsyncStatus
-            </h1>
-          </Link>
+        <div className="z-10 flex items-center gap-8">
+          <div className="flex flex-col">
+            <Link href="/" className="flex items-center gap-2">
+              <AsyncStatusLogo className="h-3.5 w-auto" />
+              <h1 className="text-lg font-medium max-sm:text-base">
+                AsyncStatus
+              </h1>
+            </Link>
+          </div>
+
+          <div className="text-muted-foreground flex items-center gap-6 pt-0.5 text-sm max-sm:hidden">
+            <Link href="#how-it-works" className="hover:text-foreground">
+              How it works
+            </Link>
+            <Link href="#features" className="hover:text-foreground">
+              Features
+            </Link>
+            <Link href="#team" className="hover:text-foreground">
+              Use cases
+            </Link>
+          </div>
         </div>
 
         <div className="z-10 flex items-center gap-7 text-sm max-sm:hidden">
-          <Link href="#how-it-works" className="">
-            How it works
-          </Link>
-
-          <Link href="#features" className="">
-            Features
-          </Link>
-
-          <Link href="#team" className="">
-            Use cases
-          </Link>
-
-          <Link href="/" className="">
+          <Link href="/" className="hover:text-foreground">
             Login
           </Link>
 
@@ -145,7 +145,7 @@ export default async function Page(props: {
         <div className="mt-36 flex flex-col items-center">
           <div className="relative w-full max-w-6xl">
             <div className="flex items-center justify-between">
-              <div className="bg-background border-border rounded-lg border px-4 py-2">
+              <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
                 <div className="inline-flex items-center gap-0.5">
                   <span className="text-lg">Standup for</span>
                   <PersonSelect
@@ -163,7 +163,23 @@ export default async function Page(props: {
                 </h4>
                 <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
                   <p className="text-muted-foreground/90 text-lg text-balance">
-                    {peopleSummary[person].standupText}
+                    {(() => {
+                      const fullText = peopleSummary[person].standupText;
+                      const words = fullText.split(/\s+/);
+                      if (words.length <= 100) {
+                        return fullText;
+                      } else {
+                        return (
+                          <>
+                            {words.slice(0, 100).join(" ")}
+                            <span className="text-foreground">
+                              {" "}
+                              and {words.length - 100} more words.
+                            </span>
+                          </>
+                        );
+                      }
+                    })()}
                   </p>
                   <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm">
                     <span>{peopleSummary[person].meetingDetails.time}</span>
@@ -208,7 +224,7 @@ export default async function Page(props: {
         >
           How it works
         </h3>
-        <div className="mt-24 grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-12">
+        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
           <ConnectCard />
           <TrackCard />
           <GenerateCard />

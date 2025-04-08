@@ -102,7 +102,7 @@ export function ConnectCard() {
   const isClicking = animationStep === 2 || animationStep === 5;
 
   return (
-    <div className="border-border bg-background rounded-lg border p-5 transition-all hover:shadow-sm">
+    <div className="border-border bg-background flex h-full flex-col rounded-lg border p-5 transition-all hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-primary rounded-full border border-current px-2.5 py-0.5 text-sm font-medium">
           1

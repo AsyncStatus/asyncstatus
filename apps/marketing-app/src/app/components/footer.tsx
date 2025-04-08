@@ -49,12 +49,12 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <span className="font-medium">Company</span>
               <div className="text-muted-foreground flex flex-col gap-2">
-                <Link
-                  href="/"
+                <a
+                  href="mailto:hi@asyncstatus.com"
                   className="hover:text-foreground transition-colors"
                 >
                   Contact
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -62,19 +62,25 @@ export function Footer() {
               <span className="font-medium">Legal</span>
               <div className="text-muted-foreground flex flex-col gap-2">
                 <Link
-                  href="/"
+                  href="/privacy"
                   className="hover:text-foreground transition-colors"
                 >
                   Privacy
                 </Link>
                 <Link
-                  href="/"
+                  href="/terms"
                   className="hover:text-foreground transition-colors"
                 >
                   Terms
                 </Link>
                 <Link
-                  href="/"
+                  href="/cookies"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Cookies
+                </Link>
+                <Link
+                  href="/acceptable-use"
                   className="hover:text-foreground transition-colors"
                 >
                   Acceptable Use
