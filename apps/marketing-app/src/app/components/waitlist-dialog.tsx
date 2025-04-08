@@ -64,11 +64,6 @@ export function WaitlistDialog({
       },
     );
     setIsLoading(false);
-    if (!response.ok) {
-      setError("Failed to join waitlist, please try again later.");
-      return;
-    }
-    const json = await response.json();
     if (response.status === 429) {
       const retryAfterSeconds = Number(response.headers.get("ratelimit-reset")) || 0;
       const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
@@ -80,6 +75,12 @@ export function WaitlistDialog({
       );
       return;
     }
+    if (!response.ok) {
+      setError("Failed to join waitlist, please try again later.");
+      return;
+    }
+    const json = await response.json();
+
 
     if (json.ok) {
       setError(null);
