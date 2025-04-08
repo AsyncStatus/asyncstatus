@@ -49,8 +49,6 @@ import {
   Copy,
   Edit,
   Mail,
-  MapPin,
-  Phone,
   Trash,
   Users,
 } from "@asyncstatus/ui/icons";
@@ -58,7 +56,6 @@ import {
   useMutation,
   useQueryClient,
   useSuspenseQueries,
-  useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
@@ -86,7 +83,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { organizationSlug, userId } = Route.useParams();
   const queryClient = useQueryClient();
-  const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
   const [member, activeMember] = useSuspenseQueries({
     queries: [
@@ -112,7 +108,7 @@ function RouteComponent() {
     role: "admin",
     permission: { member: ["create", "update", "delete"] },
   });
-  const { user, role, createdAt, team } = member.data;
+  const { user, role, createdAt, team } = member.data as any;
   const joinDate = createdAt ? format(new Date(createdAt), "PPP") : "N/A";
 
   // Function to render the appropriate badge based on role
@@ -192,7 +188,7 @@ function RouteComponent() {
                 <DialogHeader>
                   <DialogTitle>Update user</DialogTitle>
                   <DialogDescription>
-                    Update user's role or other details.
+                    Update user&apos;s role or other details.
                   </DialogDescription>
                 </DialogHeader>
 

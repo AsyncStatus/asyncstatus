@@ -62,7 +62,7 @@ function RouteComponent() {
   );
   const updateOrganizationMutation = useMutation({
     ...updateOrganizationMutationOptions(),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({
         queryKey: getOrganizationQueryOptions(data.slug!).queryKey,
       });
