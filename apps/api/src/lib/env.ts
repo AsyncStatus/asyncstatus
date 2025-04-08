@@ -1,6 +1,8 @@
+import type { InferSelectModel } from "drizzle-orm";
 import type { Resend } from "resend";
 
 import type { Db } from "../db";
+import * as schema from "../db/schema";
 import type { Auth } from "./auth";
 
 export type Bindings = {
@@ -36,7 +38,7 @@ export type HonoEnvWithSession = HonoEnv & {
 
 export type HonoEnvWithOrganization = HonoEnvWithSession & {
   Variables: Variables & {
-    organization: Auth["$Infer"]["Organization"];
-    member: Auth["$Infer"]["Member"];
+    organization: InferSelectModel<typeof schema.organization>;
+    member: InferSelectModel<typeof schema.member>;
   };
 };

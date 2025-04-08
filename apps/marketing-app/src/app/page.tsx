@@ -1,167 +1,238 @@
-import { getImageProps, ImageProps } from "next/image";
 import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@asyncstatus/ui/components/dialog";
-import { ZoomIn } from "@asyncstatus/ui/icons";
+import { motion } from "framer-motion";
 
-export default function NewPage() {
-  const {
-    props: { srcSet: light, ...rest },
-  } = getImageProps({ ...common, src: "/hero-light.webp" });
-  const {
-    props: { srcSet: lightLg },
-  } = getImageProps({ ...commonLg, src: "/hero-light-lg.webp" });
+import { BetaMessage } from "./components/beta-message";
+import { ConnectCard } from "./components/connect-card";
+import { CtaSection } from "./components/cta-section";
+import { FeaturesList } from "./components/features-list";
+import { Footer } from "./components/footer";
+import { GenerateCard } from "./components/generate-card";
+import { MobileMenu } from "./components/mobile-menu";
+import { ReviewCard } from "./components/review-card";
+import { TargetAudience } from "./components/target-audience";
+import { TrackCard } from "./components/track-card";
+import { UseItYourWay } from "./components/use-it-your-way";
+import { WaitlistDialog } from "./components/waitlist-dialog";
+import { peopleSummary } from "./people-summary";
+import { PersonSelect } from "./person-select";
+
+export default async function Page(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const person =
+    typeof searchParams.person === "string"
+      ? (searchParams.person ?? "frontend-developer")
+      : "frontend-developer";
 
   return (
-    <div className="mx-auto mt-24 w-full max-w-3xl p-4 pb-24 max-sm:mt-0">
-      <AsyncStatusLogo className="h-3.5 w-auto" />
-      <h1 className="mt-3.5 text-lg font-semibold">
-        Async status updates for remote startups
-      </h1>
-      <h2 className="text-sm">
-        Made for high-agency teams that value their time.
-      </h2>
+    <>
+      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5">
+        <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
-      <Dialog>
-        <DialogTrigger asChild>
-          <div className="group relative mt-4 w-full max-w-3xl rounded-md hover:opacity-60">
-            <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <ZoomIn className="text-foreground bg-background/50 pointer-events-none size-8 rounded-full p-1 backdrop-blur-md" />
+        {/* Progressive blur overlays - stronger towards top */}
+        <div className="pointer-events-none absolute -top-24 right-0 left-0 h-24">
+          <div className="from-background/80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[1px]" />
+          <div className="from-background/80 mask-top-20 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[2px]" />
+          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[4px]" />
+          <div className="from-background/80 mask-top-60 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px]" />
+          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px]" />
+          <div className="from-background/80 mask-top-100 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[32px]" />
+        </div>
+
+        {/* Bottom blur - subtle */}
+        {/* <div className="from-background/60 pointer-events-none absolute right-0 -bottom-4 left-0 h-4 bg-gradient-to-b to-transparent backdrop-blur-[1px]" /> */}
+
+        {/* Side blurs */}
+        <div className="to-background/60 pointer-events-none absolute top-0 bottom-0 -left-6 w-6 bg-gradient-to-r from-transparent backdrop-blur-[1px]" />
+        <div className="to-background/60 pointer-events-none absolute top-0 -right-6 bottom-0 w-6 bg-gradient-to-l from-transparent backdrop-blur-[1px]" />
+
+        <div className="z-10 flex flex-col">
+          <Link href="/" className="flex items-center gap-2">
+            <AsyncStatusLogo className="h-3.5 w-auto" />
+            <h1 className="text-lg font-medium max-sm:text-base">
+              AsyncStatus
+            </h1>
+          </Link>
+        </div>
+
+        <div className="z-10 flex items-center gap-7 text-sm max-sm:hidden">
+          <Link href="#how-it-works" className="">
+            How it works
+          </Link>
+
+          <Link href="#features" className="">
+            Features
+          </Link>
+
+          <Link href="#team" className="">
+            Use cases
+          </Link>
+
+          <Link href="/" className="">
+            Login
+          </Link>
+
+          <WaitlistDialog buttonSize="sm" />
+        </div>
+
+        <MobileMenu />
+      </header>
+
+      <main className="mx-auto mt-48 w-full max-w-6xl px-4">
+        {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
+          <span>
+            <span>Async status updates for remote startups</span>
+          </span>
+          <span aria-hidden="true">
+            Async status updates for remote startups
+          </span>
+        </h2>
+        <h2 className="hidden text-center text-2xl font-bold max-sm:block">
+          Async status updates for remote startups
+        </h2>
+
+        <h3 className="text-muted-foreground mt-4 text-center text-xl leading-normal max-md:text-lg max-sm:text-base">
+          No more standups. No more status meetings. No more status emails.
+          <br />
+          Turns out your team knew how to work all along.
+        </h3> */}
+
+        {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
+          <span>
+            <span>Drop your standups</span>
+          </span>
+          <span aria-hidden="true">Drop your standups</span>
+        </h2>
+        <h2 className="hidden text-center text-2xl font-bold max-sm:block">
+          Drop your standups
+        </h2>
+
+        <h3 className="text-muted-foreground mt-4 text-center text-xl leading-normal max-md:text-lg max-sm:text-base">
+          Async status updates for remote startups. Built for high-agency teams
+          that value their time.
+        </h3> */}
+
+        <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
+          <span>
+            <span>Standup meetings suck</span>
+          </span>
+          <span aria-hidden="true">Standup meetings suck</span>
+        </h2>
+        <h2 className="hidden text-center text-5xl font-bold max-sm:block">
+          Standup meetings suck
+        </h2>
+
+        <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
+          Your team already pushed code, closed tickets, replied in threads,
+          fixed small things no one asked them to. We turn it into an update. Or
+          you can write it yourself. Either way, no one has to talk about it at
+          9:30 a.m.
+        </h3>
+
+        <div className="mt-14 flex justify-center">
+          <WaitlistDialog buttonSize="lg" />
+        </div>
+
+        <img
+          src="/hero-light.webp"
+          alt="AsyncStatus app screenshot"
+          className="border-border mt-36 w-full rounded-lg border"
+        />
+
+        <div className="mt-36 flex flex-col items-center">
+          <div className="relative w-full max-w-6xl">
+            <div className="flex items-center justify-between">
+              <div className="bg-background border-border rounded-lg border px-4 py-2">
+                <div className="inline-flex items-center gap-0.5">
+                  <span className="text-lg">Standup for</span>
+                  <PersonSelect
+                    defaultValue="frontend-developer"
+                    value={person}
+                  />
+                </div>
+              </div>
             </div>
 
-            <picture className="relative z-10 rounded-[inherit]">
-              <source media="(min-width: 1300px)" srcSet={lightLg} />
-              <source media="(min-width: 768px)" srcSet={light} />
-              <img
-                {...rest}
-                className="border-border h-auto w-full rounded-[inherit] border object-contain select-none"
-              />
-            </picture>
+            <div className="mt-4 flex flex-col gap-12">
+              <div>
+                <h4 className="text-muted-foreground mb-3 text-sm font-medium">
+                  In the meeting
+                </h4>
+                <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
+                  <p className="text-muted-foreground/90 text-lg text-balance">
+                    {peopleSummary[person].standupText}
+                  </p>
+                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm">
+                    <span>{peopleSummary[person].meetingDetails.time}</span>
+                    <span>·</span>
+                    <span>
+                      {peopleSummary[person].meetingDetails.peopleListening}{" "}
+                      people listening
+                    </span>
+                    <span>·</span>
+                    <span>
+                      {peopleSummary[person].meetingDetails.peopleTyping} people
+                      typing
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-muted-foreground mb-3 text-sm font-medium">
+                  What actually happened
+                </h4>
+                <div className="flex flex-col gap-2">
+                  {peopleSummary[person].summary.map((summary, index) => (
+                    <div key={summary} className="flex items-start gap-4">
+                      <span className="text-primary mt-1 text-sm font-medium">
+                        0{index + 1}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-lg">{summary}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </DialogTrigger>
-
-        <DialogContent
-          hideCloseButton
-          className="max-w-7xl border-0 bg-transparent p-0 p-4 outline-none sm:max-w-7xl"
-        >
-          <DialogTitle hidden aria-hidden>
-            Demo image
-          </DialogTitle>
-          <DialogDescription hidden aria-hidden>
-            See the platform
-          </DialogDescription>
-
-          <div className="relative w-full overflow-hidden rounded-md bg-transparent">
-            <img
-              src="/hero-light-lg.webp"
-              sizes="100vw"
-              alt="Demo image"
-              className="h-auto w-full rounded-md object-contain"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="mt-2.5 flex items-start justify-end gap-1">
-        <Button
-          asChild
-          variant="ghost"
-          className="text-muted-foreground text-xs"
-        >
-          <a href={process.env.NEXT_PUBLIC_APP_URL} target="_blank">
-            Go to app
-          </a>
-        </Button>
-
-        <Button
-          asChild
-          variant="ghost"
-          className="text-muted-foreground text-xs"
-        >
-          <a href="mailto:kacper@asyncstatus.com" target="_blank">
-            Contact us
-          </a>
-        </Button>
-
-        <div className="flex flex-col gap-1">
-          <Button asChild>
-            <a href={process.env.NEXT_PUBLIC_STRIPE_LINK} target="_blank">
-              Join private beta
-            </a>
-          </Button>
-          <p className="text-muted-foreground text-xs">
-            7 days free, no credit card required.
-          </p>
         </div>
-      </div>
 
-      <h3 className="mt-8 mb-1.5 text-base font-semibold">How it works?</h3>
-      <ol className="list-inside list-decimal text-sm">
-        <li>
-          You connect your tools (GitHub, Slack){" "}
-          <span className="text-muted-foreground">
-            which takes less than 5 minutes
-          </span>
-        </li>
-        <li>
-          We listen for updates from your tools and generate status updates from
-          your team's activity.
-        </li>
-        <li>Your team can optionally adjust their status updates.</li>
-      </ol>
+        <h3
+          className="mt-36 text-center text-6xl font-bold max-sm:text-5xl"
+          id="how-it-works"
+        >
+          How it works
+        </h3>
+        <div className="mt-24 grid grid-cols-1 gap-8 sm:grid-cols-2 md:gap-12">
+          <ConnectCard />
+          <TrackCard />
+          <GenerateCard />
+          <ReviewCard />
+        </div>
 
-      <h3 className="mt-8 mb-1.5 text-base font-semibold">Use cases</h3>
-      <ul className="list-inside list-disc text-sm">
-        <li>
-          <span className="italic">Developers</span> - generate status based on
-          your activity.
-        </li>
-        <li>
-          <span className="italic">Product owners</span> - see summary of your
-          team's work, spot blockers and mood changes.
-        </li>
-        <li>
-          <span className="italic">Founders</span> - get insights from your team
-          without unnecessary questions.
-        </li>
-      </ul>
+        <UseItYourWay />
 
-      <h3 className="mt-8 mb-1.5 text-base font-semibold">Features</h3>
-      <ul className="list-inside list-disc text-sm">
-        <li>Integrations with GitHub and Slack.</li>
-        <li>Blockers and mood changes.</li>
-        <li>User timezones.</li>
-        <li>Slack bot that asks for scheduled updates and posts summaries.</li>
-        <li>Manual updates.</li>
-        <li>
-          <Link
-            target="_blank"
-            href="https://github.com/asyncstatus/web"
-            className="text-muted-foreground underline underline-offset-2"
-          >
-            Open source
-          </Link>
-        </li>
-      </ul>
-    </div>
+        <section id="team">
+          <TargetAudience />
+        </section>
+
+        <section id="features">
+          <FeaturesList />
+        </section>
+
+        <section id="beta">
+          <BetaMessage />
+        </section>
+
+        <CtaSection />
+      </main>
+
+      <Footer />
+    </>
   );
 }
-
-const common = {
-  alt: "AsyncStatus App",
-  width: 1300,
-  height: 800,
-  unoptimized: true,
-  sizes: "100vw",
-} satisfies Omit<ImageProps, "src">;
-const commonLg = { ...common, width: 2666, height: 1500 } satisfies Omit<
-  ImageProps,
-  "src"
->;

@@ -1,5 +1,5 @@
 import { loginEmailMutationOptions } from "@/rpc/auth";
-import { getInvitationByEmailQueryOptions } from "@/rpc/organization";
+import { getInvitationByEmailQueryOptions } from "@/rpc/organization/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";

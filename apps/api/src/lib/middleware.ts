@@ -51,7 +51,7 @@ export const requiredOrganization = createMiddleware<HonoEnvWithOrganization>(
     }
 
     c.set("organization", { ...restOrg, slug: org.slug! });
-    c.set("member", { ...members[0], teamId: members[0].teamId ?? undefined });
+    c.set("member", members[0]);
     await next();
   },
 );

@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
+import { Noto_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
 import { PostHogProvider } from "./providers";
@@ -12,6 +13,12 @@ const favorit = localFont({
     { path: "./fonts/ABCFavorit-Regular.woff2", weight: "400" },
   ],
   variable: "--font-favorit",
+});
+
+const noto = Noto_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-noto",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +52,7 @@ export const metadata: Metadata = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={favorit.variable}>
+      <body className={`${favorit.variable} ${noto.variable}`}>
         <PostHogProvider>{props.children}</PostHogProvider>
       </body>
     </html>

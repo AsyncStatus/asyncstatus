@@ -2,7 +2,7 @@ import {
   sendVerificationEmailMutationOptions,
   signUpEmailMutationOptions,
 } from "@/rpc/auth";
-import { getInvitationByEmailQueryOptions } from "@/rpc/organization";
+import { getInvitationByEmailQueryOptions } from "@/rpc/organization/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";

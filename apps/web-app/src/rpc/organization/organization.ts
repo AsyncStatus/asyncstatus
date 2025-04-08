@@ -1,4 +1,5 @@
 import {
+  zOrganizationCreate,
   zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
@@ -9,7 +10,7 @@ import type { z } from "zod";
 import { authClient } from "@/lib/auth";
 import { mutationOptions } from "@/lib/utils";
 
-import { rpc } from "./rpc";
+import { rpc } from "../rpc";
 
 export function getOrganizationQueryOptions(idOrSlug?: string) {
   return queryOptions({
@@ -30,36 +31,12 @@ export function getOrganizationQueryOptions(idOrSlug?: string) {
 export function createOrganizationMutationOptions() {
   return mutationOptions({
     mutationKey: ["createOrganization"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.create>[0],
-    ) => {
-      const { data, error } = await authClient.organization.create(input);
-      if (error) {
-        throw new Error(error.message);
+    mutationFn: async (data: z.infer<typeof zOrganizationCreate>) => {
+      const response = await rpc.organization.$post({ form: data });
+      if (!response.ok) {
+        throw await response.json();
       }
-      return data;
-    },
-  });
-}
-
-export function createOrganizationAndSetActiveMutationOptions() {
-  return mutationOptions({
-    mutationKey: ["createOrganizationAndSetActive"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.create>[0],
-    ) => {
-      const { data, error } = await authClient.organization.create(input);
-      if (error) {
-        throw new Error(error.message);
-      }
-      const { data: activeData, error: activeError } =
-        await authClient.organization.setActive({
-          organizationId: data.id,
-        });
-      if (activeError) {
-        throw new Error(activeError.message);
-      }
-      return activeData;
+      return response.json();
     },
   });
 }

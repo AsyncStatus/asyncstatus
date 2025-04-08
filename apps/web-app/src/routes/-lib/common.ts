@@ -2,7 +2,7 @@ import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getOrganizationQueryOptions,
   listOrganizationsQueryOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import type { QueryClient } from "@tanstack/react-query";
 import { redirect, type ParsedLocation } from "@tanstack/react-router";
 

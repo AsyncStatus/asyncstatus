@@ -1,36 +1,29 @@
+import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
+import dayjs from "dayjs";
 import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 
-import * as schema from "../db/schema";
+import * as schema from "../../db/schema";
 import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
   AsyncStatusNotFoundError,
   AsyncStatusUnexpectedApiError,
-} from "../errors";
-import type { HonoEnvWithOrganization } from "../lib/env";
-import { requiredOrganization, requiredSession } from "../lib/middleware";
+} from "../../errors";
+import type { HonoEnvWithOrganization } from "../../lib/env";
+import { requiredOrganization, requiredSession } from "../../lib/middleware";
 import {
   zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
   zOrganizationMemberUpdate,
-  zOrganizationUpdate,
-} from "../schema/organization";
+} from "../../schema/organization";
 
-export const organizationRouter = new Hono<HonoEnvWithOrganization>()
+export const memberRouter = new Hono<HonoEnvWithOrganization>()
+  .use(requiredOrganization)
   .use(requiredSession)
-  .get(
-    "/:idOrSlug",
-    requiredOrganization,
-    zValidator("param", zOrganizationIdOrSlug),
-    async (c) => {
-      return c.json(c.var.organization);
-    },
-  )
   .get(
     "/:idOrSlug/members",
     requiredOrganization,
@@ -64,33 +57,13 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
           eq(schema.member.organizationId, c.var.organization.id),
           eq(schema.member.id, memberId),
         ),
-        with: { user: true, team: true },
+        with: { user: true, teamMemberships: { with: { team: true } } },
       });
       if (!member) {
         throw new AsyncStatusNotFoundError({ message: "Member not found" });
       }
 
       return c.json(member);
-    },
-  )
-  .get(
-    "/:idOrSlug/file",
-    requiredOrganization,
-    zValidator("param", zOrganizationIdOrSlug),
-    zValidator("query", z.object({ fileKey: z.string() })),
-    async (c) => {
-      const { fileKey } = c.req.valid("query");
-      const object = await c.env.PRIVATE_BUCKET.get(fileKey);
-      if (!object) {
-        throw new AsyncStatusNotFoundError({ message: "File not found" });
-      }
-
-      const headers = new Headers();
-      object.writeHttpMetadata(headers);
-      headers.set("etag", object.httpEtag);
-      headers.set("cache-control", "private, max-age=600");
-
-      return new Response(object.body, { headers });
     },
   )
   .patch(
@@ -100,18 +73,6 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("form", zOrganizationMemberUpdate),
     async (c) => {
       const { memberId } = c.req.valid("param");
-      const hasPermissionResponse = await c.var.auth.api.hasPermission({
-        body: {
-          permission: { member: ["update"] },
-          organizationId: c.var.organization.id,
-        },
-        headers: c.req.raw.headers,
-      });
-      if (!hasPermissionResponse.success && memberId !== c.var.member.id) {
-        throw new AsyncStatusForbiddenError({
-          message: "You do not have permission to update members",
-        });
-      }
       const member = await c.var.db.query.member.findFirst({
         where: eq(schema.member.id, memberId),
         with: { user: true },
@@ -119,13 +80,18 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       if (!member) {
         throw new AsyncStatusNotFoundError({ message: "Member not found" });
       }
+      if (member.userId !== c.var.session.user.id && member.role !== "admin") {
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to update this member",
+        });
+      }
 
       const { role, ...userUpdates } = c.req.valid("form");
       if (role) {
-        await c.var.auth.api.updateMemberRole({
-          body: { memberId, role, organizationId: c.var.organization.id },
-          headers: c.req.raw.headers,
-        });
+        await c.var.db
+          .update(schema.member)
+          .set({ role })
+          .where(eq(schema.member.id, memberId));
       }
       if (userUpdates.image instanceof File) {
         const image = await c.env.PRIVATE_BUCKET.put(
@@ -173,19 +139,6 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("json", zOrganizationCreateInvite),
     async (c) => {
       const { firstName, lastName, email, role } = c.req.valid("json");
-      const hasPermissionResponse = await c.var.auth.api.hasPermission({
-        body: {
-          permission: { invitation: ["create"] },
-          organizationId: c.var.organization.id,
-        },
-        headers: c.req.raw.headers,
-      });
-      if (!hasPermissionResponse.success) {
-        throw new AsyncStatusForbiddenError({
-          message: "You do not have permission to create invitations",
-        });
-      }
-
       let [existingInvitation, existingUser] = await Promise.all([
         c.var.db.query.invitation.findFirst({
           where: and(
@@ -225,90 +178,55 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const newInvitation = await c.var.auth.api.createInvitation({
-        body: {
-          role,
-          email,
-          organizationId: c.var.organization.id,
-        },
-        headers: c.req.raw.headers,
-      });
+      const invitationId = generateId();
       await c.var.db
-        .update(schema.invitation)
-        .set({ name: `${firstName} ${lastName}` })
-        .where(eq(schema.invitation.id, newInvitation.id));
-      const updatedInvitation = await c.var.db.query.invitation.findFirst({
-        where: eq(schema.invitation.id, newInvitation.id),
-        with: {
-          inviter: { columns: { id: true, name: true, email: true } },
-          organization: { columns: { id: true, slug: true, name: true } },
-        },
+        .insert(schema.invitation)
+        .values({
+          id: invitationId,
+          name: `${firstName} ${lastName}`,
+          expiresAt: dayjs().add(48, "hours").toDate(),
+          email,
+          role,
+          organizationId: c.var.organization.id,
+          inviterId: c.var.member.id,
+          status: "pending",
+        })
+        .returning();
+      const invitation = await c.var.db.query.invitation.findFirst({
+        where: eq(schema.invitation.id, invitationId),
+        with: { inviter: true, organization: true },
       });
-      if (!updatedInvitation) {
+      if (!invitation) {
         throw new AsyncStatusUnexpectedApiError({
           message: "Failed to create invitation",
         });
       }
 
-      return c.json(updatedInvitation);
-    },
-  )
-  .patch(
-    "/:idOrSlug",
-    requiredOrganization,
-    zValidator("param", zOrganizationIdOrSlug),
-    zValidator("form", zOrganizationUpdate),
-    async (c) => {
-      const hasPermissionResponse = await c.var.auth.api.hasPermission({
-        body: {
-          permission: { organization: ["update"] },
-          organizationId: c.var.organization.id,
-        },
-        headers: c.req.raw.headers,
-      });
-      if (!hasPermissionResponse.success) {
-        throw new AsyncStatusForbiddenError({
-          message: "You do not have permission to update organization settings",
-        });
-      }
+      const params = new URLSearchParams();
+      params.set("invitationId", invitation.id);
+      params.set("invitationEmail", email);
+      const inviteLink = `${c.env.WEB_APP_URL}/invitation?${params.toString()}`;
+      const invitedByUsername =
+        invitation.inviter.name?.split(" ")[0] ?? invitation.inviter.name;
 
-      const updates = c.req.valid("form");
-
-      if (updates.logo instanceof File) {
-        const image = await c.env.PRIVATE_BUCKET.put(
-          generateId(),
-          updates.logo,
-        );
-        if (!image) {
-          throw new AsyncStatusUnexpectedApiError({
-            message: "Failed to upload image",
-          });
-        }
-        (updates as any).logo = image.key;
-      } else if (updates.logo === null && c.var.organization.image) {
-        await c.env.PRIVATE_BUCKET.delete(c.var.organization.image);
-        (updates as any).logo = null;
-      }
-
-      await c.var.db
-        .update(schema.organization)
-        .set(updates as any)
-        .where(eq(schema.organization.id, c.var.organization.id));
-
-      const updatedOrganization = await c.var.db.query.organization.findFirst({
-        where: eq(schema.organization.id, c.var.organization.id),
-      });
-      if (!updatedOrganization) {
-        throw new AsyncStatusUnexpectedApiError({
-          message: "Failed to update organization",
-        });
-      }
-
-      await c.var.auth.api.setActiveOrganization({
-        body: { organizationId: updatedOrganization.id },
-        headers: c.req.raw.headers,
+      await c.var.resend.emails.send({
+        from: "AsyncStatus <onboarding@a.asyncstatus.com>",
+        to: invitation.email,
+        subject: `${invitedByUsername} invited you to ${invitation.organization.name}`,
+        text: `${invitedByUsername} invited you to ${invitation.organization.name}, accept invitation before it expires.`,
+        react: (
+          <OrganizationInvitationEmail
+            inviteeFirstName={firstName}
+            invitedByUsername={invitedByUsername}
+            invitedByEmail={invitation.inviter.email}
+            teamName={invitation.organization.name}
+            inviteLink={inviteLink}
+            expiration="48 hours"
+            preview={`${invitedByUsername} invited you to ${invitation.organization.name}, accept invitation before it expires.`}
+          />
+        ),
       });
 
-      return c.json(updatedOrganization);
+      return c.json(invitation);
     },
   );

@@ -11,15 +11,20 @@ import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { authRouter } from "./routers/auth";
 import { invitationRouter } from "./routers/invitation";
-import { organizationRouter } from "./routers/organization";
+import { memberRouter } from "./routers/organization/member";
+import { organizationRouter } from "./routers/organization/organization";
+import { waitlistRouter } from "./routers/waitlist";
 
 const app = new Hono<HonoEnv>()
   .use(
     cors({
       origin: [
         "http://localhost:3000",
+        "http://localhost:3001",
         "https://app-v2.asyncstatus.com",
         "https://app-v2.dev.asyncstatus.com",
+        "https://v2.asyncstatus.com",
+        "https://v2.dev.asyncstatus.com",
       ],
       credentials: true,
     }),
@@ -42,7 +47,9 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/organization", organizationRouter)
+  .route("/organization", memberRouter)
   .route("/invitation", invitationRouter)
+  .route("/waitlist", waitlistRouter)
   .onError((err, c) => {
     if (err instanceof AsyncStatusUnexpectedApiError) {
       return c.json({ message: err.message }, err.status);

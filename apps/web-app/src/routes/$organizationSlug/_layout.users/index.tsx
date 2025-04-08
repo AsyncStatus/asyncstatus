@@ -4,7 +4,7 @@ import {
   getActiveMemberQueryOptions,
   listMembersQueryOptions,
   removeMemberMutationOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import {
   Avatar,
   AvatarFallback,

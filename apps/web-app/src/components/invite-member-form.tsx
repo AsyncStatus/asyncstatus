@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   inviteMemberMutationOptions,
   listMembersQueryOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {

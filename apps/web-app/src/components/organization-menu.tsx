@@ -3,7 +3,7 @@ import { sessionQueryOptions } from "@/rpc/auth";
 import {
   listOrganizationsQueryOptions,
   setActiveOrganizationMutationOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import {
   Avatar,
   AvatarFallback,

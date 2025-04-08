@@ -3,7 +3,7 @@ import {
   getOrganizationQueryOptions,
   listOrganizationsQueryOptions,
   updateOrganizationMutationOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import { zOrganizationUpdate } from "@asyncstatus/api/schema/organization";
 import {
   Breadcrumb,

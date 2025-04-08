@@ -5,7 +5,7 @@ import {
   getMemberQueryOptions,
   listMembersQueryOptions,
   updateMemberMutationOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import { zOrganizationMemberUpdate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {

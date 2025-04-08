@@ -4,7 +4,7 @@ import {
   getInvitationByEmailQueryOptions,
   getInvitationQueryOptions,
   rejectInvitationMutationOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
 import {
   Avatar,
   AvatarFallback,

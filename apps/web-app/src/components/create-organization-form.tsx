@@ -1,9 +1,10 @@
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   checkOrganizationSlugQueryOptions,
-  createOrganizationAndSetActiveMutationOptions,
+  createOrganizationMutationOptions,
   listOrganizationsQueryOptions,
-} from "@/rpc/organization";
+} from "@/rpc/organization/organization";
+import { zOrganizationCreate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
@@ -27,16 +28,14 @@ import {
   FormMessage,
 } from "@/components/form";
 
-const schema = z.object({ name: z.string().min(3).max(128) });
-
 export function CreateOrganizationForm(props: {
   onSuccess?: (data: typeof authClient.$Infer.ActiveOrganization) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const form = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: { name: "" },
+    resolver: zodResolver(zOrganizationCreate),
+    defaultValues: { name: "", slug: "" },
   });
   const name = form.watch("name");
   const [debouncedName] = useDebounce(name, 300);
@@ -47,8 +46,13 @@ export function CreateOrganizationForm(props: {
     retry: 0,
   });
   const createOrganization = useMutation({
-    ...createOrganizationAndSetActiveMutationOptions(),
+    ...createOrganizationMutationOptions(),
     onSuccess(data) {
+      if (!data.organization) {
+        toast.error("Failed to create organization");
+        return;
+      }
+
       queryClient.invalidateQueries({
         queryKey: listOrganizationsQueryOptions().queryKey,
       });
@@ -60,14 +64,17 @@ export function CreateOrganizationForm(props: {
           }
           return {
             ...sessionData,
-            session: { ...sessionData.session, activeOrganizationId: data.id },
+            session: {
+              ...sessionData.session,
+              activeOrganizationId: data.organization.id,
+            },
           };
         },
       );
-      props.onSuccess?.(data);
+      props.onSuccess?.(data.organization as any);
       navigate({
         to: "/$organizationSlug",
-        params: { organizationSlug: data.slug },
+        params: { organizationSlug: data.organization.slug || "" },
       });
     },
     onError(error) {
@@ -75,69 +82,71 @@ export function CreateOrganizationForm(props: {
     },
   });
 
+  const onSubmit = (values: z.infer<typeof zOrganizationCreate>) => {
+    createOrganization.mutate(values);
+  };
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit((data) => {
-          createOrganization.mutate({
-            name: data.name,
-            slug: slugify(data.name),
-          });
-        })}
-        className="mx-auto w-full space-y-24"
-      >
-        <div className="grid gap-5">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-end justify-between">
-                  <FormLabel>Organization name</FormLabel>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Organization name</FormLabel>
+              <FormControl>
+                <Input placeholder="Acme Inc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Organization slug</FormLabel>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    placeholder="acme-inc"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      if (!form.getValues("slug")) {
+                        form.setValue("slug", slugify(e.target.value));
+                      }
+                    }}
+                  />
+                  {checkOrganizationSlug.data ===
+                  undefined ? null : checkOrganizationSlug.data ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
                 </div>
-                <FormControl>
-                  <Input placeholder="Apple Inc." {...field} />
-                </FormControl>
-                <FormDescription
-                  data-state={checkOrganizationSlug.error ? "error" : "success"}
-                  className="text-muted-foreground data-[state=error]:text-destructive h-4 data-[state=success]:text-green-500"
-                >
-                  {checkOrganizationSlug.isFetched &&
-                    checkOrganizationSlug.error && (
-                      <div className="flex items-center gap-0.5">
-                        <X className="size-4" />
-                        Name is already taken
-                      </div>
-                    )}
+              </FormControl>
+              <FormDescription>
+                This will be used in the URL of your organization.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-                  {checkOrganizationSlug.isFetched &&
-                    !checkOrganizationSlug.error && (
-                      <div className="flex items-center gap-0.5">
-                        <Check className="size-4" />
-                        Name is available
-                      </div>
-                    )}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={
-              createOrganization.isPending ||
-              debouncedName !== name ||
-              checkOrganizationSlug.isPending ||
-              Boolean(
-                checkOrganizationSlug.isFetched && checkOrganizationSlug.error,
-              )
-            }
-          >
-            Create organization
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          disabled={
+            createOrganization.isPending ||
+            checkOrganizationSlug.isPending ||
+            !checkOrganizationSlug.data
+          }
+        >
+          Create organization
+        </Button>
       </form>
     </Form>
   );
