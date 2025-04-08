@@ -28,7 +28,7 @@ const navVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.03,
     },
   },
 } satisfies Variants;
@@ -36,11 +36,22 @@ const navVariants = {
 const linkVariants = {
   hidden: {
     opacity: 0,
-    x: -20,
+    y: -10,
+    transition: {
+      type: "spring",
+      stiffness: 500,
+      damping: 20,
+    },
   },
   visible: {
     opacity: 1,
-    x: 0,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 35,
+      mass: 0.8,
+    },
   },
 } satisfies Variants;
 
@@ -48,9 +59,9 @@ export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <>
+    <div className="z-50 hidden items-center justify-center gap-6 max-sm:flex">
       <button
-        className="relative z-50 hidden h-6 w-6 touch-manipulation flex-col justify-center gap-2 p-1 max-sm:flex"
+        className="relative flex h-6 w-6 touch-manipulation flex-col justify-center gap-2"
         aria-label="Toggle menu"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -80,12 +91,12 @@ export function MobileMenu() {
               variants={navVariants}
               initial="hidden"
               animate="visible"
-              className="flex flex-col gap-6 text-lg"
+              className="flex flex-col text-lg"
             >
               <motion.div variants={linkVariants}>
                 <Link
                   href="#how-it-works"
-                  className="border-border block w-full border-b pb-4"
+                  className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
                   How it works
@@ -94,7 +105,7 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="#features"
-                  className="border-border block w-full border-b pb-4"
+                  className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
                   Features
@@ -103,7 +114,7 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="#team"
-                  className="border-border block w-full border-b pb-4"
+                  className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
                   Use cases
@@ -112,14 +123,14 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="/"
-                  className="border-border block w-full border-b pb-4"
+                  className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
                   Login
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <div className="border-border block w-full border-b pb-4">
+                <div className="block w-full py-6">
                   <WaitlistDialog
                     buttonSize="lg"
                     className="h-12 w-full text-lg font-normal"
@@ -130,6 +141,6 @@ export function MobileMenu() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
