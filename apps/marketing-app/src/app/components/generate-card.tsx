@@ -578,7 +578,7 @@ export function GenerateCard() {
           3
         </span>
       </div>
-      <div className="bg-background relative mt-3 aspect-video w-full overflow-hidden rounded-md border max-sm:min-h-[320px]">
+      <div className="bg-background relative mt-3 aspect-video w-full overflow-hidden rounded-md border max-sm:h-[320px]">
         <div className="h-full w-full p-3">
           {/* Date header */}
           <div className="mb-2 text-left text-sm font-medium">

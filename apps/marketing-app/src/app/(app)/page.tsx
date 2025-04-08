@@ -84,7 +84,7 @@ export default async function Page(props: {
         <MobileMenu />
       </header>
 
-      <main className="mx-auto mt-48 w-full max-w-6xl px-4">
+      <main className="mx-auto mt-48 w-full max-w-6xl px-4 max-sm:mt-28">
         {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
             <span>Async status updates for remote startups</span>
@@ -135,21 +135,21 @@ export default async function Page(props: {
           9:30 a.m.
         </h3>
 
-        <div className="mt-14 flex justify-center">
+        <div className="mt-14 flex justify-center max-sm:mt-6">
           <WaitlistDialog buttonSize="lg" />
         </div>
 
         <img
           src="/hero-light.webp"
           alt="AsyncStatus app screenshot"
-          className="border-border mt-36 w-full rounded-lg border"
+          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
         />
 
         <div className="mt-36 flex flex-col items-center">
           <div className="relative w-full max-w-6xl">
             <div className="flex items-center justify-between">
               <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
-                <div className="inline-flex items-center gap-0.5">
+                <div className="inline-flex items-center gap-0.5 max-sm:gap-1.5">
                   <span className="text-lg">Standup for</span>
                   <PersonSelect
                     defaultValue="frontend-developer"

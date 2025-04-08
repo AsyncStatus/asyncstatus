@@ -798,7 +798,7 @@ export function ReviewCard() {
       </div>
       <div
         ref={containerRef}
-        className="bg-background relative mt-3 aspect-video w-full overflow-hidden rounded-md border max-sm:min-h-[300px]"
+        className="bg-background relative mt-3 aspect-video w-full overflow-hidden rounded-md border max-sm:h-[300px]"
       >
         {/* Editor view (hidden in final view) */}
         {!isShowingFinalView && (
