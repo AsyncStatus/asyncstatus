@@ -472,7 +472,7 @@ export function FeaturesList() {
               Self-host or just see through the code.{" "}
               <Link
                 target="_blank"
-                href="https://github.com/asyncstatus/web"
+                href="https://github.com/asyncstatus/asyncstatus"
                 className="text-primary inline-flex items-center text-sm font-medium hover:underline"
               >
                 View on GitHub
