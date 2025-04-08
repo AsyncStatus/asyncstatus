@@ -35,6 +35,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=marketing-app
+          command: bun run deploy
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           workingDirectory: apps/marketing-app
