@@ -1,5 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# https://opennext.js.org/cloudflare/get-started#9-add-open-next-to-gitignore
+.open-next 
+.dev.vars
+.wrangler
+
 # dependencies
 /node_modules
 /.pnp
