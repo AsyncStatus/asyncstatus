@@ -205,11 +205,13 @@ export function WaitlistDialog({
         <div className="bg-primary -mx-6 px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h4 className="text-primary-foreground font-medium">
+              <h4 className="text-primary-foreground text-lg font-medium">
                 Skip the line for $5
               </h4>
               <p className="text-primary-foreground/60 text-sm">
-                No waiting, just access to beta. Now.
+                No waiting, just access to beta.
+                <br />
+                Discounts and priority support included.
               </p>
             </div>
             <Button

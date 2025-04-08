@@ -71,7 +71,10 @@ export default async function Page(props: {
         </div>
 
         <div className="z-10 flex items-center gap-7 text-sm max-sm:hidden">
-          <Link href="/" className="hover:text-foreground">
+          <Link
+            href={process.env.NEXT_PUBLIC_APP_URL ?? ""}
+            className="hover:text-foreground"
+          >
             Login
           </Link>
 
