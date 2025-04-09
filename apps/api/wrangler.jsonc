@@ -4,6 +4,9 @@
   "main": "src/index.ts",
   "minify": true,
   "compatibility_date": "2025-03-16",
+  "observability": {
+    "enabled": true,
+  },
   "kv_namespaces": [
     {
       "binding": "AS_PROD_AUTH_KV",

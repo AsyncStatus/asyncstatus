@@ -2,6 +2,9 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "compatibility_date": "2025-03-16",
   "name": "web-app",
+  "observability": {
+    "enabled": true,
+  },
   "pages_build_output_dir": "dist",
   "placement": {
     "mode": "off",
