@@ -140,7 +140,7 @@ function RouteComponent() {
               <CardContent>
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((values) => {
+                    onSubmit={form.handleSubmit((values: any) => {
                       updateOrganizationMutation.mutate({
                         param: { idOrSlug: params.organizationSlug },
                         form: { ...values, slug: slugify(values.name) },
