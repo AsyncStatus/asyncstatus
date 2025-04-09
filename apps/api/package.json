@@ -29,6 +29,7 @@
     "@hono/zod-validator": "0.4.3",
     "@libsql/client": "0.15.2",
     "better-auth": "1.2.5",
+    "bun": "1.2.9",
     "dayjs": "1.11.13",
     "drizzle-orm": "0.41.0",
     "hono": "4.7.6",
@@ -39,10 +40,10 @@
     "@asyncstatus/eslint-config": "workspace:*",
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
-    "@cloudflare/workers-types": "4.20250407.0",
-    "@types/bun": "1.2.8",
+    "@cloudflare/workers-types": "4.20250409.0",
+    "@types/bun": "1.2.9",
     "drizzle-kit": "0.30.6",
-    "wrangler": "4.8.0"
+    "wrangler": "4.9.1"
   },
-  "packageManager": "bun@1.2.8"
+  "packageManager": "bun@1.2.9"
 }

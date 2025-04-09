@@ -3,7 +3,7 @@
   "name": "api",
   "main": "src/index.ts",
   "minify": true,
-  "compatibility_date": "2025-03-16",
+  "compatibility_date": "2025-04-02",
   "observability": {
     "enabled": true,
   },
