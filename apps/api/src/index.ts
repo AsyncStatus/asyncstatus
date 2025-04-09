@@ -14,6 +14,7 @@ import { authRouter } from "./routers/auth";
 import { invitationRouter } from "./routers/invitation";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
+import { organizationSlackRouter, slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
 
 const app = new Hono<HonoEnv>()
@@ -53,7 +54,9 @@ const app = new Hono<HonoEnv>()
   .route("/auth", authRouter)
   .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
+  .route("/organization", organizationSlackRouter)
   .route("/invitation", invitationRouter)
+  .route("/slack", slackRouter)
   .route("/waitlist", waitlistRouter)
   .onError((err, c) => {
     console.log(err);

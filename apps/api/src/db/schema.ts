@@ -201,3 +201,42 @@ export const teamMembershipRelations = relations(teamMembership, ({ one }) => ({
     references: [member.id],
   }),
 }));
+
+// Slack tables
+export const slackWorkspace = sqliteTable("slack_workspace", {
+  id: text("id").primaryKey(),
+  teamId: text("team_id").notNull(),
+  teamName: text("team_name").notNull(),
+  botUserId: text("bot_user_id").notNull(),
+  botAccessToken: text("bot_access_token").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+export const slackIntegration = sqliteTable("slack_integration", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organization.id, { onDelete: "cascade" }),
+  slackWorkspaceId: text("slack_workspace_id").notNull().references(() => slackWorkspace.id, { onDelete: "cascade" }),
+  createdById: text("created_by_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  settings: text("settings", { mode: "json" }),
+});
+
+export const slackWorkspaceRelations = relations(slackWorkspace, ({ many }) => ({
+  integrations: many(slackIntegration),
+}));
+
+export const slackIntegrationRelations = relations(slackIntegration, ({ one }) => ({
+  organization: one(organization, {
+    fields: [slackIntegration.organizationId],
+    references: [organization.id],
+  }),
+  workspace: one(slackWorkspace, {
+    fields: [slackIntegration.slackWorkspaceId],
+    references: [slackWorkspace.id],
+  }),
+  createdBy: one(user, {
+    fields: [slackIntegration.createdById],
+    references: [user.id],
+  }),
+}));
