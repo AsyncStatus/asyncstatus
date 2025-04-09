@@ -79,8 +79,12 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (invitation.data?.hasUser && invitation.data?.email) {
-      form.resetField("email", { defaultValue: invitation.data.email });
+    if (invitation.data?.email) {
+      form.reset({
+        email: invitation.data.email,
+        password: "",
+        rememberMe: true,
+      });
     }
   }, [invitation.data, form]);
 
