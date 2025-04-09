@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { loginEmailMutationOptions } from "@/rpc/auth";
 import { getInvitationByEmailQueryOptions } from "@/rpc/organization/organization";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -76,6 +77,12 @@ function RouteComponent() {
       rememberMe: true,
     },
   });
+
+  useEffect(() => {
+    if (invitation.data?.hasUser && invitation.data?.email) {
+      form.setValue("email", invitation.data.email);
+    }
+  }, [invitation.data, form]);
 
   const loginEmail = useMutation({
     ...loginEmailMutationOptions(),
