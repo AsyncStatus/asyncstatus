@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   inviteMemberMutationOptions,
   listMembersQueryOptions,
-} from "@/rpc/organization/organization";
+} from "@/rpc/organization/member";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -22,10 +24,14 @@ import {
 import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQueries,
+} from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { authClient, roleOptions } from "@/lib/auth";
+import { roleOptions } from "@/lib/auth";
 import {
   Form,
   FormControl,
@@ -50,6 +56,7 @@ export function InviteMemberForm(props: {
 }) {
   const queryClient = useQueryClient();
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
+  const [teamPopoverOpen, setTeamPopoverOpen] = useState(false);
   const form = useForm({
     resolver: zodResolver(zOrganizationCreateInvite),
     defaultValues: {
@@ -57,23 +64,35 @@ export function InviteMemberForm(props: {
       lastName: "",
       email: "",
       role: "member" as const,
+      teamId: "",
     },
   });
+  const [organization, teams] = useSuspenseQueries({
+    queries: [
+      getOrganizationQueryOptions(props.organizationSlug),
+      listTeamsQueryOptions(props.organizationSlug),
+    ],
+  });
+  useEffect(() => {
+    if (teams.data && teams.data[0]) {
+      form.setValue("teamId", teams.data[0].id);
+    }
+  }, [teams.data, form]);
   const inviteMember = useMutation({
     ...inviteMemberMutationOptions(),
     onSuccess(data) {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(props.organizationSlug).queryKey,
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      props.onSuccess?.(data as any);
+      props.onSuccess?.({
+        ...data,
+        status: data.status as "pending" | "accepted" | "rejected" | "canceled",
+        role: data.role as "member" | "admin" | "owner",
+        teamId: data.teamId ?? undefined,
+      });
     },
   });
-  const isOwner = authClient.organization.checkRolePermission({
-    role: "owner",
-    permission: { member: ["update"] },
-  });
-
+  const isOwner = organization.data.member.role === "owner";
   return (
     <Form {...form}>
       <form
@@ -211,6 +230,74 @@ export function InviteMemberForm(props: {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="teamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Team</FormLabel>
+                <FormControl>
+                  <Popover
+                    open={teamPopoverOpen}
+                    onOpenChange={setTeamPopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={teamPopoverOpen}
+                        className="justify-between"
+                      >
+                        {field.value
+                          ? teams.data?.find((team) => team.id === field.value)
+                              ?.name
+                          : "Select team..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search teams..."
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>No team found.</CommandEmpty>
+                          <CommandGroup>
+                            {teams.data?.map((team) => (
+                              <CommandItem
+                                key={team.id}
+                                value={team.id}
+                                onSelect={(currentValue) => {
+                                  form.setValue("teamId", currentValue);
+                                  setTeamPopoverOpen(false);
+                                }}
+                              >
+                                <div>
+                                  <p className="font-medium">{team.name}</p>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "mt-0.5 ml-auto self-start",
+                                    team.id === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Button
             type="submit"
             className="w-full"

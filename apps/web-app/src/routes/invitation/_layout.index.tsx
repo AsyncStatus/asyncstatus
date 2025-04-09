@@ -10,7 +10,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@asyncstatus/ui/components/avatar";
-import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -20,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@asyncstatus/ui/components/card";
-import { Separator } from "@asyncstatus/ui/components/separator";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Mail, User } from "@asyncstatus/ui/icons";
 import {
@@ -29,7 +27,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
 
 import { getFileUrl, getInitials } from "@/lib/utils";
 
@@ -42,6 +39,7 @@ export const Route = createFileRoute("/invitation/_layout/")({
         getInvitationByEmailQueryOptions(
           search.invitationId,
           search.invitationEmail,
+          false,
         ),
       ),
     ]);
@@ -78,11 +76,14 @@ function RouteComponent() {
       toast.success("Invitation accepted successfully!");
       navigate({
         to: "/$organizationSlug",
-        params: { organizationSlug: invitation.data!.organization.slug! },
+        params: { organizationSlug: invitation.data!.organization.slug },
         replace: true,
       });
       queryClient.invalidateQueries({
-        queryKey: getInvitationQueryOptions(search.invitationId).queryKey,
+        queryKey: getInvitationQueryOptions(
+          search.invitationId,
+          search.invitationEmail,
+        ).queryKey,
       });
     },
   });
@@ -91,31 +92,15 @@ function RouteComponent() {
     onSuccess() {
       toast.success("Invitation rejected");
       queryClient.invalidateQueries({
-        queryKey: getInvitationQueryOptions(search.invitationId).queryKey,
+        queryKey: getInvitationQueryOptions(
+          search.invitationId,
+          search.invitationEmail,
+        ).queryKey,
       });
     },
   });
 
   const { data } = invitation;
-
-  const expiresIn = data?.expiresAt
-    ? formatDistanceToNow(data.expiresAt, { addSuffix: true })
-    : "N/A";
-
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return <Badge variant="default">Pending</Badge>;
-      case "accepted":
-        return <Badge variant="secondary">Accepted</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
-      case "canceled":
-        return <Badge variant="outline">Canceled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
 
   // Get organization avatar URL if logo exists
   const organizationAvatarUrl =
@@ -173,20 +158,20 @@ function RouteComponent() {
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Role: </span>
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Role:</span>
               <span className="font-medium capitalize">{data?.role}</span>
             </div>
 
-            <div className="text-sm">
-              <span className="text-muted-foreground">Status: </span>
-              {getStatusBadge(data?.status ?? "pending")}
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Expires: </span>
-              <span>{expiresIn}</span>
-            </div>
+            {data?.team && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Team:</span>
+                <span className="font-medium capitalize">
+                  {data?.team.name}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -197,7 +182,7 @@ function RouteComponent() {
             <Button
               className="flex-1"
               onClick={() =>
-                acceptInvitation.mutate({ invitationId: search.invitationId })
+                acceptInvitation.mutate({ id: search.invitationId })
               }
               disabled={acceptInvitation.isPending}
             >
@@ -207,7 +192,7 @@ function RouteComponent() {
               variant="outline"
               className="flex-1"
               onClick={() =>
-                rejectInvitation.mutate({ invitationId: search.invitationId })
+                rejectInvitation.mutate({ id: search.invitationId })
               }
               disabled={rejectInvitation.isPending}
             >

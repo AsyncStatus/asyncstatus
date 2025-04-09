@@ -1,14 +1,14 @@
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
-  checkOrganizationSlugQueryOptions,
   createOrganizationMutationOptions,
+  getOrganizationQueryOptions,
   listOrganizationsQueryOptions,
 } from "@/rpc/organization/organization";
+import type { Organization } from "@asyncstatus/api";
 import { zOrganizationCreate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { Check, X } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { authClient } from "@/lib/auth";
 import useDebounce from "@/lib/use-debounce";
 import {
   Form,
@@ -29,7 +28,7 @@ import {
 } from "@/components/form";
 
 export function CreateOrganizationForm(props: {
-  onSuccess?: (data: typeof authClient.$Infer.ActiveOrganization) => void;
+  onSuccess?: (data: Organization) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -38,12 +37,12 @@ export function CreateOrganizationForm(props: {
     defaultValues: { name: "", slug: "" },
   });
   const name = form.watch("name");
-  const [debouncedName] = useDebounce(name, 300);
-  const checkOrganizationSlug = useQuery({
-    ...checkOrganizationSlugQueryOptions(
-      debouncedName.length >= 3 ? slugify(debouncedName) : "",
-    ),
+  const slug = form.watch("slug");
+  const [debouncedSlug] = useDebounce(slug, 300);
+  const existingOrganization = useQuery({
+    ...getOrganizationQueryOptions(debouncedSlug),
     retry: 0,
+    throwOnError: false,
   });
   const createOrganization = useMutation({
     ...createOrganizationMutationOptions(),
@@ -71,7 +70,10 @@ export function CreateOrganizationForm(props: {
           };
         },
       );
-      props.onSuccess?.(data.organization as any);
+      props.onSuccess?.({
+        ...data.organization,
+        createdAt: new Date(data.organization.createdAt),
+      });
       navigate({
         to: "/$organizationSlug",
         params: { organizationSlug: data.organization.slug || "" },
@@ -96,42 +98,20 @@ export function CreateOrganizationForm(props: {
             <FormItem>
               <FormLabel>Organization name</FormLabel>
               <FormControl>
-                <Input placeholder="Acme Inc." {...field} />
+                <Input
+                  placeholder="Acme Inc."
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    form.setValue("slug", slugify(e.target.value));
+                  }}
+                />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="slug"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Organization slug</FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    placeholder="acme-inc"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      if (!form.getValues("slug")) {
-                        form.setValue("slug", slugify(e.target.value));
-                      }
-                    }}
-                  />
-                  {checkOrganizationSlug.data ===
-                  undefined ? null : checkOrganizationSlug.data ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <X className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </FormControl>
-              <FormDescription>
-                This will be used in the URL of your organization.
-              </FormDescription>
+              {name && !existingOrganization.isPending && (
+                <FormDescription>
+                  {name} is {existingOrganization.data ? "taken" : "available"}
+                </FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -141,8 +121,8 @@ export function CreateOrganizationForm(props: {
           type="submit"
           disabled={
             createOrganization.isPending ||
-            checkOrganizationSlug.isPending ||
-            !checkOrganizationSlug.data
+            existingOrganization.isPending ||
+            Boolean(existingOrganization.data)
           }
         >
           Create organization

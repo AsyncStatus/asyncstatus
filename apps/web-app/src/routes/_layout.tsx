@@ -22,13 +22,13 @@ export const Route = createFileRoute("/_layout")({
         params: { organizationSlug: defaultOrganization.slug },
       });
     }
-    const org = await ensureValidOrganization(
+    const { organization } = await ensureValidOrganization(
       session.activeOrganizationId,
       queryClient,
     );
     throw redirect({
       to: "/$organizationSlug",
-      params: { organizationSlug: org.slug },
+      params: { organizationSlug: organization.slug },
     });
   },
 });

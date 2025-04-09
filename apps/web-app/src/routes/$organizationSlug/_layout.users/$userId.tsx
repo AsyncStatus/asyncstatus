@@ -1,10 +1,10 @@
 import { Suspense, useState } from "react";
 import {
-  getActiveMemberQueryOptions,
   getMemberQueryOptions,
   listMembersQueryOptions,
-  removeMemberMutationOptions,
-} from "@/rpc/organization/organization";
+  updateMemberMutationOptions,
+} from "@/rpc/organization/member";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import {
   Avatar,
   AvatarFallback,
@@ -45,6 +45,7 @@ import {
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
 import {
+  Archive,
   Calendar,
   Copy,
   Edit,
@@ -60,7 +61,6 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 
-import { authClient } from "@/lib/auth";
 import { getFileUrl, getInitials } from "@/lib/utils";
 import { UpdateMemberForm } from "@/components/update-member-form";
 
@@ -76,6 +76,9 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         getMemberQueryOptions({ idOrSlug: organizationSlug, memberId: userId }),
       ),
+      queryClient.ensureQueryData(
+        getOrganizationQueryOptions(organizationSlug),
+      ),
     ]);
   },
 });
@@ -84,14 +87,14 @@ function RouteComponent() {
   const { organizationSlug, userId } = Route.useParams();
   const queryClient = useQueryClient();
   const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
-  const [member, activeMember] = useSuspenseQueries({
+  const [member, organization] = useSuspenseQueries({
     queries: [
       getMemberQueryOptions({ idOrSlug: organizationSlug, memberId: userId }),
-      getActiveMemberQueryOptions(),
+      getOrganizationQueryOptions(organizationSlug),
     ],
   });
-  const removeMember = useMutation({
-    ...removeMemberMutationOptions(),
+  const updateMember = useMutation({
+    ...updateMemberMutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(organizationSlug).queryKey,
@@ -104,12 +107,13 @@ function RouteComponent() {
       });
     },
   });
-  const isAdmin = authClient.organization.checkRolePermission({
-    role: "admin",
-    permission: { member: ["create", "update", "delete"] },
-  });
-  const { user, role, createdAt, team } = member.data as any;
+  const isAdmin =
+    organization.data.member.role === "admin" ||
+    organization.data.member.role === "owner";
+  const { user, role, createdAt, teamMemberships, archivedAt } = member.data;
   const joinDate = createdAt ? format(new Date(createdAt), "PPP") : "N/A";
+  const archiveDate = archivedAt ? format(new Date(archivedAt), "PPP") : null;
+  const isArchived = Boolean(archivedAt);
 
   // Function to render the appropriate badge based on role
   const getRoleBadge = (role: string) => {
@@ -152,21 +156,47 @@ function RouteComponent() {
         </div>
 
         <div className="flex gap-2">
+          {isAdmin && isArchived && (
+            <Button
+              variant="secondary"
+              disabled={updateMember.isPending}
+              onClick={() => {
+                updateMember.mutate({
+                  param: {
+                    idOrSlug: organizationSlug,
+                    memberId: member.data.id,
+                  },
+                  form: { archivedAt: null as any },
+                });
+              }}
+              className="flex-initial"
+              title="Restore this user to active status"
+            >
+              <Archive className="size-4" />
+              <span>Unarchive user</span>
+            </Button>
+          )}
+
           {isAdmin && (
             <Button
               variant="destructive"
-              disabled={removeMember.isPending}
+              disabled={updateMember.isPending || isArchived}
               onClick={() => {
-                if (activeMember.data.id === member.data.id) {
+                if (organization.data.member.id === member.data.id) {
                   toast.info("You cannot remove your own account");
                   return;
                 }
 
-                removeMember.mutate({
-                  memberIdOrEmail: member.data.id,
+                updateMember.mutate({
+                  param: {
+                    idOrSlug: organizationSlug,
+                    memberId: member.data.id,
+                  },
+                  form: { archivedAt: new Date().toISOString() },
                 });
               }}
               className="flex-initial"
+              title={isArchived ? "Cannot remove archived user" : "Remove user"}
             >
               <Trash className="size-4" />
               <span>Remove user</span>
@@ -179,7 +209,11 @@ function RouteComponent() {
               onOpenChange={setUpdateMemberDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="secondary">
+                <Button
+                  variant="secondary"
+                  disabled={isArchived}
+                  title={isArchived ? "Cannot edit archived user" : "Edit user"}
+                >
                   <Edit className="size-4" />
                   <span>Edit user</span>
                 </Button>
@@ -210,9 +244,11 @@ function RouteComponent() {
       <div className="container mx-auto space-y-8 py-6">
         <div className="flex flex-col gap-6 md:flex-row">
           {/* User Profile Card */}
-          <Card className="w-full md:w-1/3">
+          <Card className={`w-full md:w-1/3 ${isArchived ? "opacity-90" : ""}`}>
             <CardContent className="flex flex-col items-center pt-6">
-              <Avatar className="mb-4 size-24">
+              <Avatar
+                className={`mb-4 size-24 ${isArchived ? "grayscale" : ""}`}
+              >
                 <AvatarImage
                   src={
                     user.image
@@ -244,10 +280,21 @@ function RouteComponent() {
                   {user.email}
                 </Button>
               </div>
-              <div className="mt-3">{getRoleBadge(role)}</div>
-              <div className="mt-4 flex items-center gap-2 text-sm">
-                <Calendar className="text-muted-foreground size-3" />
-                <span>Joined on {joinDate}</span>
+              <div className="mt-3 flex gap-2">
+                {getRoleBadge(role)}
+                {isArchived && <Badge variant="destructive">Archived</Badge>}
+              </div>
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="text-muted-foreground size-3" />
+                  <span>Joined on {joinDate}</span>
+                </div>
+                {isArchived && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Archive className="text-muted-foreground size-3" />
+                    <span>Archived on {archiveDate}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -287,6 +334,18 @@ function RouteComponent() {
                           </p>
                         </div>
                       </div>
+
+                      {isArchived && (
+                        <div className="flex items-start gap-2">
+                          <Archive className="text-muted-foreground mt-0.5 size-5" />
+                          <div>
+                            <p className="font-medium">Archived</p>
+                            <p className="text-muted-foreground text-sm">
+                              {archiveDate}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -311,12 +370,16 @@ function RouteComponent() {
                     <CardTitle>Team Memberships</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {team ? (
-                      <div className="flex items-center gap-2">
+                    {teamMemberships.map((teamMembership) => (
+                      <div
+                        key={teamMembership.id}
+                        className="flex items-center gap-2"
+                      >
                         <Users className="size-5" />
-                        <span>{team.name}</span>
+                        <span>{teamMembership.team.name}</span>
                       </div>
-                    ) : (
+                    ))}
+                    {teamMemberships.length === 0 && (
                       <div className="text-muted-foreground py-6 text-center">
                         <p>Not a member of any teams</p>
                       </div>

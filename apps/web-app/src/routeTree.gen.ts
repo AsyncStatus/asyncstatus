@@ -28,7 +28,9 @@ import { Route as authLayoutLoginImport } from './routes/(auth)/_layout.login'
 import { Route as authLayoutForgotPasswordImport } from './routes/(auth)/_layout.forgot-password'
 import { Route as OrganizationSlugLayoutSettingsImport } from './routes/$organizationSlug/_layout.settings'
 import { Route as OrganizationSlugLayoutUsersIndexImport } from './routes/$organizationSlug/_layout.users/index'
+import { Route as OrganizationSlugLayoutTeamsIndexImport } from './routes/$organizationSlug/_layout.teams/index'
 import { Route as OrganizationSlugLayoutUsersUserIdImport } from './routes/$organizationSlug/_layout.users/$userId'
+import { Route as OrganizationSlugLayoutTeamsTeamIdImport } from './routes/$organizationSlug/_layout.teams/$teamId'
 
 // Create Virtual Routes
 
@@ -151,10 +153,24 @@ const OrganizationSlugLayoutUsersIndexRoute =
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
 
+const OrganizationSlugLayoutTeamsIndexRoute =
+  OrganizationSlugLayoutTeamsIndexImport.update({
+    id: '/teams/',
+    path: '/teams/',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+
 const OrganizationSlugLayoutUsersUserIdRoute =
   OrganizationSlugLayoutUsersUserIdImport.update({
     id: '/users/$userId',
     path: '/users/$userId',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+
+const OrganizationSlugLayoutTeamsTeamIdRoute =
+  OrganizationSlugLayoutTeamsTeamIdImport.update({
+    id: '/teams/$teamId',
+    path: '/teams/$teamId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
 
@@ -288,11 +304,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationLayoutIndexImport
       parentRoute: typeof InvitationLayoutImport
     }
+    '/$organizationSlug/_layout/teams/$teamId': {
+      id: '/$organizationSlug/_layout/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/$organizationSlug/teams/$teamId'
+      preLoaderRoute: typeof OrganizationSlugLayoutTeamsTeamIdImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
     '/$organizationSlug/_layout/users/$userId': {
       id: '/$organizationSlug/_layout/users/$userId'
       path: '/users/$userId'
       fullPath: '/$organizationSlug/users/$userId'
       preLoaderRoute: typeof OrganizationSlugLayoutUsersUserIdImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
+    '/$organizationSlug/_layout/teams/': {
+      id: '/$organizationSlug/_layout/teams/'
+      path: '/teams'
+      fullPath: '/$organizationSlug/teams'
+      preLoaderRoute: typeof OrganizationSlugLayoutTeamsIndexImport
       parentRoute: typeof OrganizationSlugLayoutImport
     }
     '/$organizationSlug/_layout/users/': {
@@ -321,7 +351,9 @@ const LayoutRouteWithChildren =
 interface OrganizationSlugLayoutRouteChildren {
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
+  OrganizationSlugLayoutTeamsTeamIdRoute: typeof OrganizationSlugLayoutTeamsTeamIdRoute
   OrganizationSlugLayoutUsersUserIdRoute: typeof OrganizationSlugLayoutUsersUserIdRoute
+  OrganizationSlugLayoutTeamsIndexRoute: typeof OrganizationSlugLayoutTeamsIndexRoute
   OrganizationSlugLayoutUsersIndexRoute: typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
@@ -329,8 +361,12 @@ const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
   {
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,
     OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
+    OrganizationSlugLayoutTeamsTeamIdRoute:
+      OrganizationSlugLayoutTeamsTeamIdRoute,
     OrganizationSlugLayoutUsersUserIdRoute:
       OrganizationSlugLayoutUsersUserIdRoute,
+    OrganizationSlugLayoutTeamsIndexRoute:
+      OrganizationSlugLayoutTeamsIndexRoute,
     OrganizationSlugLayoutUsersIndexRoute:
       OrganizationSlugLayoutUsersIndexRoute,
   }
@@ -441,7 +477,9 @@ export interface FileRoutesByFullPath {
   '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
   '/invitation/': typeof InvitationLayoutIndexRoute
+  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
@@ -455,7 +493,9 @@ export interface FileRoutesByTo {
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
   '/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
@@ -479,7 +519,9 @@ export interface FileRoutesById {
   '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
   '/invitation/_layout/': typeof InvitationLayoutIndexRoute
+  '/$organizationSlug/_layout/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/_layout/teams/': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
 }
 
@@ -499,7 +541,9 @@ export interface FileRouteTypes {
     | '/$organizationSlug/'
     | '/create-organization/'
     | '/invitation/'
+    | '/$organizationSlug/teams/$teamId'
     | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/teams'
     | '/$organizationSlug/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -512,7 +556,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/sign-up'
+    | '/$organizationSlug/teams/$teamId'
     | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/teams'
     | '/$organizationSlug/users'
   id:
     | '__root__'
@@ -534,7 +580,9 @@ export interface FileRouteTypes {
     | '/$organizationSlug/_layout/'
     | '/create-organization/_layout/'
     | '/invitation/_layout/'
+    | '/$organizationSlug/_layout/teams/$teamId'
     | '/$organizationSlug/_layout/users/$userId'
+    | '/$organizationSlug/_layout/teams/'
     | '/$organizationSlug/_layout/users/'
   fileRoutesById: FileRoutesById
 }
@@ -590,7 +638,9 @@ export const routeTree = rootRoute
       "children": [
         "/$organizationSlug/_layout/settings",
         "/$organizationSlug/_layout/",
+        "/$organizationSlug/_layout/teams/$teamId",
         "/$organizationSlug/_layout/users/$userId",
+        "/$organizationSlug/_layout/teams/",
         "/$organizationSlug/_layout/users/"
       ]
     },
@@ -672,8 +722,16 @@ export const routeTree = rootRoute
       "filePath": "invitation/_layout.index.tsx",
       "parent": "/invitation/_layout"
     },
+    "/$organizationSlug/_layout/teams/$teamId": {
+      "filePath": "$organizationSlug/_layout.teams/$teamId.tsx",
+      "parent": "/$organizationSlug/_layout"
+    },
     "/$organizationSlug/_layout/users/$userId": {
       "filePath": "$organizationSlug/_layout.users/$userId.tsx",
+      "parent": "/$organizationSlug/_layout"
+    },
+    "/$organizationSlug/_layout/teams/": {
+      "filePath": "$organizationSlug/_layout.teams/index.tsx",
       "parent": "/$organizationSlug/_layout"
     },
     "/$organizationSlug/_layout/users/": {

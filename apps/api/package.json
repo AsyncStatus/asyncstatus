@@ -7,6 +7,9 @@
     ".": {
       "types": "./src/rpc.ts"
     },
+    "./auth": {
+      "types": "./src/lib/auth.tsx"
+    },
     "./schema/*": "./src/schema/*.ts",
     "./errors": "./src/errors/index.ts"
   },

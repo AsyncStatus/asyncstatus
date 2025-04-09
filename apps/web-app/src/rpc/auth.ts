@@ -6,6 +6,7 @@ import { mutationOptions } from "@/lib/utils";
 export function sessionQueryOptions() {
   return queryOptions({
     queryKey: ["session"],
+    staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
       const { data, error } = await authClient.getSession({
         fetchOptions: { signal },

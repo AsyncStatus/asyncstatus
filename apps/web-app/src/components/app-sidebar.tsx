@@ -1,8 +1,9 @@
-import { Suspense, type PropsWithChildren } from "react";
+import { Suspense } from "react";
 import {
   sendVerificationEmailMutationOptions,
   sessionQueryOptions,
 } from "@/rpc/auth";
+import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -25,6 +26,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@asyncstatus/ui/components/sidebar";
+import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
@@ -122,6 +124,32 @@ function AppSidebarBetaNotice() {
   );
 }
 
+function AppSidebarTeams(props: { organizationSlug: string }) {
+  const teams = useSuspenseQuery(listTeamsQueryOptions(props.organizationSlug));
+  return teams.data.map((team) => (
+    <SidebarMenuItem key={team.id}>
+      <SidebarMenuButton asChild>
+        <Link
+          to="/$organizationSlug/teams/$teamId"
+          params={{ organizationSlug: props.organizationSlug, teamId: team.id }}
+        >
+          {team.name}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  ));
+}
+
+function AppSidebarTeamsSkeleton() {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <Skeleton className="h-8 w-full rounded-md" />
+      <Skeleton className="h-8 w-full rounded-md" />
+      <Skeleton className="h-8 w-full rounded-md" />
+    </div>
+  );
+}
+
 function AppSidebarUserEmailNotVerified() {
   const session = useSuspenseQuery(sessionQueryOptions());
   const sendVerificationEmail = useMutation({
@@ -186,6 +214,24 @@ export function AppSidebar(props: { organizationSlug: string }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel asChild>
+            <Link
+              to="/$organizationSlug/teams"
+              params={{ organizationSlug: props.organizationSlug }}
+            >
+              Your teams
+            </Link>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Suspense fallback={<AppSidebarTeamsSkeleton />}>
+                <AppSidebarTeams organizationSlug={props.organizationSlug} />
+              </Suspense>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-0 max-sm:p-2">
@@ -227,6 +273,13 @@ export function AppSidebarSkeleton() {
                   organizationSlug={params?.organizationSlug ?? ""}
                 />
               </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Your teams</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <AppSidebarTeamsSkeleton />
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

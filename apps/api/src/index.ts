@@ -14,12 +14,16 @@ import { authRouter } from "./routers/auth";
 import { invitationRouter } from "./routers/invitation";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
+import { teamsRouter } from "./routers/organization/teams";
 import { waitlistRouter } from "./routers/waitlist";
 
 const app = new Hono<HonoEnv>()
   .use(
     cors({
       origin: [
+        ...(process.env.NODE_ENV === "development"
+          ? ["http://localhost:3000", "http://localhost:5173"]
+          : []),
         "https://app-v2.asyncstatus.com",
         "https://app-v2.dev.asyncstatus.com",
         "https://v2.asyncstatus.com",
@@ -37,8 +41,8 @@ const app = new Hono<HonoEnv>()
     const auth = createAuth(c.env, db, resend);
     c.set("auth", auth);
     const waitlistRateLimiter = createRateLimiter(c.env, {
-      windowMs: 60 * 60 * 1000, // 60 minutes
-      limit: 10, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+      windowMs: 60 * 60 * 1000,
+      limit: 10,
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
@@ -53,6 +57,7 @@ const app = new Hono<HonoEnv>()
   .route("/auth", authRouter)
   .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
+  .route("/organization", teamsRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .onError((err, c) => {

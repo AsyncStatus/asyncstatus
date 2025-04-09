@@ -31,13 +31,17 @@ export const invitationRouter = new Hono<HonoEnvWithSession>()
           with: {
             inviter: { columns: { name: true } },
             organization: { columns: { name: true, slug: true, logo: true } },
+            team: { columns: { name: true } },
           },
         }),
         c.var.db.query.user.findFirst({
           where: eq(schema.user.email, email),
         }),
       ]);
-      if (!invitation || c.var.session.user.email !== invitation.email) {
+      if (
+        !invitation ||
+        (c.var.session && c.var.session.user.email !== invitation.email)
+      ) {
         throw new AsyncStatusNotFoundError({
           message: "Invitation not found",
         });
@@ -208,6 +212,13 @@ export const invitationRouter = new Hono<HonoEnvWithSession>()
             teamId: invitation.teamId,
             memberId: member[0].id,
           });
+        }
+
+        if (!c.var.session.user.emailVerified) {
+          await tx
+            .update(schema.user)
+            .set({ emailVerified: true })
+            .where(eq(schema.user.id, c.var.session.user.id));
         }
 
         const organization = await tx.query.organization.findFirst({

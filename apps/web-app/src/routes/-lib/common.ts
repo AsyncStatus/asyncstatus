@@ -54,7 +54,7 @@ export async function ensureValidOrganization(
   const org = await queryClient
     .fetchQuery(getOrganizationQueryOptions(organizationIdOrSlug))
     .catch(() => {});
-  if (!org?.slug) {
+  if (!org?.organization.slug) {
     const org = await getDefaultOrganization(queryClient);
     throw redirect({
       to: "/$organizationSlug",
@@ -62,5 +62,5 @@ export async function ensureValidOrganization(
     });
   }
 
-  return { ...org, slug: org.slug! };
+  return org;
 }

@@ -9,6 +9,7 @@ import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
   AsyncStatusNotFoundError,
+  AsyncStatusUnauthorizedError,
   AsyncStatusUnexpectedApiError,
 } from "../../errors";
 import type { HonoEnvWithOrganization } from "../../lib/env";
@@ -130,14 +131,71 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       };
     });
 
+    const data = await c.env.AS_PROD_AUTH_KV.get<any>(
+      c.var.session.session.token,
+      { type: "json" },
+    );
+    if (!data) {
+      throw new AsyncStatusUnauthorizedError({
+        message: "Unauthorized",
+      });
+    }
+    await c.env.AS_PROD_AUTH_KV.put(
+      c.var.session.session.token,
+      JSON.stringify({
+        ...data,
+        session: {
+          ...data.session,
+          activeOrganizationId: results.organization.id,
+        },
+      }),
+    );
+
     return c.json(results);
   })
+  .get("/", async (c) => {
+    const organizations = await c.var.db.query.organization.findMany({
+      with: {
+        members: {
+          where: eq(schema.member.userId, c.var.session.user.id),
+        },
+      },
+    });
+    return c.json(organizations);
+  })
+  .patch(
+    "/:idOrSlug/set-active",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    async (c) => {
+      const data = await c.env.AS_PROD_AUTH_KV.get<any>(
+        c.var.session.session.token,
+        { type: "json" },
+      );
+      if (!data) {
+        throw new AsyncStatusUnauthorizedError({
+          message: "Unauthorized",
+        });
+      }
+      await c.env.AS_PROD_AUTH_KV.put(
+        c.var.session.session.token,
+        JSON.stringify({
+          ...data,
+          session: {
+            ...data.session,
+            activeOrganizationId: c.var.organization.id,
+          },
+        }),
+      );
+      return c.json(c.var.organization);
+    },
+  )
   .get(
     "/:idOrSlug",
     requiredOrganization,
     zValidator("param", zOrganizationIdOrSlug),
     async (c) => {
-      return c.json(c.var.organization);
+      return c.json({ organization: c.var.organization, member: c.var.member });
     },
   )
   .patch(
@@ -175,13 +233,13 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
         .set(updates as any)
         .where(eq(schema.organization.id, c.var.organization.id))
         .returning();
-      if (!updatedOrganization) {
+      if (!updatedOrganization || !updatedOrganization[0]) {
         throw new AsyncStatusUnexpectedApiError({
           message: "Failed to update organization",
         });
       }
 
-      return c.json(updatedOrganization);
+      return c.json(updatedOrganization[0]);
     },
   )
   .get(

@@ -60,6 +60,13 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days
+      additionalFields: {
+        activeOrganizationId: {
+          type: "string",
+          required: false,
+          input: false,
+        },
+      },
     },
     secondaryStorage: {
       set(key, value, ttl) {

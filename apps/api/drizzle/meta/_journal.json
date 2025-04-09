@@ -15,6 +15,20 @@
       "when": 1743344822072,
       "tag": "0001_youthful_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1744222966340,
+      "tag": "0002_huge_viper",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1744231805383,
+      "tag": "0003_lonely_the_liberteens",
+      "breakpoints": true
     }
   ]
 }

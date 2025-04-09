@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
-  getActiveMemberQueryOptions,
   getMemberQueryOptions,
   listMembersQueryOptions,
   updateMemberMutationOptions,
-} from "@/rpc/organization/organization";
+} from "@/rpc/organization/member";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { zOrganizationMemberUpdate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -33,7 +33,7 @@ import {
 } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { authClient, roleOptions } from "@/lib/auth";
+import { roleOptions } from "@/lib/auth";
 import { getFileUrl } from "@/lib/utils";
 import {
   Form,
@@ -53,7 +53,6 @@ export function UpdateMemberForm(props: {
     userId: string;
     organizationId: string;
     role: string;
-    teamId: string | null;
     user: {
       id: string;
       name: string;
@@ -67,13 +66,14 @@ export function UpdateMemberForm(props: {
 }) {
   const queryClient = useQueryClient();
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
-  const [session, member] = useSuspenseQueries({
+  const [session, member, organization] = useSuspenseQueries({
     queries: [
       sessionQueryOptions(),
       getMemberQueryOptions({
         idOrSlug: props.organizationSlug,
         memberId: props.memberId,
       }),
+      getOrganizationQueryOptions(props.organizationSlug),
     ],
   });
 
@@ -104,23 +104,21 @@ export function UpdateMemberForm(props: {
           queryKey: sessionQueryOptions().queryKey,
         });
         queryClient.invalidateQueries({
-          queryKey: getActiveMemberQueryOptions().queryKey,
+          queryKey: getOrganizationQueryOptions(props.organizationSlug)
+            .queryKey,
         });
       }
-      props.onSuccess?.(data as any);
+      props.onSuccess?.(data);
     },
   });
-  const isOwner = authClient.organization.checkRolePermission({
-    role: "owner",
-    permission: { member: ["update"] },
-  });
+  const isOwner = organization.data.member.role === "owner";
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) => {
           updateMember.mutate({
-            form: data,
+            form: data as any,
             param: {
               idOrSlug: props.organizationSlug,
               memberId: props.memberId,
@@ -253,10 +251,7 @@ export function UpdateMemberForm(props: {
                 <FormItem>
                   <FormLabel className="mb-2">Profile Image</FormLabel>
                   <FormControl>
-                    <ImageUpload
-                      value={value as any}
-                      onChange={field.onChange}
-                    />
+                    <ImageUpload value={value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

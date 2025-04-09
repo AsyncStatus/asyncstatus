@@ -2,6 +2,9 @@ import {
   ensureValidOrganization,
   ensureValidSession,
 } from "@/routes/-lib/common";
+import { listMembersQueryOptions } from "@/rpc/organization/member";
+import { listOrganizationsQueryOptions } from "@/rpc/organization/organization";
+import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import {
   SidebarInset,
   SidebarProvider,
@@ -18,8 +21,13 @@ export const Route = createFileRoute("/$organizationSlug/_layout")({
     params: { organizationSlug },
     location,
   }) => {
-    await ensureValidSession(queryClient, location);
-    await ensureValidOrganization(organizationSlug, queryClient);
+    await Promise.all([
+      ensureValidSession(queryClient, location),
+      ensureValidOrganization(organizationSlug, queryClient),
+      queryClient.ensureQueryData(listOrganizationsQueryOptions()),
+      queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
+      queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
+    ]);
   },
 });
 

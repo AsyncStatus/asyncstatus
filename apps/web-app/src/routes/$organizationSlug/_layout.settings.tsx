@@ -62,9 +62,9 @@ function RouteComponent() {
   );
   const updateOrganizationMutation = useMutation({
     ...updateOrganizationMutationOptions(),
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: getOrganizationQueryOptions(data.slug!).queryKey,
+        queryKey: getOrganizationQueryOptions(data.slug).queryKey,
       });
       queryClient.invalidateQueries({
         queryKey: getOrganizationQueryOptions(params.organizationSlug).queryKey,
@@ -86,7 +86,7 @@ function RouteComponent() {
       );
       navigate({
         to: "/$organizationSlug/settings",
-        params: { organizationSlug: data.slug! },
+        params: { organizationSlug: data.slug },
         replace: true,
       });
     },
@@ -94,9 +94,9 @@ function RouteComponent() {
   const form = useForm({
     resolver: zodResolver(zOrganizationUpdate),
     defaultValues: {
-      name: organizationQuery.data?.name || "",
-      slug: organizationQuery.data?.slug || "",
-      logo: organizationQuery.data?.logo || null,
+      name: organizationQuery.data?.organization.name || "",
+      slug: organizationQuery.data?.organization.slug || "",
+      logo: organizationQuery.data?.organization.logo || null,
     },
   });
 
@@ -140,7 +140,7 @@ function RouteComponent() {
               <CardContent>
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((values: any) => {
+                    onSubmit={form.handleSubmit((values) => {
                       updateOrganizationMutation.mutate({
                         param: { idOrSlug: params.organizationSlug },
                         form: { ...values, slug: slugify(values.name) },
@@ -180,7 +180,7 @@ function RouteComponent() {
                               <FormLabel className="mb-2">Logo</FormLabel>
                               <FormControl>
                                 <ImageUpload
-                                  value={value as any}
+                                  value={value}
                                   onChange={field.onChange}
                                 />
                               </FormControl>

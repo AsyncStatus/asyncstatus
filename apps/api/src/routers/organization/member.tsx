@@ -1,8 +1,9 @@
 import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { zValidator } from "@hono/zod-validator";
+import { LibsqlError } from "@libsql/client";
 import { generateId } from "better-auth";
 import dayjs from "dayjs";
-import { and, eq, not } from "drizzle-orm";
+import { and, DrizzleError, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
 
 import * as schema from "../../db/schema";
@@ -80,54 +81,73 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
       if (!member) {
         throw new AsyncStatusNotFoundError({ message: "Member not found" });
       }
-      if (member.userId !== c.var.session.user.id && member.role !== "admin") {
+      if (
+        member.userId !== c.var.session.user.id &&
+        c.var.member.role !== "admin" &&
+        c.var.member.role !== "owner"
+      ) {
         throw new AsyncStatusForbiddenError({
           message: "You do not have permission to update this member",
         });
       }
 
-      const { role, ...userUpdates } = c.req.valid("form");
-      if (role) {
-        await c.var.db
-          .update(schema.member)
-          .set({ role })
-          .where(eq(schema.member.id, memberId));
-      }
-      if (userUpdates.image instanceof File) {
-        const image = await c.env.PRIVATE_BUCKET.put(
-          generateId(),
-          userUpdates.image,
-        );
-        if (!image) {
+      const { role, archivedAt, ...userUpdates } = c.req.valid("form");
+      const updatedMember = await c.var.db.transaction(async (tx) => {
+        if (role) {
+          await tx
+            .update(schema.member)
+            .set({ role })
+            .where(eq(schema.member.id, memberId));
+        }
+        if (archivedAt) {
+          await tx
+            .update(schema.member)
+            .set({ archivedAt: new Date(archivedAt) })
+            .where(eq(schema.member.id, memberId));
+        } else if (archivedAt === null && member.archivedAt) {
+          await tx
+            .update(schema.member)
+            .set({ archivedAt: null })
+            .where(eq(schema.member.id, memberId));
+        }
+
+        if (userUpdates.image instanceof File) {
+          const image = await c.env.PRIVATE_BUCKET.put(
+            generateId(),
+            userUpdates.image,
+          );
+          if (!image) {
+            throw new AsyncStatusUnexpectedApiError({
+              message: "Failed to upload image",
+            });
+          }
+          (userUpdates.image as any) = image.key;
+        } else if (userUpdates.image === null && member.user.image) {
+          await c.env.PRIVATE_BUCKET.delete(member.user.image);
+          (userUpdates.image as any) = null;
+        }
+        if (Object.keys(userUpdates).length > 0) {
+          const name =
+            userUpdates.firstName || userUpdates.lastName
+              ? `${userUpdates.firstName} ${userUpdates.lastName}`
+              : undefined;
+
+          await tx
+            .update(schema.user)
+            .set({ name, ...(userUpdates as any) })
+            .where(eq(schema.user.id, member.userId));
+        }
+        const updatedMember = await tx.query.member.findFirst({
+          where: eq(schema.member.id, memberId),
+          with: { user: true },
+        });
+        if (!updatedMember) {
           throw new AsyncStatusUnexpectedApiError({
-            message: "Failed to upload image",
+            message: "Failed to update member",
           });
         }
-        (userUpdates.image as any) = image.key;
-      } else if (userUpdates.image === null && member.user.image) {
-        await c.env.PRIVATE_BUCKET.delete(member.user.image);
-        (userUpdates.image as any) = null;
-      }
-      if (Object.keys(userUpdates).length > 0) {
-        const name =
-          userUpdates.firstName || userUpdates.lastName
-            ? `${userUpdates.firstName} ${userUpdates.lastName}`
-            : undefined;
-
-        await c.var.db
-          .update(schema.user)
-          .set({ name, ...(userUpdates as any) })
-          .where(eq(schema.user.id, member.userId));
-      }
-      const updatedMember = await c.var.db.query.member.findFirst({
-        where: eq(schema.member.id, memberId),
-        with: { user: true },
+        return updatedMember;
       });
-      if (!updatedMember) {
-        throw new AsyncStatusUnexpectedApiError({
-          message: "Failed to update member",
-        });
-      }
 
       return c.json(updatedMember);
     },
@@ -138,7 +158,13 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("param", zOrganizationIdOrSlug),
     zValidator("json", zOrganizationCreateInvite),
     async (c) => {
-      const { firstName, lastName, email, role } = c.req.valid("json");
+      if (c.var.member.role !== "admin" && c.var.member.role !== "owner") {
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to invite members",
+        });
+      }
+
+      const { firstName, lastName, email, role, teamId } = c.req.valid("json");
       let [existingInvitation, existingUser] = await Promise.all([
         c.var.db.query.invitation.findFirst({
           where: and(
@@ -160,6 +186,11 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
           with: { user: true },
         }),
       ]);
+      if (existingUser?.archivedAt) {
+        throw new AsyncStatusBadRequestError({
+          message: "User is archived",
+        });
+      }
       if (
         (existingInvitation?.expiresAt &&
           existingInvitation.expiresAt < new Date()) ||
@@ -178,20 +209,31 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
+      const firstTeamId =
+        teamId ??
+        (
+          await c.var.db.query.team.findFirst({
+            where: eq(schema.team.organizationId, c.var.organization.id),
+          })
+        )?.id;
+      if (!firstTeamId) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "No teams found",
+        });
+      }
+
       const invitationId = generateId();
-      await c.var.db
-        .insert(schema.invitation)
-        .values({
-          id: invitationId,
-          name: `${firstName} ${lastName}`,
-          expiresAt: dayjs().add(48, "hours").toDate(),
-          email,
-          role,
-          organizationId: c.var.organization.id,
-          inviterId: c.var.member.id,
-          status: "pending",
-        })
-        .returning();
+      await c.var.db.insert(schema.invitation).values({
+        id: invitationId,
+        name: `${firstName} ${lastName}`,
+        expiresAt: dayjs().add(48, "hours").toDate(),
+        email,
+        role,
+        organizationId: c.var.organization.id,
+        inviterId: c.var.session.user.id,
+        status: "pending",
+        teamId: firstTeamId,
+      });
       const invitation = await c.var.db.query.invitation.findFirst({
         where: eq(schema.invitation.id, invitationId),
         with: { inviter: true, organization: true },

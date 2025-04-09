@@ -1,4 +1,4 @@
-import { eq, or } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 
 import { member, organization } from "../db/schema";
@@ -19,22 +19,22 @@ export const requiredSession = createMiddleware<HonoEnv>(async (c, next) => {
 
 export const requiredOrganization = createMiddleware<HonoEnvWithOrganization>(
   async (c, next) => {
-    const orgOrSlug = c.req.param("idOrSlug");
-    if (!orgOrSlug) {
+    const idOrSlug =
+      c.req.param("idOrSlug") ??
+      c.req.url.split("/organization/")[1]?.split("/")[0];
+    if (!idOrSlug) {
       throw new AsyncStatusBadRequestError({
         message: "Organization ID or slug is required",
       });
     }
 
     const org = await c.var.db.query.organization.findFirst({
-      where: or(
-        eq(organization.id, orgOrSlug),
-        eq(organization.slug, orgOrSlug),
-      ),
+      where: or(eq(organization.id, idOrSlug), eq(organization.slug, idOrSlug)),
       with: {
         members: {
           limit: 1,
           where: eq(member.userId, c.var.session.user.id),
+          orderBy: [desc(member.role)],
         },
       },
     });
@@ -50,7 +50,7 @@ export const requiredOrganization = createMiddleware<HonoEnvWithOrganization>(
       });
     }
 
-    c.set("organization", { ...restOrg, slug: org.slug! });
+    c.set("organization", restOrg);
     c.set("member", members[0]);
     await next();
   },

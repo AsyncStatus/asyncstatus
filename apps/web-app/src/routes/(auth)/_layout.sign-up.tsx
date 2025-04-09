@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   sendVerificationEmailMutationOptions,
   signUpEmailMutationOptions,
@@ -87,6 +88,14 @@ function RouteComponent() {
       passwordConfirmation: "",
     },
   });
+
+  useEffect(() => {
+    if (invitation.data) {
+      form.setValue("email", invitation.data.email);
+      form.setValue("firstName", invitation.data.name?.split(" ")[0] ?? "");
+      form.setValue("lastName", invitation.data.name?.split(" ")[1] ?? "");
+    }
+  }, [invitation.data, form]);
 
   const signUpEmail = useMutation(signUpEmailMutationOptions());
   const sendVerificationEmail = useMutation({
@@ -229,25 +238,23 @@ function RouteComponent() {
             By signing up, you agree to our{" "}
             <a
               className="underline"
-              href={
-                import.meta.env.VITE_MARKETING_APP_URL + "/terms-of-service"
-              }
+              href={import.meta.env.VITE_MARKETING_APP_URL + "/terms"}
             >
               Terms of Service
             </a>
             ,{" "}
             <a
               className="underline"
-              href={import.meta.env.VITE_MARKETING_APP_URL + "/acceptable-use"}
+              href={import.meta.env.VITE_MARKETING_APP_URL + "/privacy"}
             >
-              Acceptable Use
+              Privacy Policy
             </a>{" "}
             and{" "}
             <a
               className="underline"
-              href={import.meta.env.VITE_MARKETING_APP_URL + "/privacy-policy"}
+              href={import.meta.env.VITE_MARKETING_APP_URL + "/acceptable-use"}
             >
-              Privacy Policy
+              Acceptable Use
             </a>
             .
           </p>

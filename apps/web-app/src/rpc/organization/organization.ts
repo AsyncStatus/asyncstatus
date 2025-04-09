@@ -1,13 +1,10 @@
 import {
   zOrganizationCreate,
-  zOrganizationCreateInvite,
   zOrganizationIdOrSlug,
-  zOrganizationMemberId,
 } from "@asyncstatus/api/schema/organization";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import type { z } from "zod";
 
-import { authClient } from "@/lib/auth";
 import { mutationOptions } from "@/lib/utils";
 
 import { rpc } from "../rpc";
@@ -44,71 +41,10 @@ export function createOrganizationMutationOptions() {
 export function listOrganizationsQueryOptions() {
   return queryOptions({
     queryKey: ["organizations"],
+    staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
-      const { data, error } = await authClient.organization.list({
+      const response = await rpc.organization.$get({
         fetchOptions: { signal },
-      });
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    },
-  });
-}
-
-export function checkOrganizationSlugQueryOptions(slug: string) {
-  return queryOptions({
-    queryKey: ["checkOrganizationSlug", slug],
-    throwOnError: false,
-    queryFn: slug
-      ? async ({ signal }) => {
-          const { data, error } = await authClient.organization.checkSlug({
-            slug,
-            fetchOptions: { signal },
-          });
-          if (error) {
-            throw new Error(error.message);
-          }
-          return data;
-        }
-      : skipToken,
-  });
-}
-
-export function setActiveOrganizationMutationOptions() {
-  return mutationOptions({
-    mutationKey: ["setActiveOrganization"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.setActive>[0],
-    ) => {
-      const { data, error } = await authClient.organization.setActive(input);
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    },
-  });
-}
-
-export function getActiveMemberQueryOptions() {
-  return queryOptions({
-    queryKey: ["activeMember"],
-    queryFn: async () => {
-      const { data, error } = await authClient.organization.getActiveMember();
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    },
-  });
-}
-
-export function listMembersQueryOptions(idOrSlug: string) {
-  return queryOptions({
-    queryKey: ["members", idOrSlug],
-    queryFn: async () => {
-      const response = await rpc.organization[":idOrSlug"].members.$get({
-        param: { idOrSlug },
       });
       if (!response.ok) {
         throw await response.json();
@@ -118,31 +54,13 @@ export function listMembersQueryOptions(idOrSlug: string) {
   });
 }
 
-export function removeMemberMutationOptions() {
+export function setActiveOrganizationMutationOptions() {
   return mutationOptions({
-    mutationKey: ["removeMember"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.removeMember>[0],
-    ) => {
-      const { data, error } = await authClient.organization.removeMember(input);
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    },
-  });
-}
-
-export function inviteMemberMutationOptions() {
-  return mutationOptions({
-    mutationKey: ["inviteMember"],
-    mutationFn: async (data: {
-      param: z.infer<typeof zOrganizationIdOrSlug>;
-      json: z.infer<typeof zOrganizationCreateInvite>;
-    }) => {
-      const response = await rpc.organization[
-        ":idOrSlug"
-      ].members.invitations.$post({ param: data.param, json: data.json });
+    mutationKey: ["setActiveOrganization"],
+    mutationFn: async (param: z.infer<typeof zOrganizationIdOrSlug>) => {
+      const response = await rpc.organization[":idOrSlug"]["set-active"].$patch(
+        { param },
+      );
       if (!response.ok) {
         throw await response.json();
       }
@@ -154,14 +72,14 @@ export function inviteMemberMutationOptions() {
 export function cancelInvitationMutationOptions() {
   return mutationOptions({
     mutationKey: ["cancelInvitation"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.cancelInvitation>[0],
-    ) => {
-      const res = await authClient.organization.cancelInvitation(input);
-      if (res.error) {
-        throw new Error(res.error.message);
+    mutationFn: async (param: { id: string }) => {
+      const response = await rpc.invitation[":id"].cancel.$patch({
+        param,
+      });
+      if (!response.ok) {
+        throw await response.json();
       }
-      return res.data;
+      return response.json();
     },
   });
 }
@@ -169,14 +87,14 @@ export function cancelInvitationMutationOptions() {
 export function acceptInvitationMutationOptions() {
   return mutationOptions({
     mutationKey: ["acceptInvitation"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.acceptInvitation>[0],
-    ) => {
-      const res = await authClient.organization.acceptInvitation(input);
-      if (res.error) {
-        throw new Error(res.error.message);
+    mutationFn: async (param: { id: string }) => {
+      const response = await rpc.invitation[":id"].accept.$patch({
+        param,
+      });
+      if (!response.ok) {
+        throw await response.json();
       }
-      return res.data;
+      return response.json();
     },
   });
 }
@@ -184,28 +102,30 @@ export function acceptInvitationMutationOptions() {
 export function rejectInvitationMutationOptions() {
   return mutationOptions({
     mutationKey: ["rejectInvitation"],
-    mutationFn: async (
-      input: Parameters<typeof authClient.organization.rejectInvitation>[0],
-    ) => {
-      const res = await authClient.organization.rejectInvitation(input);
-      if (res.error) {
-        throw new Error(res.error.message);
+    mutationFn: async (param: { id: string }) => {
+      const response = await rpc.invitation[":id"].reject.$patch({
+        param,
+      });
+      if (!response.ok) {
+        throw await response.json();
       }
-      return res.data;
+      return response.json();
     },
   });
 }
-export function getInvitationQueryOptions(invitationId: string) {
+
+export function getInvitationQueryOptions(invitationId: string, email: string) {
   return queryOptions({
-    queryKey: ["invitation", invitationId],
+    queryKey: ["invitation", invitationId, email],
     queryFn: async () => {
-      const response = await authClient.organization.getInvitation({
-        query: { id: invitationId },
+      const response = await rpc.invitation[":id"].$get({
+        param: { id: invitationId },
+        query: { email },
       });
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (!response.ok) {
+        throw await response.json();
       }
-      return response.data;
+      return response.json();
     },
   });
 }
@@ -230,43 +150,7 @@ export function getInvitationByEmailQueryOptions(
       }
       return response.json();
     },
-    enabled: !!invitationId && !!email,
-  });
-}
-
-export function getMemberQueryOptions(
-  param: z.infer<typeof zOrganizationIdOrSlug> &
-    z.infer<typeof zOrganizationMemberId>,
-) {
-  return queryOptions({
-    queryKey: ["member", param.idOrSlug, param.memberId],
-    queryFn: async () => {
-      const response = await rpc.organization[":idOrSlug"].members[
-        ":memberId"
-      ].$get({ param });
-      if (!response.ok) {
-        throw await response.json();
-      }
-      return response.json();
-    },
-  });
-}
-
-export function updateMemberMutationOptions() {
-  return mutationOptions({
-    mutationKey: ["updateMember"],
-    mutationFn: async (
-      input: Parameters<
-        (typeof rpc.organization)[":idOrSlug"]["members"][":memberId"]["$patch"]
-      >[0],
-    ) => {
-      const response =
-        await rpc.organization[":idOrSlug"].members[":memberId"].$patch(input);
-      if (!response.ok) {
-        throw await response.json();
-      }
-      return response.json();
-    },
+    enabled: Boolean(invitationId) && Boolean(email),
   });
 }
 

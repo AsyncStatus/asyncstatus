@@ -1,4 +1,5 @@
-import { organizationClient } from "better-auth/client/plugins";
+import type { Auth } from "@asyncstatus/api/auth";
+import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
 export const roleOptions = [
@@ -24,5 +25,5 @@ export const roleOptions = [
 export const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_API_URL,
   basePath: "/auth",
-  plugins: [organizationClient({ teams: { enabled: true } })],
+  plugins: [inferAdditionalFields<Auth>()],
 });

@@ -1,9 +1,11 @@
 import { Suspense, useState } from "react";
 import {
-  cancelInvitationMutationOptions,
-  getActiveMemberQueryOptions,
   listMembersQueryOptions,
-  removeMemberMutationOptions,
+  updateMemberMutationOptions,
+} from "@/rpc/organization/member";
+import {
+  cancelInvitationMutationOptions,
+  getOrganizationQueryOptions,
 } from "@/rpc/organization/organization";
 import {
   Avatar,
@@ -46,6 +48,7 @@ import {
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
 import {
+  Archive,
   Calendar,
   Edit,
   Mail,
@@ -63,7 +66,6 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 
-import { authClient } from "@/lib/auth";
 import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberForm } from "@/components/update-member-form";
@@ -77,7 +79,9 @@ export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   }) => {
     await Promise.all([
       queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(getActiveMemberQueryOptions()),
+      queryClient.ensureQueryData(
+        getOrganizationQueryOptions(organizationSlug),
+      ),
     ]);
   },
 });
@@ -90,14 +94,14 @@ function RouteComponent() {
   const [updateMemberId, setUpdateMemberId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<string>("members");
-  const [activeMember, members] = useSuspenseQueries({
+  const [organization, members] = useSuspenseQueries({
     queries: [
-      getActiveMemberQueryOptions(),
+      getOrganizationQueryOptions(organizationSlug),
       listMembersQueryOptions(organizationSlug),
     ],
   });
-  const removeMember = useMutation({
-    ...removeMemberMutationOptions(),
+  const updateMember = useMutation({
+    ...updateMemberMutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(organizationSlug).queryKey,
@@ -112,27 +116,33 @@ function RouteComponent() {
       });
     },
   });
-  const isAdmin = authClient.organization.checkRolePermission({
-    role: "admin",
-    permission: { member: ["create", "update", "delete"] },
-  });
-  const canCancelInvitation = authClient.organization.checkRolePermission({
-    role: "admin",
-    permission: { invitation: ["cancel"] },
-  });
+  const isAdmin =
+    organization.data.member.role === "admin" ||
+    organization.data.member.role === "owner";
 
-  // Filter members and invitations based on search query
-  const filteredMembers = members.data.members?.filter(
+  // Filter members based on archived status and search query
+  const activeMembers = members.data.members?.filter(
     (member) =>
-      member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+      !member.archivedAt &&
+      (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
+
+  const archivedMembers = members.data.members?.filter(
+    (member) =>
+      member.archivedAt &&
+      (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const filteredInvitations = members.data.invitations?.filter((invitation) =>
     invitation.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  console.log(filteredMembers);
+  // Function to render archive date
+  const formatArchiveDate = (archivedAt: string | null) => {
+    return archivedAt ? dayjs(archivedAt).format("MMM D, YYYY") : "Unknown";
+  };
 
   return (
     <>
@@ -201,7 +211,14 @@ function RouteComponent() {
               <Users className="size-3" />
               <span>Users</span>
               <span className="text-muted-foreground/60 text-xs">
-                {members.data.members?.length ?? 0}
+                {activeMembers?.length ?? 0}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="archived">
+              <Archive className="size-3" />
+              <span>Archived</span>
+              <span className="text-muted-foreground/60 text-xs">
+                {archivedMembers?.length ?? 0}
               </span>
             </TabsTrigger>
             <TabsTrigger value="invitations">
@@ -215,7 +232,7 @@ function RouteComponent() {
 
           <TabsContent value="members" className="pt-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredMembers?.length === 0 ? (
+              {activeMembers?.length === 0 ? (
                 <div className="text-muted-foreground col-span-full py-8 text-center">
                   <Users className="mx-auto mb-2 size-10 opacity-50" />
                   <p className="text-lg font-medium">No members found</p>
@@ -226,9 +243,7 @@ function RouteComponent() {
                   </p>
                 </div>
               ) : (
-                filteredMembers?.map((member) => {
-                  console.log(member.id, member.user.name);
-
+                activeMembers?.map((member) => {
                   return (
                     <Card key={member.id} className="overflow-hidden pb-0">
                       <CardHeader>
@@ -293,18 +308,31 @@ function RouteComponent() {
                             <Button
                               size="sm"
                               variant="destructive"
-                              disabled={removeMember.isPending}
+                              disabled={updateMember.isPending}
                               onClick={() => {
-                                if (activeMember.data.id === member.id) {
+                                if (organization.data.member.id === member.id) {
                                   toast.info(
                                     "You cannot remove your own account",
                                   );
                                   return;
                                 }
 
-                                removeMember.mutate({
-                                  memberIdOrEmail: member.id,
-                                });
+                                updateMember.mutate(
+                                  {
+                                    param: {
+                                      idOrSlug: organizationSlug,
+                                      memberId: member.id,
+                                    },
+                                    form: {
+                                      archivedAt: new Date().toISOString(),
+                                    },
+                                  },
+                                  {
+                                    onSuccess: () => {
+                                      setTab("archived");
+                                    },
+                                  },
+                                );
                               }}
                               className="flex-initial"
                             >
@@ -343,7 +371,7 @@ function RouteComponent() {
                                 <DialogHeader>
                                   <DialogTitle>Update user</DialogTitle>
                                   <DialogDescription>
-                                    Update user's role or other details.
+                                    Update user&apos;s role or other details.
                                   </DialogDescription>
                                 </DialogHeader>
 
@@ -361,6 +389,119 @@ function RouteComponent() {
                                 </Suspense>
                               </DialogContent>
                             </Dialog>
+                          )}
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="archived" className="pt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {archivedMembers?.length === 0 ? (
+                <div className="text-muted-foreground col-span-full py-8 text-center">
+                  <Archive className="mx-auto mb-2 size-10 opacity-50" />
+                  <p className="text-lg font-medium">No archived users found</p>
+                  <p className="text-sm">
+                    {searchQuery
+                      ? "Try a different search query"
+                      : "There are no archived users"}
+                  </p>
+                </div>
+              ) : (
+                archivedMembers?.map((member) => {
+                  return (
+                    <Card
+                      key={member.id}
+                      className="overflow-hidden pb-0 opacity-90"
+                    >
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-12 grayscale">
+                            <AvatarImage
+                              src={
+                                member.user.image
+                                  ? getFileUrl({
+                                      param: { idOrSlug: organizationSlug },
+                                      query: { fileKey: member.user.image },
+                                    })
+                                  : undefined
+                              }
+                            />
+                            <AvatarFallback className="text-lg">
+                              {getInitials(member.user.name ?? "")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="font-medium">
+                              {member.user.name}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-2">
+                              {member.user.email}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary">
+                            {upperFirst(member.role)}
+                          </Badge>
+                          <Badge variant="destructive">Archived</Badge>
+                          <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                            <Archive className="size-3" />
+                            <span>
+                              Archived {formatArchiveDate(member.archivedAt)}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="bg-muted/20 border-t pb-3.5">
+                        <div className="flex w-full gap-2">
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="secondary"
+                            className="flex-1"
+                          >
+                            <Link
+                              to="/$organizationSlug/users/$userId"
+                              params={{ organizationSlug, userId: member.id }}
+                            >
+                              <UserRound className="size-4" />
+                              View Profile
+                            </Link>
+                          </Button>
+
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={updateMember.isPending}
+                              onClick={() => {
+                                updateMember.mutate(
+                                  {
+                                    param: {
+                                      idOrSlug: organizationSlug,
+                                      memberId: member.id,
+                                    },
+                                    form: { archivedAt: null as any },
+                                  },
+                                  {
+                                    onSuccess: () => {
+                                      // Switch to members tab after unarchiving
+                                      setTab("members");
+                                    },
+                                  },
+                                );
+                              }}
+                              title="Restore this user to active status"
+                            >
+                              <Archive className="size-4" />
+                            </Button>
                           )}
                         </div>
                       </CardFooter>
@@ -432,15 +573,13 @@ function RouteComponent() {
                         </div>
                       </CardContent>
                       <CardFooter className="bg-muted/20 border-t pb-3.5">
-                        {canCancelInvitation && (
+                        {isAdmin && (
                           <Button
                             size="sm"
                             variant="destructive"
                             disabled={cancelInvitation.isPending}
                             onClick={() => {
-                              cancelInvitation.mutate({
-                                invitationId: invitation.id,
-                              });
+                              cancelInvitation.mutate({ id: invitation.id });
                             }}
                             className="w-full"
                           >

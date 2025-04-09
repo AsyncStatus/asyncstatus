@@ -64,10 +64,10 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
   const setActiveOrganization = useMutation({
     ...setActiveOrganizationMutationOptions(),
     onMutate(data) {
-      if (data?.organizationSlug) {
+      if (data?.idOrSlug) {
         navigate({
           to: "/$organizationSlug",
-          params: { organizationSlug: data.organizationSlug },
+          params: { organizationSlug: data.idOrSlug },
         });
       }
     },
@@ -155,7 +155,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                         params={{ organizationSlug: organization.slug }}
                         onClick={() => {
                           setActiveOrganization.mutate({
-                            organizationSlug: organization.slug,
+                            idOrSlug: organization.slug,
                           });
                         }}
                       >
