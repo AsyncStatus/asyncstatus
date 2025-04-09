@@ -7,6 +7,9 @@
   "observability": {
     "enabled": true,
   },
+  "placement": {
+    "mode": "smart",
+  },
   "kv_namespaces": [
     {
       "binding": "AS_PROD_AUTH_KV",
