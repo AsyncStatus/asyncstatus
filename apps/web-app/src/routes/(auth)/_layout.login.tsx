@@ -80,7 +80,7 @@ function RouteComponent() {
 
   useEffect(() => {
     if (invitation.data?.hasUser && invitation.data?.email) {
-      form.setValue("email", invitation.data.email);
+      form.resetField("email", { defaultValue: invitation.data.email });
     }
   }, [invitation.data, form]);
 
