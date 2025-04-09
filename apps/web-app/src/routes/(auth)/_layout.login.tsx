@@ -78,16 +78,6 @@ function RouteComponent() {
     },
   });
 
-  useEffect(() => {
-    if (invitation.data?.email) {
-      form.reset({
-        email: invitation.data.email,
-        password: "",
-        rememberMe: true,
-      });
-    }
-  }, [invitation.data, form]);
-
   const loginEmail = useMutation({
     ...loginEmailMutationOptions(),
     async onSuccess() {
@@ -102,7 +92,10 @@ function RouteComponent() {
       <form
         className="mx-auto w-full max-w-xs space-y-24"
         onSubmit={form.handleSubmit((data) => {
-          loginEmail.mutate(data);
+          loginEmail.mutate({
+            ...data,
+            email: invitation.data?.email ?? data.email,
+          });
         })}
       >
         <div className="space-y-1.5 text-center">
