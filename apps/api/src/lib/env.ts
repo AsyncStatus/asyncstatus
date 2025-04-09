@@ -20,6 +20,9 @@ export type Bindings = {
   WEB_APP_URL: string;
   PRIVATE_BUCKET: R2Bucket;
   RATE_LIMITER: KVNamespace;
+  SLACK_CLIENT_ID: string;
+  SLACK_CLIENT_SECRET: string;
+  SLACK_SIGNING_SECRET: string;
 };
 
 export type Variables = {
