@@ -5,6 +5,7 @@ import type { Db } from "../db";
 import * as schema from "../db/schema";
 import type { Auth } from "./auth";
 import type { RateLimiter } from "./rate-limiter";
+import type { ReturnType as SlackbotReturnType } from "../slackbot";
 
 export type Bindings = {
   TURSO_URL: string;
@@ -20,6 +21,8 @@ export type Bindings = {
   WEB_APP_URL: string;
   PRIVATE_BUCKET: R2Bucket;
   RATE_LIMITER: KVNamespace;
+  SLACK_BOT_TOKEN?: string;
+  SLACK_SIGNING_SECRET?: string;
 };
 
 export type Variables = {
@@ -28,6 +31,7 @@ export type Variables = {
   resend: Resend;
   session: Auth["$Infer"]["Session"] | null;
   waitlistRateLimiter: RateLimiter;
+  slackbot?: SlackbotReturnType;
 };
 
 export type HonoEnv = {

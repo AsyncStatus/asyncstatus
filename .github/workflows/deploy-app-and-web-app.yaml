@@ -27,6 +27,16 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/api
           packageManager: bun
+          secrets: |
+            SLACK_CLIENT_ID
+            SLACK_CLIENT_SECRET
+            SLACK_SIGNING_SECRET
+            SLACK_BOT_TOKEN
+        env:
+            SLACK_CLIENT_ID: ${{ secrets.SLACK_CLIENT_ID }}
+            SLACK_CLIENT_SECRET: ${{ secrets.SLACK_CLIENT_SECRET }}
+            SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+            SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
       - name: Build Web App
         run: cd apps/web-app && bun run build
