@@ -35,7 +35,7 @@ Apply here: https://app.slack.com/app-settings/<app_id>/app-manifest
     },
     "oauth_config": {
         "redirect_urls": [
-            "https://c537-78-11-5-212.ngrok-free.app/slack/oauth"
+            "https://api-v2.asyncstatus.com/slack/oauth"
         ],
         "scopes": {
             "bot": [
