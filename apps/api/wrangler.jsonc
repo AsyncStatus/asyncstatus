@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "minify": true,
   "compatibility_date": "2025-04-02",
+  "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
   },

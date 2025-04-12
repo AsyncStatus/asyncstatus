@@ -28,6 +28,7 @@
     "@hono-rate-limiter/cloudflare": "0.2.2",
     "@hono/zod-validator": "0.4.3",
     "@libsql/client": "0.15.3",
+    "@slack/bolt": "4.2.1",
     "better-auth": "1.2.5",
     "bun": "1.2.9",
     "dayjs": "1.11.13",

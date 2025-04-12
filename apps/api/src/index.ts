@@ -15,7 +15,9 @@ import { invitationRouter } from "./routers/invitation";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
 import { teamsRouter } from "./routers/organization/teams";
+import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
+import { initSlackbot } from "./slackbot";
 
 const app = new Hono<HonoEnv>()
   .use(
@@ -42,6 +44,14 @@ const app = new Hono<HonoEnv>()
       limit: 10,
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
+    
+    // Initialize Slackbot
+    const slackbot = initSlackbot(c.env);
+    if (slackbot) {
+      // Store slackbot instance in app context instead of starting it
+      c.set("slackbot", slackbot);
+    }
+    
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
       c.set("session", null);
@@ -57,6 +67,7 @@ const app = new Hono<HonoEnv>()
   .route("/organization", teamsRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
+  .route("/slack", slackRouter)
   .onError((err, c) => {
     console.log(err);
     if (err instanceof AsyncStatusUnexpectedApiError) {
