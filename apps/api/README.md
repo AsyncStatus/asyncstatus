@@ -80,7 +80,7 @@ From an end-user perspective, the workflow is:
 1. In the sidebar, go to "Features" → "Slash Commands"
 2. Click "Create New Command"
 3. Configure a new slash command:
-   - Command: `/status`
+   - Command: `/asyncstatus`
    - Request URL: `https://[your-api-domain]/slack/commands`
    - Short Description: "Update your status"
    - Usage Hint: "[your status message]"
