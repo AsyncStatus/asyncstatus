@@ -1,0 +1,1 @@
+ALTER TABLE `member` ADD `slack_username` text;

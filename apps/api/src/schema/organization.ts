@@ -20,6 +20,7 @@ export const zOrganizationMemberUpdate = z
     lastName: z.string().min(1).trim(),
     role: z.enum(["member", "admin", "owner"]),
     archivedAt: z.string().nullish(),
+    slackUsername: z.string().trim().nullish(),
     image: z.any().transform((val) => {
       if (val instanceof File) {
         return val;

@@ -37,6 +37,7 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
+import React from "react";
 
 import { getFileUrl } from "@/lib/utils";
 import {
@@ -48,9 +49,34 @@ import {
   FormMessage,
 } from "@/components/form";
 
+// Add types for the member
+interface Member {
+  id: string;
+  slackUsername?: string | null;
+  role: string;
+  [key: string]: any;
+}
+
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
 });
+
+// Add profile mutation function
+async function updateMemberSlackUsername(organizationSlug: string, data: { slackUsername?: string | null }) {
+  const response = await fetch(`/api/organization/${organizationSlug}/members/me/slack`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to update Slack username");
+  }
+  
+  return response.json();
+}
 
 function RouteComponent() {
   const params = useParams({ from: "/$organizationSlug" });
@@ -100,6 +126,39 @@ function RouteComponent() {
     },
   });
 
+  // Add profile form state
+  const sessionQuery = useSuspenseQuery(sessionQueryOptions());
+  const currentUser = sessionQuery.data?.user;
+  const [slackUsername, setSlackUsername] = React.useState("");
+
+  // Get the current member to get their slack username
+  const currentMemberQuery = useSuspenseQuery<{ id: string; slackUsername?: string | null }>({
+    queryKey: ['currentMember', params.organizationSlug],
+    queryFn: async () => {
+      const response = await fetch(`/api/organization/${params.organizationSlug}/members/me`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch current member");
+      }
+      return response.json();
+    },
+  });
+
+  React.useEffect(() => {
+    if (currentMemberQuery.data?.slackUsername) {
+      setSlackUsername(currentMemberQuery.data.slackUsername);
+    }
+  }, [currentMemberQuery.data]);
+
+  const profileMutation = useMutation({
+    mutationFn: (data: { slackUsername?: string | null }) => 
+      updateMemberSlackUsername(params.organizationSlug, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['currentMember', params.organizationSlug],
+      });
+    },
+  });
+
   return (
     <>
       <header className="flex shrink-0 items-center justify-between gap-2">
@@ -133,6 +192,7 @@ function RouteComponent() {
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
@@ -199,6 +259,45 @@ function RouteComponent() {
                     </Button>
                   </form>
                 </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-4">
+            <Card>
+              <CardContent>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    profileMutation.mutate({ 
+                      slackUsername: slackUsername || null 
+                    });
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid gap-5">
+                    <div>
+                      <FormLabel>Slack Username</FormLabel>
+                      <FormControl>
+                        <Input
+                          value={slackUsername}
+                          onChange={(e) => setSlackUsername(e.target.value)}
+                          placeholder="Enter your Slack username"
+                        />
+                      </FormControl>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Connect your Slack account to use the /asyncstatus command in this organization
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={profileMutation.isPending}
+                  >
+                    Save Slack Username
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

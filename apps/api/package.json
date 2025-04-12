@@ -18,6 +18,8 @@
     "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
     "dev:turso": "turso dev --db-file ./src/db/local-db",
+    "migrate": "npx drizzle-kit push",
+    "migrate:generate": "npx drizzle-kit generate",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
     "format": "prettier --write .",

@@ -1,9 +1,14 @@
 import { App } from '@slack/bolt';
 import type { HonoEnv } from '../lib/env';
+import { eq } from 'drizzle-orm';
+import { user, member, statusUpdate, statusUpdateItem } from '../db/schema';
+import { nanoid } from 'nanoid';
+import type { Db } from '../db';
 
 export interface SlackbotConfig {
   token: string;
   signingSecret: string;
+  db?: Db;
 }
 
 export type ReturnType = {
@@ -18,6 +23,9 @@ export function createSlackbot(config: SlackbotConfig): ReturnType {
     socketMode: false, // Don't use socket mode
     processBeforeResponse: true,
   });
+
+  // Store the db instance in a variable closure that can be accessed by handlers
+  const dbInstance = config.db;
 
   // Listen for app mention events
   app.event('app_mention', async ({ event, say }) => {
@@ -41,10 +49,82 @@ export function createSlackbot(config: SlackbotConfig): ReturnType {
     // Acknowledge command request
     await ack();
 
-    await respond({
-      response_type: 'in_channel', // or 'ephemeral' for only visible to the user
-      text: `<@${command.user_id}> set their status: ${command.text || "No status provided"}`,
-    });
+    try {
+      // Get db from the closure
+      const db = dbInstance;
+
+      if (!db) {
+        console.error("Database not available in Slack client context");
+        await respond({
+          response_type: 'ephemeral',
+          text: `Error: Database connection is not available. Please try again later.`,
+        });
+        return;
+      }
+
+      // Check if the Slack user is associated with an AsyncStatus user
+      const slackUser = command.user_id;
+      
+      // Find member with the given slack username
+      const associatedMember = await db.query.member.findFirst({
+        where: eq(member.slackUsername, slackUser),
+        with: {
+          user: true,
+          organization: true
+        },
+      });
+
+      if (!associatedMember) {
+        await respond({
+          response_type: 'ephemeral', // Only visible to the user
+          text: `Error: Your Slack account is not connected to any AsyncStatus account. Please connect your account in the organization settings.`,
+        });
+        return;
+      }
+      
+      // Create status update
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const statusUpdateId = nanoid();
+      
+      // Insert status update
+      await db.insert(statusUpdate).values({
+        id: statusUpdateId,
+        memberId: associatedMember.id,
+        teamId: null, // No team associated when coming from Slack
+        effectiveFrom: now,
+        effectiveTo: tomorrow,
+        mood: "neutral",
+        emoji: "✅",
+        isDraft: false, // Published immediately
+        createdAt: now,
+        updatedAt: now,
+      });
+      
+      // Insert status update item
+      await db.insert(statusUpdateItem).values({
+        id: nanoid(),
+        statusUpdateId: statusUpdateId,
+        content: command.text || "No status provided",
+        isBlocker: false,
+        order: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await respond({
+        response_type: 'in_channel', // Visible to all users in the channel
+        text: `<@${command.user_id}> set their status: ${command.text || "No status provided"}`,
+      });
+    } catch (error) {
+      console.error("Error saving status update:", error);
+      await respond({
+        response_type: 'ephemeral',
+        text: `Error: Something went wrong saving your status update. Please try again later.`,
+      });
+    }
   });
 
   // Add a message shortcut (message context menu)
