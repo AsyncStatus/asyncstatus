@@ -26,7 +26,7 @@ Apply here: https://app.slack.com/app-settings/<app_id>/app-manifest
         "slash_commands": [
             {
                 "command": "/asyncstatus",
-                "url": "https://api-v2.asyncstatus.com/slack/commands",
+                "url": "https://api.asyncstatus.com/slack/commands",
                 "description": "Interact with AsyncStatus",
                 "usage_hint": "[your status message]",
                 "should_escape": false
@@ -35,7 +35,7 @@ Apply here: https://app.slack.com/app-settings/<app_id>/app-manifest
     },
     "oauth_config": {
         "redirect_urls": [
-            "https://api-v2.asyncstatus.com/slack/oauth"
+            "https://api.asyncstatus.com/slack/oauth"
         ],
         "scopes": {
             "bot": [
@@ -52,7 +52,7 @@ Apply here: https://app.slack.com/app-settings/<app_id>/app-manifest
     },
     "settings": {
         "event_subscriptions": {
-            "request_url": "https://api-v2.asyncstatus.com/slack/events",
+            "request_url": "https://api.asyncstatus.com/slack/events",
             "bot_events": [
                 "app_mention",
                 "message.channels",
@@ -62,7 +62,7 @@ Apply here: https://app.slack.com/app-settings/<app_id>/app-manifest
         },
         "interactivity": {
             "is_enabled": true,
-            "request_url": "https://api-v2.asyncstatus.com/slack/events"
+            "request_url": "https://api.asyncstatus.com/slack/events"
         },
         "org_deploy_enabled": false,
         "socket_mode_enabled": false,
