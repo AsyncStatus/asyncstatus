@@ -11,6 +11,18 @@
   "placement": {
     "mode": "smart",
   },
+  "workflows": [
+    {
+      "name": "sync-github",
+      "binding": "SYNC_GITHUB_WORKFLOW",
+      "class_name": "SyncGithubWorkflow",
+    },
+    {
+      "name": "delete-github-integration",
+      "binding": "DELETE_GITHUB_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteGithubIntegrationWorkflow",
+    },
+  ],
   "kv_namespaces": [
     {
       "binding": "AS_PROD_AUTH_KV",

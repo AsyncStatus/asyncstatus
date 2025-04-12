@@ -52,14 +52,15 @@ const app = new Hono<HonoEnv>()
     c.set("waitlistRateLimiter", waitlistRateLimiter);
 
     // Initialize Slackbot with db access
-    const slackbot = c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET 
-      ? {
-        token: c.env.SLACK_BOT_TOKEN,
-        signingSecret: c.env.SLACK_SIGNING_SECRET,
-        db
-      }
-      : null;
-    
+    const slackbot =
+      c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET
+        ? {
+            token: c.env.SLACK_BOT_TOKEN,
+            signingSecret: c.env.SLACK_SIGNING_SECRET,
+            db,
+          }
+        : null;
+
     if (slackbot) {
       // Create slackbot instance with db access
       const slackbotInstance = createSlackbot(slackbot);
@@ -77,12 +78,12 @@ const app = new Hono<HonoEnv>()
     return next();
   })
   .route("/auth", authRouter)
+  .route("/organization", githubRouter)
   .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
-  .route("/organization", githubRouter)
   .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
@@ -100,3 +101,5 @@ const app = new Hono<HonoEnv>()
 
 export default app;
 export type App = typeof app;
+export { SyncGithubWorkflow } from "./workflows/sync-github";
+export { DeleteGithubIntegrationWorkflow } from "./workflows/delete-github-integration";

@@ -227,12 +227,60 @@ export const githubIntegration = sqliteTable(
     accessToken: text("access_token"),
     tokenExpiresAt: integer("token_expires_at", { mode: "timestamp" }),
     repositories: text("repositories"),
+    syncId: text("sync_id"),
+    syncStatus: text("sync_status"),
+    deleteId: text("delete_id"),
+    deleteStatus: text("delete_status"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [
     index("github_organization_id_index").on(t.organizationId),
     index("github_installation_id_index").on(t.installationId),
+  ],
+);
+
+export const githubRepository = sqliteTable(
+  "github_repository",
+  {
+    id: text("id").primaryKey(),
+    integrationId: text("integration_id")
+      .notNull()
+      .references(() => githubIntegration.id, { onDelete: "cascade" }),
+    repoId: text("repo_id").notNull(),
+    name: text("name").notNull(),
+    fullName: text("full_name").notNull(),
+    private: integer("private", { mode: "boolean" }).notNull(),
+    htmlUrl: text("html_url").notNull(),
+    description: text("description"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("github_repo_integration_id_index").on(t.integrationId),
+    index("github_repo_repo_id_index").on(t.repoId),
+  ],
+);
+
+export const githubUser = sqliteTable(
+  "github_user",
+  {
+    id: text("id").primaryKey(),
+    integrationId: text("integration_id")
+      .notNull()
+      .references(() => githubIntegration.id, { onDelete: "cascade" }),
+    githubId: text("github_id").notNull(),
+    login: text("login").notNull(),
+    avatarUrl: text("avatar_url"),
+    htmlUrl: text("html_url").notNull(),
+    name: text("name"),
+    email: text("email"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("github_user_integration_id_index").on(t.integrationId),
+    index("github_user_github_id_index").on(t.githubId),
   ],
 );
 
@@ -351,10 +399,29 @@ export const publicStatusShareRelations = relations(
 
 export const githubIntegrationRelations = relations(
   githubIntegration,
-  ({ one }) => ({
+  ({ one, many }) => ({
     organization: one(organization, {
       fields: [githubIntegration.organizationId],
       references: [organization.id],
     }),
+    repositories: many(githubRepository),
+    users: many(githubUser),
   }),
 );
+
+export const githubRepositoryRelations = relations(
+  githubRepository,
+  ({ one }) => ({
+    integration: one(githubIntegration, {
+      fields: [githubRepository.integrationId],
+      references: [githubIntegration.id],
+    }),
+  }),
+);
+
+export const githubUserRelations = relations(githubUser, ({ one }) => ({
+  integration: one(githubIntegration, {
+    fields: [githubUser.integrationId],
+    references: [githubIntegration.id],
+  }),
+}));

@@ -207,7 +207,7 @@ function RouteComponent() {
 
           <TabsContent value="integrations" className="space-y-4">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <div className="flex flex-col space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
