@@ -23,6 +23,7 @@ const app = new Hono<HonoEnv>()
   .use(
     cors({
       origin: [
+        "http://localhost:3000",
         "https://app-v2.asyncstatus.com",
         "https://app-v2.dev.asyncstatus.com",
         "https://v2.asyncstatus.com",
@@ -44,14 +45,14 @@ const app = new Hono<HonoEnv>()
       limit: 10,
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
-    
+
     // Initialize Slackbot
     const slackbot = initSlackbot(c.env);
     if (slackbot) {
       // Store slackbot instance in app context instead of starting it
       c.set("slackbot", slackbot);
     }
-    
+
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
       c.set("session", null);

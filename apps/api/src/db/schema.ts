@@ -139,6 +139,77 @@ export const invitation = sqliteTable(
   ],
 );
 
+export const statusUpdate = sqliteTable(
+  "status_update",
+  {
+    id: text("id").primaryKey(),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    teamId: text("team_id").references(() => team.id, { onDelete: "set null" }),
+    effectiveFrom: integer("effective_from", { mode: "timestamp" }).notNull(),
+    effectiveTo: integer("effective_to", { mode: "timestamp" }).notNull(),
+    mood: text("mood"),
+    emoji: text("emoji"),
+    isDraft: integer("is_draft", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("status_update_member_id_index").on(t.memberId),
+    index("status_update_team_id_index").on(t.teamId),
+    index("status_update_created_at_index").on(t.createdAt),
+    index("status_update_effective_from_index").on(t.effectiveFrom),
+    index("status_update_effective_to_index").on(t.effectiveTo),
+    index("status_update_is_draft_index").on(t.isDraft),
+  ],
+);
+
+export const statusUpdateItem = sqliteTable(
+  "status_update_item",
+  {
+    id: text("id").primaryKey(),
+    statusUpdateId: text("status_update_id")
+      .notNull()
+      .references(() => statusUpdate.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    isBlocker: integer("is_blocker", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    order: integer("order").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("status_update_item_update_id_index").on(t.statusUpdateId),
+    index("status_update_item_blocker_index").on(t.isBlocker),
+  ],
+);
+
+export const publicStatusShare = sqliteTable(
+  "public_status_share",
+  {
+    id: text("id").primaryKey(),
+    statusUpdateId: text("status_update_id")
+      .notNull()
+      .references(() => statusUpdate.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull().unique(),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    expiresAt: integer("expires_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("public_share_status_update_id_index").on(t.statusUpdateId),
+    index("public_share_organization_id_index").on(t.organizationId),
+    index("public_share_slug_index").on(t.slug),
+    index("public_share_is_active_index").on(t.isActive),
+  ],
+);
+
 // Relations section - after all tables are defined
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
@@ -157,6 +228,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   teams: many(team),
   invitations: many(invitation),
+  publicStatusShares: many(publicStatusShare),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -169,6 +241,7 @@ export const memberRelations = relations(member, ({ one, many }) => ({
     references: [organization.id],
   }),
   teamMemberships: many(teamMembership),
+  statusUpdates: many(statusUpdate),
 }));
 
 export const teamRelations = relations(team, ({ one, many }) => ({
@@ -177,6 +250,7 @@ export const teamRelations = relations(team, ({ one, many }) => ({
     references: [organization.id],
   }),
   teamMemberships: many(teamMembership),
+  statusUpdates: many(statusUpdate),
 }));
 
 export const teamMembershipRelations = relations(teamMembership, ({ one }) => ({
@@ -204,3 +278,43 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
     references: [team.id],
   }),
 }));
+
+export const statusUpdateRelations = relations(
+  statusUpdate,
+  ({ one, many }) => ({
+    member: one(member, {
+      fields: [statusUpdate.memberId],
+      references: [member.id],
+    }),
+    team: one(team, {
+      fields: [statusUpdate.teamId],
+      references: [team.id],
+    }),
+    items: many(statusUpdateItem),
+    publicShares: many(publicStatusShare),
+  }),
+);
+
+export const statusUpdateItemRelations = relations(
+  statusUpdateItem,
+  ({ one }) => ({
+    statusUpdate: one(statusUpdate, {
+      fields: [statusUpdateItem.statusUpdateId],
+      references: [statusUpdate.id],
+    }),
+  }),
+);
+
+export const publicStatusShareRelations = relations(
+  publicStatusShare,
+  ({ one }) => ({
+    statusUpdate: one(statusUpdate, {
+      fields: [publicStatusShare.statusUpdateId],
+      references: [statusUpdate.id],
+    }),
+    organization: one(organization, {
+      fields: [publicStatusShare.organizationId],
+      references: [organization.id],
+    }),
+  }),
+);
