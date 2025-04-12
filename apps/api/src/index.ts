@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { Resend } from "resend";
 
 import { createDb } from "./db";
@@ -13,6 +12,7 @@ import type { HonoEnv } from "./lib/env";
 import { createRateLimiter } from "./lib/rate-limiter";
 import { authRouter } from "./routers/auth";
 import { invitationRouter } from "./routers/invitation";
+import { githubRouter } from "./routers/organization/github";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
@@ -73,6 +73,7 @@ const app = new Hono<HonoEnv>()
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
+  .route("/organization", githubRouter)
   .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)

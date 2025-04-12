@@ -214,6 +214,26 @@ export const publicStatusShare = sqliteTable(
   ],
 );
 
+export const githubIntegration = sqliteTable(
+  "github_integration",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    installationId: text("installation_id").notNull(),
+    accessToken: text("access_token"),
+    tokenExpiresAt: integer("token_expires_at", { mode: "timestamp" }),
+    repositories: text("repositories"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("github_organization_id_index").on(t.organizationId),
+    index("github_installation_id_index").on(t.installationId),
+  ],
+);
+
 // Relations section - after all tables are defined
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
@@ -228,12 +248,16 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const organizationRelations = relations(organization, ({ many }) => ({
-  members: many(member),
-  teams: many(team),
-  invitations: many(invitation),
-  publicStatusShares: many(publicStatusShare),
-}));
+export const organizationRelations = relations(
+  organization,
+  ({ many, one }) => ({
+    members: many(member),
+    teams: many(team),
+    invitations: many(invitation),
+    publicStatusShares: many(publicStatusShare),
+    githubIntegration: one(githubIntegration),
+  }),
+);
 
 export const memberRelations = relations(member, ({ one, many }) => ({
   user: one(user, {
@@ -318,6 +342,16 @@ export const publicStatusShareRelations = relations(
     }),
     organization: one(organization, {
       fields: [publicStatusShare.organizationId],
+      references: [organization.id],
+    }),
+  }),
+);
+
+export const githubIntegrationRelations = relations(
+  githubIntegration,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [githubIntegration.organizationId],
       references: [organization.id],
     }),
   }),

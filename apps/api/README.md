@@ -95,7 +95,7 @@ From an end-user perspective, the workflow is:
 5. Choose "Message shortcut" and configure:
    - Name: "Save Message"
    - Short Description: "Save this message to your notes"
-x   - Callback ID: `save_message`
+     x - Callback ID: `save_message`
 6. Click "Create"
 7. Click "Save Changes" at the bottom of the page
 
@@ -113,4 +113,34 @@ SLACK_SIGNING_SECRET=your-actual-signing-secret
 If you make any changes to scopes after initial installation, you'll need to reinstall the app to your workspace:
 
 1. Go to "OAuth & Permissions"
-2. Click "Install to Workspace" again 
+2. Click "Install to Workspace" again
+
+## GitHub Integration
+
+To enable GitHub integration, you need to create a GitHub App and configure it properly:
+
+1. Go to your GitHub profile settings > Developer settings > GitHub Apps
+2. Click "New GitHub App"
+3. Fill in the following details:
+   - GitHub App name: AsyncStatus (or your preferred name)
+   - Homepage URL: Your application URL
+   - Callback URL: `https://your-app-domain.com/callback/github`
+   - Webhook: Disable for now (optional based on your needs)
+   - Permissions:
+     - Repository permissions:
+       - Contents: Read-only
+       - Metadata: Read-only
+       - Pull requests: Read-only
+       - Issues: Read-only
+     - Organization permissions:
+       - Members: Read-only
+4. Generate a private key and note the App ID
+5. Update your environment variables:
+   ```
+   GITHUB_APP_ID=your_app_id
+   GITHUB_APP_PRIVATE_KEY=your_private_key
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   ```
+
+After installation, your GitHub integration will allow users to connect their GitHub organizations to AsyncStatus, providing access to repository data and team information.

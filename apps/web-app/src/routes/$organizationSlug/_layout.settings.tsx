@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
-import { CreditCard } from "@asyncstatus/ui/icons";
+import { CreditCard, Github } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
 import {
@@ -47,6 +47,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/form";
+import { GitHubIntegrationButton } from "@/components/github-integration-button";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
@@ -133,6 +134,7 @@ function RouteComponent() {
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
@@ -199,6 +201,31 @@ function RouteComponent() {
                     </Button>
                   </form>
                 </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white">
+                        <Github className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-medium">GitHub</h3>
+                        <p className="text-sm text-gray-500">
+                          Connect your GitHub organization for team integration
+                        </p>
+                      </div>
+                    </div>
+                    <GitHubIntegrationButton
+                      organizationSlug={params.organizationSlug}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
