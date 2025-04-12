@@ -5,6 +5,7 @@ import { generateId } from "better-auth";
 import dayjs from "dayjs";
 import { and, DrizzleError, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 
 import * as schema from "../../db/schema";
 import {
@@ -91,7 +92,7 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const { role, archivedAt, ...userUpdates } = c.req.valid("form");
+      const { role, archivedAt, slackUsername, ...userUpdates } = c.req.valid("form");
       const updatedMember = await c.var.db.transaction(async (tx) => {
         if (role) {
           await tx
@@ -108,6 +109,13 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
           await tx
             .update(schema.member)
             .set({ archivedAt: null })
+            .where(eq(schema.member.id, memberId));
+        }
+        
+        if (slackUsername !== undefined) {
+          await tx
+            .update(schema.member)
+            .set({ slackUsername })
             .where(eq(schema.member.id, memberId));
         }
 
@@ -271,4 +279,98 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
 
       return c.json(invitation);
     },
+  )
+  .post(
+    "/:idOrSlug/members/me/slack",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    zValidator(
+      "json",
+      z.object({
+        slackUsername: z.string().trim().nullish(),
+      })
+    ),
+    async (c) => {
+      const { slackUsername } = c.req.valid("json");
+      
+      // Update the slackUsername for the current member
+      await c.var.db
+        .update(schema.member)
+        .set({ 
+          slackUsername,
+          // If slackUsername is null, unset it (SQL NULL)
+          ...(slackUsername === null ? { slackUsername: null } : {})
+        })
+        .where(eq(schema.member.id, c.var.member.id));
+        
+      // Get the updated member
+      const updatedMember = await c.var.db.query.member.findFirst({
+        where: eq(schema.member.id, c.var.member.id),
+        with: { user: true },
+      });
+      
+      return c.json({ 
+        success: true,
+        member: updatedMember 
+      });
+    }
+  )
+  .get(
+    "/:idOrSlug/members/me",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    async (c) => {
+      // Return the currently logged-in user's member record
+      return c.json(c.var.member);
+    }
+  )
+  .get(
+    "/:idOrSlug/slack/users",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    async (c) => {
+      // Check if user is admin or owner
+      if (c.var.member.role !== "admin" && c.var.member.role !== "owner") {
+        throw new AsyncStatusForbiddenError({
+          message: "You do not have permission to access Slack users",
+        });
+      }
+
+      const slackbot = c.get("slackbot");
+      if (!slackbot) {
+        throw new AsyncStatusBadRequestError({
+          message: "Slack integration is not configured",
+        });
+      }
+
+      try {
+        // Get list of users from Slack API
+        const result = await slackbot.app.client.users.list();
+        
+        if (!result.ok) {
+          throw new AsyncStatusUnexpectedApiError({
+            message: "Failed to fetch users from Slack",
+          });
+        }
+
+        // Filter out bots, deactivated users, and other non-human users
+        const users = result.members?.filter(
+          (user: any) => 
+            !user.is_bot && 
+            !user.deleted && 
+            !user.is_workspace_app && 
+            !user.is_app_user && 
+            user.name !== "slackbot"
+        ) || [];
+
+        return c.json({ 
+          users 
+        });
+      } catch (error) {
+        console.error("Error fetching Slack users:", error);
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to fetch users from Slack",
+        });
+      }
+    }
   );

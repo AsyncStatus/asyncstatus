@@ -21,7 +21,7 @@ import { teamsRouter } from "./routers/organization/teams";
 import { publicStatusShareRouter } from "./routers/publicStatusShare";
 import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
-import { initSlackbot } from "./slackbot";
+import { createSlackbot } from "./slackbot";
 
 const app = new Hono<HonoEnv>()
   .use(
@@ -51,11 +51,20 @@ const app = new Hono<HonoEnv>()
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
 
-    // Initialize Slackbot
-    const slackbot = initSlackbot(c.env);
+    // Initialize Slackbot with db access
+    const slackbot = c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET 
+      ? {
+        token: c.env.SLACK_BOT_TOKEN,
+        signingSecret: c.env.SLACK_SIGNING_SECRET,
+        db
+      }
+      : null;
+    
     if (slackbot) {
-      // Store slackbot instance in app context instead of starting it
-      c.set("slackbot", slackbot);
+      // Create slackbot instance with db access
+      const slackbotInstance = createSlackbot(slackbot);
+      // Store slackbot instance in app context
+      c.set("slackbot", slackbotInstance);
     }
 
     const session = await auth.api.getSession({ headers: c.req.raw.headers });

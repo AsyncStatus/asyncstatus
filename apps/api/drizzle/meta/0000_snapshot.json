@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c9ef9eaa-bad5-43bf-a877-f28d84ac7445",
+  "id": "aff0bd97-50c4-4c9d-b201-ef90c4bc706c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -127,6 +127,101 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "github_integration": {
+      "name": "github_integration",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "installation_id": {
+          "name": "installation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "token_expires_at": {
+          "name": "token_expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "repositories": {
+          "name": "repositories",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "github_organization_id_index": {
+          "name": "github_organization_id_index",
+          "columns": [
+            "organization_id"
+          ],
+          "isUnique": false
+        },
+        "github_installation_id_index": {
+          "name": "github_installation_id_index",
+          "columns": [
+            "installation_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "github_integration_organization_id_organization_id_fk": {
+          "name": "github_integration_organization_id_organization_id_fk",
+          "tableFrom": "github_integration",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "invitation": {
       "name": "invitation",
       "columns": {
@@ -153,6 +248,13 @@
         },
         "role": {
           "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -217,6 +319,19 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
+        "invitation_team_id_team_id_fk": {
+          "name": "invitation_team_id_team_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "team",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "invitation_inviter_id_user_id_fk": {
           "name": "invitation_inviter_id_user_id_fk",
           "tableFrom": "invitation",
@@ -266,8 +381,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "team_id": {
-          "name": "team_id",
+        "slack_username": {
+          "name": "slack_username",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -278,6 +393,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -350,7 +472,7 @@
           "name": "slug",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "logo": {
@@ -396,8 +518,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "session": {
-      "name": "session",
+    "public_status_share": {
+      "name": "public_status_share",
       "columns": {
         "id": {
           "name": "id",
@@ -406,16 +528,339 @@
           "notNull": true,
           "autoincrement": false
         },
+        "status_update_id": {
+          "name": "status_update_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
         "expires_at": {
           "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "token": {
-          "name": "token",
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "public_status_share_slug_unique": {
+          "name": "public_status_share_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "public_share_status_update_id_index": {
+          "name": "public_share_status_update_id_index",
+          "columns": [
+            "status_update_id"
+          ],
+          "isUnique": false
+        },
+        "public_share_organization_id_index": {
+          "name": "public_share_organization_id_index",
+          "columns": [
+            "organization_id"
+          ],
+          "isUnique": false
+        },
+        "public_share_slug_index": {
+          "name": "public_share_slug_index",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": false
+        },
+        "public_share_is_active_index": {
+          "name": "public_share_is_active_index",
+          "columns": [
+            "is_active"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "public_status_share_status_update_id_status_update_id_fk": {
+          "name": "public_status_share_status_update_id_status_update_id_fk",
+          "tableFrom": "public_status_share",
+          "tableTo": "status_update",
+          "columnsFrom": [
+            "status_update_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "public_status_share_organization_id_organization_id_fk": {
+          "name": "public_status_share_organization_id_organization_id_fk",
+          "tableFrom": "public_status_share",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "status_update": {
+      "name": "status_update",
+      "columns": {
+        "id": {
+          "name": "id",
           "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "member_id": {
+          "name": "member_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "effective_from": {
+          "name": "effective_from",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "effective_to": {
+          "name": "effective_to",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mood": {
+          "name": "mood",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "emoji": {
+          "name": "emoji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_draft": {
+          "name": "is_draft",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "status_update_member_id_index": {
+          "name": "status_update_member_id_index",
+          "columns": [
+            "member_id"
+          ],
+          "isUnique": false
+        },
+        "status_update_organization_id_index": {
+          "name": "status_update_organization_id_index",
+          "columns": [
+            "organization_id"
+          ],
+          "isUnique": false
+        },
+        "status_update_team_id_index": {
+          "name": "status_update_team_id_index",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "status_update_created_at_index": {
+          "name": "status_update_created_at_index",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "status_update_effective_from_index": {
+          "name": "status_update_effective_from_index",
+          "columns": [
+            "effective_from"
+          ],
+          "isUnique": false
+        },
+        "status_update_effective_to_index": {
+          "name": "status_update_effective_to_index",
+          "columns": [
+            "effective_to"
+          ],
+          "isUnique": false
+        },
+        "status_update_is_draft_index": {
+          "name": "status_update_is_draft_index",
+          "columns": [
+            "is_draft"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "status_update_member_id_member_id_fk": {
+          "name": "status_update_member_id_member_id_fk",
+          "tableFrom": "status_update",
+          "tableTo": "member",
+          "columnsFrom": [
+            "member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "status_update_organization_id_organization_id_fk": {
+          "name": "status_update_organization_id_organization_id_fk",
+          "tableFrom": "status_update",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "status_update_team_id_team_id_fk": {
+          "name": "status_update_team_id_team_id_fk",
+          "tableFrom": "status_update",
+          "tableTo": "team",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "status_update_item": {
+      "name": "status_update_item",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status_update_id": {
+          "name": "status_update_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_blocker": {
+          "name": "is_blocker",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -433,66 +878,31 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "active_organization_id": {
-          "name": "active_organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {
-        "session_token_unique": {
-          "name": "session_token_unique",
+        "status_update_item_update_id_index": {
+          "name": "status_update_item_update_id_index",
           "columns": [
-            "token"
-          ],
-          "isUnique": true
-        },
-        "user_session_id_index": {
-          "name": "user_session_id_index",
-          "columns": [
-            "user_id"
+            "status_update_id"
           ],
           "isUnique": false
         },
-        "token_session_index": {
-          "name": "token_session_index",
+        "status_update_item_blocker_index": {
+          "name": "status_update_item_blocker_index",
           "columns": [
-            "token"
+            "is_blocker"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "session_user_id_user_id_fk": {
-          "name": "session_user_id_user_id_fk",
-          "tableFrom": "session",
-          "tableTo": "user",
+        "status_update_item_status_update_id_status_update_id_fk": {
+          "name": "status_update_item_status_update_id_status_update_id_fk",
+          "tableFrom": "status_update_item",
+          "tableTo": "status_update",
           "columnsFrom": [
-            "user_id"
+            "status_update_id"
           ],
           "columnsTo": [
             "id"
@@ -552,6 +962,79 @@
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "team_membership": {
+      "name": "team_membership",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "member_id": {
+          "name": "member_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "team_members_team_id_index": {
+          "name": "team_members_team_id_index",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "team_members_member_id_index": {
+          "name": "team_members_member_id_index",
+          "columns": [
+            "member_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "team_membership_team_id_team_id_fk": {
+          "name": "team_membership_team_id_team_id_fk",
+          "tableFrom": "team_membership",
+          "tableTo": "team",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "team_membership_member_id_member_id_fk": {
+          "name": "team_membership_member_id_member_id_fk",
+          "tableFrom": "team_membership",
+          "tableTo": "member",
+          "columnsFrom": [
+            "member_id"
           ],
           "columnsTo": [
             "id"

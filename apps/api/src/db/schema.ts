@@ -80,6 +80,8 @@ export const member = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
+    // Optional Slack username - nullable by default
+    slackUsername: text("slack_username"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     archivedAt: integer("archived_at", { mode: "timestamp" }),
   },

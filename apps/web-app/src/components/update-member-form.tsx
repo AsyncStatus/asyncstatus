@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getMemberQueryOptions,
@@ -44,6 +44,17 @@ import {
   FormMessage,
 } from "@/components/form";
 
+// Type for Slack users
+interface SlackUser {
+  id: string;
+  name: string;
+  real_name: string;
+  profile: {
+    image_24?: string;
+    display_name: string;
+  };
+}
+
 export function UpdateMemberForm(props: {
   organizationSlug: string;
   memberId: string;
@@ -66,6 +77,9 @@ export function UpdateMemberForm(props: {
 }) {
   const queryClient = useQueryClient();
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
+  const [slackUsersPopoverOpen, setSlackUsersPopoverOpen] = useState(false);
+  const [slackUsers, setSlackUsers] = useState<SlackUser[]>([]);
+  const [isLoadingSlackUsers, setIsLoadingSlackUsers] = useState(false);
   const [session, member, organization] = useSuspenseQueries({
     queries: [
       sessionQueryOptions(),
@@ -84,6 +98,7 @@ export function UpdateMemberForm(props: {
       lastName: member.data.user.name?.split(" ").slice(1).join(" ") ?? "",
       role: member.data.role as "member" | "admin" | "owner",
       image: member.data.user.image ?? null,
+      slackUsername: member.data.slackUsername ?? "",
     },
   });
 
@@ -112,6 +127,28 @@ export function UpdateMemberForm(props: {
     },
   });
   const isOwner = organization.data.member.role === "owner";
+
+  // Fetch Slack users when component mounts
+  useEffect(() => {
+    async function fetchSlackUsers() {
+      setIsLoadingSlackUsers(true);
+      try {
+        const response = await fetch(`/api/organization/${props.organizationSlug}/slack/users`);
+        if (response.ok) {
+          const data = await response.json() as { users: SlackUser[] };
+          setSlackUsers(data.users || []);
+        } else {
+          console.error("Failed to fetch Slack users");
+        }
+      } catch (error) {
+        console.error("Error fetching Slack users:", error);
+      } finally {
+        setIsLoadingSlackUsers(false);
+      }
+    }
+    
+    fetchSlackUsers();
+  }, [props.organizationSlug]);
 
   return (
     <Form {...form}>
@@ -230,6 +267,115 @@ export function UpdateMemberForm(props: {
                     </PopoverContent>
                   </Popover>
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="slackUsername"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slack User</FormLabel>
+                <FormControl>
+                  <Popover
+                    open={slackUsersPopoverOpen}
+                    onOpenChange={setSlackUsersPopoverOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={slackUsersPopoverOpen}
+                        className="justify-between"
+                      >
+                        {field.value 
+                          ? `@${field.value}` 
+                          : "Select Slack user..."}
+                        {isLoadingSlackUsers ? (
+                          <span className="animate-spin">⟳</span>
+                        ) : (
+                          <ChevronsUpDown className="opacity-50" />
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[300px]" side="bottom" align="start" alignOffset={0}>
+                      <Command>
+                        <CommandInput
+                          placeholder="Search Slack users..."
+                          className="h-9"
+                        />
+                        <CommandList>
+                          <CommandEmpty>No Slack users found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="none"
+                              onSelect={() => {
+                                form.setValue("slackUsername", "");
+                                setSlackUsersPopoverOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center">
+                                <div className="ml-2">
+                                  <p className="font-medium">Not connected</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    Disconnect from Slack
+                                  </p>
+                                </div>
+                                <Check
+                                  className={cn(
+                                    "mt-0.5 ml-auto self-start",
+                                    !field.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                              </div>
+                            </CommandItem>
+                            {slackUsers.map((slackUser) => (
+                              <CommandItem
+                                key={slackUser.id}
+                                value={slackUser.name}
+                                onSelect={() => {
+                                  form.setValue("slackUsername", slackUser.name);
+                                  setSlackUsersPopoverOpen(false);
+                                }}
+                              >
+                                <div className="flex items-center">
+                                  {slackUser.profile.image_24 && (
+                                    <img 
+                                      src={slackUser.profile.image_24} 
+                                      alt={slackUser.name} 
+                                      className="h-5 w-5 rounded mr-2" 
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="font-medium">@{slackUser.name}</p>
+                                    <p className="text-muted-foreground text-xs">
+                                      {slackUser.real_name || slackUser.profile.display_name}
+                                    </p>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "mt-0.5 ml-auto self-start",
+                                      slackUser.name === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0",
+                                    )}
+                                  />
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <p className="text-muted-foreground text-xs">
+                  Connect this user to their Slack account for the /asyncstatus command
+                </p>
                 <FormMessage />
               </FormItem>
             )}
