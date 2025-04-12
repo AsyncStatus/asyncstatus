@@ -1,3 +1,4 @@
+import { setInterval } from "node:timers";
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
@@ -10,8 +11,6 @@ import {
 } from "../../errors";
 import type { HonoEnvWithOrganization } from "../../lib/env";
 import { requiredOrganization, requiredSession } from "../../lib/middleware";
-import { wait } from "../../lib/wait";
-import { zGithubIntegrationUpdate } from "../../schema/github-integration";
 import { zOrganizationIdOrSlug } from "../../schema/organization";
 
 export const githubRouter = new Hono<HonoEnvWithOrganization>()
@@ -128,22 +127,31 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const maxWaitTime = 1000 * 60 * 5; // 5 minutes
       const startTime = Date.now();
 
-      while (
-        statusInstance.status !== "complete" &&
-        Date.now() - startTime < maxWaitTime
-      ) {
-        await wait(1000);
-        statusInstance = await workflowInstance.status();
-        await writer.write(
-          encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-        );
-      }
+      let previousStatus = statusInstance.status;
+      const checkStatus = setInterval(async () => {
+        try {
+          statusInstance = await workflowInstance.status();
+          if (previousStatus !== statusInstance.status) {
+            await writer.write(
+              encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
+            );
+            previousStatus = statusInstance.status;
+          }
 
-      statusInstance = await workflowInstance.status();
-      await writer.write(
-        encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-      );
-      await writer.close();
+          if (
+            statusInstance.status === "complete" ||
+            Date.now() - startTime >= maxWaitTime
+          ) {
+            clearInterval(checkStatus);
+            await writer.close();
+          }
+        } catch (error) {
+          console.error("Error checking workflow status:", error);
+          clearInterval(checkStatus);
+          await writer.close();
+        }
+      }, 1000);
+
       return new Response(transformStream.readable, { headers });
     },
   )
@@ -180,22 +188,31 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const maxWaitTime = 1000 * 60 * 5; // 5 minutes
       const startTime = Date.now();
 
-      while (
-        statusInstance.status !== "complete" &&
-        Date.now() - startTime < maxWaitTime
-      ) {
-        await wait(1000);
-        statusInstance = await workflowInstance.status();
-        await writer.write(
-          encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-        );
-      }
+      let previousStatus = statusInstance.status;
+      const checkStatus = setInterval(async () => {
+        try {
+          statusInstance = await workflowInstance.status();
+          if (previousStatus !== statusInstance.status) {
+            await writer.write(
+              encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
+            );
+            previousStatus = statusInstance.status;
+          }
 
-      statusInstance = await workflowInstance.status();
-      await writer.write(
-        encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-      );
-      await writer.close();
+          if (
+            statusInstance.status === "complete" ||
+            Date.now() - startTime >= maxWaitTime
+          ) {
+            clearInterval(checkStatus);
+            await writer.close();
+          }
+        } catch (error) {
+          console.error("Error checking workflow status:", error);
+          clearInterval(checkStatus);
+          await writer.close();
+        }
+      }, 1000);
+
       return new Response(transformStream.readable, { headers });
     },
   )

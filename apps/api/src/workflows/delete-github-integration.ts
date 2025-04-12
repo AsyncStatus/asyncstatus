@@ -9,6 +9,7 @@ import { App } from "octokit";
 import { createDb } from "../db";
 import * as schema from "../db/schema";
 import type { HonoEnv } from "../lib/env";
+import { wait } from "../lib/wait";
 
 export type DeleteGithubIntegrationWorkflowParams = {
   integrationId: string;
@@ -37,6 +38,7 @@ export class DeleteGithubIntegrationWorkflow extends WorkflowEntrypoint<
     });
 
     await step.do("delete-installation", async () => {
+      await wait(1000 * 60); // 1 minute
       const app = new App({
         appId: this.env.GITHUB_APP_ID,
         privateKey: this.env.GITHUB_APP_PRIVATE_KEY,
