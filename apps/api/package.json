@@ -27,7 +27,7 @@
     "@asyncstatus/email": "workspace:*",
     "@hono-rate-limiter/cloudflare": "0.2.2",
     "@hono/zod-validator": "0.4.3",
-    "@libsql/client": "0.15.2",
+    "@libsql/client": "0.15.3",
     "better-auth": "1.2.5",
     "bun": "1.2.9",
     "dayjs": "1.11.13",
@@ -40,10 +40,10 @@
     "@asyncstatus/eslint-config": "workspace:*",
     "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
-    "@cloudflare/workers-types": "4.20250409.0",
+    "@cloudflare/workers-types": "4.20250412.0",
     "@types/bun": "1.2.9",
     "drizzle-kit": "0.30.6",
-    "wrangler": "4.9.1"
+    "wrangler": "4.10.0"
   },
   "packageManager": "bun@1.2.9"
 }
