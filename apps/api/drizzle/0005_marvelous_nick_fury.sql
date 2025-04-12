@@ -1,0 +1,2 @@
+ALTER TABLE `status_update` ADD `organization_id` text NOT NULL REFERENCES organization(id);--> statement-breakpoint
+CREATE INDEX `status_update_organization_id_index` ON `status_update` (`organization_id`);

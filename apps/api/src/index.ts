@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import { Resend } from "resend";
 
 import { createDb } from "./db";
@@ -14,7 +15,10 @@ import { authRouter } from "./routers/auth";
 import { invitationRouter } from "./routers/invitation";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
+import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
+import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
+import { publicStatusShareRouter } from "./routers/publicStatusShare";
 import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
 import { initSlackbot } from "./slackbot";
@@ -24,12 +28,13 @@ const app = new Hono<HonoEnv>()
     cors({
       origin: [
         "http://localhost:3000",
-        "https://app-v2.asyncstatus.com",
-        "https://app-v2.dev.asyncstatus.com",
-        "https://v2.asyncstatus.com",
-        "https://asyncstatus.com",
-        "https://v2.dev.asyncstatus.com",
+        "https://www.asyncstatus.com",
+        "https://dev.asyncstatus.com",
+        "https://beta.asyncstatus.com",
+        "https://app.asyncstatus.com",
       ],
+      allowHeaders: ["Content-Type", "Authorization"],
+      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       credentials: true,
     }),
   )
@@ -66,6 +71,9 @@ const app = new Hono<HonoEnv>()
   .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
   .route("/organization", teamsRouter)
+  .route("/organization", statusUpdateRouter)
+  .route("/organization", organizationPublicShareRouter)
+  .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .route("/slack", slackRouter)

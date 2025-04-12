@@ -146,6 +146,9 @@ export const statusUpdate = sqliteTable(
     memberId: text("member_id")
       .notNull()
       .references(() => member.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
     teamId: text("team_id").references(() => team.id, { onDelete: "set null" }),
     effectiveFrom: integer("effective_from", { mode: "timestamp" }).notNull(),
     effectiveTo: integer("effective_to", { mode: "timestamp" }).notNull(),
@@ -157,6 +160,7 @@ export const statusUpdate = sqliteTable(
   },
   (t) => [
     index("status_update_member_id_index").on(t.memberId),
+    index("status_update_organization_id_index").on(t.organizationId),
     index("status_update_team_id_index").on(t.teamId),
     index("status_update_created_at_index").on(t.createdAt),
     index("status_update_effective_from_index").on(t.effectiveFrom),
