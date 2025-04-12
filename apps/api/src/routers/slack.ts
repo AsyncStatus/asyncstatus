@@ -117,7 +117,7 @@ export const slackRouter = new Hono<HonoEnv>()
       }
       
       // Handle slash commands as a fallback
-      if (command === "/asyncstatus" || command === "/status") {
+      if (command === "/asyncstatus") {
         console.log("Using fallback command handler");
         return c.json({
           response_type: "in_channel", // visible to all users in the channel

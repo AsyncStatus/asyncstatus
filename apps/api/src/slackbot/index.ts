@@ -19,18 +19,6 @@ export function createSlackbot(config: SlackbotConfig): ReturnType {
     processBeforeResponse: true,
   });
 
-  // Listen for message events with "hello" text
-  app.message('hello', async ({ message, say }) => {
-    // Say hello back
-    // @ts-expect-error - Handle different message types
-    const userId = message.user || message.message?.user;
-    if (userId) {
-      await say(`Hello there, <@${userId}>!`);
-    } else {
-      await say(`Hello there!`);
-    }
-  });
-
   // Listen for app mention events
   app.event('app_mention', async ({ event, say }) => {
     await say(`You mentioned me, <@${event.user}>!`);
@@ -55,18 +43,6 @@ export function createSlackbot(config: SlackbotConfig): ReturnType {
 
     await respond({
       response_type: 'in_channel', // or 'ephemeral' for only visible to the user
-      text: `<@${command.user_id}> set their status: ${command.text || "No status provided"}`,
-    });
-  });
-
-  // Also handle the /status command as a fallback
-  app.command('/status', async ({ command, ack, respond }) => {
-    console.log("Status command received:", command);
-    // Acknowledge command request
-    await ack();
-
-    await respond({
-      response_type: 'in_channel',
       text: `<@${command.user_id}> set their status: ${command.text || "No status provided"}`,
     });
   });
@@ -155,7 +131,7 @@ export function createSlackbot(config: SlackbotConfig): ReturnType {
           console.log("Processing command directly");
           const { command } = body;
           
-          if (command.command === '/asyncstatus' || command.command === '/status') {
+          if (command.command === '/asyncstatus') {
             try {
               // If we have a response_url, use it (more reliable than chat.postMessage)
               if (command.response_url) {
