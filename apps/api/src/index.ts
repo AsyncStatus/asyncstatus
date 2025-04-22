@@ -103,3 +103,4 @@ export default app;
 export type App = typeof app;
 export { SyncGithubWorkflow } from "./workflows/sync-github";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/delete-github-integration";
+export { GenerateStatusWorkflow } from "./workflows/generate-status";

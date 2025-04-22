@@ -5,6 +5,7 @@ import type { Db } from "../db";
 import * as schema from "../db/schema";
 import type { ReturnType as SlackbotReturnType } from "../slackbot";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/delete-github-integration";
+import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { SyncGithubWorkflowParams } from "../workflows/sync-github";
 import type { Auth } from "./auth";
 import type { RateLimiter } from "./rate-limiter";
@@ -29,6 +30,8 @@ export type Bindings = {
   SLACK_SIGNING_SECRET?: string;
   SYNC_GITHUB_WORKFLOW: Workflow<SyncGithubWorkflowParams>;
   DELETE_GITHUB_INTEGRATION_WORKFLOW: Workflow<DeleteGithubIntegrationWorkflowParams>;
+  GENERATE_STATUS_WORKFLOW: Workflow<GenerateStatusWorkflowParams>;
+  AI: Ai;
 };
 
 export type Variables = {

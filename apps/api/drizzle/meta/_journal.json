@@ -22,6 +22,13 @@
       "when": 1744486813160,
       "tag": "0002_thick_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1745354724702,
+      "tag": "0003_loving_captain_america",
+      "breakpoints": true
     }
   ]
 }

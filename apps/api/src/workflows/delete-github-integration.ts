@@ -38,7 +38,6 @@ export class DeleteGithubIntegrationWorkflow extends WorkflowEntrypoint<
     });
 
     await step.do("delete-installation", async () => {
-      await wait(1000 * 60); // 1 minute
       const app = new App({
         appId: this.env.GITHUB_APP_ID,
         privateKey: this.env.GITHUB_APP_PRIVATE_KEY,

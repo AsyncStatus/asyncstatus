@@ -11,6 +11,9 @@
   "placement": {
     "mode": "smart",
   },
+  "ai": {
+    "binding": "AI",
+  },
   "workflows": [
     {
       "name": "sync-github",
@@ -21,6 +24,11 @@
       "name": "delete-github-integration",
       "binding": "DELETE_GITHUB_INTEGRATION_WORKFLOW",
       "class_name": "DeleteGithubIntegrationWorkflow",
+    },
+    {
+      "name": "generate-status",
+      "binding": "GENERATE_STATUS_WORKFLOW",
+      "class_name": "GenerateStatusWorkflow",
     },
   ],
   "kv_namespaces": [

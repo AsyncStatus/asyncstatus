@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 
 import * as schema from "../../db/schema";
@@ -544,5 +544,71 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
         .where(eq(schema.statusUpdateItem.id, statusUpdateItemId));
 
       return c.json({ success: true });
+    },
+  )
+  // Trigger Generate‑Status workflow for a member
+  .post(
+    "/:idOrSlug/status-update/generate",
+    zValidator(
+      "json",
+      zStatusUpdateCreate
+        .pick({ memberId: true, effectiveFrom: true, effectiveTo: true })
+        .extend({
+          effectiveFrom: zStatusUpdateCreate.shape.effectiveFrom,
+          effectiveTo: zStatusUpdateCreate.shape.effectiveTo,
+        }),
+    ),
+    async (c) => {
+      const { memberId, effectiveFrom, effectiveTo } = c.req.valid("json");
+
+      // Verify member belongs to this organization
+      const member = await c.var.db.query.member.findFirst({
+        where: and(
+          eq(schema.member.id, memberId),
+          eq(schema.member.organizationId, c.var.organization.id),
+        ),
+      });
+      if (!member) {
+        throw new AsyncStatusNotFoundError({ message: "Member not found" });
+      }
+
+      // Check duplicate queued/running job for same member
+      const existingJob = await c.var.db.query.statusGenerationJob.findFirst({
+        where: and(
+          eq(schema.statusGenerationJob.memberId, memberId),
+          inArray(schema.statusGenerationJob.state, ["queued", "running"]),
+        ),
+      });
+      if (existingJob) {
+        throw new AsyncStatusBadRequestError({
+          message:
+            "A status generation job is already in progress for this member.",
+        });
+      }
+
+      // Insert job
+      const jobId = generateId();
+      const now = new Date();
+      await c.var.db.insert(schema.statusGenerationJob).values({
+        id: jobId,
+        memberId,
+        effectiveFrom,
+        effectiveTo,
+        state: "queued",
+        createdAt: now,
+      });
+
+      // Launch workflow
+      const workflowInstance = await c.env.GENERATE_STATUS_WORKFLOW.create({
+        params: { jobId },
+      });
+
+      // Immediately update job started status if workflow queued successfully
+      await c.var.db
+        .update(schema.statusGenerationJob)
+        .set({ state: (await workflowInstance.status()).status })
+        .where(eq(schema.statusGenerationJob.id, jobId));
+
+      return c.json({ jobId, workflowId: workflowInstance.id });
     },
   );

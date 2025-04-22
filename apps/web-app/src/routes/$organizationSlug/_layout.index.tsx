@@ -20,6 +20,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CircleHelpIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { GenerateStatusButton } from "@/components/generate-status-button";
+
 import { EmptyState } from "../../components/empty-state";
 import { StatusUpdateCard } from "../../components/status-update-card";
 import { StatusUpdateDialog } from "../../components/status-update-dialog";
@@ -46,7 +48,6 @@ function RouteComponent() {
   const [filter, setFilter] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
-  // Fetch status updates
   const { data: statusUpdates, refetch } = useQuery({
     queryKey: ["statusUpdates", organization?.id, filter, selectedTeamId],
     queryFn: async () => {
@@ -187,6 +188,11 @@ function RouteComponent() {
               </Select>
             )}
           </div>
+
+          <GenerateStatusButton
+            organizationSlug={organizationSlug}
+            memberId={member?.id ?? ""}
+          />
           <StatusUpdateDialog
             onSuccess={refetch}
             organizationSlug={organizationSlug}

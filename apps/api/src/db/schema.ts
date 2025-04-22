@@ -1,5 +1,28 @@
-import { relations } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { relations, sql } from "drizzle-orm";
+import {
+  customType,
+  index,
+  integer,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
+
+const float32Array = customType<{
+  data: number[];
+  config: { dimensions: number };
+  configRequired: true;
+  driverData: Buffer;
+}>({
+  dataType(config) {
+    return `F32_BLOB(${config.dimensions})`;
+  },
+  fromDriver(value: Buffer) {
+    return Array.from(new Float32Array(value.buffer));
+  },
+  toDriver(value: number[]) {
+    return sql`vector32(${JSON.stringify(value)})`;
+  },
+});
 
 export const user = sqliteTable(
   "user",
@@ -82,12 +105,14 @@ export const member = sqliteTable(
     role: text("role").notNull(),
     // Optional Slack username - nullable by default
     slackUsername: text("slack_username"),
+    githubId: text("github_id"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     archivedAt: integer("archived_at", { mode: "timestamp" }),
   },
   (t) => [
     index("organization_member_id_index").on(t.organizationId),
     index("user_member_id_index").on(t.userId),
+    index("member_github_id_index").on(t.githubId),
   ],
 );
 
@@ -284,6 +309,59 @@ export const githubUser = sqliteTable(
   ],
 );
 
+export const githubEvent = sqliteTable(
+  "github_event",
+  {
+    id: text("id").primaryKey(),
+    githubId: text("github_id").notNull(), // GitHub event ID (snowflake)
+    memberId: text("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    repo: text("repo").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    canonicalText: text("canonical_text"),
+    payload: text("payload", { mode: "json" }),
+    insertedAt: integer("inserted_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("github_event_member_id_idx").on(t.memberId),
+    index("github_event_created_at_idx").on(t.createdAt),
+    index("github_event_github_id_idx").on(t.githubId),
+  ],
+);
+
+export const githubEventVector = sqliteTable("github_event_vector", {
+  eventId: text("event_id")
+    .primaryKey()
+    .references(() => githubEvent.id, { onDelete: "cascade" }),
+  embedding: float32Array("embedding", { dimensions: 1024 }).notNull(),
+});
+
+export const statusGenerationJob = sqliteTable(
+  "status_generation_job",
+  {
+    id: text("id").primaryKey(),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    effectiveFrom: integer("effective_from", { mode: "timestamp" }).notNull(),
+    effectiveTo: integer("effective_to", { mode: "timestamp" }).notNull(),
+    state: text("state").notNull(), // queued | running | done | error
+    errorMessage: text("error_message"),
+    statusUpdateId: text("status_update_id").references(() => statusUpdate.id, {
+      onDelete: "set null",
+    }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    startedAt: integer("started_at", { mode: "timestamp" }),
+    finishedAt: integer("finished_at", { mode: "timestamp" }),
+  },
+  (t) => [
+    index("status_job_member_idx").on(t.memberId),
+    index("status_job_state_idx").on(t.state),
+  ],
+);
+
 // Relations section - after all tables are defined
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
@@ -425,3 +503,38 @@ export const githubUserRelations = relations(githubUser, ({ one }) => ({
     references: [githubIntegration.id],
   }),
 }));
+
+export const githubEventRelations = relations(githubEvent, ({ one, many }) => ({
+  member: one(member, {
+    fields: [githubEvent.memberId],
+    references: [member.id],
+  }),
+  vector: one(githubEventVector, {
+    fields: [githubEvent.id],
+    references: [githubEventVector.eventId],
+  }),
+}));
+
+export const githubEventVectorRelations = relations(
+  githubEventVector,
+  ({ one }) => ({
+    event: one(githubEvent, {
+      fields: [githubEventVector.eventId],
+      references: [githubEvent.id],
+    }),
+  }),
+);
+
+export const statusGenerationJobRelations = relations(
+  statusGenerationJob,
+  ({ one }) => ({
+    member: one(member, {
+      fields: [statusGenerationJob.memberId],
+      references: [member.id],
+    }),
+    statusUpdate: one(statusUpdate, {
+      fields: [statusGenerationJob.statusUpdateId],
+      references: [statusUpdate.id],
+    }),
+  }),
+);
