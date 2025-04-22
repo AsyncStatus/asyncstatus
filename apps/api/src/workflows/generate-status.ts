@@ -40,7 +40,7 @@ function buildPushEventPrompt(
       (
         f,
       ) => `<file name="${f.filename}" status="${f.status}" additions="${f.additions}" deletions="${f.deletions}" changes="${f.changes}">
-<patch>${(f.patch ?? "").slice(0, 400)}</patch>
+<patch>${(f.patch ?? "").slice(0, 5000)}</patch>
 </file>`,
     )
     .join("\n");
@@ -68,7 +68,47 @@ ${messagesXml}
 ${filesXml}
 </files>
 
-Using the information above, write 1-3 concise stand-up bullet points (each starting with '- '). Focus on the purpose and outcome of the changes, avoid file names. Limit each bullet to 30 words.`;
+Using the information above, write 1-4 concise stand-up bullet points (each starting with '- ').
+Each bullet should highlight the inferred feature/section and the outcome of the work, avoiding file names.
+Limit each bullet to 200 words.
+Return ONLY the bullet list, no extra headings or prose.`;
+}
+
+/**
+ * Build a prompt for Gemma to summarise a list of canonical GitHub event texts
+ * into concise stand‑up bullets for the specified date range.
+ */
+function buildSummaryPrompt(
+  events: string[],
+  effectiveFrom: string | Date,
+  effectiveTo: string | Date,
+): string {
+  const fromStr = new Date(effectiveFrom).toISOString();
+  const toStr = new Date(effectiveTo).toISOString();
+  const eventsXml = events
+    .map((e) => `<event>${e}</event>`) // simplistic escaping
+    .join("\n");
+
+  return `
+<general>
+You are an engineering assistant that writes concise daily stand-up bullets.
+Summarise the developer's GitHub activity between ${fromStr} and ${toStr} with a keen focus on OUTCOMES and user-facing impact.
+Use commit messages and the nature of changed files to INFER which product feature, module, or section of the codebase was affected (e.g. "billing flow", "auth middleware", "mobile UI").
+Avoid literal file names, but clearly mention the inferred feature/section when relevant.
+Be helpful yet concise, and NEVER hallucinate. Generate UP TO 10 bullet points (fewer is better).
+Make sure to condense the information to 100 words or less (less is better) and generally extract the most important information.
+</general>
+
+<stats>
+<eventsCount>${events.length}</eventsCount>
+</stats>
+
+<events>
+${eventsXml}
+</events>
+
+Using the information above, craft a list of 1-10 bullet points starting with '- '.
+Return ONLY the bullet list, no extra headings or prose.`;
 }
 
 async function canonicalizeEvent(
@@ -85,7 +125,7 @@ async function canonicalizeEvent(
         // Summarize commits with Gemma model
         const commits = (payload?.commits ?? []) as any[];
         const commitMessages: string[] = commits
-          .slice(0, 10)
+          .slice(0, 20)
           .map((c: any) => `- ${c.message}`);
 
         const changedFiles: Set<string> = new Set();
@@ -141,9 +181,10 @@ async function canonicalizeEvent(
           },
           fileInfos,
         );
-        const gemmaResp = await env.AI.run("@hf/google/gemma-7b-it", {
-          messages: [{ role: "user", content: prompt }],
-        });
+        const gemmaResp = await env.AI.run(
+          "@cf/meta/llama-4-scout-17b-16e-instruct",
+          { prompt },
+        );
         let summaryText: string = Array.isArray(gemmaResp)
           ? gemmaResp.join("\n")
           : (((gemmaResp as any)?.response as string) ?? "");
@@ -379,6 +420,37 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
         orderBy: asc(schema.githubEvent.createdAt),
       });
 
+      // ===== Summarise canonical texts with Gemma =====
+      const allEventLines = canonicalTexts.flatMap((row) =>
+        (row.canonicalText ?? "")
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean),
+      );
+
+      let summaryBullets: string[] = [];
+      if (allEventLines.length > 0) {
+        const summaryPrompt = buildSummaryPrompt(
+          allEventLines,
+          job.effectiveFrom,
+          job.effectiveTo,
+        );
+        const gemmaResp = await (this.env.AI as any).run(
+          "@cf/meta/llama-4-scout-17b-16e-instruct",
+          { prompt: summaryPrompt },
+        );
+        const summaryText: string = Array.isArray(gemmaResp)
+          ? gemmaResp.join("\n")
+          : (((gemmaResp as any)?.response as string) ?? "");
+        summaryBullets = summaryText
+          .split("\n")
+          .map((l: string) => l.trim())
+          .filter(Boolean);
+        // Fallback to raw events if model produced nothing useful
+        if (summaryBullets.length === 0)
+          summaryBullets = allEventLines.slice(0, 10);
+      }
+
       const statusUpdateId = nanoid();
       const now2 = new Date();
       await db.insert(schema.statusUpdate).values({
@@ -395,20 +467,18 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
         updatedAt: now2,
       });
 
-      let order = 0;
-      for (const row of canonicalTexts) {
-        const bullets = row.canonicalText?.split("\n") ?? [];
-        for (const bullet of bullets.filter(Boolean)) {
-          await db.insert(schema.statusUpdateItem).values({
-            id: nanoid(),
-            statusUpdateId,
-            content: bullet.trim().replace(/^[-*]/, ""),
-            isBlocker: false,
-            order: order++,
-            createdAt: now2,
-            updatedAt: now2,
-          });
-        }
+      const items = summaryBullets.map((bullet, idx) => ({
+        id: nanoid(),
+        statusUpdateId,
+        content: bullet.replace(/^[-*]\s*/, ""),
+        isBlocker: false,
+        order: idx,
+        createdAt: now2,
+        updatedAt: now2,
+      }));
+
+      if (items.length > 0) {
+        await db.insert(schema.statusUpdateItem).values(items);
       }
 
       // mark done
