@@ -10,7 +10,6 @@ import { App } from "octokit";
 import { createDb } from "../db";
 import * as schema from "../db/schema";
 import type { HonoEnv } from "../lib/env";
-import { wait } from "../lib/wait";
 
 export type SyncGithubWorkflowParams = { integrationId: string };
 
@@ -35,9 +34,6 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
     });
 
     await step.do("sync-users", async () => {
-      console.log("Waiting 1 minute");
-      await wait(1000 * 60); // 1 minute
-      console.log("Waiting 1 minute done");
       const app = new App({
         appId: this.env.GITHUB_APP_ID,
         privateKey: this.env.GITHUB_APP_PRIVATE_KEY,
@@ -69,7 +65,6 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
           existingUserIds.includes(user.id.toString()),
         );
 
-        // Insert new users
         if (newUsers.length > 0) {
           await db.batch(
             newUsers.map((user) => {
