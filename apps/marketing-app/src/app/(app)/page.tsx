@@ -9,6 +9,7 @@ import { Footer } from "../components/footer";
 import { GenerateCard } from "../components/generate-card";
 import { MobileMenu } from "../components/mobile-menu";
 import { ReviewCard } from "../components/review-card";
+import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
 import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
@@ -238,6 +239,18 @@ export default async function Page(props: {
 
         <section id="features">
           <FeaturesList />
+        </section>
+
+        <section id="calculator" className="mt-36">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+              Calculate Your Standup Savings
+            </h2>
+            <p className="mt-4 text-xl text-gray-600">
+              See how much time and money your team can save by replacing synchronous standups with AsyncStatus.
+            </p>
+          </div>
+          <SavingsCalculator maxWidth="6xl" />
         </section>
 
         <section id="beta">
