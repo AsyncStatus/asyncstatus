@@ -3,7 +3,7 @@
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-*Gather status data from various sources and extract the essence:*
+*Gather status data from various sources and extract the essence.*
 
 [asyncstatus.com](https://asyncstatus.com/)
 
