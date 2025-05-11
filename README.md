@@ -1,5 +1,3 @@
-# AsyncStatus
-
 ![AsyncStatus.com logo](https://github.com/AsyncStatus/asyncstatus/blob/CONTRIBUTING/docs/assets/full-logo-white-bg.jpg?raw=true)
 
 *Gather status data from various sources and extract the essence*
