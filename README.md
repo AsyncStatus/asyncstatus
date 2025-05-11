@@ -1,11 +1,12 @@
 # AsyncStatus
 
+![AsyncStatus.com logo](https://github.com/AsyncStatus/asyncstatus/blob/CONTRIBUTING/docs/assets/full-logo-white-bg.jpg?raw=true)
+
+*Gather status data from various sources and extract the essence*
+
 <!-- badges -->
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-
-*Gather status data from various sources and extract the essence*  
-![AsyncStatus in action](https://media.giphy.com/media/1msH5I8b0CHNwn97Ym/giphy.gif?cid=ecf05e47j6zh46kkz2z2anakschdn93zo45jifm1uvucz2j4&ep=v1_gifs_search&rid=giphy.gif&ct=g)
 
 ## Table of Contents
 
