@@ -27,7 +27,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "7.55.0",
     "zod": "3.24.2",
-    "framer-motion": "12.6.5"
+    "motion": "12.15.0"
   },
   "devDependencies": {
     "@asyncstatus/eslint-config": "workspace:*",

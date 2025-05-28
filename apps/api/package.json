@@ -18,7 +18,8 @@
     "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
     "dev:turso": "turso dev --db-file ./src/db/local-db",
-    "migrate": "npx drizzle-kit push",
+    "migrate": "npx drizzle-kit migrate",
+    "migrate:push": "npx drizzle-kit push",
     "migrate:generate": "npx drizzle-kit generate",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --max-warnings 0 --fix",
@@ -37,7 +38,7 @@
     "better-auth": "1.2.5",
     "bun": "1.2.14",
     "dayjs": "1.11.13",
-    "drizzle-orm": "0.41.0",
+    "drizzle-orm": "0.44.0",
     "hono": "4.7.6",
     "hono-rate-limiter": "0.4.2",
     "nanoid": "5.1.5",
@@ -53,7 +54,7 @@
     "@cloudflare/workers-types": "4.20250528.0",
     "@octokit/openapi-webhooks-types": "11.0.0",
     "@types/bun": "1.2.14",
-    "drizzle-kit": "0.30.6",
+    "drizzle-kit": "0.31.1",
     "wrangler": "4.17.0"
   },
   "packageManager": "bun@1.2.9"

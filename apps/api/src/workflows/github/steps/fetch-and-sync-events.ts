@@ -33,10 +33,12 @@ export async function fetchAndSyncEvents({
           return [];
         }
 
-        const filteredEvents = response.data.filter(
-          (event) =>
-            event.created_at && new Date(event.created_at) > maxEventDate,
-        );
+        const filteredEvents = response.data.filter((event) => {
+          if (!event.created_at) {
+            return true;
+          }
+          return new Date(event.created_at) > maxEventDate;
+        });
         if (filteredEvents.length !== response.data.length) {
           done();
         }
@@ -45,34 +47,40 @@ export async function fetchAndSyncEvents({
       },
     );
 
-    const batchUpserts = events.map((event) => {
-      return db
-        .insert(schema.githubEvent)
-        .values({
-          id: nanoid(),
-          githubId: event.id.toString(),
-          githubUserId: event.actor.id.toString(),
-          insertedAt: new Date(),
-          createdAt: event.created_at ? new Date(event.created_at) : new Date(),
-          repositoryId: repo.id,
-          type: event.type ?? "UnknownEvent",
-          payload: event.payload,
-        })
-        .onConflictDoUpdate({
-          target: schema.githubEvent.githubId,
-          setWhere: eq(schema.githubEvent.githubId, event.id.toString()),
-          set: {
+    try {
+      const batchUpserts = events.map((event) => {
+        return db
+          .insert(schema.githubEvent)
+          .values({
+            id: nanoid(),
+            githubId: event.id.toString(),
+            githubActorId: event.actor.id.toString(),
             insertedAt: new Date(),
             createdAt: event.created_at
               ? new Date(event.created_at)
               : new Date(),
             repositoryId: repo.id,
             type: event.type ?? "UnknownEvent",
-            githubUserId: event.actor.id.toString(),
             payload: event.payload,
-          },
-        });
-    });
-    await db.batch(batchUpserts as any);
+          })
+          .onConflictDoUpdate({
+            target: schema.githubEvent.githubId,
+            setWhere: eq(schema.githubEvent.githubId, event.id.toString()),
+            set: {
+              insertedAt: new Date(),
+              createdAt: event.created_at
+                ? new Date(event.created_at)
+                : new Date(),
+              repositoryId: repo.id,
+              type: event.type ?? "UnknownEvent",
+              githubActorId: event.actor.id.toString(),
+              payload: event.payload,
+            },
+          });
+      });
+      await db.batch(batchUpserts as any);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

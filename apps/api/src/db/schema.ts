@@ -323,9 +323,7 @@ export const githubEvent = sqliteTable(
   {
     id: text("id").primaryKey(),
     githubId: text("github_id").notNull().unique(), // GitHub event ID (snowflake)
-    githubUserId: text("github_user_id")
-      .notNull()
-      .references(() => githubUser.id, { onDelete: "cascade" }),
+    githubActorId: text("github_actor_id").notNull(),
     repositoryId: text("repository_id")
       .notNull()
       .references(() => githubRepository.id, { onDelete: "cascade" }),

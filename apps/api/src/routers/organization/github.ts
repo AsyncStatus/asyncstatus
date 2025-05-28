@@ -106,16 +106,17 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         )
         .limit(1);
       if (!integration || !integration.syncId) {
-        return c.json({ status: "completed" });
-      }
+        // Return current sync status from database even if no active workflow
+        const currentStatus = integration
+          ? {
+              status: "completed",
+              name: integration.syncStatusName || undefined,
+              step: integration.syncStatusStep || undefined,
+            }
+          : { status: "completed" };
 
-      const encoder = new TextEncoder();
-      const transformStream = new TransformStream();
-      const writer = transformStream.writable.getWriter();
-      const headers = new Headers();
-      headers.set("Content-Type", "text/event-stream");
-      headers.set("Cache-Control", "no-cache");
-      headers.set("Connection", "keep-alive");
+        return c.json(currentStatus);
+      }
 
       const workflowInstance = await c.env.SYNC_GITHUB_WORKFLOW.get(
         integration.syncId,
@@ -124,32 +125,105 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const maxWaitTime = 1000 * 60 * 5; // 5 minutes
       const startTime = Date.now();
 
+      // Send initial status with current database state
+      const [initialIntegration] = await c.var.db
+        .select({
+          syncStatusName: schema.githubIntegration.syncStatusName,
+          syncStatusStep: schema.githubIntegration.syncStatusStep,
+        })
+        .from(schema.githubIntegration)
+        .where(eq(schema.githubIntegration.id, integration.id))
+        .limit(1);
+
       let previousStatus = statusInstance.status;
-      const checkStatus = setInterval(async () => {
-        try {
-          statusInstance = await workflowInstance.status();
-          if (previousStatus !== statusInstance.status) {
-            await writer.write(
-              encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-            );
-            previousStatus = statusInstance.status;
-          }
+      let previousSyncStatusName = initialIntegration?.syncStatusName;
+      let previousSyncStatusStep = initialIntegration?.syncStatusStep;
 
-          if (
-            statusInstance.status === "complete" ||
-            Date.now() - startTime >= maxWaitTime
-          ) {
-            clearInterval(checkStatus);
-            await writer.close();
-          }
-        } catch (error) {
-          console.error("Error checking workflow status:", error);
-          clearInterval(checkStatus);
-          await writer.close();
-        }
-      }, 1000);
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
 
-      return new Response(transformStream.readable, { headers });
+          // Send initial status
+          const initialResponseData = {
+            ...statusInstance,
+            name: initialIntegration?.syncStatusName || undefined,
+            step: initialIntegration?.syncStatusStep || undefined,
+          };
+
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(initialResponseData)}\n\n`),
+          );
+
+          // Start polling
+          const pollStatus = async () => {
+            try {
+              statusInstance = await workflowInstance.status();
+
+              // Fetch current sync status from database
+              const [currentIntegration] = await c.var.db
+                .select({
+                  syncStatusName: schema.githubIntegration.syncStatusName,
+                  syncStatusStep: schema.githubIntegration.syncStatusStep,
+                })
+                .from(schema.githubIntegration)
+                .where(eq(schema.githubIntegration.id, integration.id))
+                .limit(1);
+
+              const responseData = {
+                ...statusInstance,
+                name: currentIntegration?.syncStatusName || undefined,
+                step: currentIntegration?.syncStatusStep || undefined,
+              };
+
+              // Check if any status has changed
+              const hasStatusChanged = previousStatus !== statusInstance.status;
+              const hasSyncNameChanged =
+                previousSyncStatusName !== currentIntegration?.syncStatusName;
+              const hasSyncStepChanged =
+                previousSyncStatusStep !== currentIntegration?.syncStatusStep;
+
+              if (
+                hasStatusChanged ||
+                hasSyncNameChanged ||
+                hasSyncStepChanged
+              ) {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify(responseData)}\n\n`),
+                );
+                previousStatus = statusInstance.status;
+                previousSyncStatusName = currentIntegration?.syncStatusName;
+                previousSyncStatusStep = currentIntegration?.syncStatusStep;
+              }
+
+              // Check if we should stop
+              if (
+                statusInstance.status === "complete" ||
+                Date.now() - startTime >= maxWaitTime
+              ) {
+                controller.close();
+                return;
+              }
+
+              // Schedule next poll
+              setTimeout(pollStatus, 1000);
+            } catch (error) {
+              console.error("Error checking workflow status:", error);
+              controller.error(error);
+            }
+          };
+
+          // Start the first poll
+          setTimeout(pollStatus, 1000);
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
     },
   )
   .get(

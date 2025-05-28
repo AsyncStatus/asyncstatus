@@ -4,6 +4,10 @@ import {
   getGithubIntegrationQueryOptions,
 } from "@/rpc/organization/github";
 import { rpc } from "@/rpc/rpc";
+import {
+  SyncGithubWorkflowStatusName,
+  SyncGithubWorkflowStatusStep,
+} from "@asyncstatus/api/schema/github-integration";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Dialog,
