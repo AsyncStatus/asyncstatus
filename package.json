@@ -6,6 +6,6 @@
     "apps/*"
   ],
   "dependencies": {
-    "bun": "1.2.9"
+    "bun": "1.2.14"
   }
 }

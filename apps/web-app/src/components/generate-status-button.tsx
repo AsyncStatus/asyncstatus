@@ -12,7 +12,7 @@ import {
 } from "@asyncstatus/ui/components/dialog";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation } from "@tanstack/react-query";
-import { addDays, startOfDay } from "date-fns";
+import { addDays, endOfDay, startOfDay } from "date-fns";
 
 type GenerateStatusButtonProps = {
   organizationSlug: string;
@@ -37,7 +37,7 @@ export function GenerateStatusButton({
     to?: Date | undefined;
   }>({
     from: effectiveFrom ?? startOfDay(addDays(new Date(), -1)),
-    to: effectiveTo ?? new Date(),
+    to: effectiveTo ?? endOfDay(new Date()),
   });
   const mutation = useMutation({
     ...generateStatusMutationOptions(),

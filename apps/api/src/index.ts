@@ -1,6 +1,8 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Resend } from "resend";
+import { VoyageAIClient } from "voyageai";
 
 import { createDb } from "./db";
 import {
@@ -21,7 +23,6 @@ import { teamsRouter } from "./routers/organization/teams";
 import { publicStatusShareRouter } from "./routers/publicStatusShare";
 import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
-import { createSlackbot } from "./slackbot";
 
 const app = new Hono<HonoEnv>()
   .use(
@@ -51,22 +52,13 @@ const app = new Hono<HonoEnv>()
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
 
-    // Initialize Slackbot with db access
-    const slackbot =
-      c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET
-        ? {
-            token: c.env.SLACK_BOT_TOKEN,
-            signingSecret: c.env.SLACK_SIGNING_SECRET,
-            db,
-          }
-        : null;
+    const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
+    c.set("anthropicClient", anthropicClient);
 
-    if (slackbot) {
-      // Create slackbot instance with db access
-      const slackbotInstance = createSlackbot(slackbot);
-      // Store slackbot instance in app context
-      c.set("slackbot", slackbotInstance);
-    }
+    const voyageClient = new VoyageAIClient({
+      apiKey: c.env.VOYAGE_API_KEY,
+    });
+    c.set("voyageClient", voyageClient);
 
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
@@ -101,6 +93,6 @@ const app = new Hono<HonoEnv>()
 
 export default app;
 export type App = typeof app;
-export { SyncGithubWorkflow } from "./workflows/sync-github";
-export { DeleteGithubIntegrationWorkflow } from "./workflows/delete-github-integration";
+export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { GenerateStatusWorkflow } from "./workflows/generate-status";

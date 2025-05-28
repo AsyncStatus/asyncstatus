@@ -251,13 +251,21 @@ export const githubIntegration = sqliteTable(
     installationId: text("installation_id").notNull(),
     accessToken: text("access_token"),
     tokenExpiresAt: integer("token_expires_at", { mode: "timestamp" }),
-    repositories: text("repositories"),
-    syncId: text("sync_id"),
-    syncStatus: text("sync_status"),
-    deleteId: text("delete_id"),
-    deleteStatus: text("delete_status"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+
+    syncId: text("sync_id"),
+    syncStatusName: text("sync_status_name"),
+    syncStatusStep: text("sync_status_step"),
+    syncStatusUpdatedAt: integer("sync_updated_at", { mode: "timestamp" }),
+    syncStartedAt: integer("sync_started_at", { mode: "timestamp" }),
+    syncFinishedAt: integer("sync_finished_at", { mode: "timestamp" }),
+    syncError: text("sync_error"),
+    syncErrorAt: integer("sync_error_at", { mode: "timestamp" }),
+
+    deleteId: text("delete_id"),
+    deleteStatus: text("delete_status"),
+    deleteError: text("delete_error"),
   },
   (t) => [
     index("github_organization_id_index").on(t.organizationId),
@@ -272,8 +280,9 @@ export const githubRepository = sqliteTable(
     integrationId: text("integration_id")
       .notNull()
       .references(() => githubIntegration.id, { onDelete: "cascade" }),
-    repoId: text("repo_id").notNull(),
+    repoId: text("repo_id").notNull().unique(),
     name: text("name").notNull(),
+    owner: text("owner").notNull(),
     fullName: text("full_name").notNull(),
     private: integer("private", { mode: "boolean" }).notNull(),
     htmlUrl: text("html_url").notNull(),
@@ -294,7 +303,7 @@ export const githubUser = sqliteTable(
     integrationId: text("integration_id")
       .notNull()
       .references(() => githubIntegration.id, { onDelete: "cascade" }),
-    githubId: text("github_id").notNull(),
+    githubId: text("github_id").notNull().unique(),
     login: text("login").notNull(),
     avatarUrl: text("avatar_url"),
     htmlUrl: text("html_url").notNull(),
@@ -313,30 +322,39 @@ export const githubEvent = sqliteTable(
   "github_event",
   {
     id: text("id").primaryKey(),
-    githubId: text("github_id").notNull(), // GitHub event ID (snowflake)
-    memberId: text("member_id")
+    githubId: text("github_id").notNull().unique(), // GitHub event ID (snowflake)
+    githubUserId: text("github_user_id")
       .notNull()
-      .references(() => member.id, { onDelete: "cascade" }),
+      .references(() => githubUser.id, { onDelete: "cascade" }),
+    repositoryId: text("repository_id")
+      .notNull()
+      .references(() => githubRepository.id, { onDelete: "cascade" }),
     type: text("type").notNull(),
-    repo: text("repo").notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-    canonicalText: text("canonical_text"),
     payload: text("payload", { mode: "json" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     insertedAt: integer("inserted_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [
-    index("github_event_member_id_idx").on(t.memberId),
+    index("github_event_repository_id_idx").on(t.repositoryId),
     index("github_event_created_at_idx").on(t.createdAt),
     index("github_event_github_id_idx").on(t.githubId),
+    index("github_event_type_idx").on(t.type),
   ],
 );
 
-export const githubEventVector = sqliteTable("github_event_vector", {
-  eventId: text("event_id")
-    .primaryKey()
-    .references(() => githubEvent.id, { onDelete: "cascade" }),
-  embedding: float32Array("embedding", { dimensions: 1024 }).notNull(),
-});
+export const githubEventVector = sqliteTable(
+  "github_event_vector",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => githubEvent.id, { onDelete: "cascade" }),
+    embeddingText: text("embedding_text").notNull(),
+    embedding: float32Array("embedding", { dimensions: 1024 }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [index("github_event_vector_event_id_idx").on(t.eventId)],
+);
 
 export const statusGenerationJob = sqliteTable(
   "status_generation_job",
@@ -489,11 +507,12 @@ export const githubIntegrationRelations = relations(
 
 export const githubRepositoryRelations = relations(
   githubRepository,
-  ({ one }) => ({
+  ({ one, many }) => ({
     integration: one(githubIntegration, {
       fields: [githubRepository.integrationId],
       references: [githubIntegration.id],
     }),
+    events: many(githubEvent),
   }),
 );
 
@@ -505,14 +524,11 @@ export const githubUserRelations = relations(githubUser, ({ one }) => ({
 }));
 
 export const githubEventRelations = relations(githubEvent, ({ one, many }) => ({
-  member: one(member, {
-    fields: [githubEvent.memberId],
-    references: [member.id],
+  repository: one(githubRepository, {
+    fields: [githubEvent.repositoryId],
+    references: [githubRepository.id],
   }),
-  vector: one(githubEventVector, {
-    fields: [githubEvent.id],
-    references: [githubEventVector.eventId],
-  }),
+  vectors: many(githubEventVector),
 }));
 
 export const githubEventVectorRelations = relations(

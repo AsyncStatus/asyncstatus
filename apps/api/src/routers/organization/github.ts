@@ -79,10 +79,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       });
       await db
         .update(schema.githubIntegration)
-        .set({
-          syncId: workflowInstance.id,
-          syncStatus: (await workflowInstance.status()).status,
-        })
+        .set({ syncId: workflowInstance.id })
         .where(eq(schema.githubIntegration.id, integrationId));
 
       return c.redirect(

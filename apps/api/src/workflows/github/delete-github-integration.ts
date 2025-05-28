@@ -6,10 +6,9 @@ import {
 import { eq } from "drizzle-orm";
 import { App } from "octokit";
 
-import { createDb } from "../db";
-import * as schema from "../db/schema";
-import type { HonoEnv } from "../lib/env";
-import { wait } from "../lib/wait";
+import { createDb } from "../../db";
+import * as schema from "../../db/schema";
+import type { HonoEnv } from "../../lib/env";
 
 export type DeleteGithubIntegrationWorkflowParams = {
   integrationId: string;

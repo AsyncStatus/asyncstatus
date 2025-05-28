@@ -15,7 +15,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout.index'
-import { Route as SStatusSlugImport } from './routes/s.$statusSlug'
 import { Route as InvitationLayoutImport } from './routes/invitation/_layout'
 import { Route as CreateOrganizationLayoutImport } from './routes/create-organization/_layout'
 import { Route as authLayoutImport } from './routes/(auth)/_layout'
@@ -74,12 +73,6 @@ const LayoutIndexRoute = LayoutIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LayoutRoute,
-} as any)
-
-const SStatusSlugRoute = SStatusSlugImport.update({
-  id: '/s/$statusSlug',
-  path: '/s/$statusSlug',
-  getParentRoute: () => rootRoute,
 } as any)
 
 const InvitationLayoutRoute = InvitationLayoutImport.update({
@@ -247,13 +240,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/invitation'
       preLoaderRoute: typeof InvitationLayoutImport
       parentRoute: typeof InvitationRoute
-    }
-    '/s/$statusSlug': {
-      id: '/s/$statusSlug'
-      path: '/s/$statusSlug'
-      fullPath: '/s/$statusSlug'
-      preLoaderRoute: typeof SStatusSlugImport
-      parentRoute: typeof rootRoute
     }
     '/_layout/': {
       id: '/_layout/'
@@ -483,7 +469,6 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
   '/invitation': typeof InvitationLayoutRouteWithChildren
-  '/s/$statusSlug': typeof SStatusSlugRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -503,7 +488,6 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
   '/invitation': typeof InvitationLayoutIndexRoute
-  '/s/$statusSlug': typeof SStatusSlugRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -526,7 +510,6 @@ export interface FileRoutesById {
   '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
   '/invitation': typeof InvitationRouteWithChildren
   '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
-  '/s/$statusSlug': typeof SStatusSlugRoute
   '/_layout/': typeof LayoutIndexRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -550,7 +533,6 @@ export interface FileRouteTypes {
     | '/'
     | '/create-organization'
     | '/invitation'
-    | '/s/$statusSlug'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -569,7 +551,6 @@ export interface FileRouteTypes {
     | '/'
     | '/create-organization'
     | '/invitation'
-    | '/s/$statusSlug'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -590,7 +571,6 @@ export interface FileRouteTypes {
     | '/create-organization/_layout'
     | '/invitation'
     | '/invitation/_layout'
-    | '/s/$statusSlug'
     | '/_layout/'
     | '/$organizationSlug/_layout/settings'
     | '/(auth)/_layout/forgot-password'
@@ -613,7 +593,6 @@ export interface RootRouteChildren {
   authRoute: typeof authRouteWithChildren
   CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
   InvitationRoute: typeof InvitationRouteWithChildren
-  SStatusSlugRoute: typeof SStatusSlugRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -622,7 +601,6 @@ const rootRouteChildren: RootRouteChildren = {
   authRoute: authRouteWithChildren,
   CreateOrganizationRoute: CreateOrganizationRouteWithChildren,
   InvitationRoute: InvitationRouteWithChildren,
-  SStatusSlugRoute: SStatusSlugRoute,
 }
 
 export const routeTree = rootRoute
@@ -639,8 +617,7 @@ export const routeTree = rootRoute
         "/$organizationSlug",
         "/(auth)",
         "/create-organization",
-        "/invitation",
-        "/s/$statusSlug"
+        "/invitation"
       ]
     },
     "/_layout": {
@@ -708,9 +685,6 @@ export const routeTree = rootRoute
       "children": [
         "/invitation/_layout/"
       ]
-    },
-    "/s/$statusSlug": {
-      "filePath": "s.$statusSlug.tsx"
     },
     "/_layout/": {
       "filePath": "_layout.index.tsx",

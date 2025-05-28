@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4d458c37-74f2-483e-abdb-b2fa297110ba",
+  "id": "08528a0b-6a40-4e5b-b60d-1811f80f7269",
   "prevId": "528aa232-1884-4fe6-b0d9-2265ceda89ff",
   "tables": {
     "account": {
@@ -144,8 +144,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "member_id": {
-          "name": "member_id",
+        "github_user_id": {
+          "name": "github_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "repository_id": {
+          "name": "repository_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -158,11 +165,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "repo": {
-          "name": "repo",
+        "payload": {
+          "name": "payload",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
@@ -170,20 +177,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "canonical_text": {
-          "name": "canonical_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "payload": {
-          "name": "payload",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "inserted_at": {
@@ -195,10 +188,17 @@
         }
       },
       "indexes": {
-        "github_event_member_id_idx": {
-          "name": "github_event_member_id_idx",
+        "github_event_github_id_unique": {
+          "name": "github_event_github_id_unique",
           "columns": [
-            "member_id"
+            "github_id"
+          ],
+          "isUnique": true
+        },
+        "github_event_repository_id_idx": {
+          "name": "github_event_repository_id_idx",
+          "columns": [
+            "repository_id"
           ],
           "isUnique": false
         },
@@ -215,15 +215,35 @@
             "github_id"
           ],
           "isUnique": false
+        },
+        "github_event_type_idx": {
+          "name": "github_event_type_idx",
+          "columns": [
+            "type"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
-        "github_event_member_id_member_id_fk": {
-          "name": "github_event_member_id_member_id_fk",
+        "github_event_github_user_id_github_user_id_fk": {
+          "name": "github_event_github_user_id_github_user_id_fk",
           "tableFrom": "github_event",
-          "tableTo": "member",
+          "tableTo": "github_user",
           "columnsFrom": [
-            "member_id"
+            "github_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "github_event_repository_id_github_repository_id_fk": {
+          "name": "github_event_repository_id_github_repository_id_fk",
+          "tableFrom": "github_event",
+          "tableTo": "github_repository",
+          "columnsFrom": [
+            "repository_id"
           ],
           "columnsTo": [
             "id"
@@ -239,10 +259,24 @@
     "github_event_vector": {
       "name": "github_event_vector",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "event_id": {
           "name": "event_id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "embedding_text": {
+          "name": "embedding_text",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -252,9 +286,24 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "github_event_vector_event_id_idx": {
+          "name": "github_event_vector_event_id_idx",
+          "columns": [
+            "event_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "github_event_vector_event_id_github_event_id_fk": {
           "name": "github_event_vector_event_id_github_event_id_fk",
@@ -312,11 +361,18 @@
           "notNull": false,
           "autoincrement": false
         },
-        "repositories": {
-          "name": "repositories",
-          "type": "text",
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "sync_id": {
@@ -326,9 +382,51 @@
           "notNull": false,
           "autoincrement": false
         },
-        "sync_status": {
-          "name": "sync_status",
+        "sync_status_name": {
+          "name": "sync_status_name",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_status_step": {
+          "name": "sync_status_step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_updated_at": {
+          "name": "sync_updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_started_at": {
+          "name": "sync_started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_finished_at": {
+          "name": "sync_finished_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_error": {
+          "name": "sync_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sync_error_at": {
+          "name": "sync_error_at",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -347,18 +445,11 @@
           "notNull": false,
           "autoincrement": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
+        "delete_error": {
+          "name": "delete_error",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -428,6 +519,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "owner": {
+          "name": "owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "full_name": {
           "name": "full_name",
           "type": "text",
@@ -472,6 +570,13 @@
         }
       },
       "indexes": {
+        "github_repository_repo_id_unique": {
+          "name": "github_repository_repo_id_unique",
+          "columns": [
+            "repo_id"
+          ],
+          "isUnique": true
+        },
         "github_repo_integration_id_index": {
           "name": "github_repo_integration_id_index",
           "columns": [
@@ -581,6 +686,13 @@
         }
       },
       "indexes": {
+        "github_user_github_id_unique": {
+          "name": "github_user_github_id_unique",
+          "columns": [
+            "github_id"
+          ],
+          "isUnique": true
+        },
         "github_user_integration_id_index": {
           "name": "github_user_integration_id_index",
           "columns": [

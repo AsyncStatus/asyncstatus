@@ -94,7 +94,7 @@ export function GitHubIntegrationButton({
     <>
       {githubIntegration.data?.syncId && (
         <p className="text-sm text-gray-500">
-          {githubIntegration.data.syncStatus}
+          {githubIntegration.data.syncStatusName}
         </p>
       )}
 

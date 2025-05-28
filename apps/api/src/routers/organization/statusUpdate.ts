@@ -561,7 +561,6 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
     async (c) => {
       const { memberId, effectiveFrom, effectiveTo } = c.req.valid("json");
 
-      // Verify member belongs to this organization
       const member = await c.var.db.query.member.findFirst({
         where: and(
           eq(schema.member.id, memberId),
@@ -572,43 +571,64 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
         throw new AsyncStatusNotFoundError({ message: "Member not found" });
       }
 
-      // Check duplicate queued/running job for same member
-      const existingJob = await c.var.db.query.statusGenerationJob.findFirst({
+      const integration = await c.var.db.query.githubIntegration.findFirst({
         where: and(
-          eq(schema.statusGenerationJob.memberId, memberId),
-          inArray(schema.statusGenerationJob.state, ["queued", "running"]),
+          eq(schema.githubIntegration.organizationId, c.var.organization.id),
         ),
       });
-      if (existingJob) {
-        throw new AsyncStatusBadRequestError({
-          message:
-            "A status generation job is already in progress for this member.",
+      if (!integration) {
+        throw new AsyncStatusNotFoundError({
+          message: "GitHub integration not found",
         });
       }
 
-      // Insert job
-      const jobId = generateId();
-      const now = new Date();
-      await c.var.db.insert(schema.statusGenerationJob).values({
-        id: jobId,
-        memberId,
-        effectiveFrom,
-        effectiveTo,
-        state: "queued",
-        createdAt: now,
+      // Check duplicate queued/running job for same member
+      // const existingJob = await c.var.db.query.statusGenerationJob.findFirst({
+      //   where: and(
+      //     eq(schema.statusGenerationJob.memberId, memberId),
+      //     inArray(schema.statusGenerationJob.state, ["queued", "running"]),
+      //   ),
+      // });
+      // if (existingJob) {
+      //   throw new AsyncStatusBadRequestError({
+      //     message:
+      //       "A status generation job is already in progress for this member.",
+      //   });
+      // }
+
+      const workflowInstance = await c.env.SYNC_GITHUB_WORKFLOW.create({
+        params: { integrationId: integration.id },
       });
 
-      // Launch workflow
-      const workflowInstance = await c.env.GENERATE_STATUS_WORKFLOW.create({
-        params: { jobId },
-      });
-
-      // Immediately update job started status if workflow queued successfully
+      const syncId = generateId();
       await c.var.db
-        .update(schema.statusGenerationJob)
-        .set({ state: (await workflowInstance.status()).status })
-        .where(eq(schema.statusGenerationJob.id, jobId));
+        .update(schema.githubIntegration)
+        .set({ syncId })
+        .where(eq(schema.githubIntegration.id, integration.id));
 
-      return c.json({ jobId, workflowId: workflowInstance.id });
+      // Insert job
+      // const jobId = generateId();
+      // const now = new Date();
+      // await c.var.db.insert(schema.statusGenerationJob).values({
+      //   id: jobId,
+      //   memberId,
+      //   effectiveFrom,
+      //   effectiveTo,
+      //   state: "queued",
+      //   createdAt: now,
+      // });
+
+      // // Launch workflow
+      // const workflowInstance = await c.env.GENERATE_STATUS_WORKFLOW.create({
+      //   params: { jobId },
+      // });
+
+      // // Immediately update job started status if workflow queued successfully
+      // await c.var.db
+      //   .update(schema.statusGenerationJob)
+      //   .set({ state: (await workflowInstance.status()).status })
+      //   .where(eq(schema.statusGenerationJob.id, jobId));
+
+      return c.json({ syncId, workflowId: workflowInstance.id });
     },
   );
