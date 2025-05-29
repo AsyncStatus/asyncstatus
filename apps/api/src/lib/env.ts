@@ -14,6 +14,7 @@ import type { RateLimiter } from "./rate-limiter";
 export type Bindings = {
   TURSO_URL: string;
   TURSO_AUTH_TOKEN: string;
+  TURSO_ENCRYPTION_KEY: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   AS_PROD_AUTH_KV: KVNamespace;
