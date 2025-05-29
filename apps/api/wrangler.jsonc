@@ -14,6 +14,22 @@
   "ai": {
     "binding": "AI",
   },
+  "queues": {
+    "consumers": [
+      {
+        "queue": "github-webhook-events-consumer",
+        "dead_letter_queue": "github-webhook-events-dl",
+        "max_batch_size": 100,
+        "max_batch_timeout": 30,
+      },
+    ],
+    "producers": [
+      {
+        "queue": "github-webhook-events-producer",
+        "binding": "GITHUB_WEBHOOK_EVENTS_QUEUE",
+      },
+    ],
+  },
   "workflows": [
     {
       "name": "sync-github",

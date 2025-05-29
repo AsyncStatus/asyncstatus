@@ -1,4 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import type { Webhooks } from "@octokit/webhooks";
+import type { EmitterWebhookEvent } from "@octokit/webhooks/types";
 import type { InferSelectModel } from "drizzle-orm";
 import type { Resend } from "resend";
 import type { VoyageAIClient } from "voyageai";
@@ -34,6 +36,8 @@ export type Bindings = {
   DELETE_GITHUB_INTEGRATION_WORKFLOW: Workflow<DeleteGithubIntegrationWorkflowParams>;
   GENERATE_STATUS_WORKFLOW: Workflow<GenerateStatusWorkflowParams>;
   AI: Ai;
+  GITHUB_WEBHOOK_SECRET: string;
+  GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<EmitterWebhookEvent>;
 };
 
 export type Variables = {
@@ -44,6 +48,7 @@ export type Variables = {
   waitlistRateLimiter: RateLimiter;
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
+  githubWebhooks: Webhooks;
 };
 
 export type HonoEnv = {

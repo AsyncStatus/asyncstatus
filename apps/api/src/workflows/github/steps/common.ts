@@ -7,10 +7,6 @@ import {
   type SyncGithubWorkflowStatusName,
 } from "../../../schema/github-integration";
 
-export function isTuple<T extends any>(array: T[]): array is [T, ...T[]] {
-  return array.length > 0;
-}
-
 type WithSafeSyncStatusParams = {
   db: Db;
   integrationId: string;

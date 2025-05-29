@@ -4,7 +4,7 @@ import type { Octokit } from "octokit";
 
 import type { Db } from "../../../db";
 import * as schema from "../../../db/schema";
-import { isTuple } from "./common";
+import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncRepositoriesParams = {
   octokit: Octokit;
