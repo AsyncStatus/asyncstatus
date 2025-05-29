@@ -4,6 +4,7 @@ import type { Octokit } from "octokit";
 
 import type { Db } from "../../../db";
 import * as schema from "../../../db/schema";
+import { isTuple } from "./common";
 
 type FetchAndSyncUsersParams = {
   octokit: Octokit;
@@ -55,7 +56,9 @@ export async function fetchAndSyncUsers({
           });
       });
 
-      await db.batch(batchUpserts as any);
+      if (isTuple(batchUpserts)) {
+        await db.batch(batchUpserts);
+      }
     }
   }
 }

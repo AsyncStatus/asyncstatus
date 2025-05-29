@@ -4,6 +4,7 @@ import type { Octokit } from "octokit";
 
 import type { Db } from "../../../db";
 import * as schema from "../../../db/schema";
+import { isTuple } from "./common";
 
 type FetchAndSyncEventsParams = {
   octokit: Octokit;
@@ -47,6 +48,10 @@ export async function fetchAndSyncEvents({
       },
     );
 
+    if (events.length === 0) {
+      continue;
+    }
+
     try {
       const batchUpserts = events.map((event) => {
         return db
@@ -78,7 +83,9 @@ export async function fetchAndSyncEvents({
             },
           });
       });
-      await db.batch(batchUpserts as any);
+      if (isTuple(batchUpserts)) {
+        await db.batch(batchUpserts);
+      }
     } catch (error) {
       console.error(error);
     }
