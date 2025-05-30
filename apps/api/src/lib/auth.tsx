@@ -34,8 +34,12 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     trustedOrigins: [
       "http://localhost:3000",
-      "https://app-v2.asyncstatus.com",
-      "https://app-v2.dev.asyncstatus.com",
+      "http://localhost:3001",
+      "http://localhost:8787",
+      "https://asyncstatus.com",
+      "https://dev.asyncstatus.com",
+      "https://beta.asyncstatus.com",
+      "https://app.asyncstatus.com",
     ],
     emailVerification: {
       autoSignInAfterVerification: true,

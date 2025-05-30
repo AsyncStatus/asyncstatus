@@ -32,7 +32,9 @@ const app = new Hono<HonoEnv>()
     cors({
       origin: [
         "http://localhost:3000",
-        "https://www.asyncstatus.com",
+        "http://localhost:3001",
+        "http://localhost:8787",
+        "https://asyncstatus.com",
         "https://dev.asyncstatus.com",
         "https://beta.asyncstatus.com",
         "https://app.asyncstatus.com",
