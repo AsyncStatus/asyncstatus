@@ -4,7 +4,9 @@ import type { Octokit } from "octokit";
 
 import type { Db } from "../../../db";
 import * as schema from "../../../db/schema";
+import type { AnyGithubWebhookEventDefinition } from "../../../lib/github-event-definition";
 import { isTuple } from "../../../lib/is-tuple";
+import { standardizeGithubEventName } from "../../../lib/standardize-github-event-name";
 
 type FetchAndSyncEventsParams = {
   octokit: Octokit;
@@ -65,8 +67,8 @@ export async function fetchAndSyncEvents({
               ? new Date(event.created_at)
               : new Date(),
             repositoryId: repo.id,
-            type: event.type ?? "UnknownEvent",
-            payload: event.payload,
+            type: standardizeGithubEventName(event.type ?? "UnknownEvent"),
+            payload: event.payload as AnyGithubWebhookEventDefinition,
           })
           .onConflictDoUpdate({
             target: schema.githubEvent.githubId,
@@ -77,9 +79,9 @@ export async function fetchAndSyncEvents({
                 ? new Date(event.created_at)
                 : new Date(),
               repositoryId: repo.id,
-              type: event.type ?? "UnknownEvent",
+              type: standardizeGithubEventName(event.type ?? "UnknownEvent"),
               githubActorId: event.actor.id.toString(),
-              payload: event.payload,
+              payload: event.payload as AnyGithubWebhookEventDefinition,
             },
           });
       });

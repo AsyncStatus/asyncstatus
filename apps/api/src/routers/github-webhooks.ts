@@ -10,6 +10,7 @@ export const githubWebhooksRouter = new Hono<HonoEnv>().on(
     const githubWebhooks = c.get("githubWebhooks");
 
     githubWebhooks.onAny(async (event) => {
+      console.log("Received event", event);
       const queue = c.env.GITHUB_WEBHOOK_EVENTS_QUEUE;
       await queue.send(event, { contentType: "json" });
     });

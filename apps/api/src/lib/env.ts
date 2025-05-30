@@ -1,6 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Webhooks } from "@octokit/webhooks";
-import type { EmitterWebhookEvent } from "@octokit/webhooks/types";
 import type { InferSelectModel } from "drizzle-orm";
 import type { Resend } from "resend";
 import type { VoyageAIClient } from "voyageai";
@@ -11,6 +10,7 @@ import type { GenerateStatusWorkflowParams } from "../workflows/generate-status"
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
 import type { Auth } from "./auth";
+import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
 
 export type Bindings = {
@@ -37,7 +37,8 @@ export type Bindings = {
   GENERATE_STATUS_WORKFLOW: Workflow<GenerateStatusWorkflowParams>;
   AI: Ai;
   GITHUB_WEBHOOK_SECRET: string;
-  GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<EmitterWebhookEvent>;
+  GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
+  GITHUB_PROCESS_EVENTS_QUEUE: Queue<string>;
 };
 
 export type Variables = {

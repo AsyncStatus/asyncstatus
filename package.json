@@ -7,5 +7,6 @@
   ],
   "dependencies": {
     "bun": "1.2.14"
-  }
+  },
+  "packageManager": "bun@1.2.14"
 }

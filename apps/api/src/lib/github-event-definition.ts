@@ -1,10 +1,9 @@
-import type { webhooks as OpenAPIWebhooks } from "@octokit/openapi-webhooks-types";
+import type {
+  EmitterWebhookEvent,
+  WebhookEvents,
+} from "@octokit/webhooks/types";
 
-export type GithubWebhookEventDefinition<
-  TEventName extends keyof OpenAPIWebhooks,
-> =
-  OpenAPIWebhooks[TEventName]["post"]["requestBody"]["content"]["application/json"];
+export type GithubWebhookEventName = WebhookEvents;
 
-export type AnyGithubWebhookEventDefinition = GithubWebhookEventDefinition<
-  keyof OpenAPIWebhooks
->;
+export type AnyGithubWebhookEventDefinition =
+  EmitterWebhookEvent<GithubWebhookEventName>;

@@ -7,6 +7,11 @@ import {
   text,
 } from "drizzle-orm/sqlite-core";
 
+import type {
+  AnyGithubWebhookEventDefinition,
+  GithubWebhookEventName,
+} from "../lib/github-event-definition";
+
 const float32Array = customType<{
   data: number[];
   config: { dimensions: number };
@@ -327,8 +332,10 @@ export const githubEvent = sqliteTable(
     repositoryId: text("repository_id")
       .notNull()
       .references(() => githubRepository.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
-    payload: text("payload", { mode: "json" }),
+    type: text("type").notNull().$type<GithubWebhookEventName>(),
+    payload: text("payload", {
+      mode: "json",
+    }).$type<AnyGithubWebhookEventDefinition>(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     insertedAt: integer("inserted_at", { mode: "timestamp" }).notNull(),
   },
@@ -336,6 +343,7 @@ export const githubEvent = sqliteTable(
     index("github_event_repository_id_idx").on(t.repositoryId),
     index("github_event_created_at_idx").on(t.createdAt),
     index("github_event_github_id_idx").on(t.githubId),
+    index("github_event_github_actor_id_idx").on(t.githubActorId),
     index("github_event_type_idx").on(t.type),
   ],
 );
