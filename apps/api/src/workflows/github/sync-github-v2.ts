@@ -5,7 +5,7 @@ import {
   type WorkflowEvent,
 } from "cloudflare:workers";
 import { subDays } from "date-fns";
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { App } from "octokit";
 import { VoyageAIClient } from "voyageai";
@@ -147,6 +147,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
           const repositories = await db.query.githubRepository.findMany({
             where: eq(schema.githubRepository.integrationId, integrationId),
             with: { events: true },
+            orderBy: asc(schema.githubEvent.createdAt),
           });
           const hasAnyEvents = repositories.some(
             (repository) => repository.events.length > 0,
