@@ -253,28 +253,26 @@ export default async function Page(props: {
           </div>
           <SavingsCalculator />
 
-          <p className="text-muted-foreground/80 mt-10 text-xs text-pretty">
+          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
             <strong>Disclaimer</strong>: These figures are estimates provided
             for illustrative purposes only and may not accurately reflect your
             team's specific situation. They do not constitute financial advice
-            or a guarantee of actual savings.
-          </p>
-
-          <p className="text-muted-foreground/80 text-xs text-pretty">
+            or a guarantee of actual savings. <br />
+            <br />
             <strong>How we calculate your savings</strong>: Hourly rate is
             derived from the average salary divided by{" "}
-            <code className="whitespace-nowrap">
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
               260&nbsp;working&nbsp;days&nbsp;×&nbsp;8&nbsp;hours
             </code>
             . Gross stand-up time per month&nbsp;=&nbsp;
-            <code className="whitespace-nowrap">
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
               team&nbsp;size&nbsp;×&nbsp;stand-up&nbsp;length&nbsp;(min)&nbsp;×&nbsp;working&nbsp;days&nbsp;/&nbsp;60
             </code>
             . We assume each developer still spends the
             <strong>&nbsp;async follow-up time&nbsp;</strong>
             (default&nbsp;10&nbsp;min/day) that you set in the slider updating
             or reading status. Hours saved per month therefore use
-            <code className="whitespace-nowrap">
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
               (stand-up&nbsp;length&nbsp;−&nbsp;async&nbsp;follow-up&nbsp;time)
             </code>
             . Monthly savings are those hours multiplied by the hourly rate;
