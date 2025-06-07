@@ -27,10 +27,10 @@ import { NumberTicker } from "./number-ticker";
 export default function SavingsCalculator() {
   const presets = {
     "yc-startup": {
-      teamSize: 10,
+      teamSize: 4,
       avgSalary: 140000,
       meetingLength: 15,
-      workingDays: 20,
+      workingDays: 31,
       asyncTime: 10,
     },
     "eu-startup": {
@@ -44,7 +44,7 @@ export default function SavingsCalculator() {
       teamSize: 15,
       avgSalary: 110000,
       meetingLength: 30,
-      workingDays: 20,
+      workingDays: 21,
       asyncTime: 10,
     },
     scaleup: {
@@ -232,17 +232,17 @@ export default function SavingsCalculator() {
                   </FormLabel>
                   <FormControl>
                     <Slider
-                      min={16}
-                      max={24}
+                      min={15}
+                      max={31}
                       step={1}
                       value={[field.value]}
                       onValueChange={([value]) => field.onChange(value)}
                     />
                   </FormControl>
                   <div className="mt-1 flex justify-between text-xs text-gray-500">
-                    <span>16 days</span>
-                    <span>20 days</span>
-                    <span>24 days</span>
+                    <span>15 days</span>
+                    <span>23 days</span>
+                    <span>31 days</span>
                   </div>
                 </FormItem>
               )}
