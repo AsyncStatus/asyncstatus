@@ -15,6 +15,7 @@ import { UseItYourWay } from "../components/use-it-your-way";
 import { WaitlistDialog } from "../components/waitlist-dialog";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
+import { NotificationAnimation } from "../components/notification-animation";
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -133,6 +134,11 @@ export default async function Page(props: {
 
         <div className="mt-14 flex justify-center max-sm:mt-6">
           <WaitlistDialog buttonSize="lg" />
+        </div>
+        
+        {/* Video animation demo */}
+        <div className="mt-24 flex justify-center">
+          <NotificationAnimation />
         </div>
 
         <img
