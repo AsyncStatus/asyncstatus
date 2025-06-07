@@ -9,6 +9,7 @@ import { Footer } from "../components/footer";
 import { GenerateCard } from "../components/generate-card";
 import { MobileMenu } from "../components/mobile-menu";
 import { ReviewCard } from "../components/review-card";
+import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
 import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
@@ -238,6 +239,46 @@ export default async function Page(props: {
 
         <section id="features">
           <FeaturesList />
+        </section>
+
+        <section id="calculator" className="mt-36">
+          <div className="mb-12 text-center">
+            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+              Calculate your savings
+            </h3>
+            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+              See how much time and money your team can save by replacing
+              synchronous standups with AsyncStatus.
+            </h3>
+          </div>
+          <SavingsCalculator />
+
+          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
+            <strong>Disclaimer</strong>: These figures are estimates provided
+            for illustrative purposes only and may not accurately reflect your
+            team's specific situation. They do not constitute financial advice
+            or a guarantee of actual savings. <br />
+            <br />
+            <strong>How we calculate your savings</strong>: Hourly rate is
+            derived from the average salary divided by{" "}
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              260&nbsp;working&nbsp;days&nbsp;×&nbsp;8&nbsp;hours
+            </code>
+            . Gross stand-up time per month&nbsp;=&nbsp;
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              team&nbsp;size&nbsp;×&nbsp;stand-up&nbsp;length&nbsp;(min)&nbsp;×&nbsp;working&nbsp;days&nbsp;/&nbsp;60
+            </code>
+            . We assume each developer still spends the
+            <strong>&nbsp;async follow-up time&nbsp;</strong>
+            (default&nbsp;10&nbsp;min/day) that you set in the slider updating
+            or reading status. Hours saved per month therefore use
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              (stand-up&nbsp;length&nbsp;−&nbsp;async&nbsp;follow-up&nbsp;time)
+            </code>
+            . Monthly savings are those hours multiplied by the hourly rate;
+            annual savings are simply monthly savings × 12. Your numbers update
+            live as you move the sliders.
+          </p>
         </section>
 
         <section id="beta">

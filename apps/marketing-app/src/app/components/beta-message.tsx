@@ -2,7 +2,7 @@
 
 export function BetaMessage() {
   return (
-    <div className="bg-muted/15 mt-16 rounded-lg border border-dashed p-6">
+    <div className="bg-muted/15 mt-32 rounded-lg border border-dashed p-6">
       <h3 className="text-2xl max-sm:text-lg">We're still shaping things</h3>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="border-border bg-muted/45 rounded-md border px-4 py-3">
