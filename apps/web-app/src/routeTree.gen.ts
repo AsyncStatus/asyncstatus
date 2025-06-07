@@ -26,6 +26,7 @@ import { Route as authLayoutSignUpImport } from './routes/(auth)/_layout.sign-up
 import { Route as authLayoutResetPasswordImport } from './routes/(auth)/_layout.reset-password'
 import { Route as authLayoutLoginImport } from './routes/(auth)/_layout.login'
 import { Route as authLayoutForgotPasswordImport } from './routes/(auth)/_layout.forgot-password'
+import { Route as OrganizationSlugLayoutStatusUpdateImport } from './routes/$organizationSlug/_layout.status-update'
 import { Route as OrganizationSlugLayoutSettingsImport } from './routes/$organizationSlug/_layout.settings'
 import { Route as OrganizationSlugLayoutUsersIndexImport } from './routes/$organizationSlug/_layout.users/index'
 import { Route as OrganizationSlugLayoutTeamsIndexImport } from './routes/$organizationSlug/_layout.teams/index'
@@ -138,6 +139,13 @@ const authLayoutForgotPasswordRoute = authLayoutForgotPasswordImport.update({
   path: '/forgot-password',
   getParentRoute: () => authLayoutRoute,
 } as any)
+
+const OrganizationSlugLayoutStatusUpdateRoute =
+  OrganizationSlugLayoutStatusUpdateImport.update({
+    id: '/status-update',
+    path: '/status-update',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
 
 const OrganizationSlugLayoutSettingsRoute =
   OrganizationSlugLayoutSettingsImport.update({
@@ -255,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutSettingsImport
       parentRoute: typeof OrganizationSlugLayoutImport
     }
+    '/$organizationSlug/_layout/status-update': {
+      id: '/$organizationSlug/_layout/status-update'
+      path: '/status-update'
+      fullPath: '/$organizationSlug/status-update'
+      preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdateImport
+      parentRoute: typeof OrganizationSlugLayoutImport
+    }
     '/(auth)/_layout/forgot-password': {
       id: '/(auth)/_layout/forgot-password'
       path: '/forgot-password'
@@ -350,6 +365,7 @@ const LayoutRouteWithChildren =
 
 interface OrganizationSlugLayoutRouteChildren {
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
+  OrganizationSlugLayoutStatusUpdateRoute: typeof OrganizationSlugLayoutStatusUpdateRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
   OrganizationSlugLayoutTeamsTeamIdRoute: typeof OrganizationSlugLayoutTeamsTeamIdRoute
   OrganizationSlugLayoutUsersUserIdRoute: typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -360,6 +376,8 @@ interface OrganizationSlugLayoutRouteChildren {
 const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
   {
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,
+    OrganizationSlugLayoutStatusUpdateRoute:
+      OrganizationSlugLayoutStatusUpdateRoute,
     OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
     OrganizationSlugLayoutTeamsTeamIdRoute:
       OrganizationSlugLayoutTeamsTeamIdRoute,
@@ -470,6 +488,7 @@ export interface FileRoutesByFullPath {
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
   '/invitation': typeof InvitationLayoutRouteWithChildren
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
@@ -489,6 +508,7 @@ export interface FileRoutesByTo {
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
   '/invitation': typeof InvitationLayoutIndexRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
@@ -512,6 +532,7 @@ export interface FileRoutesById {
   '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/$organizationSlug/_layout/status-update': typeof OrganizationSlugLayoutStatusUpdateRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
   '/(auth)/_layout/login': typeof authLayoutLoginRoute
   '/(auth)/_layout/reset-password': typeof authLayoutResetPasswordRoute
@@ -534,6 +555,7 @@ export interface FileRouteTypes {
     | '/create-organization'
     | '/invitation'
     | '/$organizationSlug/settings'
+    | '/$organizationSlug/status-update'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -552,6 +574,7 @@ export interface FileRouteTypes {
     | '/create-organization'
     | '/invitation'
     | '/$organizationSlug/settings'
+    | '/$organizationSlug/status-update'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
@@ -573,6 +596,7 @@ export interface FileRouteTypes {
     | '/invitation/_layout'
     | '/_layout/'
     | '/$organizationSlug/_layout/settings'
+    | '/$organizationSlug/_layout/status-update'
     | '/(auth)/_layout/forgot-password'
     | '/(auth)/_layout/login'
     | '/(auth)/_layout/reset-password'
@@ -637,6 +661,7 @@ export const routeTree = rootRoute
       "parent": "/$organizationSlug",
       "children": [
         "/$organizationSlug/_layout/settings",
+        "/$organizationSlug/_layout/status-update",
         "/$organizationSlug/_layout/",
         "/$organizationSlug/_layout/teams/$teamId",
         "/$organizationSlug/_layout/users/$userId",
@@ -692,6 +717,10 @@ export const routeTree = rootRoute
     },
     "/$organizationSlug/_layout/settings": {
       "filePath": "$organizationSlug/_layout.settings.tsx",
+      "parent": "/$organizationSlug/_layout"
+    },
+    "/$organizationSlug/_layout/status-update": {
+      "filePath": "$organizationSlug/_layout.status-update.tsx",
       "parent": "/$organizationSlug/_layout"
     },
     "/(auth)/_layout/forgot-password": {

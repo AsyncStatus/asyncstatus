@@ -6,6 +6,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
+import { Button } from "@asyncstatus/ui/components/button";
 import {
   Select,
   SelectContent,
@@ -16,8 +17,8 @@ import {
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { CircleHelpIcon } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { GenerateStatusButton } from "@/components/generate-status-button";
@@ -193,10 +194,16 @@ function RouteComponent() {
             organizationSlug={organizationSlug}
             memberId={member?.id ?? ""}
           />
-          <StatusUpdateDialog
-            onSuccess={refetch}
-            organizationSlug={organizationSlug}
-          />
+          <Button asChild>
+            <Link
+              to="/$organizationSlug/status-update"
+              params={{ organizationSlug }}
+              className="flex items-center gap-2"
+            >
+              <PlusIcon className="h-4 w-4" />
+              New status update
+            </Link>
+          </Button>
         </div>
       </header>
 
@@ -218,10 +225,16 @@ function RouteComponent() {
             title="No status updates yet"
             description="Create your first status update to share with your team."
             action={
-              <StatusUpdateDialog
-                onSuccess={refetch}
-                organizationSlug={organizationSlug}
-              />
+              <Button asChild>
+                <Link
+                  to="/$organizationSlug/status-update"
+                  params={{ organizationSlug }}
+                  className="flex items-center gap-2"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  New status update
+                </Link>
+              </Button>
             }
           />
         )}
