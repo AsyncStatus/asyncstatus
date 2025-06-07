@@ -1,190 +1,401 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@asyncstatus/ui/components/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@asyncstatus/ui/components/select";
+import { Slider } from "@asyncstatus/ui/components/slider";
+import { cn } from "@asyncstatus/ui/lib/utils";
+import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
 
-interface SavingsCalculatorProps {
-  maxWidth?: string;
-}
+import { DotPattern } from "./dot-pattern";
+import { MagicCard } from "./magic-card";
+import { NumberTicker } from "./number-ticker";
 
-export default function SavingsCalculator({ maxWidth = "4xl" }: SavingsCalculatorProps) {
-  const [teamSize, setTeamSize] = useState(25);
-  const [avgSalary, setAvgSalary] = useState(140000);
-  const [meetingLength, setMeetingLength] = useState(20);
-  const [workingDays, setWorkingDays] = useState(20);
-  
-  const [monthlySavings, setMonthlySavings] = useState(0);
-  const [annualSavings, setAnnualSavings] = useState(0);
-  const [hoursPerMonth, setHoursPerMonth] = useState(0);
-  
-  // Calculate savings whenever inputs change
+export default function SavingsCalculator() {
+  const presets = {
+    "yc-startup": {
+      teamSize: 10,
+      avgSalary: 140000,
+      meetingLength: 15,
+      workingDays: 20,
+      asyncTime: 10,
+    },
+    "eu-startup": {
+      teamSize: 20,
+      avgSalary: 80000,
+      meetingLength: 20,
+      workingDays: 20,
+      asyncTime: 8,
+    },
+    "us-startup": {
+      teamSize: 15,
+      avgSalary: 110000,
+      meetingLength: 30,
+      workingDays: 20,
+      asyncTime: 10,
+    },
+    scaleup: {
+      teamSize: 40,
+      avgSalary: 100000,
+      meetingLength: 65,
+      workingDays: 20,
+      asyncTime: 16,
+    },
+  } as const;
+
+  const [preset, setPreset] = useState<keyof typeof presets>("yc-startup");
+
+  const form = useForm<{
+    teamSize: number;
+    avgSalary: number;
+    meetingLength: number;
+    workingDays: number;
+    asyncTime: number;
+  }>({
+    defaultValues: {
+      ...presets[preset],
+    },
+  });
+
+  const watchedValues = form.watch();
+  const { teamSize, avgSalary, meetingLength, workingDays, asyncTime } =
+    useDeferredValue(watchedValues);
+
+  // Ensure async follow-up time is always less than stand-up length
   useEffect(() => {
-    // Calculate hourly rate based on 260 working days per year, 8 hours per day
-    const hourlyRate = avgSalary / (260 * 8);
-    
-    // Calculate hours spent in standup meetings per month
-    const hours = (teamSize * meetingLength * workingDays) / 60;
-    
-    // Calculate monthly cost of standups
-    const monthlyCost = hours * hourlyRate;
-    
-    // Set calculated values
-    setHoursPerMonth(hours);
-    setMonthlySavings(monthlyCost);
-    setAnnualSavings(monthlyCost * 12);
-  }, [teamSize, avgSalary, meetingLength, workingDays]);
+    if (asyncTime >= meetingLength) {
+      form.setValue("asyncTime", Math.max(meetingLength - 1, 1));
+    }
+  }, [asyncTime, meetingLength, form]);
+
+  // Derived calculations memoized for performance
+  const {
+    hoursStandupPerMonth,
+    standupCostMonthly,
+    monthlySavings,
+    annualSavings,
+  } = useMemo(() => {
+    const rate = avgSalary / (260 * 8);
+    const hrsStandup = (teamSize * meetingLength * workingDays) / 60;
+    const minutesSavedPerPersonPerDay = Math.max(meetingLength - asyncTime, 0);
+    const hrsSaved =
+      (teamSize * minutesSavedPerPersonPerDay * workingDays) / 60;
+    const standupCost = hrsStandup * rate;
+    const monthlySave = hrsSaved * rate;
+    const annualSave = monthlySave * 12;
+
+    return {
+      hoursStandupPerMonth: hrsStandup,
+      standupCostMonthly: standupCost,
+      monthlySavings: monthlySave,
+      annualSavings: annualSave,
+    };
+  }, [avgSalary, teamSize, meetingLength, workingDays, asyncTime]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   return (
-    <div className={`mx-auto max-w-${maxWidth} bg-white p-6 rounded-lg shadow-md`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900">Adjust Your Team Parameters</h2>
-          
-          <div>
-            <label htmlFor="team-size" className="block text-sm font-medium text-gray-700">
-              Team Size: {teamSize} {teamSize === 1 ? 'person' : 'people'}
-            </label>
-            <input
-              id="team-size"
-              type="range"
-              min="1"
-              max="50"
-              step="1"
-              value={teamSize}
-              onChange={(e) => setTeamSize(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
+    <div className="mx-auto max-w-6xl rounded-lg bg-white p-6">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <Form {...form}>
+          <form className="w-full space-y-6">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-gray-700">
+                Choose a preset:
+              </label>
+              <Select
+                value={preset}
+                onValueChange={(value) => {
+                  const key = value as keyof typeof presets;
+                  setPreset(key);
+                  form.reset(presets[key]);
+                }}
+              >
+                <SelectTrigger className="min-w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yc-startup">YC Startup</SelectItem>
+                  <SelectItem value="eu-startup">EU Startup</SelectItem>
+                  <SelectItem value="us-startup">US Startup</SelectItem>
+                  <SelectItem value="scaleup">Scaleup</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="teamSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Team size: {field.value}{" "}
+                    {field.value === 1 ? "person" : "people"}
+                  </FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={50}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={([value]) => field.onChange(value)}
+                    />
+                  </FormControl>
+                  <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <span>1</span>
+                    <span>25</span>
+                    <span>50</span>
+                  </div>
+                </FormItem>
+              )}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>1</span>
-              <span>25</span>
-              <span>50</span>
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="avg-salary" className="block text-sm font-medium text-gray-700">
-              Avg. Annual Salary: {formatCurrency(avgSalary)}
-            </label>
-            <input
-              id="avg-salary"
-              type="range"
-              min="30000"
-              max="250000"
-              step="10000"
-              value={avgSalary}
-              onChange={(e) => setAvgSalary(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
+
+            <FormField
+              control={form.control}
+              name="avgSalary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Average salary: {formatCurrency(field.value)}
+                  </FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={30000}
+                      max={250000}
+                      step={10000}
+                      value={[field.value]}
+                      onValueChange={([value]) => field.onChange(value)}
+                    />
+                  </FormControl>
+                  <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <span>$30k</span>
+                    <span>$140k</span>
+                    <span>$250k</span>
+                  </div>
+                </FormItem>
+              )}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>$30k</span>
-              <span>$150k</span>
-              <span>$250k</span>
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="meeting-length" className="block text-sm font-medium text-gray-700">
-              Daily Standup Length: {meetingLength} minutes
-            </label>
-            <input
-              id="meeting-length"
-              type="range"
-              min="5"
-              max="30"
-              step="5"
-              value={meetingLength}
-              onChange={(e) => setMeetingLength(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
+
+            <FormField
+              control={form.control}
+              name="meetingLength"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Daily standup length: {field.value} minutes
+                  </FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={5}
+                      max={65}
+                      step={5}
+                      value={[field.value]}
+                      onValueChange={([value]) => field.onChange(value)}
+                    />
+                  </FormControl>
+                  <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <span>5 min</span>
+                    <span>35 min</span>
+                    <span>65 min</span>
+                  </div>
+                </FormItem>
+              )}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>5 min</span>
-              <span>15 min</span>
-              <span>30 min</span>
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="working-days" className="block text-sm font-medium text-gray-700">
-              Working Days per Month: {workingDays} days
-            </label>
-            <input
-              id="working-days"
-              type="range"
-              min="16"
-              max="23"
-              step="1"
-              value={workingDays}
-              onChange={(e) => setWorkingDays(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
+
+            <FormField
+              control={form.control}
+              name="workingDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Working days per month: {field.value} days
+                  </FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={16}
+                      max={24}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={([value]) => field.onChange(value)}
+                    />
+                  </FormControl>
+                  <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <span>16 days</span>
+                    <span>20 days</span>
+                    <span>24 days</span>
+                  </div>
+                </FormItem>
+              )}
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>16 days</span>
-              <span>20 days</span>
-              <span>23 days</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-indigo-50 p-6 rounded-lg flex flex-col justify-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Your Potential Savings</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600">Team time spent in standups monthly</p>
-              <p className="text-2xl font-bold text-indigo-700">{hoursPerMonth.toFixed(1)} hours</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-600">Monthly savings with AsyncStatus</p>
-              <p className="text-3xl font-bold text-indigo-700">{formatCurrency(monthlySavings)}</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-gray-600">Annual savings with AsyncStatus</p>
-              <p className="text-3xl font-bold text-indigo-700">{formatCurrency(annualSavings)}</p>
-            </div>
-          </div>
-          
-          <div className="mt-8 p-4 bg-white rounded-lg border border-indigo-200">
-            <p className="italic text-gray-700 text-sm">
-              "Stand‑ups steal ~{meetingLength} min/day/person. On a {teamSize}‑dev team that's {hoursPerMonth.toFixed(0)} hrs/month = {formatCurrency(monthlySavings)} burn. Skip the call, keep the clarity."
+
+            <FormField
+              control={form.control}
+              name="asyncTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Async follow-up time: {field.value} minutes
+                  </FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={2}
+                      max={16}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={([value]) => field.onChange(value)}
+                    />
+                  </FormControl>
+                  <div className="mt-1 flex justify-between text-xs text-gray-500">
+                    <span>2 min</span>
+                    <span>9 min</span>
+                    <span>16 min</span>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+
+        <MagicCard className="from-primary/10 to-primary/10 relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-bl via-white">
+          <DotPattern
+            width={14}
+            height={14}
+            className={cn(
+              "[mask-image:radial-gradient(350px_circle_at_center,transparent,white)]",
+            )}
+          />
+
+          <h4 className="text-muted-foreground mt-12 mb-6 text-center text-base">
+            Your potential savings
+          </h4>
+
+          <div className="m-6 flex flex-col items-center gap-12">
+            <p className="from-primary to-primary/90 via-primary/80 bg-gradient-to-r bg-clip-text text-6xl font-extrabold text-transparent">
+              $
+              <NumberTicker
+                value={annualSavings}
+                decimalPlaces={0}
+                className="inline"
+              />
             </p>
-            <div className="mt-2 flex justify-between items-center">
-              <button 
+
+            <div className="flex flex-col gap-2">
+              {/* Monthly savings */}
+              <div className="flex items-baseline justify-between">
+                <p className="text-muted-foreground flex-none text-xs">
+                  Monthly
+                </p>
+                <p className="text-primary w-[196px] text-right text-xl font-semibold">
+                  $
+                  <NumberTicker
+                    value={monthlySavings}
+                    decimalPlaces={0}
+                    className="inline"
+                  />
+                </p>
+              </div>
+
+              {/* Time spent */}
+              <div className="flex items-baseline justify-between">
+                <p className="text-muted-foreground flex-none text-xs">
+                  Time / month
+                </p>
+                <p className="text-primary w-[164px] text-right text-lg font-medium">
+                  <NumberTicker
+                    value={hoursStandupPerMonth}
+                    decimalPlaces={1}
+                    className="inline"
+                  />
+                  &nbsp;hrs
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="group border-border relative m-6 overflow-hidden rounded-lg border bg-white/70 p-4 backdrop-blur max-sm:m-3"
+          >
+            {/* Subtle glow on hover */}
+            <div className="via-primary/5 pointer-events-none absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+            <p className="text-base leading-snug text-pretty text-neutral-700 italic max-sm:text-sm">
+              Here's why stand-ups suck: {meetingLength} min × {teamSize} devs ={" "}
+              {hoursStandupPerMonth.toFixed(0)} h/mo →{" "}
+              {formatCurrency(standupCostMonthly)} burn. How many more numbers
+              do you need?
+            </p>
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <motion.button
                 onClick={() => {
-                  const text = `Stand‑ups steal ~${meetingLength} min/day/person.\nOn a ${teamSize}‑dev team that's ${hoursPerMonth.toFixed(0)} hrs/month = ${formatCurrency(monthlySavings)} burn.\nSkip the call, keep the clarity.\n👉 asyncstatus.com`;
+                  const text = `Here's why stand-ups suck: ${meetingLength} min × ${teamSize} devs = ${hoursStandupPerMonth.toFixed(0)} h/mo → ${formatCurrency(standupCostMonthly)} burn. How many more numbers do you need? https://asyncstatus.com`;
                   navigator.clipboard.writeText(text);
                 }}
-                className="text-indigo-600 text-sm hover:text-indigo-500 flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-1 h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
                 </svg>
-                Copy for X
-              </button>
-              <a 
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Stand‑ups steal ~${meetingLength} min/day/person.\nOn a ${teamSize}‑dev team that's ${hoursPerMonth.toFixed(0)} hrs/month = ${formatCurrency(monthlySavings)} burn.\nSkip the call, keep the clarity.\n👉 asyncstatus.com`)}`}
+                Copy
+              </motion.button>
+              <motion.a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Here's why stand-ups suck: ${meetingLength} min × ${teamSize} devs = ${hoursStandupPerMonth.toFixed(0)} h/mo → ${formatCurrency(standupCostMonthly)} burn. How many more numbers do you need? @asyncstatus`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-indigo-600 text-sm hover:text-indigo-500 flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                Share on
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-1 h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
-                Share on X
-              </a>
+              </motion.a>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </MagicCard>
       </div>
     </div>
   );
-} 
+}
