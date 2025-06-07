@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { sessionQueryOptions } from "@/rpc/auth";
+import { useEffect, useState } from "react";
 import {
-  connectGithubMutationOptions,
   disconnectGithubMutationOptions,
   getGithubIntegrationQueryOptions,
 } from "@/rpc/organization/github";
+import { rpc } from "@/rpc/rpc";
+import {
+  SyncGithubWorkflowStatusName,
+  SyncGithubWorkflowStatusStep,
+} from "@asyncstatus/api/schema/github-integration";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Dialog,
@@ -21,7 +24,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
 
 type GitHubIntegrationButtonProps = {
   organizationSlug: string;
@@ -32,34 +34,29 @@ export function GitHubIntegrationButton({
 }: GitHubIntegrationButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
-
-  // Get session data to get organization ID
-  const session = useSuspenseQuery(sessionQueryOptions());
-  const { data: organizationData } = useSuspenseQuery(
+  const githubIntegration = useSuspenseQuery(
     getGithubIntegrationQueryOptions(organizationSlug),
   );
-
-  // Get current organization ID from session
-  const organizationId = session.data?.session?.activeOrganizationId;
-
-  // Fetch the current GitHub integration status
-  const { data: githubIntegration } = useSuspenseQuery(
-    getGithubIntegrationQueryOptions(organizationSlug),
-  );
-
-  // GitHub OAuth Installation URL - backend will handle the callback
-  // We use state parameter to pass the organization ID
-  const githubAppInstallUrl = `https://github.com/apps/asyncstatus/installations/new?state=${organizationId}`;
-
-  // Disconnect GitHub mutation
+  const githubAppInstallUrl = `https://github.com/apps/asyncstatus-local/installations/new?state=${organizationSlug}`;
   const disconnectGithub = useMutation({
     ...disconnectGithubMutationOptions(),
     onSuccess: () => {
       toast.success("Successfully disconnected GitHub");
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({
         queryKey: getGithubIntegrationQueryOptions(organizationSlug).queryKey,
       });
+
+      const eventSource = new EventSource(
+        rpc.organization[":idOrSlug"].github["delete-status"].$url({
+          param: { idOrSlug: organizationSlug },
+        }),
+        { withCredentials: true },
+      );
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log(data);
+      };
     },
     onError: (error) => {
       toast.error(
@@ -70,9 +67,42 @@ export function GitHubIntegrationButton({
     },
   });
 
+  useEffect(() => {
+    if (!githubIntegration.data?.syncId) {
+      return;
+    }
+
+    const eventSource = new EventSource(
+      rpc.organization[":idOrSlug"].github["sync-status"].$url({
+        param: { idOrSlug: organizationSlug },
+      }),
+      { withCredentials: true },
+    );
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data) as { status: string };
+      console.log(data);
+      queryClient.setQueryData(
+        getGithubIntegrationQueryOptions(organizationSlug).queryKey,
+        (old: any) => {
+          if (!old) {
+            return null;
+          }
+          return { ...old, syncStatus: data.status };
+        },
+      );
+    };
+  }, [githubIntegration.data, organizationSlug, queryClient]);
+
   return (
     <>
-      {!githubIntegration ? (
+      {githubIntegration.data?.syncId && (
+        <p className="text-sm text-gray-500">
+          {githubIntegration.data.syncStatusName}
+        </p>
+      )}
+
+      {!githubIntegration.data ? (
         <Button
           type="button"
           variant="outline"
@@ -118,18 +148,11 @@ export function GitHubIntegrationButton({
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                if (!organizationId) {
-                  toast.error("Unable to determine organization ID");
-                  return;
-                }
-                window.location.href = githubAppInstallUrl;
-              }}
-            >
-              <Github className="mr-2 h-4 w-4" />
-              Install GitHub App
+            <Button asChild>
+              <a type="button" href={githubAppInstallUrl}>
+                <Github className="mr-2 h-4 w-4" />
+                Install GitHub App
+              </a>
             </Button>
           </DialogFooter>
         </DialogContent>
