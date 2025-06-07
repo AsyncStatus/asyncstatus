@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 /**
  *  DotPattern Component Props
