@@ -115,7 +115,7 @@ export default function SavingsCalculator() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl rounded-lg bg-white p-6">
+    <div className="mx-auto max-w-6xl rounded-lg bg-white p-6 max-sm:w-full max-sm:max-w-none max-sm:p-0">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <Form {...form}>
           <form className="w-full space-y-6">
