@@ -117,9 +117,6 @@ export const AsyncStatusEditor = () => {
           </EditorCommand>
 
           <EditorBubble className="border-muted bg-background flex w-fit max-w-[90vw] overflow-hidden rounded-md border shadow-xl">
-            {/* <Separator orientation="vertical" />
-            <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
-            {/* <Separator orientation="vertical" /> */}
             <LinkSelector open={openLink} onOpenChange={setOpenLink} />
             <Separator orientation="vertical" />
             <TextButtons />

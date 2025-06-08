@@ -48,10 +48,10 @@ export const TextButtons = () => {
       icon: CodeIcon,
     },
     {
-      name: "blockableTodoList",
-      isActive: (editor) => editor.isActive("blockableTodoList"),
+      name: "blockableTodo",
+      isActive: (editor) => editor.isActive("blockableTodoItem"),
       command: (editor) =>
-        editor.chain().focus().toggleBlockableTodoList().run(),
+        editor.chain().focus().toggleBlockableTodoItem().run(),
       icon: Ban,
     },
   ];

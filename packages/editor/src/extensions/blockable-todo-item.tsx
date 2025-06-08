@@ -51,7 +51,11 @@ const BlockableTodoItemComponent = ({
   console.log(node, view);
 
   return (
-    <NodeViewWrapper className="blockable-todo-item group bg-accent border-border relative mb-2 flex flex-col overflow-hidden rounded-lg border">
+    <NodeViewWrapper
+      className={cn(
+        "blockable-todo-item group bg-accent border-border relative mb-2 flex flex-col overflow-hidden rounded-lg border",
+      )}
+    >
       <NodeViewContent
         className={cn(
           "not-prose p-3 outline-none",
@@ -60,11 +64,11 @@ const BlockableTodoItemComponent = ({
         )}
       />
 
-      <div className="bg-accent group-hover:bg-accent/50 flex w-full items-center">
+      <div className="flex w-full items-center">
         <Button
           size="sm"
           variant="ghost"
-          className="opacity-30 transition-opacity group-hover:opacity-100"
+          className="w-22 justify-start opacity-30 transition-opacity select-none group-hover:opacity-100"
           onClick={toggleBlocked}
           title={blocked ? "Unblock item" : "Block item"}
         >
@@ -74,7 +78,7 @@ const BlockableTodoItemComponent = ({
         <Button
           size="sm"
           variant="ghost"
-          className="opacity-30 transition-opacity group-hover:opacity-100"
+          className="opacity-30 transition-opacity select-none group-hover:opacity-100"
           onClick={toggleChecked}
           title={checked ? "Uncheck item" : "Check item"}
         >

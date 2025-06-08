@@ -1,13 +1,10 @@
 import type { Editor } from "@tiptap/core";
 import {
-  Ban,
-  CheckSquare,
   Heading1,
   Heading2,
   Heading3,
   List,
   ListOrdered,
-  MessageSquarePlus,
   Smile,
   Text,
   TextQuote,
@@ -22,15 +19,6 @@ import {
 
 // Base suggestion items available everywhere
 const baseSuggestionItems = createSuggestionItems([
-  {
-    title: "Send Feedback",
-    description: "Let us know how we can improve.",
-    icon: <MessageSquarePlus size={18} />,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).run();
-      window.open("/feedback", "_blank");
-    },
-  },
   {
     title: "Emoji",
     description: "Insert an emoji.",
@@ -57,24 +45,6 @@ const baseSuggestionItems = createSuggestionItems([
         .deleteRange(range)
         .toggleNode("paragraph", "paragraph")
         .run();
-    },
-  },
-  {
-    title: "To-do List",
-    description: "Track tasks with a to-do list.",
-    searchTerms: ["todo", "task", "list", "check", "checkbox"],
-    icon: <CheckSquare size={18} />,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleTaskList().run();
-    },
-  },
-  {
-    title: "Blockable To-do List",
-    description: "Track tasks with blocking capability.",
-    searchTerms: ["blockable", "todo", "task", "list", "blocked", "blocker"],
-    icon: <Ban size={18} />,
-    command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).toggleBlockableTodoList().run();
     },
   },
   {
@@ -153,11 +123,6 @@ const baseSuggestionItems = createSuggestionItems([
   },
 ]);
 
-// Extract the Todo item so we can easily return only it for the tasks section
-const todoSuggestion: SuggestionItem = baseSuggestionItems.find(
-  (i) => i.title === "To-do List",
-) as SuggestionItem;
-
 const textSuggestion: SuggestionItem = baseSuggestionItems.find(
   (i) => i.title === "Text",
 ) as SuggestionItem;
@@ -196,7 +161,7 @@ export const getSuggestionItems = (editor: Editor): SuggestionItem[] => {
       pos > statusPos &&
       pos < notesPos
     ) {
-      return [todoSuggestion];
+      return [];
     }
 
     // Between Notes and Mood -> notes section
