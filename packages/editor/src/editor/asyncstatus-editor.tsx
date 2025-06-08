@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type PropsWithChildren } from "react";
 import { countJSONStats } from "@/utils/task-item-counter";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
@@ -30,7 +30,7 @@ import {
 
 const extensions = [...asyncStatusEditorExtensions, slashCommand];
 
-export const AsyncStatusEditor = () => {
+export const AsyncStatusEditor = (props: PropsWithChildren) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(
     null,
   );
@@ -81,7 +81,7 @@ export const AsyncStatusEditor = () => {
         <EditorContent
           initialContent={initialContent}
           extensions={extensions}
-          className="bg-background relative min-h-[500px] w-full p-4 sm:mb-[calc(20vh)] sm:rounded-lg"
+          className="bg-background relative w-full p-4 sm:mb-[calc(20vh)] sm:rounded-lg"
           editorProps={{
             handleDOMEvents: {
               keydown: (_view, event) => handleCommandNavigation(event),
@@ -106,8 +106,9 @@ export const AsyncStatusEditor = () => {
           }
         >
           <div className="flex items-center gap-2">
-            <AddStatusUpdateButton />
             <EmojiSelector />
+            <AddStatusUpdateButton />
+            {props.children}
           </div>
           <EditorCommand className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all">
             <EditorCommandEmpty className="text-muted-foreground px-2">

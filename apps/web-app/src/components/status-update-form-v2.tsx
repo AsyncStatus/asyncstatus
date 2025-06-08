@@ -1,12 +1,18 @@
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { AsyncStatusEditor } from "@asyncstatus/editor";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Form } from "@asyncstatus/ui/components/form";
+import {
+  BookCheck,
+  BookDashed,
+  RocketIcon,
+  SaveIcon,
+  SendIcon,
+} from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import { StatusUpdateEditorV2 } from "./status-update-editor-v2";
 
 const formSchema = z.object({
   memberId: z.string().min(1, "Member is required"),
@@ -44,140 +50,18 @@ export function StatusUpdateForm({ organizationSlug }: StatusUpdateFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="mx-auto h-full w-full">
-          <StatusUpdateEditorV2 />
-        </div>
-
-        {/* <div className="grid h-full gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="emoji"
-            render={({ field }) => {
-              const [isOpen, setIsOpen] = useState(false);
-              return (
-                <FormItem>
-                  <FormLabel>Mood emoji (optional)</FormLabel>
-                  <FormControl>
-                    <Popover open={isOpen} onOpenChange={setIsOpen}>
-                      <PopoverTrigger asChild>
-                        <div className="relative">
-                          <Input {...field} placeholder="😊" />
-                        </div>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-fit p-0">
-                        <EmojiPicker
-                          className="h-[342px]"
-                          onEmojiSelect={(emoji) => {
-                            field.onChange(emoji.emoji);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <EmojiPickerSearch />
-                          <EmojiPickerContent />
-                          <EmojiPickerFooter />
-                        </EmojiPicker>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription>
-                    How are you feeling about this update?
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="effectiveFrom"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Effective from</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  When does this status update start being effective?
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="effectiveTo"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Effective to</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  When does this status update end?
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div> */}
-
-        {/* <Button type="submit" className="w-full">
-          Post update
-        </Button> */}
+        <AsyncStatusEditor>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline">
+              <BookDashed className="size-4" />
+              Save as draft
+            </Button>
+            <Button size="sm" type="submit">
+              <BookCheck className="size-4" />
+              Publish
+            </Button>
+          </div>
+        </AsyncStatusEditor>
       </form>
     </Form>
   );
