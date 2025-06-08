@@ -48,8 +48,6 @@ const BlockableTodoItemComponent = ({
     updateAttributes({ blocked: !blocked });
   };
 
-  console.log(node, view);
-
   return (
     <NodeViewWrapper
       className={cn(
