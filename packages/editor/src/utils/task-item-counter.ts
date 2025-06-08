@@ -21,7 +21,7 @@ export const countJSONStats = (
   const traverse = (node: JSONContent) => {
     if (!node) return;
 
-    if (node.type === "taskItem") {
+    if (node.type === "blockableTodoListItem") {
       result.taskItems += 1;
     }
 
