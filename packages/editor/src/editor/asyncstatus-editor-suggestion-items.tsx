@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import {
+  Ban,
   CheckSquare,
   Heading1,
   Heading2,
@@ -7,6 +8,7 @@ import {
   List,
   ListOrdered,
   MessageSquarePlus,
+  Smile,
   Text,
   TextQuote,
 } from "lucide-react";
@@ -30,6 +32,20 @@ const baseSuggestionItems = createSuggestionItems([
     },
   },
   {
+    title: "Emoji",
+    description: "Insert an emoji.",
+    searchTerms: ["emoji", "emoticon", "smiley", "face"],
+    icon: <Smile size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      // Trigger emoji picker opening
+      const event = new CustomEvent("openEmojiPicker", {
+        detail: { editor, position: range.from },
+      });
+      document.dispatchEvent(event);
+    },
+  },
+  {
     title: "Text",
     description: "Just start typing with plain text.",
     searchTerms: ["p", "paragraph"],
@@ -50,6 +66,15 @@ const baseSuggestionItems = createSuggestionItems([
     icon: <CheckSquare size={18} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
+    title: "Blockable To-do List",
+    description: "Track tasks with blocking capability.",
+    searchTerms: ["blockable", "todo", "task", "list", "blocked", "blocker"],
+    icon: <Ban size={18} />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleBlockableTodoList().run();
     },
   },
   {
@@ -117,14 +142,14 @@ const baseSuggestionItems = createSuggestionItems([
     description: "Capture a quote.",
     searchTerms: ["blockquote"],
     icon: <TextQuote size={18} />,
-    command: ({ editor, range }) =>
+    command: ({ editor, range }) => {
       editor
         .chain()
         .focus()
         .deleteRange(range)
-        .toggleNode("paragraph", "paragraph")
-        .toggleBlockquote()
-        .run(),
+        .toggleNode("blockquote", "paragraph")
+        .run();
+    },
   },
 ]);
 

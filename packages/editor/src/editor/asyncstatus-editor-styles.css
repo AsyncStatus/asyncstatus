@@ -81,7 +81,15 @@ ul[data-type="taskList"] li[data-checked="true"] > div > p {
   text-decoration-thickness: 2px;
 }
 
-/* Overwrite tippy-box original max-width */
+/* Blockable Todo List Styles */
+ul[data-type="blockableTodoList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+ul[data-type="blockableTodoList"] li {
+  margin: 0.5rem 0;
+}
 
 .tippy-box {
   max-width: 400px !important;

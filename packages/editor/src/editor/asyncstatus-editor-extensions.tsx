@@ -12,6 +12,8 @@ import { Underline } from "@tiptap/extension-underline";
 import { StarterKit } from "@tiptap/starter-kit";
 import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 
+import { BlockableTodoListItem } from "../extensions/blockable-todo-item";
+import { BlockableTodoList } from "../extensions/blockable-todo-list";
 import { CustomKeymap } from "../extensions/custom-keymap";
 import { MoodHeading } from "../extensions/mood-heading";
 import { NotesHeading } from "../extensions/notes-heading";
@@ -19,13 +21,144 @@ import { StatusUpdateHeading } from "../extensions/status-update-heading";
 import { TaskItemCount } from "../extensions/task-item-count";
 
 const placeholder = Placeholder.configure({
-  placeholder: ({ node }) => {
+  placeholder: ({ node, editor }): string => {
     if (node.type.name === "heading") {
       return `Heading ${node.attrs.level}`;
     }
-    return "Press '/' for commands";
+
+    // Check if we're in a blockable todo item within status update section
+    if (node.type.name === "paragraph") {
+      const { state } = editor;
+
+      // Find positions of status update heading, notes heading, and mood heading
+      let statusUpdatePos = -1;
+      let notesHeadingPos = -1;
+      let moodHeadingPos = -1;
+
+      state.doc.descendants((docNode, pos) => {
+        if (docNode.type.name === "statusUpdateHeading") {
+          statusUpdatePos = pos;
+        } else if (docNode.type.name === "notesHeading") {
+          notesHeadingPos = pos;
+        } else if (docNode.type.name === "moodHeading") {
+          moodHeadingPos = pos;
+        }
+      });
+
+      // Find current node position in the document
+      let currentNodePos = -1;
+      state.doc.descendants((docNode, pos) => {
+        if (docNode === node) {
+          currentNodePos = pos;
+          return false;
+        }
+      });
+
+      // Check if we're in status update section
+      const isInStatusUpdateSection =
+        statusUpdatePos !== -1 &&
+        notesHeadingPos !== -1 &&
+        currentNodePos > statusUpdatePos &&
+        currentNodePos < notesHeadingPos;
+
+      if (isInStatusUpdateSection) {
+        let isInBlockableTodo = false;
+        const isFirstBlockableTodoNode = false;
+
+        // Find all blockable todo nodes in status update section
+        const blockableTodoNodes: (typeof node)[] = [];
+        state.doc.descendants((docNode, pos) => {
+          if (pos > statusUpdatePos && pos < notesHeadingPos) {
+            if (docNode.type.name === "blockableTodoListItem") {
+              docNode.descendants((child) => {
+                if (child.type.name === "paragraph") {
+                  blockableTodoNodes.push(child);
+                }
+              });
+            }
+          }
+        });
+
+        // Check if current node is in blockable todo and if it's the first one
+        state.doc.descendants((docNode, pos) => {
+          if (pos > statusUpdatePos && pos < notesHeadingPos) {
+            if (docNode.type.name === "blockableTodoListItem") {
+              // Check if our node is a descendant of this todo item
+              let found = false;
+              docNode.descendants((child) => {
+                if (child === node) {
+                  found = true;
+                  return false;
+                }
+              });
+
+              if (found) {
+                isInBlockableTodo = true;
+                return false; // Stop iteration
+              }
+            }
+          }
+        });
+
+        if (isInBlockableTodo) {
+          return "What did you do? What are you planning to work on?";
+        }
+      }
+
+      // Check if we're in notes section (between notes heading and mood heading)
+      const isInNotesSection =
+        notesHeadingPos !== -1 &&
+        moodHeadingPos !== -1 &&
+        currentNodePos > notesHeadingPos &&
+        currentNodePos < moodHeadingPos;
+
+      if (isInNotesSection) {
+        // Find all paragraph nodes in notes section
+        const notesNodes: (typeof node)[] = [];
+        state.doc.descendants((docNode, pos) => {
+          if (
+            pos > notesHeadingPos &&
+            pos < moodHeadingPos &&
+            docNode.type.name === "paragraph"
+          ) {
+            notesNodes.push(docNode);
+          }
+        });
+
+        // Check if this is the first paragraph node in notes section
+        const isFirstNotesNode = notesNodes[0] === node;
+
+        if (isFirstNotesNode) {
+          return "Any notes, insights, comments";
+        }
+      }
+
+      // Check if we're in mood section (after mood heading)
+      const isInMoodSection =
+        moodHeadingPos !== -1 && currentNodePos > moodHeadingPos;
+
+      if (isInMoodSection) {
+        // Find all paragraph nodes in mood section
+        const moodNodes: (typeof node)[] = [];
+        state.doc.descendants((docNode, pos) => {
+          if (pos > moodHeadingPos && docNode.type.name === "paragraph") {
+            moodNodes.push(docNode);
+          }
+        });
+
+        // Check if this is the first paragraph node in mood section
+        const isFirstMoodNode = moodNodes[0] === node;
+
+        if (isFirstMoodNode) {
+          return "How are you feeling? What's your mood?";
+        }
+      }
+    }
+
+    return "";
   },
   includeChildren: true,
+  showOnlyCurrent: false,
 });
 
 const HighlightExtension = Highlight.configure({
@@ -49,7 +182,6 @@ const taskItem = TaskItem.configure({
   HTMLAttributes: {
     class: cn("flex gap-2 items-start my-4"),
   },
-  nested: true,
 });
 
 const horizontalRule = HorizontalRule.configure({
@@ -84,7 +216,7 @@ const taskItemCount = TaskItemCount.configure({});
 
 const globalDragHandle = GlobalDragHandle.configure({
   excludedTags: ["h1", "h2", "h3", "h4", "h5", "h6", "p", "hr", "blockquote"],
-  customNodes: [],
+  customNodes: ["blockableTodoListItem"],
 });
 
 const statusUpdateHeading = StatusUpdateHeading.configure({});
@@ -92,6 +224,10 @@ const statusUpdateHeading = StatusUpdateHeading.configure({});
 const notesHeading = NotesHeading.configure({});
 
 const moodHeading = MoodHeading.configure({});
+
+const blockableTodoList = BlockableTodoList.configure({});
+
+const blockableTodoItem = BlockableTodoListItem.configure({});
 
 export const asyncStatusEditorExtensions = [
   statusUpdateHeading,
@@ -102,6 +238,8 @@ export const asyncStatusEditorExtensions = [
   link,
   taskList,
   taskItem,
+  blockableTodoList,
+  blockableTodoItem,
   Underline,
   horizontalRule,
   characterCount,

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { countJSONStats } from "@/utils/task-item-counter";
+import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
+import { UndoIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
 import { useDebouncedCallback } from "use-debounce";
 
+import { AddStatusUpdateButton } from "@/components/add-status-update-button";
 import EditorBubble from "@/components/editor-bubble";
 import { EditorCommand, EditorCommandList } from "@/components/editor-command";
 import EditorCommandItem, {
@@ -13,8 +16,8 @@ import EditorCommandItem, {
 } from "@/components/editor-command-item";
 import { EditorContent } from "@/components/editor-content";
 import { EditorRoot } from "@/components/editor-root";
+import { EmojiSelector } from "@/components/emoji-selector";
 import { LinkSelector } from "@/components/link-selector";
-import { NodeSelector } from "@/components/node-selector";
 import { TextButtons } from "@/components/text-buttons";
 
 import { handleCommandNavigation } from "../extensions/slash-command";
@@ -36,8 +39,6 @@ export const AsyncStatusEditor = () => {
   const [wordCount, setWordCount] = useState(0);
   const [openNode, setOpenNode] = useState(false);
   const [openLink, setOpenLink] = useState(false);
-
-  const { editor } = useCurrentEditor();
 
   const debouncedUpdates = useDebouncedCallback(async (editor: Editor) => {
     const json = editor.getJSON();
@@ -95,7 +96,7 @@ export const AsyncStatusEditor = () => {
             setSaveStatus("Unsaved");
           }}
           slotBefore={
-            <div className="flex justify-between gap-2">
+            <div className="absolute top-0 right-0 left-0 flex items-center justify-between gap-2 px-4">
               <EditorStatus
                 saveStatus={saveStatus}
                 taskItemCount={taskItemCount}
@@ -104,6 +105,10 @@ export const AsyncStatusEditor = () => {
             </div>
           }
         >
+          <div className="flex items-center gap-2">
+            <AddStatusUpdateButton />
+            <EmojiSelector />
+          </div>
           <EditorCommand className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all">
             <EditorCommandEmpty className="text-muted-foreground px-2">
               No results
@@ -112,9 +117,9 @@ export const AsyncStatusEditor = () => {
           </EditorCommand>
 
           <EditorBubble className="border-muted bg-background flex w-fit max-w-[90vw] overflow-hidden rounded-md border shadow-xl">
-            <Separator orientation="vertical" />
-            <NodeSelector open={openNode} onOpenChange={setOpenNode} />
-            <Separator orientation="vertical" />
+            {/* <Separator orientation="vertical" />
+            <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
+            {/* <Separator orientation="vertical" /> */}
             <LinkSelector open={openLink} onOpenChange={setOpenLink} />
             <Separator orientation="vertical" />
             <TextButtons />
@@ -159,6 +164,8 @@ function EditorStatus({
   taskItemCount: number;
   wordCount: number;
 }) {
+  const { editor } = useCurrentEditor();
+
   return (
     <>
       <div
@@ -170,13 +177,29 @@ function EditorStatus({
         {taskItemCount} update items, {wordCount} words
       </div>
 
-      <div
-        className={cn(
-          "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm",
-          wordCount ? "block" : "hidden",
-        )}
-      >
-        {saveStatus}
+      <div className="flex h-auto items-center gap-2 p-0">
+        <Button
+          className={cn(wordCount ? "flex" : "hidden")}
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            window.localStorage.removeItem("html-content");
+            window.localStorage.removeItem("json-content");
+            editor?.commands.setContent(asyncStatusEditorDefaultContent, true);
+          }}
+        >
+          <UndoIcon className="size-4" />
+          Reset
+        </Button>
+
+        <div
+          className={cn(
+            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm",
+            wordCount ? "block" : "hidden",
+          )}
+        >
+          {saveStatus}
+        </div>
       </div>
     </>
   );

@@ -2,6 +2,7 @@ import { Button } from "@asyncstatus/ui/components/button";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useCurrentEditor } from "@tiptap/react";
 import {
+  Ban,
   BoldIcon,
   CodeIcon,
   ItalicIcon,
@@ -45,6 +46,13 @@ export const TextButtons = () => {
       isActive: (editor) => editor.isActive("code"),
       command: (editor) => editor.chain().focus().toggleCode().run(),
       icon: CodeIcon,
+    },
+    {
+      name: "blockableTodoList",
+      isActive: (editor) => editor.isActive("blockableTodoList"),
+      command: (editor) =>
+        editor.chain().focus().toggleBlockableTodoList().run(),
+      icon: Ban,
     },
   ];
   return (

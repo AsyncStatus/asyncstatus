@@ -1,48 +1,33 @@
-export const asyncStatusEditorDefaultContent = {
+import type { JSONContent } from "@tiptap/core";
+
+export const asyncStatusEditorDefaultContent: JSONContent = {
   type: "doc",
   content: [
+    { type: "statusUpdateHeading" },
     {
-      type: "statusUpdateHeading",
-    },
-    {
-      type: "taskList",
+      type: "blockableTodoList",
       content: [
         {
-          type: "taskItem",
-          attrs: { checked: false, blocker: false },
+          type: "blockableTodoListItem",
+          attrs: { checked: false },
           content: [
             {
               type: "paragraph",
-              attrs: { isEmpty: true },
               content: [],
             },
           ],
         },
       ],
     },
-    {
-      type: "notesHeading",
-    },
+    { type: "notesHeading" },
     {
       type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Check items off as you wrap them up and flag anything new that's blocking you!",
-        },
-      ],
+      content: [],
     },
-    {
-      type: "moodHeading",
-    },
+    { type: "moodHeading" },
     {
       type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "How are you feeling today?",
-        },
-      ],
+      content: [],
     },
   ],
 };
