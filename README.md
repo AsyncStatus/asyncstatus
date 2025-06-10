@@ -1,113 +1,55 @@
-# AsyncStatus
+![AsyncStatus.com logo](https://github.com/AsyncStatus/asyncstatus/blob/CONTRIBUTING/docs/assets/full-logo-white-bg.jpg?raw=true)
+<!-- badges -->
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-run app locally:
+*Gather status data from various sources and extract the essence.*
 
-### Run db:
+[asyncstatus.com](https://asyncstatus.com/)
 
-```bash
-cd apps/api
-bun dev:turso
-# new terminal
-bun run dev
-```
+![Shadcn/ui](https://img.shields.io/badge/shadcn/ui-8A2BE2?style=for-the-badge&2F&logo=shadcnui&color=131316)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=Cloudflare&logoColor=white)
+![Linear](https://img.shields.io/badge/linear-5E6AD2.svg?style=for-the-badge&logo=linear&logoColor=white)
 
-### Run app:
+## Table of Contents
 
-```bash
-cd apps/web-app
-bun run dev
-```
+- [Features](#features)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Database Migrations
+## Features
 
-AsyncStatus uses [Drizzle ORM](https://orm.drizzle.team/) for database management with SQLite/Turso. When making changes to the database schema, you need to create and apply migrations.
+✅ Slack integration
 
-### Understanding the Migration Process
+✅  Timezones
 
-1. **Schema Definition**: Database tables are defined in `apps/api/src/db/schema.ts`
-2. **Migration Generation**: After changing the schema, you generate SQL migration files
-3. **Migration Application**: Apply the migrations to update the database structure
+✅ App deployment
 
-### Steps to Create and Apply Migrations
+✅ GitHub integration 
 
-#### 1. Update the Schema
+✅ Summary of all statuses gathered from GitHub repo
 
-Edit `apps/api/src/db/schema.ts` to make your schema changes. For example, to add a new field to a table:
+✅ Statuses generation from Slack
 
-```typescript
-export const member = sqliteTable(
-  "member",
-  {
-    id: text("id").primaryKey(),
-    // ... existing fields
+✅ Manual status updates
 
-    // Add a new field
-    newField: text("new_field"),
-  }
-  // ... indexes
-);
-```
+## Roadmap
 
-#### 2. Generate the Migration
+- Intergation with github projects
+- "already seen", show only updates on the feed that are not
+- Integration with Teams
+- Integration with the GitLab
+- Audio summaries for managers (drive the car to the office, and get the latest updates)
+- Presentation for the VC and apply
 
-Run the migration generation script from the API directory:
 
-```bash
-cd apps/api
-bun run migrate:generate
-```
+## Contributing
+Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-This will create a new SQL migration file in the `apps/api/drizzle` directory (e.g., `0006_new_migration.sql`).
-
-#### 3. Apply the Migration
-
-Apply the migration to update the database:
-
-```bash
-cd apps/api
-bun run migrate
-```
-
-### Example: Adding a Slack Username Field
-
-Here's an example of how we added the `slackUsername` field to the `member` table:
-
-1. **Updated the schema** in `apps/api/src/db/schema.ts`:
-
-   ```typescript
-   export const member = sqliteTable(
-     "member",
-     {
-       // ... existing fields
-       // Optional Slack username - nullable by default
-       slackUsername: text("slack_username"),
-       // ... other fields
-     }
-     // ... indexes
-   );
-   ```
-
-2. **Generated the migration**:
-
-   ```bash
-   cd apps/api
-   bun run migrate:generate
-   ```
-
-   This created `apps/api/drizzle/0005_flashy_polaris.sql` with:
-
-   ```sql
-   ALTER TABLE `member` ADD `slack_username` text;
-   ```
-
-3. **Applied the migration**:
-   ```bash
-   cd apps/api
-   bun run migrate
-   ```
-
-### Troubleshooting
-
-- **Migration not applying**: Make sure your local database is running (`bun dev:turso`)
-- **Schema errors**: Check the Drizzle ORM documentation for correct type definitions
-- **Conflict errors**: If you have conflicts between local and remote databases, you may need to reset your local database or use `drizzle-kit push --force`
+## License
+This project is licensed under the Apache2 License. See the [LICENSE](LICENSE) file for details.
