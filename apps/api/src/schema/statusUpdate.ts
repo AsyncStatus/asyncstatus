@@ -1,16 +1,5 @@
 import { z } from "zod";
 
-export const zStatusUpdateCreate = z.object({
-  memberId: z.string().min(1),
-  organizationId: z.string().min(1).optional(),
-  teamId: z.string().optional(),
-  effectiveFrom: z.coerce.date(),
-  effectiveTo: z.coerce.date(),
-  mood: z.string().optional(),
-  emoji: z.string().optional(),
-  isDraft: z.boolean().default(true),
-});
-
 export const zStatusUpdateUpdate = z
   .object({
     teamId: z.string().optional().nullable(),
@@ -26,6 +15,7 @@ export const zStatusUpdateItemCreate = z.object({
   statusUpdateId: z.string().min(1),
   content: z.string().min(1),
   isBlocker: z.boolean().default(false),
+  isInProgress: z.boolean().default(false),
   order: z.number().int().nonnegative(),
 });
 
@@ -36,6 +26,19 @@ export const zStatusUpdateItemUpdate = z
     order: z.number().int().nonnegative().optional(),
   })
   .partial();
+
+export const zStatusUpdateCreate = z.object({
+  teamId: z.string().optional(),
+  effectiveFrom: z.coerce.date(),
+  effectiveTo: z.coerce.date(),
+  mood: z.string().nullish(),
+  emoji: z.string().nullish(),
+  notes: z.string().nullish(),
+  items: z
+    .array(zStatusUpdateItemCreate.omit({ statusUpdateId: true }))
+    .optional(),
+  isDraft: z.boolean().default(true),
+});
 
 export const zStatusUpdateId = z.object({
   statusUpdateId: z.string().min(1),

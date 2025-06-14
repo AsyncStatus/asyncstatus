@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { generateStatusMutationOptions } from "@/rpc/organization/status-update";
 import { Button } from "@asyncstatus/ui/components/button";
 import { DatePickerWithPresets } from "@asyncstatus/ui/components/date-picker";
 import {
@@ -39,17 +38,17 @@ export function GenerateStatusButton({
     from: effectiveFrom ?? startOfDay(addDays(new Date(), -1)),
     to: effectiveTo ?? endOfDay(new Date()),
   });
-  const mutation = useMutation({
-    ...generateStatusMutationOptions(),
-    onSuccess: () => {
-      toast.success("Status generation job started");
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start job",
-      );
-    },
-  });
+  // const mutation = useMutation({
+  //   ...generateStatusMutationOptions(),
+  //   onSuccess: () => {
+  //     toast.success("Status generation job started");
+  //   },
+  //   onError: (error) => {
+  //     toast.error(
+  //       error instanceof Error ? error.message : "Failed to start job",
+  //     );
+  //   },
+  // });
 
   return (
     <Dialog>
@@ -78,20 +77,21 @@ export function GenerateStatusButton({
           type="button"
           className={className}
           variant="outline"
-          onClick={() =>
-            mutation.mutate({
-              param: { idOrSlug: organizationSlug },
-              form: {
-                memberId,
-                effectiveFrom:
-                  dateRange.from ?? startOfDay(addDays(new Date(), -1)),
-                effectiveTo: dateRange.to ?? new Date(),
-              },
-            })
-          }
-          disabled={mutation.isPending}
+          onClick={() => {
+            // mutation.mutate({
+            //   param: { idOrSlug: organizationSlug },
+            //   form: {
+            //     memberId,
+            //     effectiveFrom:
+            //       dateRange.from ?? startOfDay(addDays(new Date(), -1)),
+            //     effectiveTo: dateRange.to ?? new Date(),
+            //   },
+            // });
+          }}
+          // disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Generating…" : "Generate Status"}
+          {/* {mutation.isPending ? "Generating…" : "Generate Status"} */}
+          Generate Status
         </Button>
       </DialogContent>
     </Dialog>

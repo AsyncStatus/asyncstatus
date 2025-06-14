@@ -1,5 +1,9 @@
 import { useEffect, useState, type PropsWithChildren } from "react";
-import { countJSONStats } from "@/utils/task-item-counter";
+import { countJSONStats } from "@/utils/count-json-stats";
+import {
+  extractStatusUpdateData,
+  type ExtractedStatusUpdateData,
+} from "@/utils/extract-status-update-data";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { UndoIcon } from "@asyncstatus/ui/icons";
@@ -30,14 +34,17 @@ import {
 
 const extensions = [...asyncStatusEditorExtensions, slashCommand];
 
-export const AsyncStatusEditor = (props: PropsWithChildren) => {
+export const AsyncStatusEditor = (
+  props: PropsWithChildren<{
+    onUpdate?: (statusUpdateData: ExtractedStatusUpdateData) => void;
+  }>,
+) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(
     null,
   );
-  const [saveStatus, setSaveStatus] = useState("Saved");
+  const [saveStatus, setSaveStatus] = useState("Saved locally");
   const [taskItemCount, setTaskItemCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
-  const [openNode, setOpenNode] = useState(false);
   const [openLink, setOpenLink] = useState(false);
 
   const debouncedUpdates = useDebouncedCallback(async (editor: Editor) => {
@@ -47,7 +54,8 @@ export const AsyncStatusEditor = (props: PropsWithChildren) => {
     setWordCount(stats.words);
     window.localStorage.setItem("html-content", editor.getHTML());
     window.localStorage.setItem("json-content", JSON.stringify(json));
-    setSaveStatus("Saved");
+    setSaveStatus("Saved locally");
+    props.onUpdate?.(extractStatusUpdateData(json));
   }, 500);
 
   useEffect(() => {
@@ -96,7 +104,11 @@ export const AsyncStatusEditor = (props: PropsWithChildren) => {
             setSaveStatus("Unsaved");
           }}
           slotBefore={
-            <div className="absolute top-0 right-0 left-0 flex items-center justify-between gap-2 px-4">
+            <div
+              className={cn(
+                "absolute top-0 right-0 left-0 flex items-center justify-between gap-2 px-4",
+              )}
+            >
               <EditorStatus
                 saveStatus={saveStatus}
                 taskItemCount={taskItemCount}
@@ -168,16 +180,20 @@ function EditorStatus({
     <>
       <div
         className={cn(
-          "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm",
-          wordCount ? "block" : "hidden",
+          "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm opacity-100 transition-opacity duration-75",
+          !wordCount && "opacity-0",
         )}
       >
-        {taskItemCount} update items, {wordCount} words
+        {taskItemCount} update item{taskItemCount === 1 ? "" : "s"}, {wordCount}{" "}
+        word{wordCount === 1 ? "" : "s"}
       </div>
 
       <div className="flex h-auto items-center gap-2 p-0">
         <Button
-          className={cn(wordCount ? "flex" : "hidden")}
+          className={cn(
+            "opacity-100 transition-opacity duration-75",
+            !wordCount && "opacity-0",
+          )}
           variant="ghost"
           size="sm"
           onClick={() => {
@@ -192,8 +208,8 @@ function EditorStatus({
 
         <div
           className={cn(
-            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm",
-            wordCount ? "block" : "hidden",
+            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm opacity-100 transition-opacity duration-75",
+            !wordCount && "opacity-0",
           )}
         >
           {saveStatus}

@@ -186,6 +186,7 @@ export const statusUpdate = sqliteTable(
     effectiveTo: integer("effective_to", { mode: "timestamp" }).notNull(),
     mood: text("mood"),
     emoji: text("emoji"),
+    notes: text("notes"),
     isDraft: integer("is_draft", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -210,6 +211,9 @@ export const statusUpdateItem = sqliteTable(
       .references(() => statusUpdate.id, { onDelete: "cascade" }),
     content: text("content").notNull(),
     isBlocker: integer("is_blocker", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    isInProgress: integer("is_in_progress", { mode: "boolean" })
       .notNull()
       .default(false),
     order: integer("order").notNull(),

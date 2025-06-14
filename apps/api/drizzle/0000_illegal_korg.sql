@@ -32,6 +32,7 @@ CREATE UNIQUE INDEX `github_event_github_id_unique` ON `github_event` (`github_i
 CREATE INDEX `github_event_repository_id_idx` ON `github_event` (`repository_id`);--> statement-breakpoint
 CREATE INDEX `github_event_created_at_idx` ON `github_event` (`created_at`);--> statement-breakpoint
 CREATE INDEX `github_event_github_id_idx` ON `github_event` (`github_id`);--> statement-breakpoint
+CREATE INDEX `github_event_github_actor_id_idx` ON `github_event` (`github_actor_id`);--> statement-breakpoint
 CREATE INDEX `github_event_type_idx` ON `github_event` (`type`);--> statement-breakpoint
 CREATE TABLE `github_event_vector` (
 	`id` text PRIMARY KEY NOT NULL,
@@ -43,7 +44,6 @@ CREATE TABLE `github_event_vector` (
 );
 --> statement-breakpoint
 CREATE INDEX `github_event_vector_event_id_idx` ON `github_event_vector` (`event_id`);--> statement-breakpoint
-CREATE INDEX embedding_idx ON `github_event_vector` (libsql_vector_idx(`embedding`));--> statement-breakpoint
 CREATE TABLE `github_integration` (
 	`id` text PRIMARY KEY NOT NULL,
 	`organization_id` text NOT NULL,
@@ -191,6 +191,7 @@ CREATE TABLE `status_update` (
 	`effective_to` integer NOT NULL,
 	`mood` text,
 	`emoji` text,
+	`notes` text,
 	`is_draft` integer DEFAULT true NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,
@@ -211,6 +212,7 @@ CREATE TABLE `status_update_item` (
 	`status_update_id` text NOT NULL,
 	`content` text NOT NULL,
 	`is_blocker` integer DEFAULT false NOT NULL,
+	`is_in_progress` integer DEFAULT false NOT NULL,
 	`order` integer NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,

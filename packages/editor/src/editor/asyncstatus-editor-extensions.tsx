@@ -63,7 +63,6 @@ const placeholder = Placeholder.configure({
 
       if (isInStatusUpdateSection) {
         let isInBlockableTodo = false;
-        const isFirstBlockableTodoNode = false;
 
         // Find all blockable todo nodes in status update section
         const blockableTodoNodes: (typeof node)[] = [];
@@ -150,7 +149,7 @@ const placeholder = Placeholder.configure({
         const isFirstMoodNode = moodNodes[0] === node;
 
         if (isFirstMoodNode) {
-          return "How are you feeling? What's your mood?";
+          return "How are you feeling? What's your mood? Include an emoji if you want.";
         }
       }
     }

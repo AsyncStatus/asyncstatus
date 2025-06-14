@@ -1,37 +1,23 @@
+import type { zStatusUpdateCreate } from "@asyncstatus/api/schema/statusUpdate";
+import type { z } from "zod";
+
 import { mutationOptions } from "@/lib/utils";
 
 import { rpc } from "../rpc";
 
-export function generateStatusMutationOptions() {
+export function createStatusUpdateMutationOptions() {
   return mutationOptions({
-    mutationKey: ["statusUpdate", "generate"],
+    mutationKey: ["statusUpdate", "create"],
     mutationFn: async ({
       param,
-      form,
+      json,
     }: {
       param: { idOrSlug: string };
-      form: {
-        memberId: string;
-        effectiveFrom: string | Date;
-        effectiveTo: string | Date;
-      };
+      json: z.infer<typeof zStatusUpdateCreate>;
     }) => {
       const response = await rpc.organization[":idOrSlug"][
         "status-update"
-      ].generate.$post({
-        param,
-        json: {
-          memberId: form.memberId,
-          effectiveFrom:
-            typeof form.effectiveFrom === "string"
-              ? new Date(form.effectiveFrom)
-              : form.effectiveFrom,
-          effectiveTo:
-            typeof form.effectiveTo === "string"
-              ? new Date(form.effectiveTo)
-              : form.effectiveTo,
-        },
-      });
+      ].$post({ param, json });
       if (!response.ok) {
         throw await response.json();
       }

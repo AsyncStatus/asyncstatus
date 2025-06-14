@@ -1,12 +1,12 @@
 {
-  "version": "7",
+  "version": "1",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1748464026442,
-      "tag": "0000_vengeful_lady_vermin",
+      "when": 1749892434648,
+      "tag": "0000_illegal_korg",
       "breakpoints": true
     }
   ]
