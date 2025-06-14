@@ -5,7 +5,6 @@ import { Hono } from "hono";
 
 import * as schema from "../../db/schema";
 import {
-  AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
   AsyncStatusNotFoundError,
   AsyncStatusUnexpectedApiError,
@@ -119,11 +118,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       const statusUpdate = await c.var.db.query.statusUpdate.findFirst({
         where: eq(schema.statusUpdate.id, statusUpdateId),
         with: {
-          member: {
-            with: {
-              user: true,
-            },
-          },
+          member: { with: { user: true } },
           team: true,
           items: {
             orderBy: (items) => [items.order],
@@ -153,14 +148,16 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
     zValidator("json", zStatusUpdateCreate),
     async (c) => {
       const {
-        memberId,
         teamId,
         effectiveFrom,
         effectiveTo,
         mood,
         emoji,
         isDraft,
+        notes,
+        items,
       } = c.req.valid("json");
+      const memberId = c.var.member.id;
 
       // Verify member belongs to this organization
       const member = await c.var.db.query.member.findFirst({
@@ -195,39 +192,115 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       const now = new Date();
       const statusUpdateId = generateId();
 
-      // Create the status update
-      const statusUpdate = await c.var.db
+      const statusUpdateResult = await c.var.db
         .insert(schema.statusUpdate)
         .values({
           id: statusUpdateId,
           memberId,
           organizationId: c.var.organization.id,
-          teamId,
+          teamId: teamId || null,
           effectiveFrom,
           effectiveTo,
           mood,
           emoji,
+          notes,
           isDraft,
           createdAt: now,
           updatedAt: now,
         })
         .returning();
 
-      if (!statusUpdate || !statusUpdate[0]) {
+      console.log(statusUpdateResult);
+
+      if (items) {
+        await c.var.db.insert(schema.statusUpdateItem).values(
+          items.map((item) => ({
+            id: generateId(),
+            statusUpdateId,
+            content: item.content,
+            isBlocker: item.isBlocker,
+            isInProgress: item.isInProgress,
+            order: item.order,
+            createdAt: now,
+            updatedAt: now,
+          })),
+        );
+      }
+
+      const statusUpdate = await c.var.db.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: true,
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!statusUpdate) {
         throw new AsyncStatusUnexpectedApiError({
           message: "Failed to create status update",
         });
       }
 
-      const result = await c.var.db.query.statusUpdate.findFirst({
-        where: eq(schema.statusUpdate.id, statusUpdateId),
-        with: {
-          member: true,
-          team: true,
-        },
-      });
+      // const statusUpdate = await c.var.db.transaction(async (tx) => {
+      //   const now = new Date();
+      //   const statusUpdateId = generateId();
 
-      return c.json(result);
+      //   console.log(statusUpdateId);
+
+      //   await tx.insert(schema.statusUpdate).values({
+      //     id: statusUpdateId,
+      //     memberId,
+      //     organizationId: c.var.organization.id,
+      //     teamId,
+      //     effectiveFrom,
+      //     effectiveTo,
+      //     mood,
+      //     emoji,
+      //     notes,
+      //     isDraft,
+      //     createdAt: now,
+      //     updatedAt: now,
+      //   });
+
+      //   if (items) {
+      //     await tx.insert(schema.statusUpdateItem).values(
+      //       items.map((item) => ({
+      //         id: generateId(),
+      //         statusUpdateId,
+      //         content: item.content,
+      //         isBlocker: item.isBlocker,
+      //         isInProgress: item.isInProgress,
+      //         order: item.order,
+      //         createdAt: now,
+      //         updatedAt: now,
+      //       })),
+      //     );
+      //   }
+
+      //   const result = await tx.query.statusUpdate.findFirst({
+      //     where: eq(schema.statusUpdate.id, statusUpdateId),
+      //     with: {
+      //       member: true,
+      //       team: true,
+      //       items: {
+      //         orderBy: (items) => [items.order],
+      //       },
+      //     },
+      //   });
+
+      //   if (!result) {
+      //     throw new AsyncStatusUnexpectedApiError({
+      //       message: "Failed to create status update",
+      //     });
+      //   }
+
+      //   return result;
+      // });
+
+      return c.json(statusUpdate);
     },
   )
   // Update a status update
@@ -357,191 +430,6 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       await c.var.db
         .delete(schema.statusUpdate)
         .where(eq(schema.statusUpdate.id, statusUpdateId));
-
-      return c.json({ success: true });
-    },
-  )
-  // Create a status update item
-  .post(
-    "/:idOrSlug/status-update/item",
-    zValidator("json", zStatusUpdateItemCreate),
-    async (c) => {
-      const { statusUpdateId, content, isBlocker, order } = c.req.valid("json");
-
-      // Get the status update to verify ownership
-      const statusUpdate = await c.var.db.query.statusUpdate.findFirst({
-        where: eq(schema.statusUpdate.id, statusUpdateId),
-        with: {
-          member: true,
-        },
-      });
-
-      if (!statusUpdate) {
-        throw new AsyncStatusNotFoundError({
-          message: "Status update not found",
-        });
-      }
-
-      // Verify the status update belongs to this organization
-      if (statusUpdate.organizationId !== c.var.organization.id) {
-        throw new AsyncStatusForbiddenError({
-          message: "You don't have access to this status update",
-        });
-      }
-
-      // Check if user can add items to this status update
-      const isOwner = statusUpdate.member.id === c.var.member.id;
-      const isAdmin = ["admin", "owner"].includes(c.var.member.role);
-
-      if (!isOwner && !isAdmin) {
-        throw new AsyncStatusForbiddenError({
-          message:
-            "You don't have permission to add items to this status update",
-        });
-      }
-
-      const now = new Date();
-      const statusUpdateItemId = generateId();
-
-      // Create the status update item
-      const statusUpdateItem = await c.var.db
-        .insert(schema.statusUpdateItem)
-        .values({
-          id: statusUpdateItemId,
-          statusUpdateId,
-          content,
-          isBlocker,
-          order,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
-
-      if (!statusUpdateItem || !statusUpdateItem[0]) {
-        throw new AsyncStatusUnexpectedApiError({
-          message: "Failed to create status update item",
-        });
-      }
-
-      return c.json(statusUpdateItem[0]);
-    },
-  )
-  // Update a status update item
-  .patch(
-    "/:idOrSlug/status-update/item/:statusUpdateItemId",
-    zValidator("param", zStatusUpdateItemId),
-    zValidator("json", zStatusUpdateItemUpdate),
-    async (c) => {
-      const { statusUpdateItemId } = c.req.valid("param");
-      const updates = c.req.valid("json");
-
-      // Get the status update item
-      const statusUpdateItem = await c.var.db.query.statusUpdateItem.findFirst({
-        where: eq(schema.statusUpdateItem.id, statusUpdateItemId),
-        with: {
-          statusUpdate: {
-            with: {
-              member: true,
-            },
-          },
-        },
-      });
-
-      if (!statusUpdateItem) {
-        throw new AsyncStatusNotFoundError({
-          message: "Status update item not found",
-        });
-      }
-
-      // Verify the status update belongs to this organization
-      if (
-        statusUpdateItem.statusUpdate.organizationId !== c.var.organization.id
-      ) {
-        throw new AsyncStatusForbiddenError({
-          message: "You don't have access to this status update item",
-        });
-      }
-
-      // Check if user can update this status update item
-      const isOwner =
-        statusUpdateItem.statusUpdate.member.id === c.var.member.id;
-      const isAdmin = ["admin", "owner"].includes(c.var.member.role);
-
-      if (!isOwner && !isAdmin) {
-        throw new AsyncStatusForbiddenError({
-          message:
-            "You don't have permission to update this status update item",
-        });
-      }
-
-      const updatedStatusUpdateItem = await c.var.db
-        .update(schema.statusUpdateItem)
-        .set({
-          ...updates,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.statusUpdateItem.id, statusUpdateItemId))
-        .returning();
-
-      if (!updatedStatusUpdateItem || !updatedStatusUpdateItem[0]) {
-        throw new AsyncStatusUnexpectedApiError({
-          message: "Failed to update status update item",
-        });
-      }
-
-      return c.json(updatedStatusUpdateItem[0]);
-    },
-  )
-  // Delete a status update item
-  .delete(
-    "/:idOrSlug/status-update/item/:statusUpdateItemId",
-    zValidator("param", zStatusUpdateItemId),
-    async (c) => {
-      const { statusUpdateItemId } = c.req.valid("param");
-
-      // Get the status update item
-      const statusUpdateItem = await c.var.db.query.statusUpdateItem.findFirst({
-        where: eq(schema.statusUpdateItem.id, statusUpdateItemId),
-        with: {
-          statusUpdate: {
-            with: {
-              member: true,
-            },
-          },
-        },
-      });
-
-      if (!statusUpdateItem) {
-        throw new AsyncStatusNotFoundError({
-          message: "Status update item not found",
-        });
-      }
-
-      // Verify the status update belongs to this organization
-      if (
-        statusUpdateItem.statusUpdate.organizationId !== c.var.organization.id
-      ) {
-        throw new AsyncStatusForbiddenError({
-          message: "You don't have access to this status update item",
-        });
-      }
-
-      // Check if user can delete this status update item
-      const isOwner =
-        statusUpdateItem.statusUpdate.member.id === c.var.member.id;
-      const isAdmin = ["admin", "owner"].includes(c.var.member.role);
-
-      if (!isOwner && !isAdmin) {
-        throw new AsyncStatusForbiddenError({
-          message:
-            "You don't have permission to delete this status update item",
-        });
-      }
-
-      // Delete the status update item
-      await c.var.db
-        .delete(schema.statusUpdateItem)
-        .where(eq(schema.statusUpdateItem.id, statusUpdateItemId));
 
       return c.json({ success: true });
     },

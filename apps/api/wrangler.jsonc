@@ -11,6 +11,54 @@
   "placement": {
     "mode": "smart",
   },
+  "ai": {
+    "binding": "AI",
+  },
+  "queues": {
+    "consumers": [
+      {
+        "queue": "github-webhook-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 2,
+        "retry_delay": 10,
+        "max_retries": 3,
+      },
+      {
+        "queue": "github-process-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10,
+      },
+    ],
+    "producers": [
+      {
+        "queue": "github-webhook-events",
+        "binding": "GITHUB_WEBHOOK_EVENTS_QUEUE",
+      },
+      {
+        "queue": "github-process-events",
+        "binding": "GITHUB_PROCESS_EVENTS_QUEUE",
+      },
+    ],
+  },
+  "workflows": [
+    {
+      "name": "sync-github",
+      "binding": "SYNC_GITHUB_WORKFLOW",
+      "class_name": "SyncGithubWorkflow",
+    },
+    {
+      "name": "delete-github-integration",
+      "binding": "DELETE_GITHUB_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteGithubIntegrationWorkflow",
+    },
+    {
+      "name": "generate-status",
+      "binding": "GENERATE_STATUS_WORKFLOW",
+      "class_name": "GenerateStatusWorkflow",
+    },
+  ],
   "kv_namespaces": [
     {
       "binding": "AS_PROD_AUTH_KV",
