@@ -25,7 +25,6 @@ import { GenerateStatusButton } from "@/components/generate-status-button";
 
 import { EmptyState } from "../../components/empty-state";
 import { StatusUpdateCard } from "../../components/status-update-card";
-import { StatusUpdateDialog } from "../../components/status-update-dialog";
 import { rpc } from "../../rpc/rpc";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
@@ -49,7 +48,7 @@ function RouteComponent() {
   const [filter, setFilter] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
-  const { data: statusUpdates, refetch } = useQuery({
+  const { data: statusUpdates } = useQuery({
     queryKey: ["statusUpdates", organization?.id, filter, selectedTeamId],
     queryFn: async () => {
       if (!organization?.id) return [];

@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
 
 export const Route = createFileRoute(
-  "/$organizationSlug/_layout/status-update",
+  "/$organizationSlug/_layout/status-update/",
 )({
   component: RouteComponent,
 });
