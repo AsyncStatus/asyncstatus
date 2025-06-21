@@ -84,10 +84,10 @@ function AppSidebarBetaNotice() {
   return (
     <Card className="p-2">
       <CardHeader className="px-0">
-        <CardTitle className="text-md">We're in beta</CardTitle>
+        <CardTitle className="text-md">We&apos;re in beta</CardTitle>
         <CardDescription className="text-xs text-pretty">
-          We're working hard to bring you the best experience but there are some
-          features that are still under development or might not work as
+          We&apos;re working hard to bring you the best experience but there are
+          some features that are still under development or might not work as
           expected.
         </CardDescription>
       </CardHeader>

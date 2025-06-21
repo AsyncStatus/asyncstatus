@@ -1,16 +1,22 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { Webhooks } from "@octokit/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Resend } from "resend";
+import { VoyageAIClient } from "voyageai";
 
 import { createDb } from "./db";
 import {
-  AsyncStatusExpectedApiError,
+  AsyncStatusApiError,
   AsyncStatusUnexpectedApiError,
+  type AsyncStatusApiJsonError,
 } from "./errors";
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { createRateLimiter } from "./lib/rate-limiter";
+import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
+import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
 import { memberRouter } from "./routers/organization/member";
@@ -21,14 +27,15 @@ import { teamsRouter } from "./routers/organization/teams";
 import { publicStatusShareRouter } from "./routers/publicStatusShare";
 import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
-import { createSlackbot } from "./slackbot";
 
 const app = new Hono<HonoEnv>()
   .use(
     cors({
       origin: [
         "http://localhost:3000",
-        "https://www.asyncstatus.com",
+        "http://localhost:3001",
+        "http://localhost:8787",
+        "https://asyncstatus.com",
         "https://dev.asyncstatus.com",
         "https://beta.asyncstatus.com",
         "https://app.asyncstatus.com",
@@ -51,21 +58,18 @@ const app = new Hono<HonoEnv>()
     });
     c.set("waitlistRateLimiter", waitlistRateLimiter);
 
-    // Initialize Slackbot with db access
-    const slackbot = c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET 
-      ? {
-        token: c.env.SLACK_BOT_TOKEN,
-        signingSecret: c.env.SLACK_SIGNING_SECRET,
-        db
-      }
-      : null;
-    
-    if (slackbot) {
-      // Create slackbot instance with db access
-      const slackbotInstance = createSlackbot(slackbot);
-      // Store slackbot instance in app context
-      c.set("slackbot", slackbotInstance);
-    }
+    const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
+    c.set("anthropicClient", anthropicClient);
+
+    const voyageClient = new VoyageAIClient({
+      apiKey: c.env.VOYAGE_API_KEY,
+    });
+    c.set("voyageClient", voyageClient);
+
+    const githubWebhooks = new Webhooks({
+      secret: c.env.GITHUB_WEBHOOK_SECRET,
+    });
+    c.set("githubWebhooks", githubWebhooks);
 
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
@@ -77,26 +81,37 @@ const app = new Hono<HonoEnv>()
     return next();
   })
   .route("/auth", authRouter)
+  .route("/organization", githubRouter)
   .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
-  .route("/organization", githubRouter)
   .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .route("/slack", slackRouter)
+  .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
-    console.log(err);
+    console.error(err);
     if (err instanceof AsyncStatusUnexpectedApiError) {
-      return c.json({ message: err.message }, err.status);
+      return c.json({ type: err.name, message: err.message }, err.status);
     }
-    if (err instanceof AsyncStatusExpectedApiError) {
-      return c.json({ message: err.message }, err.status);
+    if (err instanceof AsyncStatusApiError) {
+      return c.json({ type: err.name, message: err.message }, err.status);
     }
-    return c.json({ message: "Internal Server Error" }, 500);
+    const error = {
+      type: "ASAPIUnexpectedError",
+      message: "An unexpected error occurred. Please try again later.",
+    } satisfies AsyncStatusApiJsonError;
+    return c.json(error, 500);
   });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  queue: queue,
+};
 export type App = typeof app;
+export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
+export { GenerateStatusWorkflow } from "./workflows/generate-status";

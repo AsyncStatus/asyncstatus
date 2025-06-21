@@ -1,12 +1,12 @@
 {
-  "version": "7",
+  "version": "1",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "6",
-      "when": 1744454415837,
-      "tag": "0000_grey_ben_grimm",
+      "when": 1750505385065,
+      "tag": "0000_chunky_valkyrie",
       "breakpoints": true
     }
   ]

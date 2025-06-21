@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import { StrictMode } from "react";
-import { isAsyncStatusApiError } from "@asyncstatus/api/errors";
+import { isAsyncStatusApiJsonError } from "@asyncstatus/api/errors";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { toast, Toaster } from "@asyncstatus/ui/components/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,13 +17,23 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       throwOnError: true,
-      retry: 3,
+      retry: (failureCount, error) => {
+        if (isAsyncStatusApiJsonError(error)) {
+          if (error.type === "ASAPIUnexpectedError") {
+            return failureCount <= 5;
+          }
+
+          return false;
+        }
+
+        return failureCount <= 5;
+      },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
       onError(error) {
-        if (isAsyncStatusApiError(error)) {
-          console.log(error);
+        if (isAsyncStatusApiJsonError(error)) {
+          console.error(error);
           toast.error(error.message);
         } else {
           toast.error("An unexpected error occurred. Please try again later.");

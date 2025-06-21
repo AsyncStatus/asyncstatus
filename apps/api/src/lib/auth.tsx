@@ -34,8 +34,13 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     trustedOrigins: [
       "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:8787",
+      "https://asyncstatus.com",
+      "https://dev.asyncstatus.com",
+      "https://beta.asyncstatus.com",
       "https://app.asyncstatus.com",
-      "https://app.dev.asyncstatus.com",
+      "https://supposedly-simple-mallard.ngrok-free.app",
     ],
     emailVerification: {
       autoSignInAfterVerification: true,

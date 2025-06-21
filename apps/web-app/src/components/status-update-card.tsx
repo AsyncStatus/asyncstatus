@@ -14,7 +14,9 @@ import {
   CardTitle,
 } from "@asyncstatus/ui/components/card";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -151,8 +153,28 @@ export function StatusUpdateCard({
           </p>
         )}
       </CardContent>
-      {!statusUpdate.isDraft && onShare && (
-        <CardFooter className="pt-2">
+      <CardFooter className="pt-2">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="ml-auto flex items-center gap-2"
+        >
+          <Link
+            to="/$organizationSlug/status-update/$statusUpdateId"
+            params={{
+              organizationSlug,
+              statusUpdateId: statusUpdate.isDraft
+                ? dayjs(statusUpdate.effectiveFrom)
+                    .startOf("day")
+                    .format("YYYY-MM-DD")
+                : statusUpdate.id,
+            }}
+          >
+            {statusUpdate.isDraft ? "Edit" : "View"}
+          </Link>
+        </Button>
+        {!statusUpdate.isDraft && onShare && (
           <Button
             variant="ghost"
             size="sm"
@@ -162,8 +184,8 @@ export function StatusUpdateCard({
             <ShareIcon className="h-4 w-4" />
             Share
           </Button>
-        </CardFooter>
-      )}
+        )}
+      </CardFooter>
     </Card>
   );
 }
