@@ -7,8 +7,9 @@ import { VoyageAIClient } from "voyageai";
 
 import { createDb } from "./db";
 import {
-  AsyncStatusExpectedApiError,
+  AsyncStatusApiError,
   AsyncStatusUnexpectedApiError,
+  type AsyncStatusApiJsonError,
 } from "./errors";
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
@@ -92,14 +93,18 @@ const app = new Hono<HonoEnv>()
   .route("/slack", slackRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
-    console.log(err);
+    console.error(err);
     if (err instanceof AsyncStatusUnexpectedApiError) {
-      return c.json({ message: err.message }, err.status);
+      return c.json({ type: err.name, message: err.message }, err.status);
     }
-    if (err instanceof AsyncStatusExpectedApiError) {
-      return c.json({ message: err.message }, err.status);
+    if (err instanceof AsyncStatusApiError) {
+      return c.json({ type: err.name, message: err.message }, err.status);
     }
-    return c.json({ message: "Internal Server Error" }, 500);
+    const error = {
+      type: "ASAPIUnexpectedError",
+      message: "An unexpected error occurred. Please try again later.",
+    } satisfies AsyncStatusApiJsonError;
+    return c.json(error, 500);
   });
 
 export default {
