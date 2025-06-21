@@ -10,7 +10,7 @@ export const Route = createFileRoute("/(auth)/_layout")({
   pendingComponent: PendingComponent,
   validateSearch: z.object({
     invitationId: z.string().optional(),
-    invitationEmail: z.string().email().optional(),
+    invitationEmail: z.string().optional(),
   }),
   beforeLoad: async ({ context: { queryClient }, search }) => {
     await ensureNotLoggedIn(queryClient, search);
