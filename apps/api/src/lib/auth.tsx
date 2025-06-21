@@ -40,6 +40,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       "https://dev.asyncstatus.com",
       "https://beta.asyncstatus.com",
       "https://app.asyncstatus.com",
+      "https://supposedly-simple-mallard.ngrok-free.app",
     ],
     emailVerification: {
       autoSignInAfterVerification: true,

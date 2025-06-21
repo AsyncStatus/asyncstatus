@@ -10,6 +10,7 @@ import { UndoIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
+import dayjs from "dayjs";
 import { useDebouncedCallback } from "use-debounce";
 
 import { AddStatusUpdateButton } from "@/components/add-status-update-button";
@@ -25,7 +26,7 @@ import { LinkSelector } from "@/components/link-selector";
 import { TextButtons } from "@/components/text-buttons";
 
 import { handleCommandNavigation } from "../extensions/slash-command";
-import { asyncStatusEditorDefaultContent } from "./asyncstatus-editor-default-content";
+import { getAsyncStatusEditorDefaultContent } from "./asyncstatus-editor-default-content";
 import { asyncStatusEditorExtensions } from "./asyncstatus-editor-extensions";
 import {
   getSuggestionItems,
@@ -34,29 +35,65 @@ import {
 
 const extensions = [...asyncStatusEditorExtensions, slashCommand];
 
+// Helper function to get the status update date from the editor
+function getStatusUpdateDate(editor: Editor): Date | null {
+  let dateString: string | null = null;
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === "statusUpdateHeading" && node.attrs.date) {
+      dateString = node.attrs.date;
+      return false; // Stop searching once found
+    }
+  });
+  return dateString ? new Date(dateString) : null;
+}
+
 export const AsyncStatusEditor = (
   props: PropsWithChildren<{
-    onUpdate?: (statusUpdateData: ExtractedStatusUpdateData) => void;
+    date?: string;
+    onDateChange?: (date: string) => void;
+    initialContent?: JSONContent;
+    onUpdate?: (
+      statusUpdateData: ExtractedStatusUpdateData & { editorJson: JSONContent },
+    ) => void;
   }>,
 ) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(
-    null,
+    props.initialContent ?? null,
   );
-  const [saveStatus, setSaveStatus] = useState("Saved locally");
+  const [saveStatus, setSaveStatus] = useState("Saved");
   const [taskItemCount, setTaskItemCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
   const [openLink, setOpenLink] = useState(false);
 
-  const debouncedUpdates = useDebouncedCallback(async (editor: Editor) => {
+  function onUpdate(editor: Editor) {
     const json = editor.getJSON();
     const stats = countJSONStats(json);
     setTaskItemCount(stats.taskItems);
     setWordCount(stats.words);
-    window.localStorage.setItem("html-content", editor.getHTML());
-    window.localStorage.setItem("json-content", JSON.stringify(json));
-    setSaveStatus("Saved locally");
-    props.onUpdate?.(extractStatusUpdateData(json));
-  }, 500);
+
+    if (props.date) {
+      window.localStorage.setItem(
+        `html-content-${props.date}`,
+        editor.getHTML(),
+      );
+      window.localStorage.setItem(
+        `json-content-${props.date}`,
+        JSON.stringify(json),
+      );
+    } else {
+      // Fallback to regular keys if no date found
+      window.localStorage.setItem("html-content", editor.getHTML());
+      window.localStorage.setItem("json-content", JSON.stringify(json));
+    }
+
+    setSaveStatus("Saved");
+    props.onUpdate?.({
+      ...extractStatusUpdateData(json),
+      editorJson: json,
+    });
+  }
+
+  const debouncedOnUpdate = useDebouncedCallback(onUpdate, 500);
 
   useEffect(() => {
     function setCounts(json: JSONContent) {
@@ -65,21 +102,49 @@ export const AsyncStatusEditor = (
       setWordCount(stats.words);
     }
 
-    const content = window.localStorage.getItem("json-content");
+    if (props.initialContent) {
+      setInitialContent(props.initialContent);
+      setCounts(props.initialContent);
+
+      // Save the initial content to local storage (JSON only, HTML will be saved by the editor)
+      if (props.date) {
+        window.localStorage.setItem(
+          `json-content-${props.date}`,
+          JSON.stringify(props.initialContent),
+        );
+      } else {
+        window.localStorage.setItem(
+          "json-content",
+          JSON.stringify(props.initialContent),
+        );
+      }
+
+      return;
+    }
+
+    const content = props.date
+      ? window.localStorage.getItem(`json-content-${props.date}`)
+      : window.localStorage.getItem("json-content");
+
     if (
       (content &&
         content === `{"type":"doc","content":[{"type":"paragraph"}]}`) ||
       !content
     ) {
-      setInitialContent(asyncStatusEditorDefaultContent);
-      setCounts(asyncStatusEditorDefaultContent);
+      const defaultContent = getAsyncStatusEditorDefaultContent(
+        props.date
+          ? dayjs(props.date, "YYYY-MM-DD", true).toISOString()
+          : dayjs().startOf("day").toISOString(),
+      );
+      setInitialContent(defaultContent);
+      setCounts(defaultContent);
       return;
     }
 
     const json = JSON.parse(content);
     setInitialContent(json);
     setCounts(json);
-  }, []);
+  }, [props.date, props.initialContent]);
 
   if (!initialContent) return null;
 
@@ -99,8 +164,38 @@ export const AsyncStatusEditor = (
                 "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
             },
           }}
+          onCreate={({ editor }) => {
+            if (props.date) {
+              editor.commands.setStatusUpdateDate(
+                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
+              );
+            }
+            onUpdate(editor);
+          }}
           onUpdate={({ editor }) => {
-            debouncedUpdates(editor);
+            const editorDate = getStatusUpdateDate(editor);
+            if (
+              editorDate &&
+              props.date &&
+              dayjs(editorDate).startOf("day").format("YYYY-MM-DD") !==
+                props.date
+            ) {
+              props.onDateChange?.(
+                dayjs(editorDate).startOf("day").format("YYYY-MM-DD"),
+              );
+              editor.commands.setStatusUpdateDate(
+                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
+              );
+              return;
+            }
+
+            if (props.date) {
+              editor.commands.setStatusUpdateDate(
+                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
+              );
+            }
+
+            debouncedOnUpdate(editor);
             setSaveStatus("Unsaved");
           }}
           slotBefore={
@@ -110,6 +205,7 @@ export const AsyncStatusEditor = (
               )}
             >
               <EditorStatus
+                date={props.date ?? ""}
                 saveStatus={saveStatus}
                 taskItemCount={taskItemCount}
                 wordCount={wordCount}
@@ -166,10 +262,12 @@ function ConnectedEditorCommandList() {
 }
 
 function EditorStatus({
+  date,
   saveStatus,
   taskItemCount,
   wordCount,
 }: {
+  date: string;
   saveStatus: string;
   taskItemCount: number;
   wordCount: number;
@@ -197,9 +295,14 @@ function EditorStatus({
           variant="ghost"
           size="sm"
           onClick={() => {
-            window.localStorage.removeItem("html-content");
-            window.localStorage.removeItem("json-content");
-            editor?.commands.setContent(asyncStatusEditorDefaultContent, true);
+            window.localStorage.removeItem(`html-content-${date}`);
+            window.localStorage.removeItem(`json-content-${date}`);
+            editor?.commands.setContent(
+              getAsyncStatusEditorDefaultContent(
+                dayjs().startOf("day").toISOString(),
+              ),
+              true,
+            );
           }}
         >
           <UndoIcon className="size-4" />

@@ -12,7 +12,7 @@ export default defineConfig({
     TanStackRouterVite({ autoCodeSplitting: true }),
     viteReact(),
   ],
-  optimizeDeps: {
-    include: ["@asyncstatus/editor"],
+  server: {
+    allowedHosts: ["supposedly-simple-mallard.ngrok-free.app"],
   },
 });

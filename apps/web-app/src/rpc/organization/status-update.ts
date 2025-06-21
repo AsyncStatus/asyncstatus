@@ -1,16 +1,20 @@
-import type { zOrganizationIdOrSlug } from "@asyncstatus/api/schema/organization";
+import type {
+  zOrganizationIdOrSlug,
+  zOrganizationMemberId,
+} from "@asyncstatus/api/schema/organization";
 import type {
   zStatusUpdateCreate,
-  zStatusUpdateId,
+  zStatusUpdateIdOrDate,
+  zStatusUpdateMemberSearch,
 } from "@asyncstatus/api/schema/statusUpdate";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import type { z } from "zod";
 
 import { mutationOptions } from "@/lib/utils";
 
 import { rpc } from "../rpc";
 
-export function createStatusUpdateMutationOptions() {
+export function createStatusUpdateMutationOptions(queryClient: QueryClient) {
   return mutationOptions({
     mutationKey: ["statusUpdate", "create"],
     mutationFn: async ({
@@ -28,18 +32,23 @@ export function createStatusUpdateMutationOptions() {
       }
       return response.json();
     },
+    onSuccess: (data, { param }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["statusUpdate", "get", { idOrSlug: param.idOrSlug }],
+      });
+    },
   });
 }
 
 export function getStatusUpdateQueryOptions(
   params: z.infer<typeof zOrganizationIdOrSlug> &
-    z.infer<typeof zStatusUpdateId>,
+    z.infer<typeof zStatusUpdateIdOrDate>,
 ) {
   return queryOptions({
     queryKey: ["statusUpdate", "get", params],
     queryFn: async () => {
       const response = await rpc.organization[":idOrSlug"]["status-update"][
-        ":statusUpdateId"
+        ":statusUpdateIdOrDate"
       ].$get({
         param: params,
       });
@@ -48,5 +57,25 @@ export function getStatusUpdateQueryOptions(
       }
       return response.json();
     },
+  });
+}
+
+export function getStatusUpdatesByMemberQueryOptions(
+  params: z.infer<typeof zOrganizationIdOrSlug> &
+    z.infer<typeof zOrganizationMemberId>,
+  query?: z.infer<typeof zStatusUpdateMemberSearch>,
+) {
+  return queryOptions({
+    queryKey: ["statusUpdate", "getByMember", params],
+    queryFn: async () => {
+      const response = await rpc.organization[":idOrSlug"][
+        "status-update"
+      ].member[":memberId"].$get({ param: params, query: query as any });
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+    enabled: !!params.memberId,
   });
 }

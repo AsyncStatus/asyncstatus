@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@asyncstatus/ui/components/avatar";
+import { Button } from "@asyncstatus/ui/components/button";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -12,6 +14,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { getFileUrl, getInitials } from "@/lib/utils";
+import { StatusUpdateForm } from "@/components/status-update-form-v2";
 
 export const Route = createFileRoute(
   "/$organizationSlug/_layout/status-update/$statusUpdateId",
@@ -21,12 +24,73 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { statusUpdateId, organizationSlug } = Route.useParams();
+  const isDate = dayjs(statusUpdateId, "YYYY-MM-DD", true).isValid();
+  const statusUpdate = useQuery({
+    ...getStatusUpdateQueryOptions({
+      idOrSlug: organizationSlug,
+      statusUpdateIdOrDate: statusUpdateId,
+    }),
+    throwOnError: false,
+  });
+
+  if (statusUpdate.data?.isDraft || isDate) {
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <StatusUpdateForm
+          initialDate={statusUpdate.data?.effectiveFrom}
+          organizationSlug={organizationSlug}
+          initialEditorJson={statusUpdate.data?.editorJson}
+          initialIsDraft={statusUpdate.data?.isDraft}
+        />
+      </div>
+    );
+  }
+
+  if (!statusUpdate.data && !statusUpdate.isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <StatusUpdateForm
+          initialDate={statusUpdateId}
+          organizationSlug={organizationSlug}
+        />
+      </div>
+    );
+  }
+
+  return <ExistingStatusUpdateComponent />;
+}
+
+function ExistingStatusUpdateComponent() {
+  const { statusUpdateId, organizationSlug } = Route.useParams();
+  const [isEditing, setIsEditing] = useState(false);
   const { data: statusUpdate } = useQuery(
     getStatusUpdateQueryOptions({
       idOrSlug: organizationSlug,
-      statusUpdateId,
+      statusUpdateIdOrDate: statusUpdateId,
     }),
   );
+
+  if (isEditing && statusUpdate) {
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="mb-4 flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(false)}
+          >
+            Cancel
+          </Button>
+        </div>
+        <StatusUpdateForm
+          initialDate={statusUpdate.effectiveFrom}
+          organizationSlug={organizationSlug}
+          initialEditorJson={statusUpdate.editorJson}
+          initialIsDraft={statusUpdate.isDraft}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="prose prose-neutral dark:prose-invert prose-sm h-full w-full max-w-3xl px-4 py-2.5">
@@ -87,6 +151,12 @@ function RouteComponent() {
         <h2>Mood {statusUpdate?.emoji}</h2>
         <Markdown remarkPlugins={[remarkGfm]}>{statusUpdate?.mood}</Markdown>
       </section>
+
+      <div>
+        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+          Edit
+        </Button>
+      </div>
     </div>
   );
 }

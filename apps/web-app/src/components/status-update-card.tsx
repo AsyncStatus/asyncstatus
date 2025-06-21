@@ -16,6 +16,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -161,9 +162,16 @@ export function StatusUpdateCard({
         >
           <Link
             to="/$organizationSlug/status-update/$statusUpdateId"
-            params={{ organizationSlug, statusUpdateId: statusUpdate.id }}
+            params={{
+              organizationSlug,
+              statusUpdateId: statusUpdate.isDraft
+                ? dayjs(statusUpdate.effectiveFrom)
+                    .startOf("day")
+                    .format("YYYY-MM-DD")
+                : statusUpdate.id,
+            }}
           >
-            View
+            {statusUpdate.isDraft ? "Edit" : "View"}
           </Link>
         </Button>
         {!statusUpdate.isDraft && onShare && (

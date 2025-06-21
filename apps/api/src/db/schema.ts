@@ -181,6 +181,7 @@ export const statusUpdate = sqliteTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
+    editorJson: text("editor_json", { mode: "json" }),
     teamId: text("team_id").references(() => team.id, { onDelete: "set null" }),
     effectiveFrom: integer("effective_from", { mode: "timestamp" }).notNull(),
     effectiveTo: integer("effective_to", { mode: "timestamp" }).notNull(),

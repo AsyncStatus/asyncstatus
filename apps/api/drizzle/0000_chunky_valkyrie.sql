@@ -186,6 +186,7 @@ CREATE TABLE `status_update` (
 	`id` text PRIMARY KEY NOT NULL,
 	`member_id` text NOT NULL,
 	`organization_id` text NOT NULL,
+	`editor_json` text,
 	`team_id` text,
 	`effective_from` integer NOT NULL,
 	`effective_to` integer NOT NULL,

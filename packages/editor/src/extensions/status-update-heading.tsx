@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from "@asyncstatus/ui/components/popover";
 import { cn } from "@asyncstatus/ui/lib/utils";
+import type { CommandProps } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import {
   mergeAttributes,
@@ -15,6 +16,7 @@ import {
 } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import { format } from "date-fns";
+import dayjs from "dayjs";
 import { ChevronDown } from "lucide-react";
 
 export interface StatusUpdateHeadingOptions {
@@ -22,16 +24,31 @@ export interface StatusUpdateHeadingOptions {
   HTMLAttributes?: Record<string, any>;
 }
 
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    statusUpdateHeading: {
+      /**
+       * Set the date for the status update heading
+       */
+      setStatusUpdateDate: (date: Date) => ReturnType;
+    };
+  }
+}
+
 const StatusUpdateHeadingComponent = ({
   node,
   updateAttributes,
 }: NodeViewProps) => {
   const [open, setOpen] = useState(false);
-  const date = node.attrs.date ? new Date(node.attrs.date) : new Date();
+  const date = node.attrs.date
+    ? dayjs(node.attrs.date).startOf("day").toDate()
+    : dayjs().startOf("day").toDate();
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
-      updateAttributes({ date: selectedDate.toISOString() });
+      updateAttributes({
+        date: dayjs(selectedDate).startOf("day").toISOString(),
+      });
       setOpen(false);
     }
   };
@@ -93,7 +110,7 @@ export const StatusUpdateHeading = Node.create<StatusUpdateHeadingOptions>({
   addAttributes() {
     return {
       date: {
-        default: new Date().toISOString(),
+        default: dayjs().startOf("day").toISOString(),
         parseHTML: (element) => element.getAttribute("data-date"),
         renderHTML: (attributes) => ({
           "data-date": attributes.date,
@@ -123,6 +140,18 @@ export const StatusUpdateHeading = Node.create<StatusUpdateHeadingOptions>({
 
   addNodeView() {
     return ReactNodeViewRenderer(StatusUpdateHeadingComponent);
+  },
+
+  addCommands() {
+    return {
+      setStatusUpdateDate:
+        (date: Date) =>
+        ({ commands }: CommandProps) => {
+          return commands.updateAttributes("statusUpdateHeading", {
+            date: dayjs(date).startOf("day").toISOString(),
+          });
+        },
+    };
   },
 
   addProseMirrorPlugins() {

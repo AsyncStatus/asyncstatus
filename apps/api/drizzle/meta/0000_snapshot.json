@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e56f3ef0-c618-44f3-b218-f7e998b1e7ca",
+  "id": "217f11ea-e9c3-45bf-97da-8258160a3d0f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -1305,6 +1305,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "editor_json": {
+          "name": "editor_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "team_id": {

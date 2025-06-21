@@ -11,6 +11,11 @@ export const zStatusUpdateUpdate = z
   })
   .partial();
 
+export const zStatusUpdateMemberSearch = z.object({
+  isDraft: z.coerce.boolean().optional(),
+  effectiveFrom: z.string().optional(),
+});
+
 export const zStatusUpdateItemCreate = z.object({
   statusUpdateId: z.string().min(1),
   content: z.string().min(1),
@@ -33,6 +38,24 @@ export const zStatusUpdateCreate = z.object({
   effectiveTo: z.coerce.date(),
   mood: z.string().nullish(),
   emoji: z.string().nullish(),
+  editorJson: z
+    .unknown()
+    .refine((val): val is object => {
+      if (!val) {
+        return true;
+      }
+
+      if (typeof val !== "object") {
+        return false;
+      }
+
+      if (Array.isArray(val)) {
+        return false;
+      }
+
+      return true;
+    }, "Editor JSON must be an object or nullish value")
+    .nullish(),
   notes: z.string().nullish(),
   items: z
     .array(zStatusUpdateItemCreate.omit({ statusUpdateId: true }))
@@ -42,6 +65,10 @@ export const zStatusUpdateCreate = z.object({
 
 export const zStatusUpdateId = z.object({
   statusUpdateId: z.string().min(1),
+});
+
+export const zStatusUpdateIdOrDate = z.object({
+  statusUpdateIdOrDate: z.string().min(1),
 });
 
 export const zStatusUpdateItemId = z.object({

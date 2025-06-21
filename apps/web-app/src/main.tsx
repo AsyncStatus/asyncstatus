@@ -17,7 +17,17 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       throwOnError: true,
-      retry: 3,
+      retry: (failureCount, error) => {
+        if (isAsyncStatusApiJsonError(error)) {
+          if (error.type === "ASAPIUnexpectedError") {
+            return failureCount <= 5;
+          }
+
+          return false;
+        }
+
+        return failureCount <= 5;
+      },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
