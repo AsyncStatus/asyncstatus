@@ -6,6 +6,7 @@ import {
   AvatarImage,
 } from "@asyncstatus/ui/components/avatar";
 import { Button } from "@asyncstatus/ui/components/button";
+import { ArrowLeftIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -73,13 +74,14 @@ function ExistingStatusUpdateComponent() {
   if (isEditing && statusUpdate) {
     return (
       <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-4 flex justify-end">
+        <div className="mx-4 mb-4 flex">
           <Button
-            variant="outline"
-            size="sm"
+            variant="secondary"
             onClick={() => setIsEditing(false)}
+            className="w-full"
           >
-            Cancel
+            <ArrowLeftIcon className="mr-2 h-4 w-4" />
+            Cancel edit
           </Button>
         </div>
         <StatusUpdateForm
