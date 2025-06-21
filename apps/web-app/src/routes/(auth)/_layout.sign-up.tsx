@@ -95,7 +95,8 @@ function RouteComponent() {
       form.setValue("firstName", invitation.data.name?.split(" ")[0] ?? "");
       form.setValue("lastName", invitation.data.name?.split(" ")[1] ?? "");
     }
-  }, [invitation.data, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invitation.data?.email, invitation.data?.name, form]);
 
   const signUpEmail = useMutation(signUpEmailMutationOptions());
   const sendVerificationEmail = useMutation({
@@ -113,9 +114,8 @@ function RouteComponent() {
       <form
         className="mx-auto w-full max-w-xs space-y-24"
         onSubmit={form.handleSubmit(async (data) => {
-          console.log(data);
           await signUpEmail.mutateAsync({
-            email: data.email,
+            email: data.email ?? invitation.data?.email,
             password: data.password,
             name: `${data.firstName} ${data.lastName}`,
             callbackURL: import.meta.env.VITE_WEB_APP_URL,
