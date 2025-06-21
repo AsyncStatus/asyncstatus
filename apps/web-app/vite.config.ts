@@ -12,7 +12,4 @@ export default defineConfig({
     TanStackRouterVite({ autoCodeSplitting: true }),
     viteReact(),
   ],
-  server: {
-    allowedHosts: ["supposedly-simple-mallard.ngrok-free.app"],
-  },
 });
