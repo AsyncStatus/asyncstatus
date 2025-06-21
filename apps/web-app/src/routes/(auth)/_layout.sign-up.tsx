@@ -113,6 +113,7 @@ function RouteComponent() {
       <form
         className="mx-auto w-full max-w-xs space-y-24"
         onSubmit={form.handleSubmit(async (data) => {
+          console.log(data);
           await signUpEmail.mutateAsync({
             email: data.email,
             password: data.password,
