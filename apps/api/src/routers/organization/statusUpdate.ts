@@ -1,8 +1,13 @@
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import dayjs from "dayjs";
+// @ts-ignore - dayjs plugin types may not be fully compatible
+import utcPlugin from "dayjs/plugin/utc.js";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
+
+// Enable UTC plugin for dayjs
+dayjs.extend(utcPlugin);
 
 import * as schema from "../../db/schema";
 import {
@@ -51,14 +56,19 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       });
     }
 
-    const startOfDay = targetDate.startOf("day").toDate();
-    const endOfDay = targetDate.endOf("day").toDate();
+    // Create date boundaries in UTC to avoid timezone issues
+    const startOfDay = targetDate.utc().startOf("day").toDate();
+    const endOfDay = targetDate.utc().endOf("day").toDate();
 
     const statusUpdates = await c.var.db.query.statusUpdate.findMany({
       where: and(
         eq(schema.statusUpdate.organizationId, c.var.organization.id),
         eq(schema.statusUpdate.isDraft, false),
-        // Check if the status update's effective period includes the target date
+        // More precise date filtering: find status updates that are effective on this specific date
+        // Status update is effective on the target date if:
+        // 1. It starts on or before the end of the target date, AND
+        // 2. It ends on or after the start of the target date
+        // This handles both single-day status updates and multi-day status updates correctly
         lte(schema.statusUpdate.effectiveFrom, endOfDay),
         gte(schema.statusUpdate.effectiveTo, startOfDay),
       ),
@@ -72,8 +82,22 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
     });
 
-    // Sort by member name after fetching
-    const sortedStatusUpdates = statusUpdates.sort((a, b) =>
+    // Additional client-side filtering to ensure we only get status updates that truly overlap with the target date
+    // This is a backup check in case there are any timezone or date conversion issues
+    const filteredStatusUpdates = statusUpdates.filter((update) => {
+      const updateStartDate = dayjs(update.effectiveFrom).utc();
+      const updateEndDate = dayjs(update.effectiveTo).utc();
+      const targetDateUTC = targetDate.utc();
+      
+      // Check if the status update's date range includes the target date
+      const startsBeforeOrOnTargetDate = updateStartDate.isSameOrBefore(targetDateUTC.endOf("day"));
+      const endsAfterOrOnTargetDate = updateEndDate.isSameOrAfter(targetDateUTC.startOf("day"));
+      
+      return startsBeforeOrOnTargetDate && endsAfterOrOnTargetDate;
+    });
+
+    // Sort by member name after filtering
+    const sortedStatusUpdates = filteredStatusUpdates.sort((a, b) =>
       a.member.user.name.localeCompare(b.member.user.name),
     );
 
@@ -180,6 +204,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
           where: eq(
             schema.statusUpdate.effectiveFrom,
             dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true)
+              .utc()
               .startOf("day")
               .toDate(),
           ),
@@ -288,8 +313,16 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       const now = new Date();
 
       // Check if a status update already exists for this member on the effectiveFrom date
+      // Use UTC to ensure consistent date handling across timezones
       const effectiveFromStartOfDay = dayjs(effectiveFrom)
+        .utc()
         .startOf("day")
+        .toDate();
+      
+      // Also ensure effectiveTo is handled consistently
+      const effectiveToEndOfDay = dayjs(effectiveTo)
+        .utc()
+        .endOf("day")
         .toDate();
 
       // Use a transaction to ensure all operations are atomic
@@ -315,43 +348,43 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
           // Update existing status update
           statusUpdateId = existingStatusUpdate.id;
 
-          await tx
-            .update(schema.statusUpdate)
-            .set({
-              teamId: teamId || null,
-              editorJson,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
-              updatedAt: now,
-            })
-            .where(eq(schema.statusUpdate.id, statusUpdateId));
+                      await tx
+              .update(schema.statusUpdate)
+              .set({
+                teamId: teamId || null,
+                editorJson,
+                effectiveTo: effectiveToEndOfDay,
+                mood,
+                emoji,
+                notes,
+                isDraft,
+                timezone: userTimezone,
+                updatedAt: now,
+              })
+              .where(eq(schema.statusUpdate.id, statusUpdateId));
         } else {
           // Create new status update
           statusUpdateId = generateId();
 
-          await tx
-            .insert(schema.statusUpdate)
-            .values({
-              id: statusUpdateId,
-              memberId,
-              organizationId: c.var.organization.id,
-              teamId: teamId || null,
-              editorJson,
-              effectiveFrom: effectiveFromStartOfDay,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
-              createdAt: now,
-              updatedAt: now,
-            })
-            .returning();
+                      await tx
+              .insert(schema.statusUpdate)
+              .values({
+                id: statusUpdateId,
+                memberId,
+                organizationId: c.var.organization.id,
+                teamId: teamId || null,
+                editorJson,
+                effectiveFrom: effectiveFromStartOfDay,
+                effectiveTo: effectiveToEndOfDay,
+                mood,
+                emoji,
+                notes,
+                isDraft,
+                timezone: userTimezone,
+                createdAt: now,
+                updatedAt: now,
+              })
+              .returning();
         }
 
         // Handle items - only insert new unique items
