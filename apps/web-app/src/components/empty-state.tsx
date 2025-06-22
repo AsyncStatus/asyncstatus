@@ -14,13 +14,13 @@ export function EmptyState({
   action,
 }: EmptyStateProps) {
   return (
-    <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center">
+    <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed p-4 sm:p-8 text-center">
       {icon && <div className="text-muted-foreground mb-4">{icon}</div>}
-      <h3 className="mb-2 text-lg font-medium">{title}</h3>
+      <h3 className="mb-2 text-base sm:text-lg font-medium">{title}</h3>
       {description && (
-        <p className="text-muted-foreground mb-4 text-sm">{description}</p>
+        <p className="text-muted-foreground mb-4 text-sm max-w-sm">{description}</p>
       )}
-      {action && <div>{action}</div>}
+      {action && <div className="w-full sm:w-auto">{action}</div>}
     </div>
   );
 }

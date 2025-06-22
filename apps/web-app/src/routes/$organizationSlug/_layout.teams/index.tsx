@@ -102,7 +102,7 @@ function TeamsListPage() {
 
   return (
     <>
-      <header className="flex shrink-0 items-center justify-between gap-2">
+      <header className="flex flex-col gap-3 pb-4 sm:pb-0">
         <div className="flex items-center gap-0">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
@@ -115,8 +115,9 @@ function TeamsListPage() {
           </Breadcrumb>
         </div>
 
-        <div className="flex gap-2">
-          <div className="relative">
+        {/* Mobile-optimized controls */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
             <Input
               name="search"
@@ -133,9 +134,9 @@ function TeamsListPage() {
               onOpenChange={setCreateTeamDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button>
+                <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="size-4" />
-                  Create Team
+                  <span className="sm:inline">Create Team</span>
                 </Button>
               </DialogTrigger>
 
@@ -193,12 +194,12 @@ function TeamsListPage() {
       </header>
 
       <div className="py-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTeams.length === 0 ? (
             <div className="text-muted-foreground col-span-full py-8 text-center">
               <Layers className="mx-auto mb-2 size-10 opacity-50" />
-              <p className="text-lg font-medium">No teams found</p>
-              <p className="text-sm">
+              <p className="text-base sm:text-lg font-medium">No teams found</p>
+              <p className="text-sm max-w-sm mx-auto">
                 {searchQuery
                   ? "Try a different search query"
                   : "Create your first team to get started"}
@@ -207,39 +208,41 @@ function TeamsListPage() {
           ) : (
             filteredTeams.map((team) => (
               <Card key={team.id} className="overflow-hidden pb-0">
-                <CardHeader>
-                  <CardTitle className="font-medium">{team.name}</CardTitle>
-                  <CardDescription>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm sm:text-base font-medium">{team.name}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {team.teamMemberships?.length || 0} members
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="py-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex items-center gap-2">
                       <Users className="text-muted-foreground size-4" />
-                      <span className="text-sm">
+                      <span className="text-xs sm:text-sm">
                         {team.teamMemberships?.length || 0} members
                       </span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-muted/20 flex gap-2 border-t pb-3.5">
-                  <Button asChild variant="secondary" className="flex-1">
+                <CardFooter className="bg-muted/20 flex gap-2 border-t pb-3">
+                  <Button asChild variant="secondary" size="sm" className="flex-1 text-xs sm:text-sm">
                     <Link
                       to="/$organizationSlug/teams/$teamId"
                       params={{ organizationSlug, teamId: team.id }}
                     >
-                      View Details
+                      <span className="hidden sm:inline">View Details</span>
+                      <span className="sm:hidden">Details</span>
                     </Link>
                   </Button>
 
                   {isAdmin && (
                     <Button
-                      size="icon"
+                      size="sm"
                       variant="destructive"
                       disabled={deleteTeam.isPending}
                       onClick={() => setTeamToDelete(team.id)}
                       title="Delete Team"
+                      className="flex-initial"
                     >
                       <Trash className="size-4" />
                     </Button>
@@ -257,16 +260,16 @@ function TeamsListPage() {
 function PendingComponent() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Skeleton className="h-10 w-36" />
         <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-49" />
-          <Skeleton className="h-10 w-29" />
+          <Skeleton className="h-9 w-full sm:w-48" />
+          <Skeleton className="h-9 w-full sm:w-28" />
         </div>
       </div>
       <Skeleton className="h-8 w-56" />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Skeleton className="h-44 w-full" />
         <Skeleton className="h-44 w-full" />
         <Skeleton className="h-44 w-full" />

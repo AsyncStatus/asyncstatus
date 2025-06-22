@@ -142,7 +142,7 @@ function RouteComponent() {
 
   return (
     <>
-      <header className="flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 pb-4">
         <div className="flex items-center gap-0">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
@@ -155,10 +155,11 @@ function RouteComponent() {
           </Breadcrumb>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex gap-2">
+        {/* Mobile-optimized controls */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Select value={filter} onValueChange={handleFilterChange}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue placeholder="Filter by" />
               </SelectTrigger>
               <SelectContent>
@@ -175,7 +176,7 @@ function RouteComponent() {
                 value={selectedTeamId || ""}
                 onValueChange={setSelectedTeamId}
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,26 +190,28 @@ function RouteComponent() {
             )}
           </div>
 
-          <GenerateStatusButton
-            organizationSlug={organizationSlug}
-            memberId={member?.id ?? ""}
-          />
-          <Button asChild>
-            <Link
-              to="/$organizationSlug/status-update"
-              params={{ organizationSlug }}
-              className="flex items-center gap-2"
-            >
-              <PlusIcon className="h-4 w-4" />
-              New status update
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <GenerateStatusButton
+              organizationSlug={organizationSlug}
+              memberId={member?.id ?? ""}
+            />
+            <Button asChild size="sm" className="w-full sm:w-auto">
+              <Link
+                to="/$organizationSlug/status-update"
+                params={{ organizationSlug }}
+                className="flex items-center justify-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span className="sm:inline">New status update</span>
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="flex flex-1 flex-col gap-4 pt-0">
         {(statusUpdates?.length ?? 0) > 0 ? (
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+          <div className="grid auto-rows-min gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {statusUpdates?.map((statusUpdate: any) => (
               <StatusUpdateCard
                 key={statusUpdate.id}
