@@ -48,6 +48,7 @@ import {
   FormMessage,
 } from "@/components/form";
 import { GitHubIntegrationCard } from "@/components/github-integration-card";
+import { SlackIntegrationCard } from "@/components/slack-integration-card";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
@@ -207,6 +208,7 @@ function RouteComponent() {
 
           <TabsContent value="integrations" className="space-y-4">
             <GitHubIntegrationCard organizationSlug={params.organizationSlug} />
+            <SlackIntegrationCard organizationSlug={params.organizationSlug} />
           </TabsContent>
         </Tabs>
       </div>

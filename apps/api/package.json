@@ -46,7 +46,9 @@
     "octokit": "4.1.3",
     "random-words": "2.0.1",
     "resend": "4.2.0",
-    "voyageai": "0.0.4"
+    "voyageai": "0.0.4",
+    "@slack/bolt": "^3.22.0",
+    "@slack/web-api": "^7.8.0"
   },
   "devDependencies": {
     "@asyncstatus/eslint-config": "workspace:*",

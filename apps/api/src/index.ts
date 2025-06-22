@@ -14,6 +14,7 @@ import {
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { createRateLimiter } from "./lib/rate-limiter";
+import { SlackBot } from "./lib/slack-bot";
 import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
@@ -22,6 +23,7 @@ import { githubRouter } from "./routers/organization/github";
 import { memberRouter } from "./routers/organization/member";
 import { organizationRouter } from "./routers/organization/organization";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
+import { slackIntegrationRouter, slackOAuthRouter } from "./routers/organization/slack";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
 import { publicStatusShareRouter } from "./routers/publicStatusShare";
@@ -71,6 +73,22 @@ const app = new Hono<HonoEnv>()
     });
     c.set("githubWebhooks", githubWebhooks);
 
+    // Initialize Slack bot if credentials are provided
+    let slackbot: SlackBot | null = null;
+    if (c.env.SLACK_BOT_TOKEN && c.env.SLACK_SIGNING_SECRET) {
+      try {
+        slackbot = new SlackBot({
+          token: c.env.SLACK_BOT_TOKEN,
+          signingSecret: c.env.SLACK_SIGNING_SECRET,
+          db: db,
+          webAppUrl: c.env.WEB_APP_URL,
+        });
+      } catch (error) {
+        console.error("Failed to initialize Slack bot:", error);
+      }
+    }
+    c.set("slackbot", slackbot);
+
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
       c.set("session", null);
@@ -87,10 +105,12 @@ const app = new Hono<HonoEnv>()
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
+  .route("/organization", slackIntegrationRouter)
   .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .route("/slack", slackRouter)
+  .route("/slack", slackOAuthRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
