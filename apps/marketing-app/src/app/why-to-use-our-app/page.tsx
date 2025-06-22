@@ -69,7 +69,7 @@ export default function WhyToUseOurAppPage() {
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-6xl font-bold text-balance max-sm:text-4xl">
-            How It Works ? A Quick Overview
+            How It Works? A Quick Overview
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
             Send this to your manager
