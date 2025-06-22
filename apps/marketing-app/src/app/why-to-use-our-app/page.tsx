@@ -110,60 +110,60 @@ export default function WhyToUseOurAppPage() {
         <section className="mt-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <h2 className="text-3xl font-bold mb-6 text-red-600">The Hidden Costs of Daily Standups</h2>
+              <h2 className="text-3xl font-bold mb-6">Why Standups Suck</h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">❌</span>
+                  <span className="text-red-500 mt-1">💀</span>
                   <div>
-                    <strong>Context switching kills productivity:</strong> Developers lose 20-30 minutes of deep work time around each meeting
+                    <strong>They kill flow state</strong> — You know that feeling when you're in the zone at 10:30am and then... standup.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">❌</span>
+                  <span className="text-red-500 mt-1">🕐</span>
                   <div>
-                    <strong>Timezone challenges:</strong> Remote teams compromise on timing, leaving some members out or working odd hours
+                    <strong>Timezone hell</strong> — Someone's always getting screwed. 6am calls or staying late, pick your poison.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">❌</span>
+                  <span className="text-red-500 mt-1">😴</span>
                   <div>
-                    <strong>Information overload:</strong> Most standup information isn't relevant to most attendees
+                    <strong>90% irrelevant info</strong> — You don't care about the CSS bug Sarah's fixing. She doesn't care about your API refactor.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">❌</span>
+                  <span className="text-red-500 mt-1">🎭</span>
                   <div>
-                    <strong>Ritual over value:</strong> Teams go through motions without meaningful collaboration
+                    <strong>Theater, not communication</strong> — Everyone performs their status update then zones out.
                   </div>
                 </li>
               </ul>
             </div>
             
             <div>
-              <h2 className="text-3xl font-bold mb-6 text-green-600">The AsyncStatus Solution</h2>
+              <h2 className="text-3xl font-bold mb-6">What We Do Instead</h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">✅</span>
+                  <span className="text-green-500 mt-1">🤖</span>
                   <div>
-                    <strong>Automatic status generation:</strong> Pull updates from Git, Jira, Slack - no manual work required
+                    <strong>Your tools already know what you did</strong> — Git commits, closed tickets, Slack messages. We just format it nicely.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">✅</span>
+                  <span className="text-green-500 mt-1">🌍</span>
                   <div>
-                    <strong>Global team friendly:</strong> Everyone gets updates when they're ready, in their timezone
+                    <strong>Works for humans across timezones</strong> — Read updates when you want. No more 5am "quick syncs."
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">✅</span>
+                  <span className="text-green-500 mt-1">🎯</span>
                   <div>
-                    <strong>Relevant information only:</strong> Filter by team, project, or person - see what matters to you
+                    <strong>Filter the noise</strong> — Only see updates from people/projects you actually care about.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">✅</span>
+                  <span className="text-green-500 mt-1">🧠</span>
                   <div>
-                    <strong>Preserve deep work:</strong> No interruptions, no context switching, no scheduled breaks in flow
+                    <strong>Keep your flow</strong> — No scheduled interruptions. Just pure, uninterrupted coding time.
                   </div>
                 </li>
               </ul>
@@ -174,9 +174,9 @@ export default function WhyToUseOurAppPage() {
         {/* ROI Calculator Section */}
         <section className="mt-24">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 max-sm:text-3xl">Calculate Your Team's ROI</h2>
+            <h2 className="text-4xl font-bold mb-4 max-sm:text-3xl">Do The Math</h2>
             <p className="text-muted-foreground text-lg">
-              See the exact cost savings AsyncStatus will deliver to your team
+              Your manager cares about numbers. Here they are.
             </p>
           </div>
           <SavingsCalculator />
@@ -185,35 +185,35 @@ export default function WhyToUseOurAppPage() {
         {/* Risk Mitigation Section */}
         <section className="mt-24">
           <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            Low Risk, High Reward Implementation
+            "But What If It Doesn't Work?"
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">✅ Zero Learning Curve</h3>
+              <h3 className="text-xl font-semibold mb-4">📱 Your team changes nothing</h3>
               <p className="text-muted-foreground">
-                Your team keeps using the same tools they already know. AsyncStatus works in the background, pulling updates from Git, Jira, Slack, and other platforms you're already using.
+                Keep using Git, Jira, Slack like you always have. We just read the data and format it. No new tools to learn.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">✅ Gradual Rollout</h3>
+              <h3 className="text-xl font-semibold mb-4">🧪 Test it with one team</h3>
               <p className="text-muted-foreground">
-                Start with one team or project. Run both systems in parallel. Once you see the value, expand to other teams at your own pace.
+                Pick your most fed-up-with-standups team. Run it alongside meetings for a week. See what happens.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">✅ Easy Rollback</h3>
+              <h3 className="text-xl font-semibold mb-4">🚪 Easy exit</h3>
               <p className="text-muted-foreground">
-                If AsyncStatus doesn't work for your team, simply go back to meetings. No data loss, no process disruption, no vendor lock-in.
+                Don't like it? Just stop using it. Go back to meetings. We won't email you 47 times asking why you left.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">✅ Secure & Compliant</h3>
+              <h3 className="text-xl font-semibold mb-4">🔒 Actually secure</h3>
               <p className="text-muted-foreground">
-                Enterprise-grade security, SOC 2 compliance, and data residency options. Your information stays protected and under your control.
+                SOC 2, proper encryption, the works. We're developers too — we get why security matters.
               </p>
             </div>
           </div>
@@ -222,34 +222,34 @@ export default function WhyToUseOurAppPage() {
         {/* Common Objections Section */}
         <section className="mt-24">
           <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            Addressing Common Concerns
+            "Yeah But..."
           </h2>
           
           <div className="space-y-8">
             <div className="border-border bg-card rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-3">
-                "Our team needs face-to-face collaboration"
+                "We need face-to-face collaboration!"
               </h3>
               <p className="text-muted-foreground">
-                AsyncStatus doesn't eliminate collaboration - it eliminates routine status reporting. Your team still meets for planning, problem-solving, and brainstorming. You just get back 5-10 hours per week of unnecessary status meetings.
+                Cool. Keep your design reviews, planning sessions, and architecture discussions. Those are useful meetings. Daily status theater? Not so much.
               </p>
             </div>
             
             <div className="border-border bg-card rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-3">
-                "We'll lose visibility into what everyone is working on"
+                "But then I won't know what everyone's doing!"
               </h3>
               <p className="text-muted-foreground">
-                Actually, you'll gain visibility. AsyncStatus provides searchable, filterable status history. See what any team member worked on last week, last month, or last quarter. Compare that to trying to remember what was said in a standup.
+                You'll know more. Search for "what did Alex work on last week?" Try doing that with standup memories. Plus, it's all there when you need it — not just for 15 minutes at 9:30am.
               </p>
             </div>
             
             <div className="border-border bg-card rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-3">
-                "This will make our team less connected"
+                "Our team will feel disconnected!"
               </h3>
               <p className="text-muted-foreground">
-                Status meetings often feel disconnected anyway - people wait for their turn to speak and tune out for everyone else. Replace those routine updates with purposeful team activities: lunch & learns, retrospectives, or focused problem-solving sessions.
+                Do you feel connected during standups now? Honestly? Use that time for actual team building. Lunch together. Pair programming. Literally anything else.
               </p>
             </div>
           </div>
@@ -258,25 +258,25 @@ export default function WhyToUseOurAppPage() {
         {/* Success Stories Preview */}
         <section className="mt-24">
           <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            What Teams Are Saying
+            What People Actually Said
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
               <p className="text-lg mb-4 italic">
-                "We reclaimed 8 hours per week of productive time for our 6-person team. That's equivalent to hiring a part-time developer, but at a fraction of the cost."
+                "Holy shit, we got 8 hours per week back. It's like hiring a part-time developer except way cheaper and they don't ask for equity."
               </p>
               <div className="text-sm text-muted-foreground">
-                — Engineering Manager, Series B Startup
+                — Dev who convinced their manager
               </div>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
               <p className="text-lg mb-4 italic">
-                "Our global team finally gets updates that work across timezones. No more 6 AM meetings for our European developers or midnight calls for our US team."
+                "Finally, a solution for our timezone hell. Our European devs don't have to wake up at 6am anymore, and our US team isn't staying late. Revolutionary stuff."
               </p>
               <div className="text-sm text-muted-foreground">
-                — CTO, Remote-First Company
+                — CTO who was tired of being the bad guy
               </div>
             </div>
           </div>
@@ -286,11 +286,11 @@ export default function WhyToUseOurAppPage() {
         <section className="mt-24 text-center">
           <div className="bg-card border-border rounded-lg border p-12 max-sm:p-8">
             <h2 className="text-3xl font-bold mb-4">
-              Ready to Give Your Team Their Time Back?
+              Try It. What's The Worst That Could Happen?
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Join the waitlist and be among the first teams to experience async status updates. 
-              No credit card required, no commitment, just better team productivity.
+              You go back to standups. That's it. That's the worst case. 
+              But maybe — just maybe — you get your mornings back.
             </p>
             <WaitlistDialog buttonSize="lg" />
           </div>
