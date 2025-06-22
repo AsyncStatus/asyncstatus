@@ -69,10 +69,10 @@ export default function WhyToUseOurAppPage() {
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-6xl font-bold text-balance max-sm:text-4xl">
-            Send This to Your Manager
+            How It Works ? A Quick Overview
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
-            When they ask why your team needs AsyncStatus
+            Everything you need to know about AsyncStatus
           </p>
         </div>
 
