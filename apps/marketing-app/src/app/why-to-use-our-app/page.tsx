@@ -216,7 +216,7 @@ export default function WhyToUseOurAppPage() {
             <div className="bg-card border-border rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-4">🔒 Actually secure</h3>
               <p className="text-muted-foreground">
-                SOC 2, proper encryption, the works. We're developers too — we get why security and encryption matters.
+                We're developers too — we get why security and encryption matters.
               </p>
             </div>
           </div>
