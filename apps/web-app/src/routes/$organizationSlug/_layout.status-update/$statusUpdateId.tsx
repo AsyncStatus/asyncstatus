@@ -25,6 +25,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { getFileUrl, getInitials } from "@/lib/utils";
+import { formatDateInTimezone } from "@/lib/timezone";
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
 
 export const Route = createFileRoute(
@@ -191,7 +192,11 @@ function ExistingStatusUpdateComponent() {
                   {statusUpdate?.member.user.name}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
+                  {formatDateInTimezone(
+                    statusUpdate?.effectiveFrom || new Date(),
+                    statusUpdate?.member.user.timezone || "UTC",
+                    "MMM d, yyyy"
+                  )}
                 </p>
               </div>
             </div>
@@ -273,7 +278,11 @@ function ExistingStatusUpdateComponent() {
                 {statusUpdate?.member.user.name}
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Status for {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
+                Status for {formatDateInTimezone(
+                  statusUpdate?.effectiveFrom || new Date(),
+                  statusUpdate?.member.user.timezone || "UTC",
+                  "MMM d, yyyy"
+                )}
               </p>
             </div>
           </div>
@@ -294,7 +303,11 @@ function ExistingStatusUpdateComponent() {
           <section className="mt-6">
             <h2 className="text-base sm:text-lg font-semibold mb-4">
               What&apos;s new for{" "}
-              {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
+              {formatDateInTimezone(
+                statusUpdate?.effectiveFrom || new Date(),
+                statusUpdate?.member.user.timezone || "UTC",
+                "MMM d, yyyy"
+              )}
             </h2>
 
             <ul className="space-y-3 pl-0">

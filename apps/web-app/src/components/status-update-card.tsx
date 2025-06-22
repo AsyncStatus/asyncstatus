@@ -21,6 +21,7 @@ import { ShareIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { getFileUrl } from "@/lib/utils";
+import { formatDateInTimezone } from "@/lib/timezone";
 
 type StatusUpdateItem = {
   id: string;
@@ -44,6 +45,7 @@ type StatusUpdateCardProps = {
         name: string;
         email: string;
         image?: string;
+        timezone?: string;
       };
     };
     team?: {
@@ -62,6 +64,7 @@ export function StatusUpdateCard({
 }: StatusUpdateCardProps) {
   const effectiveFrom = new Date(statusUpdate.effectiveFrom);
   const effectiveTo = new Date(statusUpdate.effectiveTo);
+  const userTimezone = statusUpdate.member.user.timezone || "UTC";
 
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);
@@ -110,8 +113,8 @@ export function StatusUpdateCard({
           </div>
         </div>
         <CardDescription className="pt-2">
-          {format(effectiveFrom, "MMM d")} -{" "}
-          {format(effectiveTo, "MMM d, yyyy")}
+          {formatDateInTimezone(effectiveFrom, userTimezone, "MMM d")} -{" "}
+          {formatDateInTimezone(effectiveTo, userTimezone, "MMM d, yyyy")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -66,8 +66,38 @@ const formattedDate = formatDateInTimezone(
 1. Navigate to the API directory: `cd apps/api`
 2. Run the migration: `bun run migrate`
 
+## Status Update Timezone Support
+
+### Backend
+The status update API endpoints already include user data with timezone when returning status updates. Since we added the timezone field to the user table, all status update queries that include `member: { with: { user: true } }` will automatically include the timezone.
+
+### Frontend Updates
+1. **Status Update Card** (`apps/web-app/src/components/status-update-card.tsx`)
+   - Updated to display effective dates in the status update author's timezone
+   - Uses `formatDateInTimezone()` to format dates correctly
+
+2. **Status Update Detail View** (`apps/web-app/src/routes/$organizationSlug/_layout.status-update/$statusUpdateId.tsx`)
+   - Updated all date displays to use the status update author's timezone
+   - Shows dates in the correct timezone for the person who created the status update
+
+3. **Timezone Utilities** (`apps/web-app/src/lib/timezone.ts`)
+   - Added `date-fns-tz` library for timezone formatting
+   - Created utility functions for formatting dates in specific timezones
+
+4. **User Timezone Hook** (`apps/web-app/src/hooks/use-user-timezone.ts`)
+   - Created hooks to easily access user timezone throughout the app
+   - `useUserTimezone()` - Gets current user's timezone
+   - `useStatusUpdateUserTimezone()` - Gets timezone from status update user data
+
+## How It Works
+1. When a user creates a status update, it's stored in UTC (start of day)
+2. When displaying status updates, dates are converted to the author's timezone
+3. Each user sees status update dates in the timezone of the person who created them
+4. This ensures consistency - if someone in New York creates a status update for "Monday", everyone sees it as their Monday, regardless of their own timezone
+
 ## Next Steps
-- Update status update displays to show dates in user's timezone
 - Add timezone to user onboarding flow
 - Consider adding automatic timezone detection on signup
+- Add timezone display in user profiles
+- Consider allowing viewers to toggle between author's timezone and their own
 - Add more timezone options if needed
