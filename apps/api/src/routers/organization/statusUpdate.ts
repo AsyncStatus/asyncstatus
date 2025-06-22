@@ -51,6 +51,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       });
     }
 
+    // Create date boundaries for the target date
     const startOfDay = targetDate.startOf("day").toDate();
     const endOfDay = targetDate.endOf("day").toDate();
 
@@ -58,7 +59,11 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       where: and(
         eq(schema.statusUpdate.organizationId, c.var.organization.id),
         eq(schema.statusUpdate.isDraft, false),
-        // Check if the status update's effective period includes the target date
+        // More precise date filtering: find status updates that are effective on this specific date
+        // Status update is effective on the target date if:
+        // 1. It starts on or before the end of the target date, AND
+        // 2. It ends on or after the start of the target date
+        // This handles both single-day status updates and multi-day status updates correctly
         lte(schema.statusUpdate.effectiveFrom, endOfDay),
         gte(schema.statusUpdate.effectiveTo, startOfDay),
       ),
@@ -72,8 +77,21 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
     });
 
-    // Sort by member name after fetching
-    const sortedStatusUpdates = statusUpdates.sort((a, b) =>
+    // Additional client-side filtering to ensure we only get status updates that truly overlap with the target date
+    // This is a backup check in case there are any date conversion issues
+    const filteredStatusUpdates = statusUpdates.filter((update) => {
+      const updateStartDate = dayjs(update.effectiveFrom);
+      const updateEndDate = dayjs(update.effectiveTo);
+      
+      // Check if the status update's date range includes the target date
+      const startsBeforeOrOnTargetDate = updateStartDate.isSameOrBefore(targetDate.endOf("day"));
+      const endsAfterOrOnTargetDate = updateEndDate.isSameOrAfter(targetDate.startOf("day"));
+      
+      return startsBeforeOrOnTargetDate && endsAfterOrOnTargetDate;
+    });
+
+    // Sort by member name after filtering
+    const sortedStatusUpdates = filteredStatusUpdates.sort((a, b) =>
       a.member.user.name.localeCompare(b.member.user.name),
     );
 
@@ -291,6 +309,11 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       const effectiveFromStartOfDay = dayjs(effectiveFrom)
         .startOf("day")
         .toDate();
+      
+      // Also ensure effectiveTo is handled consistently  
+      const effectiveToEndOfDay = dayjs(effectiveTo)
+        .endOf("day")
+        .toDate();
 
       // Use a transaction to ensure all operations are atomic
       const statusUpdate = await c.var.db.transaction(async (tx) => {
@@ -315,43 +338,43 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
           // Update existing status update
           statusUpdateId = existingStatusUpdate.id;
 
-          await tx
-            .update(schema.statusUpdate)
-            .set({
-              teamId: teamId || null,
-              editorJson,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
-              updatedAt: now,
-            })
-            .where(eq(schema.statusUpdate.id, statusUpdateId));
+                      await tx
+              .update(schema.statusUpdate)
+              .set({
+                teamId: teamId || null,
+                editorJson,
+                effectiveTo: effectiveToEndOfDay,
+                mood,
+                emoji,
+                notes,
+                isDraft,
+                timezone: userTimezone,
+                updatedAt: now,
+              })
+              .where(eq(schema.statusUpdate.id, statusUpdateId));
         } else {
           // Create new status update
           statusUpdateId = generateId();
 
-          await tx
-            .insert(schema.statusUpdate)
-            .values({
-              id: statusUpdateId,
-              memberId,
-              organizationId: c.var.organization.id,
-              teamId: teamId || null,
-              editorJson,
-              effectiveFrom: effectiveFromStartOfDay,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
-              createdAt: now,
-              updatedAt: now,
-            })
-            .returning();
+                      await tx
+              .insert(schema.statusUpdate)
+              .values({
+                id: statusUpdateId,
+                memberId,
+                organizationId: c.var.organization.id,
+                teamId: teamId || null,
+                editorJson,
+                effectiveFrom: effectiveFromStartOfDay,
+                effectiveTo: effectiveToEndOfDay,
+                mood,
+                emoji,
+                notes,
+                isDraft,
+                timezone: userTimezone,
+                createdAt: now,
+                updatedAt: now,
+              })
+              .returning();
         }
 
         // Handle items - only insert new unique items

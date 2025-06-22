@@ -50,10 +50,10 @@ export function StatusUpdateForm({
       editorJson: initialEditorJson ?? null,
       effectiveFrom: initialDate
         ? dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate()
-        : new Date(),
+        : dayjs().startOf("day").toDate(),
       effectiveTo: initialDate
         ? dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate()
-        : new Date(),
+        : dayjs().endOf("day").toDate(),
       isDraft: initialIsDraft ?? true,
     },
   });
