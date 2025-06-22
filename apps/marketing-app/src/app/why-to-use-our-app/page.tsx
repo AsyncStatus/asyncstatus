@@ -66,41 +66,41 @@ export default function WhyToUseOurAppPage() {
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-6xl font-bold text-balance max-sm:text-4xl">
-            Why Your Team Needs AsyncStatus
+            Send This to Your Manager
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
-            The business case for replacing standup meetings with async status updates
+            When they ask why your team needs AsyncStatus
           </p>
         </div>
 
         {/* Key Benefits Section */}
         <section className="mt-24">
           <h2 className="text-4xl font-bold text-center mb-16 max-sm:text-3xl">
-            Immediate Business Impact
+            Here's What Actually Happens
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">25-40%</div>
-              <h3 className="text-xl font-semibold mb-2">More Productive Time</h3>
+              <div className="text-primary text-2xl font-bold mb-3">2-3 hrs</div>
+              <h3 className="text-xl font-semibold mb-2">Back per dev per week</h3>
               <p className="text-muted-foreground">
-                Eliminate 15-30 minutes of daily meetings per developer. That's 6-12 hours per month per team member back for actual work.
+                No more 15-30 min daily standups. No more "quick syncs" that aren't quick. Just actual work time.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">$15K-45K</div>
-              <h3 className="text-xl font-semibold mb-2">Annual Savings Per Team</h3>
+              <div className="text-primary text-2xl font-bold mb-3">~$30K</div>
+              <h3 className="text-xl font-semibold mb-2">What that time costs you</h3>
               <p className="text-muted-foreground">
-                Based on average developer salaries. A 5-person team saves $25K+ annually in reclaimed productive time.
+                For a 5-person team making $120K average. Yeah, standups are expensive.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">48 Hours</div>
-              <h3 className="text-xl font-semibold mb-2">Setup to Value</h3>
+              <div className="text-primary text-2xl font-bold mb-3">2 mins</div>
+              <h3 className="text-xl font-semibold mb-2">To connect your tools</h3>
               <p className="text-muted-foreground">
-                Connect your existing tools and start generating status updates. No training, no process changes, no disruption.
+                Git, Jira, Slack. Done. We pull your updates automatically. Your team keeps working.
               </p>
             </div>
           </div>
