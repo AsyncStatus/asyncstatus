@@ -20,11 +20,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@asyncstatus/ui/components/tooltip";
+import { cn } from "@asyncstatus/ui/lib/utils";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { formatInTimezone } from "@/lib/timezone";
 import { getFileUrl } from "@/lib/utils";
@@ -33,6 +36,7 @@ type StatusUpdateItem = {
   id: string;
   content: string;
   isBlocker: boolean;
+  isInProgress?: boolean;
   order: number;
 };
 
@@ -44,6 +48,7 @@ type StatusUpdateCardProps = {
     effectiveTo: string;
     emoji?: string;
     mood?: string;
+    notes?: string;
     isDraft: boolean;
     timezone?: string;
     member: {
@@ -102,8 +107,6 @@ export function StatusUpdateCard({
 
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);
-  const blockerItems = sortedItems.filter((item) => item.isBlocker);
-  const nonBlockerItems = sortedItems.filter((item) => !item.isBlocker);
 
   return (
     <Card className="h-full">
@@ -170,43 +173,59 @@ export function StatusUpdateCard({
           </Tooltip>
         </TooltipProvider>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {blockerItems.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-destructive text-sm font-semibold">Blockers</h4>
-            <ul className="space-y-2">
-              {blockerItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-destructive border-l-2 py-1 pl-3 text-sm"
-                >
-                  {item.content}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {nonBlockerItems.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Updates</h4>
-            <ul className="space-y-2">
-              {nonBlockerItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-primary border-l-2 py-1 pl-3 text-sm"
-                >
-                  {item.content}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {sortedItems.length === 0 && (
-          <p className="text-muted-foreground text-sm italic">
+      <CardContent className="prose prose-sm dark:prose-invert mt-0 pt-0">
+        {sortedItems.length > 0 ? (
+          <ul>
+            {sortedItems.map((item) => (
+              <li
+                key={item.id}
+                className={cn(
+                  item.isBlocker && "marker:text-destructive",
+                  !item.isInProgress &&
+                    !item.isBlocker &&
+                    "marker:text-green-500",
+                  item.isInProgress &&
+                    !item.isBlocker &&
+                    "marker:text-amber-500",
+                )}
+              >
+                <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-xs italic">
             No updates provided
           </p>
+        )}
+
+        {statusUpdate.notes && (
+          <div className="border-t pt-1">
+            <h4 className="text-muted-foreground mb-1 text-xs font-medium">
+              Notes
+            </h4>
+            <div className="prose prose-neutral dark:prose-invert prose-xs">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {statusUpdate.notes}
+              </Markdown>
+            </div>
+          </div>
+        )}
+
+        {statusUpdate.mood && (
+          <div className="border-t pt-1">
+            <h4 className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
+              Mood{" "}
+              {statusUpdate.emoji && (
+                <span className="text-sm">{statusUpdate.emoji}</span>
+              )}
+            </h4>
+            <div className="prose prose-neutral dark:prose-invert prose-xs">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {statusUpdate.mood}
+              </Markdown>
+            </div>
+          </div>
         )}
       </CardContent>
       <CardFooter className="pt-2">

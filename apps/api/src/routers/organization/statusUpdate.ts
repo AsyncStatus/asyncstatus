@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import dayjs from "dayjs";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
 
 import * as schema from "../../db/schema";
@@ -38,6 +38,46 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
     });
 
     return c.json(statusUpdates);
+  })
+  // Get all status updates for a specific date
+  .get("/:idOrSlug/status-update/date/:date", async (c) => {
+    const { date } = c.req.param();
+
+    // Parse and validate the date
+    const targetDate = dayjs(date, "YYYY-MM-DD", true);
+    if (!targetDate.isValid()) {
+      throw new AsyncStatusUnexpectedApiError({
+        message: "Invalid date format. Use YYYY-MM-DD",
+      });
+    }
+
+    const startOfDay = targetDate.startOf("day").toDate();
+    const endOfDay = targetDate.endOf("day").toDate();
+
+    const statusUpdates = await c.var.db.query.statusUpdate.findMany({
+      where: and(
+        eq(schema.statusUpdate.organizationId, c.var.organization.id),
+        eq(schema.statusUpdate.isDraft, false),
+        // Check if the status update's effective period includes the target date
+        lte(schema.statusUpdate.effectiveFrom, endOfDay),
+        gte(schema.statusUpdate.effectiveTo, startOfDay),
+      ),
+      with: {
+        member: { with: { user: true } },
+        team: true,
+        items: {
+          orderBy: (items) => [items.order],
+        },
+      },
+      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
+    });
+
+    // Sort by member name after fetching
+    const sortedStatusUpdates = statusUpdates.sort((a, b) =>
+      a.member.user.name.localeCompare(b.member.user.name),
+    );
+
+    return c.json(sortedStatusUpdates);
   })
   // Get status updates by team
   .get("/:idOrSlug/status-update/team/:teamId", async (c) => {

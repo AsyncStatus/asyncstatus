@@ -79,3 +79,23 @@ export function getStatusUpdatesByMemberQueryOptions(
     enabled: !!params.memberId,
   });
 }
+
+export function getStatusUpdatesByDateQueryOptions(
+  params: z.infer<typeof zOrganizationIdOrSlug> & { date: string },
+) {
+  return queryOptions({
+    queryKey: ["statusUpdate", "getByDate", params],
+    queryFn: async () => {
+      const response = await rpc.organization[":idOrSlug"][
+        "status-update"
+      ].date[":date"].$get({
+        param: params,
+      });
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+    enabled: !!params.idOrSlug && !!params.date,
+  });
+}
