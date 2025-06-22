@@ -18,6 +18,37 @@
     letter-spacing: -0.0225em;
     font-family: var(--font-favorit), system-ui, sans-serif;
   }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 640px) {
+    html, body {
+      overflow-x: hidden;
+    }
+    
+    * {
+      max-width: 100%;
+    }
+    
+    img {
+      height: auto;
+    }
+    
+    /* Prevent text overflow on mobile */
+    p, h1, h2, h3, h4, h5, h6 {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Improve touch targets */
+    button, a, input, select, textarea {
+      min-height: 44px;
+    }
+
+    /* Fix text-fit on mobile to prevent overflow */
+    .text-fit {
+      overflow: hidden;
+    }
+  }
 }
 
 @layer utilities {
@@ -59,5 +90,13 @@
       rgba(0, 0, 0, 0) 80%,
       rgba(0, 0, 0, 1) 100%
     );
+  }
+
+  /* Mobile utility classes */
+  @media (max-width: 640px) {
+    .safe-area-inset {
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
   }
 }

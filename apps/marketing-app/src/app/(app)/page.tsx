@@ -28,26 +28,23 @@ export default async function Page(props: {
 
   return (
     <>
-      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
+      <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4 py-2.5 pr-2.5 max-sm:mx-2 max-sm:p-3 max-sm:pr-3">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
-        {/* Progressive blur overlays - stronger towards top */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 -translate-y-24">
+        {/* Simplified blur overlays for better mobile performance */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 -translate-y-16 max-sm:h-8 max-sm:-translate-y-8">
           <div className="from-background/80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[2px]" />
-          <div className="from-background/80 mask-top-20 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[4px]" />
-          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px]" />
-          <div className="from-background/80 mask-top-60 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px]" />
-          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[32px]" />
-          <div className="from-background/80 mask-top-100 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[48px]" />
+          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px] max-sm:backdrop-blur-[4px]" />
+          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px] max-sm:backdrop-blur-[8px]" />
         </div>
 
         {/* Bottom blur - subtle */}
         <div className="from-background/60 pointer-events-none absolute right-0 -bottom-2 left-0 h-2 bg-gradient-to-b to-transparent backdrop-blur-[1px]" />
 
-        <div className="z-10 flex items-center gap-8">
+        <div className="z-10 flex items-center gap-8 max-sm:gap-4">
           <div className="flex flex-col">
             <Link href="/" className="flex items-center gap-2">
-              <AsyncStatusLogo className="h-3.5 w-auto" />
+              <AsyncStatusLogo className="h-3.5 w-auto max-sm:h-3" />
               <h1 className="text-lg font-medium max-sm:text-base">
                 AsyncStatus
               </h1>
@@ -81,73 +78,43 @@ export default async function Page(props: {
         <MobileMenu />
       </header>
 
-      <main className="mx-auto mt-48 w-full max-w-6xl px-4 max-sm:mt-28">
-        {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
-          <span>
-            <span>Async status updates for remote startups</span>
-          </span>
-          <span aria-hidden="true">
-            Async status updates for remote startups
-          </span>
-        </h2>
-        <h2 className="hidden text-center text-2xl font-bold max-sm:block">
-          Async status updates for remote startups
-        </h2>
+      <main className="mx-auto mt-48 w-full max-w-6xl px-4 max-sm:mt-20 max-sm:px-3">
+        {/* Mobile-optimized hero section */}
+        <div className="max-sm:space-y-4">
+          <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
+            <span>
+              <span>Standup meetings suck</span>
+            </span>
+            <span aria-hidden="true">Standup meetings suck</span>
+          </h2>
+          <h2 className="hidden text-center text-4xl font-bold leading-tight max-sm:block max-sm:text-3xl">
+            Standup meetings suck
+          </h2>
 
-        <h3 className="text-muted-foreground mt-4 text-center text-xl leading-normal max-md:text-lg max-sm:text-base">
-          No more standups. No more status meetings. No more status emails.
-          <br />
-          Turns out your team knew how to work all along.
-        </h3> */}
+          <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:mt-4 max-sm:text-base max-sm:leading-relaxed max-sm:px-2">
+            Your team already pushed code, closed tickets, replied in threads,
+            fixed small things no one asked them to. We turn it into an update. Or
+            you can write it yourself. Either way, no one has to talk about it at
+            9:30 a.m.
+          </h3>
 
-        {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
-          <span>
-            <span>Drop your standups</span>
-          </span>
-          <span aria-hidden="true">Drop your standups</span>
-        </h2>
-        <h2 className="hidden text-center text-2xl font-bold max-sm:block">
-          Drop your standups
-        </h2>
-
-        <h3 className="text-muted-foreground mt-4 text-center text-xl leading-normal max-md:text-lg max-sm:text-base">
-          Async status updates for remote startups. Built for high-agency teams
-          that value their time.
-        </h3> */}
-
-        <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
-          <span>
-            <span>Standup meetings suck</span>
-          </span>
-          <span aria-hidden="true">Standup meetings suck</span>
-        </h2>
-        <h2 className="hidden text-center text-5xl font-bold max-sm:block">
-          Standup meetings suck
-        </h2>
-
-        <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Your team already pushed code, closed tickets, replied in threads,
-          fixed small things no one asked them to. We turn it into an update. Or
-          you can write it yourself. Either way, no one has to talk about it at
-          9:30 a.m.
-        </h3>
-
-        <div className="mt-14 flex justify-center max-sm:mt-6">
-          <WaitlistDialog buttonSize="lg" />
+          <div className="mt-14 flex justify-center max-sm:mt-8">
+            <WaitlistDialog buttonSize="lg" />
+          </div>
         </div>
 
         <img
           src="/hero-light.webp"
           alt="AsyncStatus app screenshot"
-          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
+          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16 max-sm:rounded-md"
         />
 
-        <div className="mt-36 flex flex-col items-center">
+        <div className="mt-36 flex flex-col items-center max-sm:mt-16">
           <div className="relative w-full max-w-6xl">
-            <div className="flex items-center justify-between">
-              <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
-                <div className="inline-flex items-center gap-0.5 max-sm:gap-1.5">
-                  <span className="text-lg">Standup for</span>
+            <div className="flex items-center justify-between max-sm:justify-center">
+              <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full max-sm:max-w-sm">
+                <div className="inline-flex items-center gap-0.5 max-sm:w-full max-sm:justify-center max-sm:gap-1.5">
+                  <span className="text-lg max-sm:text-base">Standup for</span>
                   <PersonSelect
                     defaultValue="frontend-developer"
                     value={person}
@@ -156,13 +123,13 @@ export default async function Page(props: {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col gap-12">
+            <div className="mt-4 flex flex-col gap-12 max-sm:gap-8">
               <div>
                 <h4 className="text-muted-foreground mb-3 text-sm font-medium">
                   In the meeting
                 </h4>
-                <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground/90 text-lg text-balance">
+                <div className="border-border/40 bg-muted/30 rounded-lg border p-4 max-sm:p-3">
+                  <p className="text-muted-foreground/90 text-lg text-balance max-sm:text-base max-sm:leading-relaxed">
                     {(() => {
                       const fullText = peopleSummary[person].standupText;
                       const words = fullText.split(/\s+/);
@@ -181,14 +148,14 @@ export default async function Page(props: {
                       }
                     })()}
                   </p>
-                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm">
+                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm max-sm:flex-wrap max-sm:gap-2 max-sm:text-xs">
                     <span>{peopleSummary[person].meetingDetails.time}</span>
-                    <span>·</span>
+                    <span className="max-sm:hidden">·</span>
                     <span>
                       {peopleSummary[person].meetingDetails.peopleListening}{" "}
                       people listening
                     </span>
-                    <span>·</span>
+                    <span className="max-sm:hidden">·</span>
                     <span>
                       {peopleSummary[person].meetingDetails.peopleTyping} people
                       typing
@@ -203,12 +170,12 @@ export default async function Page(props: {
                 </h4>
                 <div className="flex flex-col gap-2">
                   {peopleSummary[person].summary.map((summary, index) => (
-                    <div key={summary} className="flex items-start gap-4">
-                      <span className="text-primary mt-1 text-sm font-medium">
+                    <div key={summary} className="flex items-start gap-4 max-sm:gap-3">
+                      <span className="text-primary mt-1 text-sm font-medium max-sm:text-xs">
                         0{index + 1}
                       </span>
                       <div className="flex-1">
-                        <p className="text-lg">{summary}</p>
+                        <p className="text-lg max-sm:text-base max-sm:leading-relaxed">{summary}</p>
                       </div>
                     </div>
                   ))}
@@ -219,12 +186,12 @@ export default async function Page(props: {
         </div>
 
         <h3
-          className="mt-36 text-center text-6xl font-bold max-sm:text-5xl"
+          className="mt-36 text-center text-6xl font-bold max-sm:mt-20 max-sm:text-4xl"
           id="how-it-works"
         >
           How it works
         </h3>
-        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
+        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:mt-12 max-sm:gap-6 sm:grid-cols-2 md:gap-12">
           <ConnectCard />
           <TrackCard />
           <GenerateCard />
@@ -241,19 +208,19 @@ export default async function Page(props: {
           <FeaturesList />
         </section>
 
-        <section id="calculator" className="mt-36">
-          <div className="mb-12 text-center">
-            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+        <section id="calculator" className="mt-36 max-sm:mt-20">
+          <div className="mb-12 text-center max-sm:mb-8">
+            <h3 className="text-center text-6xl font-bold max-sm:text-4xl">
               Calculate your savings
             </h3>
-            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+            <h3 className="text-muted-foreground mt-6 text-xl text-pretty max-sm:mt-4 max-sm:text-lg max-sm:px-2">
               See how much time and money your team can save by replacing
               synchronous standups with AsyncStatus.
             </h3>
           </div>
           <SavingsCalculator />
 
-          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
+          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty max-sm:text-xs max-sm:leading-relaxed max-sm:px-2">
             <strong>Disclaimer</strong>: These figures are estimates provided
             for illustrative purposes only and may not accurately reflect your
             team's specific situation. They do not constitute financial advice

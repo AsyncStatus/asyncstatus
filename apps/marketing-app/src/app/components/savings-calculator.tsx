@@ -115,12 +115,12 @@ export default function SavingsCalculator() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl rounded-lg bg-white p-6 max-sm:w-full max-sm:max-w-none max-sm:p-0">
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+    <div className="mx-auto max-w-6xl rounded-lg bg-white p-6 max-sm:w-full max-sm:max-w-none max-sm:p-3 max-sm:rounded-md">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 max-sm:gap-6">
         <Form {...form}>
-          <form className="w-full space-y-6">
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700">
+          <form className="w-full space-y-6 max-sm:space-y-4">
+            <div className="flex items-center gap-3 max-sm:flex-col max-sm:items-start max-sm:gap-2">
+              <label className="text-sm font-medium text-gray-700 max-sm:text-xs">
                 Choose a preset:
               </label>
               <Select
@@ -131,7 +131,7 @@ export default function SavingsCalculator() {
                   form.reset(presets[key]);
                 }}
               >
-                <SelectTrigger className="min-w-40">
+                <SelectTrigger className="min-w-40 max-sm:w-full max-sm:min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,7 +148,7 @@ export default function SavingsCalculator() {
               name="teamSize"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="max-sm:text-sm">
                     Team size: {field.value}{" "}
                     {field.value === 1 ? "person" : "people"}
                   </FormLabel>
@@ -175,7 +175,7 @@ export default function SavingsCalculator() {
               name="avgSalary"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="max-sm:text-sm">
                     Average salary: {formatCurrency(field.value)}
                   </FormLabel>
                   <FormControl>
@@ -201,7 +201,7 @@ export default function SavingsCalculator() {
               name="meetingLength"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="max-sm:text-sm">
                     Daily standup length: {field.value} minutes
                   </FormLabel>
                   <FormControl>
@@ -227,7 +227,7 @@ export default function SavingsCalculator() {
               name="workingDays"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="max-sm:text-sm">
                     Working days per month: {field.value} days
                   </FormLabel>
                   <FormControl>
@@ -253,7 +253,7 @@ export default function SavingsCalculator() {
               name="asyncTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
+                  <FormLabel className="max-sm:text-sm">
                     Async follow-up time: {field.value} minutes
                   </FormLabel>
                   <FormControl>
@@ -276,7 +276,7 @@ export default function SavingsCalculator() {
           </form>
         </Form>
 
-        <MagicCard className="from-primary/10 to-primary/10 relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-bl via-white">
+        <MagicCard className="from-primary/10 to-primary/10 relative flex flex-col items-center justify-center rounded-2xl bg-gradient-to-bl via-white max-sm:rounded-lg">
           <DotPattern
             width={14}
             height={14}
@@ -285,12 +285,12 @@ export default function SavingsCalculator() {
             )}
           />
 
-          <h4 className="text-muted-foreground mt-12 mb-6 text-center text-base">
+          <h4 className="text-muted-foreground mt-12 mb-6 text-center text-base max-sm:mt-8 max-sm:mb-4 max-sm:text-sm">
             Your potential savings
           </h4>
 
-          <div className="m-6 flex flex-col items-center gap-12">
-            <p className="from-primary to-primary/90 via-primary/80 bg-gradient-to-r bg-clip-text text-6xl font-extrabold text-transparent">
+          <div className="m-6 flex flex-col items-center gap-12 max-sm:m-4 max-sm:gap-8">
+            <p className="from-primary to-primary/90 via-primary/80 bg-gradient-to-r bg-clip-text text-6xl font-extrabold text-transparent max-sm:text-4xl">
               $
               <NumberTicker
                 value={annualSavings}
@@ -301,11 +301,11 @@ export default function SavingsCalculator() {
 
             <div className="flex flex-col gap-2">
               {/* Monthly savings */}
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between max-sm:flex-col max-sm:items-center max-sm:text-center max-sm:gap-1">
                 <p className="text-muted-foreground flex-none text-xs">
                   Monthly
                 </p>
-                <p className="text-primary w-[196px] text-right text-xl font-semibold">
+                <p className="text-primary w-[196px] text-right text-xl font-semibold max-sm:w-auto max-sm:text-lg">
                   $
                   <NumberTicker
                     value={monthlySavings}
@@ -316,11 +316,11 @@ export default function SavingsCalculator() {
               </div>
 
               {/* Time spent */}
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between max-sm:flex-col max-sm:items-center max-sm:text-center max-sm:gap-1">
                 <p className="text-muted-foreground flex-none text-xs">
                   Time / month
                 </p>
-                <p className="text-primary w-[164px] text-right text-lg font-medium">
+                <p className="text-primary w-[164px] text-right text-lg font-medium max-sm:w-auto">
                   <NumberTicker
                     value={hoursStandupPerMonth}
                     decimalPlaces={1}
@@ -337,18 +337,18 @@ export default function SavingsCalculator() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="group border-border relative m-6 overflow-hidden rounded-lg border bg-white/70 p-4 backdrop-blur max-sm:m-3"
+            className="group border-border relative m-6 overflow-hidden rounded-lg border bg-white/70 p-4 backdrop-blur max-sm:m-3 max-sm:p-3"
           >
             {/* Subtle glow on hover */}
             <div className="via-primary/5 pointer-events-none absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-            <p className="text-base leading-snug text-pretty text-neutral-700 italic max-sm:text-sm">
+            <p className="text-base leading-snug text-pretty text-neutral-700 italic max-sm:text-sm max-sm:leading-relaxed">
               Here's why stand-ups suck: {meetingLength} min × {teamSize} devs ={" "}
               {hoursStandupPerMonth.toFixed(0)} h/mo →{" "}
               {formatCurrency(standupCostMonthly)} burn. How many more numbers
               do you need?
             </p>
-            <div className="mt-3 flex items-center justify-end gap-2">
+            <div className="mt-3 flex items-center justify-end gap-2 max-sm:flex-col max-sm:gap-3 max-sm:items-stretch">
               <motion.button
                 onClick={() => {
                   const text = `Here's why stand-ups suck: ${meetingLength} min × ${teamSize} devs = ${hoursStandupPerMonth.toFixed(0)} h/mo → ${formatCurrency(standupCostMonthly)} burn. How many more numbers do you need? https://asyncstatus.com`;
@@ -356,7 +356,7 @@ export default function SavingsCalculator() {
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
+                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors max-sm:justify-center"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -380,7 +380,7 @@ export default function SavingsCalculator() {
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
+                className="bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors max-sm:justify-center"
               >
                 Share on
                 <svg

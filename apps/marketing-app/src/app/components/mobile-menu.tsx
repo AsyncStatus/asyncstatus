@@ -61,7 +61,7 @@ export function MobileMenu() {
   return (
     <div className="z-50 hidden items-center justify-center gap-6 max-sm:flex">
       <button
-        className="relative flex h-6 w-6 touch-manipulation flex-col justify-center gap-2"
+        className="relative flex h-12 w-12 touch-manipulation flex-col justify-center items-center gap-2 rounded-md"
         aria-label="Toggle menu"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -85,7 +85,7 @@ export function MobileMenu() {
             animate="visible"
             exit="exit"
             transition={{ duration: 0.1 }}
-            className="bg-background/95 fixed inset-0 top-14 z-40 p-6 backdrop-blur-sm"
+            className="bg-background/95 fixed inset-0 top-14 z-40 p-6 backdrop-blur-sm safe-area-inset"
           >
             <motion.nav
               variants={navVariants}
@@ -96,7 +96,7 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="#how-it-works"
-                  className="block w-full py-6"
+                  className="block w-full py-4 px-2 rounded-md hover:bg-muted/50 transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   How it works
@@ -105,7 +105,7 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="#features"
-                  className="block w-full py-6"
+                  className="block w-full py-4 px-2 rounded-md hover:bg-muted/50 transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   Features
@@ -114,7 +114,7 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="#team"
-                  className="block w-full py-6"
+                  className="block w-full py-4 px-2 rounded-md hover:bg-muted/50 transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   Use cases
@@ -123,14 +123,14 @@ export function MobileMenu() {
               <motion.div variants={linkVariants}>
                 <Link
                   href="/"
-                  className="block w-full py-6"
+                  className="block w-full py-4 px-2 rounded-md hover:bg-muted/50 transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   Login
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <div className="block w-full py-6">
+                <div className="block w-full py-4 px-2">
                   <WaitlistDialog
                     buttonSize="lg"
                     className="h-12 w-full text-lg font-normal"
