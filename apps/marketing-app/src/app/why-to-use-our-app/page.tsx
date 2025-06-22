@@ -68,7 +68,7 @@ export default function WhyToUseOurAppPage() {
       <main className="mx-auto mt-32 w-full max-w-4xl px-4 max-sm:mt-20">
         {/* Hero Section */}
         <div className="text-center">
-          <h1 className="text-6xl font-bold text-balance max-sm:text-4xl">
+          <h1 className="text-6xl font-bold text-balance tracking-wide max-sm:text-4xl">
             How It Works? A Quick Overview
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
