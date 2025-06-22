@@ -72,7 +72,7 @@ export default function WhyToUseOurAppPage() {
             How It Works ? A Quick Overview
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
-            Everything you need to know about AsyncStatus
+            Send this to your manager
           </p>
         </div>
 
