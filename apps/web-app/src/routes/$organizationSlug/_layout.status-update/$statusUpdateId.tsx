@@ -317,11 +317,11 @@ function ExistingStatusUpdateComponent() {
                     !item.isInProgress && !item.isBlocker && "bg-green-500",
                     item.isInProgress && !item.isBlocker && "bg-amber-500"
                   )} />
-                  <div className="flex-1 min-w-0">
-                    <Markdown remarkPlugins={[remarkGfm]} className="text-sm sm:text-base">
-                      {item.content}
-                    </Markdown>
-                  </div>
+                                     <div className="flex-1 min-w-0 text-sm sm:text-base">
+                     <Markdown remarkPlugins={[remarkGfm]}>
+                       {item.content}
+                     </Markdown>
+                   </div>
                 </li>
               ))}
             </ul>
