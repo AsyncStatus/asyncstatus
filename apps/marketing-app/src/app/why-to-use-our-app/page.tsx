@@ -255,32 +255,7 @@ export default function WhyToUseOurAppPage() {
           </div>
         </section>
 
-        {/* Success Stories Preview */}
-        <section className="mt-24">
-          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            What People Actually Said
-          </h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-card border-border rounded-lg border p-6">
-              <p className="text-lg mb-4 italic">
-                "Holy shit, we got 8 hours per week back. It's like hiring a part-time developer except way cheaper and they don't ask for equity."
-              </p>
-              <div className="text-sm text-muted-foreground">
-                — Dev who convinced their manager
-              </div>
-            </div>
-            
-            <div className="bg-card border-border rounded-lg border p-6">
-              <p className="text-lg mb-4 italic">
-                "Finally, a solution for our timezone hell. Our European devs don't have to wake up at 6am anymore, and our US team isn't staying late. Revolutionary stuff."
-              </p>
-              <div className="text-sm text-muted-foreground">
-                — CTO who was tired of being the bad guy
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* CTA Section */}
         <section className="mt-24 text-center">
