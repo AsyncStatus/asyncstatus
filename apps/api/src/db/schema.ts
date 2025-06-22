@@ -37,6 +37,7 @@ export const user = sqliteTable(
     email: text("email").notNull().unique(),
     emailVerified: integer("email_verified", { mode: "boolean" }).notNull(),
     image: text("image"),
+    timezone: text("timezone").default("UTC"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },

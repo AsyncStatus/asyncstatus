@@ -20,13 +20,13 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { ChevronsUpDown, CreditCard, LogOut } from "@asyncstatus/ui/icons";
+import { ChevronsUpDown, CreditCard, LogOut, User } from "@asyncstatus/ui/icons";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 
 import { getFileUrl, getInitials } from "@/lib/utils";
 
@@ -130,6 +130,15 @@ export function UserMenu(props: { organizationSlug: string }) {
             </DropdownMenuLabel>
 
             <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/$organizationSlug/profile"
+                  params={{ organizationSlug: props.organizationSlug }}
+                >
+                  <User />
+                  Profile settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <a
                   href={import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL}

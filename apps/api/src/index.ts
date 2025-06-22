@@ -26,6 +26,7 @@ import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
 import { publicStatusShareRouter } from "./routers/publicStatusShare";
 import { slackRouter } from "./routers/slack";
+import { userRouter } from "./routers/user";
 import { waitlistRouter } from "./routers/waitlist";
 
 const app = new Hono<HonoEnv>()
@@ -81,17 +82,18 @@ const app = new Hono<HonoEnv>()
     return next();
   })
   .route("/auth", authRouter)
-  .route("/organization", githubRouter)
-  .route("/organization", organizationRouter)
-  .route("/organization", memberRouter)
-  .route("/organization", teamsRouter)
-  .route("/organization", statusUpdateRouter)
-  .route("/organization", organizationPublicShareRouter)
-  .route("/public-status-share", publicStatusShareRouter)
-  .route("/invitation", invitationRouter)
-  .route("/waitlist", waitlistRouter)
-  .route("/slack", slackRouter)
-  .route("/github/webhooks", githubWebhooksRouter)
+.route("/user", userRouter)
+.route("/organization", githubRouter)
+.route("/organization", organizationRouter)
+.route("/organization", memberRouter)
+.route("/organization", teamsRouter)
+.route("/organization", statusUpdateRouter)
+.route("/organization", organizationPublicShareRouter)
+.route("/public-status-share", publicStatusShareRouter)
+.route("/invitation", invitationRouter)
+.route("/waitlist", waitlistRouter)
+.route("/slack", slackRouter)
+.route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
     if (err instanceof AsyncStatusUnexpectedApiError) {
