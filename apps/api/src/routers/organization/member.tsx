@@ -12,6 +12,7 @@ import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
   AsyncStatusNotFoundError,
+  AsyncStatusUnauthorizedError,
   AsyncStatusUnexpectedApiError,
 } from "../../errors";
 import type { HonoEnvWithOrganization } from "../../lib/env";
@@ -21,6 +22,7 @@ import {
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
   zOrganizationMemberUpdate,
+  zUserTimezoneUpdate,
 } from "../../schema/organization";
 
 export const memberRouter = new Hono<HonoEnvWithOrganization>()
@@ -92,7 +94,8 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const { role, archivedAt, slackUsername, ...userUpdates } = c.req.valid("form");
+      const { role, archivedAt, slackUsername, ...userUpdates } =
+        c.req.valid("form");
       const updatedMember = await c.var.db.transaction(async (tx) => {
         if (role) {
           await tx
@@ -111,7 +114,7 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
             .set({ archivedAt: null })
             .where(eq(schema.member.id, memberId));
         }
-        
+
         if (slackUsername !== undefined) {
           await tx
             .update(schema.member)
@@ -280,40 +283,66 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
       return c.json(invitation);
     },
   )
-  .post(
-    "/:idOrSlug/members/me/slack",
+  .patch(
+    "/:idOrSlug/members/me/timezone",
     requiredOrganization,
     zValidator("param", zOrganizationIdOrSlug),
-    zValidator(
-      "json",
-      z.object({
-        slackUsername: z.string().trim().nullish(),
-      })
-    ),
+    zValidator("json", zUserTimezoneUpdate),
     async (c) => {
-      const { slackUsername } = c.req.valid("json");
-      
-      // Update the slackUsername for the current member
-      await c.var.db
-        .update(schema.member)
-        .set({ 
-          slackUsername,
-          // If slackUsername is null, unset it (SQL NULL)
-          ...(slackUsername === null ? { slackUsername: null } : {})
-        })
-        .where(eq(schema.member.id, c.var.member.id));
-        
-      // Get the updated member
-      const updatedMember = await c.var.db.query.member.findFirst({
-        where: eq(schema.member.id, c.var.member.id),
-        with: { user: true },
+      const { timezone } = c.req.valid("json");
+
+      // Update timezone in a transaction to ensure atomicity
+      const result = await c.var.db.transaction(async (tx) => {
+        // Update the user's timezone
+        await tx
+          .update(schema.user)
+          .set({
+            timezone,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.user.id, c.var.session.user.id));
+
+        // Insert a record in timezone history for atomic tracking
+        await tx.insert(schema.userTimezoneHistory).values({
+          id: generateId(),
+          userId: c.var.session.user.id,
+          timezone,
+          createdAt: new Date(),
+        });
+
+        // Get the updated user
+        const updatedUser = await tx.query.user.findFirst({
+          where: eq(schema.user.id, c.var.session.user.id),
+        });
+
+        return updatedUser;
       });
-      
-      return c.json({ 
-        success: true,
-        member: updatedMember 
-      });
-    }
+
+      if (!result) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to update timezone",
+        });
+      }
+
+      const data = await c.env.AS_PROD_AUTH_KV.get<any>(
+        c.var.session.session.token,
+        { type: "json" },
+      );
+      if (!data) {
+        throw new AsyncStatusUnauthorizedError({
+          message: "Unauthorized",
+        });
+      }
+      await c.env.AS_PROD_AUTH_KV.put(
+        c.var.session.session.token,
+        JSON.stringify({
+          ...data,
+          user: { ...data.user, timezone: result.timezone },
+        }),
+      );
+
+      return c.json(result);
+    },
   )
   .get(
     "/:idOrSlug/members/me",
@@ -322,55 +351,5 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
     async (c) => {
       // Return the currently logged-in user's member record
       return c.json(c.var.member);
-    }
-  )
-  .get(
-    "/:idOrSlug/slack/users",
-    requiredOrganization,
-    zValidator("param", zOrganizationIdOrSlug),
-    async (c) => {
-      // Check if user is admin or owner
-      if (c.var.member.role !== "admin" && c.var.member.role !== "owner") {
-        throw new AsyncStatusForbiddenError({
-          message: "You do not have permission to access Slack users",
-        });
-      }
-
-      const slackbot = c.get("slackbot");
-      if (!slackbot) {
-        throw new AsyncStatusBadRequestError({
-          message: "Slack integration is not configured",
-        });
-      }
-
-      try {
-        // Get list of users from Slack API
-        const result = await slackbot.app.client.users.list();
-        
-        if (!result.ok) {
-          throw new AsyncStatusUnexpectedApiError({
-            message: "Failed to fetch users from Slack",
-          });
-        }
-
-        // Filter out bots, deactivated users, and other non-human users
-        const users = result.members?.filter(
-          (user: any) => 
-            !user.is_bot && 
-            !user.deleted && 
-            !user.is_workspace_app && 
-            !user.is_app_user && 
-            user.name !== "slackbot"
-        ) || [];
-
-        return c.json({ 
-          users 
-        });
-      } catch (error) {
-        console.error("Error fetching Slack users:", error);
-        throw new AsyncStatusUnexpectedApiError({
-          message: "Failed to fetch users from Slack",
-        });
-      }
-    }
+    },
   );

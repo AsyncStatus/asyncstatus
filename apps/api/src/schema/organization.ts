@@ -35,6 +35,10 @@ export const zOrganizationMemberUpdate = z
   })
   .partial();
 
+export const zUserTimezoneUpdate = z.object({
+  timezone: z.string().min(1).trim(),
+});
+
 export const zOrganizationUpdate = z
   .object({
     name: z.string().min(1).trim(),

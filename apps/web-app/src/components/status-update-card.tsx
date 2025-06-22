@@ -1,3 +1,4 @@
+import { sessionQueryOptions } from "@/rpc/auth";
 import {
   Avatar,
   AvatarFallback,
@@ -13,19 +14,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@asyncstatus/ui/components/card";
-import { useMutation } from "@tanstack/react-query";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@asyncstatus/ui/components/tooltip";
+import { cn } from "@asyncstatus/ui/lib/utils";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
-import { toast } from "sonner";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
+import { formatInTimezone } from "@/lib/timezone";
 import { getFileUrl } from "@/lib/utils";
 
 type StatusUpdateItem = {
   id: string;
   content: string;
   isBlocker: boolean;
+  isInProgress?: boolean;
   order: number;
 };
 
@@ -37,7 +48,9 @@ type StatusUpdateCardProps = {
     effectiveTo: string;
     emoji?: string;
     mood?: string;
+    notes?: string;
     isDraft: boolean;
+    timezone?: string;
     member: {
       id: string;
       user: {
@@ -60,13 +73,40 @@ export function StatusUpdateCard({
   statusUpdate,
   onShare,
 }: StatusUpdateCardProps) {
+  const session = useSuspenseQuery(sessionQueryOptions());
   const effectiveFrom = new Date(statusUpdate.effectiveFrom);
   const effectiveTo = new Date(statusUpdate.effectiveTo);
 
+  // Get user's preferred timezone, fallback to UTC
+  const userTimezone = session.data?.user?.timezone || "UTC";
+
+  // Check if both dates are on the same day in user's timezone
+  const effectiveFromDate = formatInTimezone(
+    effectiveFrom,
+    userTimezone,
+    "yyyy-MM-dd",
+  );
+  const effectiveToDate = formatInTimezone(
+    effectiveTo,
+    userTimezone,
+    "yyyy-MM-dd",
+  );
+  const isSameDay = effectiveFromDate === effectiveToDate;
+
+  // Format dates in user's timezone
+  const formattedEffectiveFrom = formatInTimezone(
+    effectiveFrom,
+    userTimezone,
+    "MMM d",
+  );
+  const formattedEffectiveTo = formatInTimezone(
+    effectiveTo,
+    userTimezone,
+    "MMM d, yyyy",
+  );
+
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);
-  const blockerItems = sortedItems.filter((item) => item.isBlocker);
-  const nonBlockerItems = sortedItems.filter((item) => !item.isBlocker);
 
   return (
     <Card className="h-full">
@@ -109,48 +149,83 @@ export function StatusUpdateCard({
             {statusUpdate.isDraft && <Badge variant="outline">Draft</Badge>}
           </div>
         </div>
-        <CardDescription className="pt-2">
-          {format(effectiveFrom, "MMM d")} -{" "}
-          {format(effectiveTo, "MMM d, yyyy")}
-        </CardDescription>
+        <TooltipProvider delayDuration={700}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CardDescription className="cursor-help pt-2">
+                {isSameDay
+                  ? formattedEffectiveTo
+                  : `${formattedEffectiveFrom} - ${formattedEffectiveTo}`}
+              </CardDescription>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="space-y-1">
+                <p>Displaying in your timezone: {userTimezone}</p>
+                <p className="text-muted-foreground text-xs">
+                  Created in: {statusUpdate.timezone || "UTC"}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Original dates: {effectiveFrom.toISOString().split("T")[0]} to{" "}
+                  {effectiveTo.toISOString().split("T")[0]}
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {blockerItems.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-destructive text-sm font-semibold">Blockers</h4>
-            <ul className="space-y-2">
-              {blockerItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-destructive border-l-2 py-1 pl-3 text-sm"
-                >
-                  {item.content}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {nonBlockerItems.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Updates</h4>
-            <ul className="space-y-2">
-              {nonBlockerItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-primary border-l-2 py-1 pl-3 text-sm"
-                >
-                  {item.content}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {sortedItems.length === 0 && (
-          <p className="text-muted-foreground text-sm italic">
+      <CardContent className="prose prose-sm dark:prose-invert mt-0 pt-0">
+        {sortedItems.length > 0 ? (
+          <ul>
+            {sortedItems.map((item) => (
+              <li
+                key={item.id}
+                className={cn(
+                  item.isBlocker && "marker:text-destructive",
+                  !item.isInProgress &&
+                    !item.isBlocker &&
+                    "marker:text-green-500",
+                  item.isInProgress &&
+                    !item.isBlocker &&
+                    "marker:text-amber-500",
+                )}
+              >
+                <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-xs italic">
             No updates provided
           </p>
+        )}
+
+        {statusUpdate.notes && (
+          <div className="border-t pt-1">
+            <h4 className="text-muted-foreground mb-1 text-xs font-medium">
+              Notes
+            </h4>
+            <div className="prose prose-neutral dark:prose-invert prose-xs">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {statusUpdate.notes}
+              </Markdown>
+            </div>
+          </div>
+        )}
+
+        {statusUpdate.mood && (
+          <div className="border-t pt-1">
+            <h4 className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
+              Mood{" "}
+              {statusUpdate.emoji && (
+                <span className="text-sm">{statusUpdate.emoji}</span>
+              )}
+            </h4>
+            <div className="prose prose-neutral dark:prose-invert prose-xs">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {statusUpdate.mood}
+              </Markdown>
+            </div>
+          </div>
         )}
       </CardContent>
       <CardFooter className="pt-2">

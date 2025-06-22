@@ -23,6 +23,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@asyncstatus/ui/components/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@asyncstatus/ui/components/select";
 import { CreditCard } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
@@ -37,6 +44,7 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
+import { toast } from "@asyncstatus/ui/components/sonner";
 
 import { getFileUrl } from "@/lib/utils";
 import {
@@ -48,6 +56,7 @@ import {
   FormMessage,
 } from "@/components/form";
 import { GitHubIntegrationCard } from "@/components/github-integration-card";
+import { TimezoneSettings } from "@/components/timezone-settings";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
@@ -135,6 +144,7 @@ function RouteComponent() {
           <TabsList className="mb-4">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-4">
@@ -207,6 +217,14 @@ function RouteComponent() {
 
           <TabsContent value="integrations" className="space-y-4">
             <GitHubIntegrationCard organizationSlug={params.organizationSlug} />
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-4">
+            <Card>
+              <CardContent>
+                <TimezoneSettings organizationSlug={params.organizationSlug} />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

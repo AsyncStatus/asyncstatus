@@ -2,6 +2,8 @@ import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { customSession } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import type { Resend } from "resend";
 
 import type { Db } from "../db";
@@ -70,6 +72,16 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           type: "string",
           required: false,
           input: false,
+        },
+      },
+    },
+    user: {
+      additionalFields: {
+        timezone: {
+          type: "string",
+          required: true,
+          input: false,
+          defaultValue: "UTC",
         },
       },
     },
