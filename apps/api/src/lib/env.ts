@@ -9,10 +9,11 @@ import * as schema from "../db/schema";
 import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { ProcessStatusUpdateParams } from "../workflows/slack/process-status-update";
 import type { Auth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
-import type { SlackBot } from "./slack-bot";
+import type { SlackConfig } from "./slack";
 
 export type Bindings = {
   TURSO_URL: string;
@@ -36,6 +37,7 @@ export type Bindings = {
   SYNC_GITHUB_WORKFLOW: Workflow<SyncGithubWorkflowParams>;
   DELETE_GITHUB_INTEGRATION_WORKFLOW: Workflow<DeleteGithubIntegrationWorkflowParams>;
   GENERATE_STATUS_WORKFLOW: Workflow<GenerateStatusWorkflowParams>;
+  PROCESS_SLACK_STATUS_WORKFLOW: Workflow<ProcessStatusUpdateParams>;
   AI: Ai;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
@@ -53,7 +55,7 @@ export type Variables = {
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
   githubWebhooks: Webhooks;
-  slackbot: SlackBot | null;
+  slackConfig: SlackConfig | null;
 };
 
 export type HonoEnv = {

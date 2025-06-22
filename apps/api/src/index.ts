@@ -14,7 +14,7 @@ import {
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { createRateLimiter } from "./lib/rate-limiter";
-import { createSlackBot } from "./lib/slack-bot";
+import { validateSlackConfig, type SlackConfig } from "./lib/slack";
 import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
@@ -72,13 +72,23 @@ const app = new Hono<HonoEnv>()
     });
     c.set("githubWebhooks", githubWebhooks);
 
-    // Initialize Slack bot if credentials are available
-    const slackbot = createSlackBot(
-      c.env.SLACK_BOT_TOKEN,
-      c.env.SLACK_SIGNING_SECRET,
-      db
-    );
-    c.set("slackbot", slackbot);
+    // Initialize Slack configuration if credentials are available
+    const potentialSlackConfig: Partial<SlackConfig> = {
+      botToken: c.env.SLACK_BOT_TOKEN,
+      signingSecret: c.env.SLACK_SIGNING_SECRET,
+    };
+    
+    const slackConfig = validateSlackConfig(potentialSlackConfig) 
+      ? potentialSlackConfig 
+      : null;
+    
+    if (!slackConfig) {
+      console.warn("Slack credentials not provided, Slack integration disabled");
+    } else {
+      console.log("Slack integration enabled");
+    }
+    
+    c.set("slackConfig", slackConfig);
 
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {
@@ -124,3 +134,4 @@ export type App = typeof app;
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { GenerateStatusWorkflow } from "./workflows/generate-status";
+export { ProcessStatusUpdateWorkflow } from "./workflows/slack/process-status-update";

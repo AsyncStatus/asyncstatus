@@ -1,23 +1,47 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { HonoEnv } from "../lib/env";
+import {
+  createSlackClient,
+  parseSlashCommand,
+  postEphemeralMessage,
+  respondToSlashCommand,
+  verifySlackSignature,
+  type StatusUpdatePayload,
+} from "../lib/slack";
+import { processStatusUpdate } from "../workflows/slack/process-status-update";
 
 export const slackRouter = new Hono<HonoEnv>()
   .post("/events", async (c) => {
     try {
       console.log("==== SLACK EVENT RECEIVED ====");
-      console.log("Headers:", JSON.stringify(c.req.raw.headers, null, 2));
       
-      // Get raw body for debugging
+      const slackConfig = c.get("slackConfig");
+      if (!slackConfig) {
+        console.warn("Slack integration not configured");
+        return c.json({ ok: true }, 200);
+      }
+      
+      // Get raw body for signature verification
       const rawBody = await c.req.text();
-      console.log("Raw body:", rawBody);
+      const timestamp = c.req.header("x-slack-request-timestamp") || "";
+      const signature = c.req.header("x-slack-signature") || "";
       
-      // Parse the body again
+      // Verify Slack signature
+      const isValid = await verifySlackSignature(
+        slackConfig.signingSecret,
+        timestamp,
+        rawBody,
+        signature
+      );
+      
+      if (!isValid) {
+        console.error("Invalid Slack signature");
+        return c.json({ error: "Invalid signature" }, 401);
+      }
+      
       const body = JSON.parse(rawBody);
-      console.log("Parsed body:", JSON.stringify(body, null, 2));
-      
-      const slackbot = c.get("slackbot");
-      console.log("Slackbot available:", !!slackbot);
+      console.log("Event type:", body.type);
       
       // Respond to Slack Events API URL verification
       if (body.type === "url_verification") {
@@ -25,110 +49,137 @@ export const slackRouter = new Hono<HonoEnv>()
         return c.json({ challenge: body.challenge });
       }
       
-      // Handle other events using the slackbot
-      if (slackbot) {
-        try {
-          console.log("Forwarding event to slackbot processor");
-          await slackbot.processEvent(body);
-          console.log("Event processing complete");
-        } catch (slackError) {
-          console.error("Error in slackbot.processEvent:", slackError);
-        }
-      } else {
-        console.warn("No slackbot instance available to process event");
+      // Handle app mentions
+      if (body.type === "event_callback" && body.event?.type === "app_mention") {
+        const event = body.event;
+        const client = createSlackClient(slackConfig);
+        
+        await postEphemeralMessage(
+          client,
+          event.channel,
+          event.user,
+          `Hi <@${event.user}>! Use \`/asyncstatus [your status]\` to update your status.`
+        );
       }
       
-      console.log("Returning success response");
-      return c.json({ success: true });
+      return c.json({ ok: true });
     } catch (error) {
       console.error("Error in /events endpoint:", error);
-      // Return 200 even on error to prevent Slack from retrying
-      return c.json({ error: "An error occurred processing the event", ok: true }, 200);
+      return c.json({ ok: true }, 200); // Always return 200 to prevent Slack retries
     }
   })
   .post("/commands", async (c) => {
     try {
       console.log("==== SLACK COMMAND RECEIVED ====");
-      console.log("Headers:", JSON.stringify(c.req.raw.headers, null, 2));
       
-      // Debug: log raw request
-      const rawBody = await c.req.text();
-      console.log("Raw request body:", rawBody);
-      
-      // Parse the form data from raw body (since formData() might be failing)
-      const params = new URLSearchParams(rawBody);
-      
-      // Convert URLSearchParams to object for easier debugging
-      const paramObj: Record<string, string> = {};
-      for (const [key, value] of params.entries()) {
-        paramObj[key] = value;
+      const slackConfig = c.get("slackConfig");
+      if (!slackConfig) {
+        return c.json({
+          response_type: "ephemeral",
+          text: "Slack integration is not configured."
+        });
       }
-      console.log("All command parameters:", JSON.stringify(paramObj, null, 2));
       
-      const command = params.get("command") || "";
-      const text = params.get("text") || "";
-      const userId = params.get("user_id") || "";
-      const teamId = params.get("team_id") || "";
-      const channelId = params.get("channel_id") || "";
-      const responseUrl = params.get("response_url") || "";
+      const rawBody = await c.req.text();
+      const timestamp = c.req.header("x-slack-request-timestamp") || "";
+      const signature = c.req.header("x-slack-signature") || "";
       
-      console.log("Command details:", { command, text, userId, teamId, channelId });
-      console.log("Response URL:", responseUrl);
+      // Verify Slack signature
+      const isValid = await verifySlackSignature(
+        slackConfig.signingSecret,
+        timestamp,
+        rawBody,
+        signature
+      );
       
-      const slackbot = c.get("slackbot");
-      console.log("Slackbot available:", !!slackbot);
+      if (!isValid) {
+        console.error("Invalid Slack signature for command");
+        return c.json({
+          response_type: "ephemeral",
+          text: "Authentication failed."
+        });
+      }
       
-      // If we have a slackbot instance, use it to process the command
-      if (slackbot && command === "/asyncstatus") {
-        try {
-          // Create a command payload that Bolt can understand
-          const commandPayload = {
-            command,
-            text,
-            user_id: userId,
-            team_id: teamId,
-            channel_id: channelId,
-            response_url: responseUrl,
-            api_app_id: params.get("api_app_id") || "",
-            token: params.get("token") || "",
-            trigger_id: params.get("trigger_id") || "",
-          };
-          
-          console.log("Attempting to process command with slackbot");
-          const result = await slackbot.processEvent({
-            type: 'command',
-            command: commandPayload
-          });
-          console.log("Command processing result:", result);
-          
-          // Return an immediate 200 response to Slack
-          return c.json({
-            response_type: "in_channel",
-            text: `Processing your status update: ${text || "No status provided"}`,
-          });
-        } catch (slackbotError) {
-          console.error("Error processing with slackbot:", slackbotError);
-          // Return an error message to the user
+      const commandPayload = parseSlashCommand(rawBody);
+      console.log("Command:", commandPayload.command, "Text:", commandPayload.text);
+      
+      if (commandPayload.command === "/asyncstatus") {
+        const status = commandPayload.text.trim();
+        
+        if (!status) {
           return c.json({
             response_type: "ephemeral",
-            text: "Sorry, there was an error processing your command. Please try again later."
+            text: "Please provide a status message. Example: `/asyncstatus Working on the Q2 report`"
           });
         }
-      }
-      
-      // Handle slash commands as a fallback
-      if (command === "/asyncstatus") {
-        console.log("Using fallback command handler");
-        return c.json({
-          response_type: "in_channel", // visible to all users in the channel
-          text: `<@${userId}> set their status: ${text || "No status provided"}`,
-        });
+        
+        // Create status update payload
+        const statusUpdate: StatusUpdatePayload = {
+          userId: commandPayload.user_id,
+          userName: commandPayload.user_name,
+          status: status,
+          channelId: commandPayload.channel_id,
+          teamId: commandPayload.team_id,
+        };
+        
+        try {
+          // Process the status update using the workflow
+          const db = c.get("db");
+          
+          // For now, we'll use a default organization ID
+          // In a real implementation, you'd determine this from the Slack team or user context
+          const organizationId = "default-org"; // This should be determined dynamically
+          
+          // Trigger the workflow
+          const result = await processStatusUpdate(
+            {
+              statusUpdate,
+              slackConfig,
+              organizationId,
+            },
+            db
+          );
+          
+          if (result.success) {
+            // Immediate response to acknowledge the command
+            return c.json({
+              response_type: "in_channel",
+              text: `<@${commandPayload.user_id}> set their status: ${status}`
+            });
+          } else {
+            console.error("Workflow failed:", result.error);
+            return c.json({
+              response_type: "ephemeral",
+              text: "Sorry, there was an error processing your status update."
+            });
+          }
+        } catch (workflowError) {
+          console.error("Error triggering workflow:", workflowError);
+          
+          // Fallback: just post the message without saving to database
+          const client = createSlackClient(slackConfig);
+          const message = `<@${commandPayload.user_id}> set their status: ${status}`;
+          
+          try {
+            await postEphemeralMessage(client, commandPayload.channel_id, commandPayload.user_id, message);
+            
+            return c.json({
+              response_type: "in_channel",
+              text: message
+            });
+          } catch (slackError) {
+            console.error("Fallback Slack post failed:", slackError);
+            return c.json({
+              response_type: "ephemeral",
+              text: "Sorry, there was an error processing your command."
+            });
+          }
+        }
       }
       
       throw new HTTPException(400, { message: "Unknown command" });
     } catch (error) {
       console.error("Error in /commands endpoint:", error);
-      // Return a user-friendly error to Slack
       return c.json({ 
         response_type: "ephemeral",
         text: "Sorry, something went wrong processing your command."
