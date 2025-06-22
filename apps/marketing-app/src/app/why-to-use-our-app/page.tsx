@@ -116,7 +116,7 @@ export default function WhyToUseOurAppPage() {
               <h2 className="text-3xl font-bold mb-6">Why Standups Suck</h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">💀</span>
+                  <span className="text-red-500 mt-1">•</span>
                   <div>
                     <strong>They kill flow state</strong> — You know that feeling when you're in the zone at 10:30am and then... standup.
                   </div>
@@ -146,7 +146,7 @@ export default function WhyToUseOurAppPage() {
               <h2 className="text-3xl font-bold mb-6">What We Do Instead</h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">🤖</span>
+                  <span className="text-green-500 mt-1">•</span>
                   <div>
                     <strong>Your tools already know what you did</strong> — Git commits, closed tickets, Slack messages. We just format it nicely.
                   </div>
