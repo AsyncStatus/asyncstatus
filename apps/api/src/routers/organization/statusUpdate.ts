@@ -1,13 +1,8 @@
 import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import dayjs from "dayjs";
-// @ts-ignore - dayjs plugin types may not be fully compatible
-import utcPlugin from "dayjs/plugin/utc.js";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
-
-// Enable UTC plugin for dayjs
-dayjs.extend(utcPlugin);
 
 import * as schema from "../../db/schema";
 import {
@@ -56,9 +51,9 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       });
     }
 
-    // Create date boundaries in UTC to avoid timezone issues
-    const startOfDay = targetDate.utc().startOf("day").toDate();
-    const endOfDay = targetDate.utc().endOf("day").toDate();
+    // Create date boundaries for the target date
+    const startOfDay = targetDate.startOf("day").toDate();
+    const endOfDay = targetDate.endOf("day").toDate();
 
     const statusUpdates = await c.var.db.query.statusUpdate.findMany({
       where: and(
@@ -83,15 +78,14 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
     });
 
     // Additional client-side filtering to ensure we only get status updates that truly overlap with the target date
-    // This is a backup check in case there are any timezone or date conversion issues
+    // This is a backup check in case there are any date conversion issues
     const filteredStatusUpdates = statusUpdates.filter((update) => {
-      const updateStartDate = dayjs(update.effectiveFrom).utc();
-      const updateEndDate = dayjs(update.effectiveTo).utc();
-      const targetDateUTC = targetDate.utc();
+      const updateStartDate = dayjs(update.effectiveFrom);
+      const updateEndDate = dayjs(update.effectiveTo);
       
       // Check if the status update's date range includes the target date
-      const startsBeforeOrOnTargetDate = updateStartDate.isSameOrBefore(targetDateUTC.endOf("day"));
-      const endsAfterOrOnTargetDate = updateEndDate.isSameOrAfter(targetDateUTC.startOf("day"));
+      const startsBeforeOrOnTargetDate = updateStartDate.isSameOrBefore(targetDate.endOf("day"));
+      const endsAfterOrOnTargetDate = updateEndDate.isSameOrAfter(targetDate.startOf("day"));
       
       return startsBeforeOrOnTargetDate && endsAfterOrOnTargetDate;
     });
@@ -204,7 +198,6 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
           where: eq(
             schema.statusUpdate.effectiveFrom,
             dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true)
-              .utc()
               .startOf("day")
               .toDate(),
           ),
@@ -313,15 +306,12 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       const now = new Date();
 
       // Check if a status update already exists for this member on the effectiveFrom date
-      // Use UTC to ensure consistent date handling across timezones
       const effectiveFromStartOfDay = dayjs(effectiveFrom)
-        .utc()
         .startOf("day")
         .toDate();
       
-      // Also ensure effectiveTo is handled consistently
+      // Also ensure effectiveTo is handled consistently  
       const effectiveToEndOfDay = dayjs(effectiveTo)
-        .utc()
         .endOf("day")
         .toDate();
 

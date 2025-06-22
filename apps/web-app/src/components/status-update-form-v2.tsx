@@ -49,11 +49,11 @@ export function StatusUpdateForm({
       teamId: "",
       editorJson: initialEditorJson ?? null,
       effectiveFrom: initialDate
-        ? dayjs(initialDate, "YYYY-MM-DD", true).utc().startOf("day").toDate()
-        : dayjs().utc().startOf("day").toDate(),
+        ? dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate()
+        : dayjs().startOf("day").toDate(),
       effectiveTo: initialDate
-        ? dayjs(initialDate, "YYYY-MM-DD", true).utc().endOf("day").toDate()
-        : dayjs().utc().endOf("day").toDate(),
+        ? dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate()
+        : dayjs().endOf("day").toDate(),
       isDraft: initialIsDraft ?? true,
     },
   });
@@ -62,11 +62,11 @@ export function StatusUpdateForm({
     if (initialDate) {
       form.setValue(
         "effectiveFrom",
-        dayjs(initialDate, "YYYY-MM-DD", true).utc().startOf("day").toDate(),
+        dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate(),
       );
       form.setValue(
         "effectiveTo",
-        dayjs(initialDate, "YYYY-MM-DD", true).utc().endOf("day").toDate(),
+        dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate(),
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,11 +140,9 @@ export function StatusUpdateForm({
           initialContent={initialEditorJson}
           onDateChange={(date) => {
             const nextEffectiveFrom = dayjs(date, "YYYY-MM-DD", true)
-              .utc()
               .startOf("day")
               .toDate();
             const nextEffectiveTo = dayjs(date, "YYYY-MM-DD", true)
-              .utc()
               .endOf("day")
               .toDate();
 
@@ -168,11 +166,11 @@ export function StatusUpdateForm({
             form.setValue("items", data.statusUpdateItems);
             form.setValue("editorJson", data.editorJson);
 
-            const nextEffectiveFrom = dayjs(data.date).utc().startOf("day").toDate();
+            const nextEffectiveFrom = dayjs(data.date).startOf("day").toDate();
             form.setValue("effectiveFrom", nextEffectiveFrom);
             form.setValue(
               "effectiveTo",
-              dayjs(data.date).utc().endOf("day").toDate(),
+              dayjs(data.date).endOf("day").toDate(),
             );
 
             if (form.getValues("isDraft") && !isPending) {
