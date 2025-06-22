@@ -95,7 +95,7 @@ export function MobileMenu() {
             >
               <motion.div variants={linkVariants}>
                 <Link
-                  href="#how-it-works"
+                  href="/#how-it-works"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
@@ -104,7 +104,7 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="#features"
+                  href="/#features"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
@@ -113,7 +113,7 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="#team"
+                  href="/#team"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
@@ -122,7 +122,16 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="/"
+                  href="/why-to-use-our-app"
+                  className="block w-full py-6"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Why AsyncStatus
+                </Link>
+              </motion.div>
+              <motion.div variants={linkVariants}>
+                <Link
+                  href={process.env.NEXT_PUBLIC_APP_URL ?? ""}
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
