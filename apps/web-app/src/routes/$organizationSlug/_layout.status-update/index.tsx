@@ -1,6 +1,16 @@
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { getStatusUpdatesByMemberQueryOptions } from "@/rpc/organization/status-update";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@asyncstatus/ui/components/breadcrumb";
+import { Separator } from "@asyncstatus/ui/components/separator";
+import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
@@ -51,8 +61,37 @@ function RouteComponent() {
   const { organizationSlug } = Route.useParams();
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <StatusUpdateForm organizationSlug={organizationSlug} />
-    </div>
+    <>
+      <header className="flex flex-col gap-3 pb-4 sm:pb-0">
+        <div className="flex items-center gap-0">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link
+                    to="/$organizationSlug"
+                    params={{ organizationSlug }}
+                  >
+                    Status updates
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>New Status Update</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+
+      <div className="py-4">
+        <div className="mx-auto w-full max-w-3xl">
+          <StatusUpdateForm organizationSlug={organizationSlug} />
+        </div>
+      </div>
+    </>
   );
 }
