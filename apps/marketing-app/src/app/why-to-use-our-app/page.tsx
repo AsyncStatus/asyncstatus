@@ -122,19 +122,19 @@ export default function WhyToUseOurAppPage() {
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">🕐</span>
+                  <span className="text-red-500 mt-1">•</span>
                   <div>
                     <strong>Timezone hell</strong> — Someone's always getting screwed. 6am calls or staying late, pick your poison.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">😴</span>
+                  <span className="text-red-500 mt-1">•</span>
                   <div>
                     <strong>90% irrelevant info</strong> — You don't care about the CSS bug Sarah's fixing. She doesn't care about your API refactor.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">🎭</span>
+                  <span className="text-red-500 mt-1">•</span>
                   <div>
                     <strong>Theater, not communication</strong> — Everyone performs their status update then zones out.
                   </div>
@@ -152,19 +152,19 @@ export default function WhyToUseOurAppPage() {
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">🌍</span>
+                  <span className="text-green-500 mt-1">•</span>
                   <div>
                     <strong>Works for humans across timezones</strong> — Read updates when you want. No more 5am "quick syncs."
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">🎯</span>
+                  <span className="text-green-500 mt-1">•</span>
                   <div>
                     <strong>Filter the noise</strong> — Only see updates from people/projects you actually care about.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">🧠</span>
+                  <span className="text-green-500 mt-1">•</span>
                   <div>
                     <strong>Keep your flow</strong> — No scheduled interruptions. Just pure, uninterrupted coding time.
                   </div>
@@ -193,21 +193,21 @@ export default function WhyToUseOurAppPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">📱 Your team changes nothing</h3>
+              <h3 className="text-xl font-semibold mb-4">Your team changes nothing</h3>
               <p className="text-muted-foreground">
                 Keep using Git, Jira, Slack like you always have. We just read the data and format it. No new tools to learn.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">🧪 Test it with one team</h3>
+              <h3 className="text-xl font-semibold mb-4">Test it with one team</h3>
               <p className="text-muted-foreground">
                 Pick your most fed-up-with-standups team. Run it alongside meetings for a week. See what happens.
               </p>
             </div>
             
             <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">🚪 Easy exit</h3>
+              <h3 className="text-xl font-semibold mb-4">Easy exit</h3>
               <p className="text-muted-foreground">
                 Don't like it? Just stop using it. Go back to meetings. We won't email you 47 times asking why you left.
               </p>
