@@ -299,24 +299,24 @@ function ExistingStatusUpdateComponent() {
 
             <ul className="space-y-3 pl-0">
               {statusUpdate?.items.map((item) => (
-                <li
-                  key={item.id}
-                  className={cn(
-                    "flex items-start gap-3 p-3 rounded-md border",
-                    item.isBlocker && "border-destructive bg-destructive/5",
-                    !item.isInProgress &&
-                      !item.isBlocker &&
-                      "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
-                    item.isInProgress && !item.isBlocker && "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
-                  )}
-                  style={{ listStyle: "none" }}
-                >
-                  <div className={cn(
-                    "w-2 h-2 rounded-full mt-2 flex-shrink-0",
-                    item.isBlocker && "bg-destructive",
-                    !item.isInProgress && !item.isBlocker && "bg-green-500",
-                    item.isInProgress && !item.isBlocker && "bg-amber-500"
-                  )} />
+                                 <li
+                   key={item.id}
+                   className={cn(
+                     "flex items-center gap-3 p-3 rounded-md border",
+                     item.isBlocker && "border-destructive bg-destructive/5",
+                     !item.isInProgress &&
+                       !item.isBlocker &&
+                       "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
+                     item.isInProgress && !item.isBlocker && "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
+                   )}
+                   style={{ listStyle: "none" }}
+                 >
+                   <div className={cn(
+                     "w-2 h-2 rounded-full flex-shrink-0",
+                     item.isBlocker && "bg-destructive",
+                     !item.isInProgress && !item.isBlocker && "bg-green-500",
+                     item.isInProgress && !item.isBlocker && "bg-amber-500"
+                   )} />
                                      <div className="flex-1 min-w-0 text-sm sm:text-base">
                      <Markdown remarkPlugins={[remarkGfm]}>
                        {item.content}
