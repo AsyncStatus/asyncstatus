@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { sessionQueryOptions } from "@/rpc/auth";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { zUserProfileUpdate } from "@asyncstatus/api/schema/user";
 import {
   Breadcrumb,
@@ -12,7 +10,6 @@ import { Button } from "@asyncstatus/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@asyncstatus/ui/components/card";
 import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
-import { Label } from "@asyncstatus/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -26,7 +23,6 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -70,6 +66,18 @@ const TIMEZONES = [
   { value: "Pacific/Auckland", label: "Auckland" },
 ];
 
+// Query options for user profile
+const getUserProfileQueryOptions = () => ({
+  queryKey: ["user", "profile"],
+  queryFn: async () => {
+    const response = await rpc.user.me.$get();
+    if (!response.ok) {
+      throw new Error("Failed to fetch user profile");
+    }
+    return response.json();
+  },
+});
+
 export const Route = createFileRoute("/$organizationSlug/_layout/profile")({
   component: RouteComponent,
 });
@@ -78,21 +86,7 @@ function RouteComponent() {
   const params = useParams({ from: "/$organizationSlug" });
   const queryClient = useQueryClient();
   const sessionQuery = useSuspenseQuery(sessionQueryOptions());
-  const organizationQuery = useSuspenseQuery(
-    getOrganizationQueryOptions(params.organizationSlug),
-  );
-
-  // Query to get user profile with timezone
-  const userProfileQuery = useQuery({
-    queryKey: ["user", "profile"],
-    queryFn: async () => {
-      const response = await rpc.user.me.$get();
-      if (!response.ok) {
-        throw new Error("Failed to fetch user profile");
-      }
-      return response.json();
-    },
-  });
+  const userProfileQuery = useSuspenseQuery(getUserProfileQueryOptions());
 
   // Mutation to update user profile
   const updateProfileMutation = useMutation({
@@ -109,6 +103,11 @@ function RouteComponent() {
       queryClient.invalidateQueries({ queryKey: ["user", "profile"] });
       queryClient.invalidateQueries({ queryKey: sessionQueryOptions().queryKey });
       toast.success("Profile updated successfully");
+      form.reset({
+        name: data.name,
+        timezone: data.timezone || "UTC",
+        image: data.image,
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update profile");
@@ -123,15 +122,6 @@ function RouteComponent() {
       image: userProfileQuery.data?.image || sessionQuery.data?.user.image || null,
     },
   });
-
-  // Update form when user profile data is loaded
-  if (userProfileQuery.data && !form.formState.isDirty) {
-    form.reset({
-      name: userProfileQuery.data.name,
-      timezone: userProfileQuery.data.timezone || "UTC",
-      image: userProfileQuery.data.image,
-    });
-  }
 
   return (
     <>
@@ -184,7 +174,7 @@ function RouteComponent() {
                       <FormLabel>Timezone</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
