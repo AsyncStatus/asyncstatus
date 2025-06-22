@@ -154,37 +154,41 @@ export function StatusUpdateCard({
         )}
       </CardContent>
       <CardFooter className="pt-2">
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="ml-auto flex items-center gap-2"
-        >
-          <Link
-            to="/$organizationSlug/status-update/$statusUpdateId"
-            params={{
-              organizationSlug,
-              statusUpdateId: statusUpdate.isDraft
-                ? dayjs(statusUpdate.effectiveFrom)
-                    .startOf("day")
-                    .format("YYYY-MM-DD")
-                : statusUpdate.id,
-            }}
-          >
-            {statusUpdate.isDraft ? "Edit" : "View"}
-          </Link>
-        </Button>
-        {!statusUpdate.isDraft && onShare && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto flex items-center gap-2"
-            onClick={() => onShare(statusUpdate.id)}
-          >
-            <ShareIcon className="h-4 w-4" />
-            Share
-          </Button>
-        )}
+        <div className="flex w-full items-center justify-between gap-2">
+          <div className="flex gap-2">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Link
+                to="/$organizationSlug/status-update/$statusUpdateId"
+                params={{
+                  organizationSlug,
+                  statusUpdateId: statusUpdate.isDraft
+                    ? dayjs(statusUpdate.effectiveFrom)
+                        .startOf("day")
+                        .format("YYYY-MM-DD")
+                    : statusUpdate.id,
+                }}
+              >
+                {statusUpdate.isDraft ? "Edit" : "View"}
+              </Link>
+            </Button>
+            {!statusUpdate.isDraft && onShare && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => onShare(statusUpdate.id)}
+              >
+                <ShareIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Share</span>
+              </Button>
+            )}
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );

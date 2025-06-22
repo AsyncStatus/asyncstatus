@@ -37,7 +37,7 @@ function RouteComponent() {
   return (
     <SidebarProvider>
       <AppSidebar organizationSlug={organizationSlug} />
-      <SidebarInset className="px-4 py-2.5">
+      <SidebarInset className="px-3 py-2 sm:px-4 sm:py-2.5">
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
