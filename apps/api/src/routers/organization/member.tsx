@@ -21,6 +21,7 @@ import {
   zOrganizationIdOrSlug,
   zOrganizationMemberId,
   zOrganizationMemberUpdate,
+  zUserTimezoneUpdate,
 } from "../../schema/organization";
 
 export const memberRouter = new Hono<HonoEnvWithOrganization>()
@@ -312,6 +313,49 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
       return c.json({ 
         success: true,
         member: updatedMember 
+      });
+    }
+  )
+  .patch(
+    "/:idOrSlug/members/me/timezone",
+    requiredOrganization,
+    zValidator("param", zOrganizationIdOrSlug),
+    zValidator("json", zUserTimezoneUpdate),
+    async (c) => {
+      const { timezone } = c.req.valid("json");
+      
+      // Update timezone in a transaction to ensure atomicity
+      const result = await c.var.db.transaction(async (tx) => {
+        // Update the user's timezone
+        await tx
+          .update(schema.user)
+          .set({ 
+            timezone,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.user.id, c.var.session.user.id));
+        
+        // Insert a record in timezone history for atomic tracking
+        await tx
+          .insert(schema.userTimezoneHistory)
+          .values({
+            id: generateId(),
+            userId: c.var.session.user.id,
+            timezone,
+            createdAt: new Date(),
+          });
+        
+        // Get the updated user
+        const updatedUser = await tx.query.user.findFirst({
+          where: eq(schema.user.id, c.var.session.user.id),
+        });
+        
+        return updatedUser;
+      });
+      
+      return c.json({ 
+        success: true,
+        user: result,
       });
     }
   )

@@ -37,10 +37,27 @@ export const user = sqliteTable(
     email: text("email").notNull().unique(),
     emailVerified: integer("email_verified", { mode: "boolean" }).notNull(),
     image: text("image"),
+    timezone: text("timezone").notNull().default("UTC"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
   (t) => [index("email_user_index").on(t.email)],
+);
+
+export const userTimezoneHistory = sqliteTable(
+  "user_timezone_history",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    timezone: text("timezone").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("user_timezone_history_user_id_index").on(t.userId),
+    index("user_timezone_history_created_at_index").on(t.createdAt),
+  ],
 );
 
 export const account = sqliteTable(
@@ -189,6 +206,7 @@ export const statusUpdate = sqliteTable(
     emoji: text("emoji"),
     notes: text("notes"),
     isDraft: integer("is_draft", { mode: "boolean" }).notNull().default(true),
+    timezone: text("timezone").notNull().default("UTC"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
@@ -396,7 +414,18 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   members: many(member),
   invitations: many(invitation),
+  timezoneHistory: many(userTimezoneHistory),
 }));
+
+export const userTimezoneHistoryRelations = relations(
+  userTimezoneHistory,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [userTimezoneHistory.userId],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {

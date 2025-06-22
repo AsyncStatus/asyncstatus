@@ -13,6 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@asyncstatus/ui/components/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@asyncstatus/ui/components/tooltip";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
@@ -38,6 +44,7 @@ type StatusUpdateCardProps = {
     emoji?: string;
     mood?: string;
     isDraft: boolean;
+    timezone?: string;
     member: {
       id: string;
       user: {
@@ -109,10 +116,29 @@ export function StatusUpdateCard({
             {statusUpdate.isDraft && <Badge variant="outline">Draft</Badge>}
           </div>
         </div>
-        <CardDescription className="pt-2">
-          {format(effectiveFrom, "MMM d")} -{" "}
-          {format(effectiveTo, "MMM d, yyyy")}
-        </CardDescription>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CardDescription className="pt-2 cursor-help">
+                {format(effectiveFrom, "MMM d")} -{" "}
+                {format(effectiveTo, "MMM d, yyyy")}
+              </CardDescription>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="space-y-1">
+                <p className="font-medium">
+                  Created in timezone: {statusUpdate.timezone || "UTC"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Original: {effectiveFrom.toISOString()}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Your timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardHeader>
       <CardContent className="space-y-4">
         {blockerItems.length > 0 && (

@@ -94,3 +94,21 @@ export function updateMemberMutationOptions() {
     },
   });
 }
+
+export function updateTimezoneMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["updateTimezone"],
+    mutationFn: async (
+      input: Parameters<
+        (typeof rpc.organization)[":idOrSlug"]["members"]["me"]["timezone"]["$patch"]
+      >[0],
+    ) => {
+      const response =
+        await rpc.organization[":idOrSlug"].members.me.timezone.$patch(input);
+      if (!response.ok) {
+        throw await response.json();
+      }
+      return response.json();
+    },
+  });
+}

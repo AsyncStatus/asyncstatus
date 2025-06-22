@@ -264,6 +264,13 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
           ),
         });
 
+        // Get the user's current timezone
+        const user = await tx.query.user.findFirst({
+          where: eq(schema.user.id, c.var.session.user.id),
+        });
+
+        const userTimezone = user?.timezone || "UTC";
+
         let statusUpdateId: string;
 
         if (existingStatusUpdate) {
@@ -280,6 +287,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
               emoji,
               notes,
               isDraft,
+              timezone: userTimezone,
               updatedAt: now,
             })
             .where(eq(schema.statusUpdate.id, statusUpdateId));
@@ -301,6 +309,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
               emoji,
               notes,
               isDraft,
+              timezone: userTimezone,
               createdAt: now,
               updatedAt: now,
             })
