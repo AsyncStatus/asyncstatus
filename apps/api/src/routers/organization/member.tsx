@@ -293,6 +293,17 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
     async (c) => {
       const { slackUsername } = c.req.valid("json");
       
+      // Check if organization has Slack integration
+      const slackIntegration = await c.var.db.query.slackIntegration.findFirst({
+        where: eq(schema.slackIntegration.organizationId, c.var.organization.id),
+      });
+      
+      if (!slackIntegration && slackUsername) {
+        throw new AsyncStatusBadRequestError({
+          message: "Organization does not have Slack integration configured",
+        });
+      }
+      
       // Update the slackUsername for the current member
       await c.var.db
         .update(schema.member)
@@ -336,16 +347,24 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const slackbot = c.get("slackbot");
-      if (!slackbot) {
+      // Check if organization has Slack integration
+      const slackIntegration = await c.var.db.query.slackIntegration.findFirst({
+        where: eq(schema.slackIntegration.organizationId, c.var.organization.id),
+      });
+      
+      if (!slackIntegration) {
         throw new AsyncStatusBadRequestError({
-          message: "Slack integration is not configured",
+          message: "Organization does not have Slack integration configured",
         });
       }
 
       try {
+        // Use the organization's Slack bot token
+        const { WebClient } = await import("@slack/web-api");
+        const client = new WebClient(slackIntegration.botAccessToken);
+        
         // Get list of users from Slack API
-        const result = await slackbot.app.client.users.list();
+        const result = await client.users.list();
         
         if (!result.ok) {
           throw new AsyncStatusUnexpectedApiError({

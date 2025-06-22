@@ -391,6 +391,29 @@ export const statusGenerationJob = sqliteTable(
   ],
 );
 
+export const slackIntegration = sqliteTable(
+  "slack_integration",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" })
+      .unique(),
+    teamId: text("team_id").notNull(),
+    teamName: text("team_name").notNull(),
+    botUserId: text("bot_user_id").notNull(),
+    botAccessToken: text("bot_access_token").notNull(),
+    installerUserId: text("installer_user_id").notNull(),
+    scope: text("scope").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("slack_organization_id_index").on(t.organizationId),
+    index("slack_team_id_index").on(t.teamId),
+  ],
+);
+
 // Relations section - after all tables are defined
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
@@ -413,6 +436,7 @@ export const organizationRelations = relations(
     invitations: many(invitation),
     publicStatusShares: many(publicStatusShare),
     githubIntegration: one(githubIntegration),
+    slackIntegration: one(slackIntegration),
   }),
 );
 
@@ -562,6 +586,16 @@ export const statusGenerationJobRelations = relations(
     statusUpdate: one(statusUpdate, {
       fields: [statusGenerationJob.statusUpdateId],
       references: [statusUpdate.id],
+    }),
+  }),
+);
+
+export const slackIntegrationRelations = relations(
+  slackIntegration,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [slackIntegration.organizationId],
+      references: [organization.id],
     }),
   }),
 );
