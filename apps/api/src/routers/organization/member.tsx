@@ -338,30 +338,27 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
 
       const slackbot = c.get("slackbot");
       if (!slackbot) {
-        throw new AsyncStatusBadRequestError({
-          message: "Slack integration is not configured",
-        });
+        return c.json(
+          { error: "Slack integration not available" },
+          400,
+        );
       }
 
       try {
         // Get list of users from Slack API
         const result = await slackbot.app.client.users.list();
         
-        if (!result.ok) {
-          throw new AsyncStatusUnexpectedApiError({
-            message: "Failed to fetch users from Slack",
-          });
+        if (!result.members) {
+          return c.json({ error: "Failed to fetch Slack users" }, 500);
         }
 
-        // Filter out bots, deactivated users, and other non-human users
-        const users = result.members?.filter(
-          (user: any) => 
-            !user.is_bot && 
-            !user.deleted && 
-            !user.is_workspace_app && 
-            !user.is_app_user && 
+        // Filter out bots and deactivated users
+        const users = result.members.filter(
+          (user: any) =>
+            !user.deleted &&
+            !user.is_bot &&
             user.name !== "slackbot"
-        ) || [];
+        );
 
         return c.json({ 
           users 

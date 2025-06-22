@@ -36,6 +36,7 @@
     "@libsql/client": "0.15.3",
     "@octokit/auth-oauth-user": "5.1.4",
     "@octokit/webhooks": "14.0.0",
+    "@slack/bolt": "3.22.0",
     "better-auth": "1.2.5",
     "bun": "1.2.14",
     "dayjs": "1.11.13",

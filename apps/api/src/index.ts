@@ -14,6 +14,7 @@ import {
 import { createAuth } from "./lib/auth";
 import type { HonoEnv } from "./lib/env";
 import { createRateLimiter } from "./lib/rate-limiter";
+import { createSlackBot } from "./lib/slack-bot";
 import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
@@ -70,6 +71,14 @@ const app = new Hono<HonoEnv>()
       secret: c.env.GITHUB_WEBHOOK_SECRET,
     });
     c.set("githubWebhooks", githubWebhooks);
+
+    // Initialize Slack bot if credentials are available
+    const slackbot = createSlackBot(
+      c.env.SLACK_BOT_TOKEN,
+      c.env.SLACK_SIGNING_SECRET,
+      db
+    );
+    c.set("slackbot", slackbot);
 
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) {

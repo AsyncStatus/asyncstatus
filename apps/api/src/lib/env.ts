@@ -12,6 +12,7 @@ import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v
 import type { Auth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
+import type { SlackBot } from "./slack-bot";
 
 export type Bindings = {
   TURSO_URL: string;
@@ -39,6 +40,8 @@ export type Bindings = {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
   GITHUB_PROCESS_EVENTS_QUEUE: Queue<string>;
+  SLACK_BOT_TOKEN: string;
+  SLACK_SIGNING_SECRET: string;
 };
 
 export type Variables = {
@@ -50,6 +53,7 @@ export type Variables = {
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
   githubWebhooks: Webhooks;
+  slackbot: SlackBot | null;
 };
 
 export type HonoEnv = {

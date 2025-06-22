@@ -1,0 +1,33 @@
+# Database
+TURSO_URL=libsql://your-database-url
+TURSO_AUTH_TOKEN=your-auth-token
+TURSO_ENCRYPTION_KEY=your-encryption-key
+
+# Authentication
+BETTER_AUTH_SECRET=your-auth-secret
+BETTER_AUTH_URL=http://localhost:8787
+
+# OAuth Providers
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# GitHub Integration
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GITHUB_APP_ID=your-github-app-id
+GITHUB_APP_PRIVATE_KEY=your-private-key
+GITHUB_WEBHOOK_SECRET=your-webhook-secret
+
+# Email
+RESEND_API_KEY=your-resend-api-key
+
+# URLs
+WEB_APP_URL=http://localhost:3000
+
+# AI Services
+ANTHROPIC_API_KEY=your-anthropic-api-key
+VOYAGE_API_KEY=your-voyage-api-key
+
+# Slack Integration
+SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
+SLACK_SIGNING_SECRET=your-slack-signing-secret
