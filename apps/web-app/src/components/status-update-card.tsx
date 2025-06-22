@@ -1,3 +1,4 @@
+import { sessionQueryOptions } from "@/rpc/auth";
 import {
   Avatar,
   AvatarFallback,
@@ -19,13 +20,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@asyncstatus/ui/components/tooltip";
-import { useMutation } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
-import { toast } from "sonner";
 
+import { formatInTimezone } from "@/lib/timezone";
 import { getFileUrl } from "@/lib/utils";
 
 type StatusUpdateItem = {
@@ -67,8 +68,37 @@ export function StatusUpdateCard({
   statusUpdate,
   onShare,
 }: StatusUpdateCardProps) {
+  const session = useSuspenseQuery(sessionQueryOptions());
   const effectiveFrom = new Date(statusUpdate.effectiveFrom);
   const effectiveTo = new Date(statusUpdate.effectiveTo);
+
+  // Get user's preferred timezone, fallback to UTC
+  const userTimezone = session.data?.user?.timezone || "UTC";
+
+  // Check if both dates are on the same day in user's timezone
+  const effectiveFromDate = formatInTimezone(
+    effectiveFrom,
+    userTimezone,
+    "yyyy-MM-dd",
+  );
+  const effectiveToDate = formatInTimezone(
+    effectiveTo,
+    userTimezone,
+    "yyyy-MM-dd",
+  );
+  const isSameDay = effectiveFromDate === effectiveToDate;
+
+  // Format dates in user's timezone
+  const formattedEffectiveFrom = formatInTimezone(
+    effectiveFrom,
+    userTimezone,
+    "MMM d",
+  );
+  const formattedEffectiveTo = formatInTimezone(
+    effectiveTo,
+    userTimezone,
+    "MMM d, yyyy",
+  );
 
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);
@@ -116,24 +146,24 @@ export function StatusUpdateCard({
             {statusUpdate.isDraft && <Badge variant="outline">Draft</Badge>}
           </div>
         </div>
-        <TooltipProvider>
+        <TooltipProvider delayDuration={700}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <CardDescription className="pt-2 cursor-help">
-                {format(effectiveFrom, "MMM d")} -{" "}
-                {format(effectiveTo, "MMM d, yyyy")}
+              <CardDescription className="cursor-help pt-2">
+                {isSameDay
+                  ? formattedEffectiveTo
+                  : `${formattedEffectiveFrom} - ${formattedEffectiveTo}`}
               </CardDescription>
             </TooltipTrigger>
             <TooltipContent>
               <div className="space-y-1">
-                <p className="font-medium">
-                  Created in timezone: {statusUpdate.timezone || "UTC"}
+                <p>Displaying in your timezone: {userTimezone}</p>
+                <p className="text-muted-foreground text-xs">
+                  Created in: {statusUpdate.timezone || "UTC"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Original: {effectiveFrom.toISOString()}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Your timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                <p className="text-muted-foreground text-xs">
+                  Original dates: {effectiveFrom.toISOString().split("T")[0]} to{" "}
+                  {effectiveTo.toISOString().split("T")[0]}
                 </p>
               </div>
             </TooltipContent>

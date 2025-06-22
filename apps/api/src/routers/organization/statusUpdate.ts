@@ -106,8 +106,6 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
         where.push(eq(schema.statusUpdate.isDraft, false));
       }
 
-      console.log(effectiveFrom);
-
       if (effectiveFrom) {
         where.push(
           eq(schema.statusUpdate.effectiveFrom, new Date(effectiveFrom)),
