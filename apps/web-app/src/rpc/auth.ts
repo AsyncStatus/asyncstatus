@@ -8,7 +8,8 @@ export function sessionQueryOptions() {
     queryKey: ["session"],
     staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.getSession({
         fetchOptions: { signal, headers },
       });
@@ -25,7 +26,8 @@ export function sessionBetterAuthQueryOptions() {
     queryKey: ["session"],
     staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.getSession({
         fetchOptions: { signal, headers },
       });
@@ -41,7 +43,8 @@ export function loginEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["loginEmail"],
     mutationFn: async (input: Parameters<typeof authClient.signIn.email>[0]) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.signIn.email(input, { headers });
       if (error) {
         throw new Error(error.message);
@@ -55,7 +58,8 @@ export function signUpEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["signUpEmail"],
     mutationFn: async (input: Parameters<typeof authClient.signUp.email>[0]) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.signUp.email(input, { headers });
       if (error) {
         throw new Error(error.message);
@@ -69,7 +73,8 @@ export function sendVerificationEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["sendVerificationEmail"],
     mutationFn: async (input: Parameters<typeof authClient.sendVerificationEmail>[0]) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.sendVerificationEmail(input, { headers });
       if (error) {
         throw new Error(error.message);
@@ -82,7 +87,8 @@ export function forgotPasswordMutationOptions() {
   return mutationOptions({
     mutationKey: ["forgotPassword"],
     mutationFn: async (input: Parameters<typeof authClient.forgetPassword>[0]) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.forgetPassword(input, { headers });
       if (error) {
         throw new Error(error.message);
@@ -96,7 +102,8 @@ export function resetPasswordMutationOptions() {
   return mutationOptions({
     mutationKey: ["resetPassword"],
     mutationFn: async (input: Parameters<typeof authClient.resetPassword>[0]) => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.resetPassword(input, { headers });
       if (error) {
         throw new Error(error.message);
@@ -110,7 +117,8 @@ export function logoutMutationOptions() {
   return mutationOptions({
     mutationKey: ["logout"],
     mutationFn: async () => {
-      const headers = new Headers(getIncomingHeaders() as any);
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.signOut(undefined, { headers });
       if (error) {
         throw new Error(error.message);

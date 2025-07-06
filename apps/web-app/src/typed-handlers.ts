@@ -7,7 +7,8 @@ import { typedUrlFactory } from "@asyncstatus/typed-handlers/url";
 import { getIncomingHeaders } from "./get-incoming-headers";
 
 const typedContractFetch = typedContractFetchFactory(`${import.meta.env.VITE_API_URL}/th`, () => {
-  const headers = new Headers(getIncomingHeaders() as any);
+  const headers = new Headers();
+  headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
   return { credentials: "include", headers };
 });
 export const typedQueryOptions = typedQueryOptionsFactory(typedContractFetch);

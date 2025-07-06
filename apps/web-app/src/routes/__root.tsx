@@ -5,10 +5,8 @@ import { lazy, Suspense, useEffect } from "react";
 import { z } from "zod/v4";
 import globalsCss from "../globals.css?url";
 
-const searchSchema = z.object({ redirect: z.string().optional() });
-
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  validateSearch: searchSchema,
+  validateSearch: z.object({ redirect: z.string().optional() }),
   component: RootComponent,
   head: () => ({
     meta: [
@@ -20,7 +18,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         src: "/dark-mode.js",
         type: "text/javascript",
-        crossorigin: "true",
+        crossOrigin: "anonymous",
       },
     ],
     links: [
@@ -35,21 +33,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "/ABCFavorit-Regular.woff2",
         as: "font",
         type: "font/woff2",
-        crossorigin: "true",
+        crossOrigin: "anonymous",
       },
       {
         rel: "preload",
         href: "/ABCFavorit-Medium.woff2",
         as: "font",
         type: "font/woff2",
-        crossorigin: "true",
+        crossOrigin: "anonymous",
       },
       {
         rel: "preload",
         href: "/ABCFavorit-Bold.woff2",
         as: "font",
         type: "font/woff2",
-        crossorigin: "true",
+        crossOrigin: "anonymous",
       },
     ],
   }),

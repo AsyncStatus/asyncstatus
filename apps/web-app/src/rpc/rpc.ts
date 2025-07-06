@@ -5,6 +5,8 @@ import { getIncomingHeaders } from "@/get-incoming-headers";
 export const rpc = hc<App>(import.meta.env.VITE_API_URL, {
   init: { credentials: "include" },
   headers() {
-    return getIncomingHeaders() as any;
+    return {
+      cookie: (getIncomingHeaders() as any)["cookie"] ?? "",
+    };
   },
 });
