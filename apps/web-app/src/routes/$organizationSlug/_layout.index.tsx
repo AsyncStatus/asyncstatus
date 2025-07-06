@@ -14,7 +14,6 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { CalendarIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import dayjs from "dayjs";
@@ -35,14 +34,16 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
   }),
   loaderDeps: ({ search: { date } }) => ({ date }),
   loader: async ({ context: { queryClient }, params: { organizationSlug }, deps: { date } }) => {
-    const [organization] = await Promise.all([
+    const [organization, statusUpdates] = await Promise.all([
       ensureValidOrganization(queryClient, organizationSlug),
-      getStatusUpdatesByDateQueryOptions({
-        idOrSlug: organizationSlug,
-        date,
-      }),
+      queryClient.ensureQueryData(
+        getStatusUpdatesByDateQueryOptions({
+          idOrSlug: organizationSlug,
+          date,
+        }),
+      ),
     ]);
-    return { organization };
+    return { organization, statusUpdates };
   },
   head: async ({ loaderData }) => {
     return {
@@ -94,10 +95,8 @@ function RouteComponent() {
   const navigate = Route.useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const { data: statusUpdates } = useQuery(
-    getStatusUpdatesByDateQueryOptions({ idOrSlug: organizationSlug, date }),
-  );
-
+  const { statusUpdates } = Route.useLoaderData();
+  console.log("statusUpdates", statusUpdates);
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       navigate({ search: { date: dayjs(date).format("YYYY-MM-DD") } });
@@ -144,7 +143,7 @@ function RouteComponent() {
     );
   };
 
-  const typedStatusUpdates = statusUpdates as StatusUpdate[] | undefined;
+  const typedStatusUpdates = statusUpdates as unknown as StatusUpdate[] | undefined;
 
   const groupedByMember = typedStatusUpdates?.reduce(
     (acc: Record<string, StatusUpdate[]>, update: StatusUpdate) => {
