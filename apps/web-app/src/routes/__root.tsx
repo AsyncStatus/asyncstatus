@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { z } from "zod/v4";
 import globalsCss from "../globals.css?url";
 
@@ -18,6 +18,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "AsyncStatus" },
+    ],
+    scripts: [
+      {
+        src: "/dark-mode.js",
+        type: "text/javascript",
+        crossorigin: "true",
+      },
     ],
     links: [
       { rel: "stylesheet", href: globalsCss },
@@ -68,6 +75,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootComponent() {
+  useEffect(() => {
+    document.documentElement.classList.toggle(
+      "dark",
+      localStorage.theme === "dark" ||
+        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches),
+    );
+  }, []);
+
   return (
     <RootDocument>
       <Outlet />
