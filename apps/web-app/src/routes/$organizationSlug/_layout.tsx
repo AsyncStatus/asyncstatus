@@ -9,14 +9,24 @@ import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 export const Route = createFileRoute("/$organizationSlug/_layout")({
   component: RouteComponent,
   pendingComponent: AppSidebarSkeleton,
-  beforeLoad: async ({ context: { queryClient }, params: { organizationSlug }, location }) => {
-    await Promise.all([
+  loader: async ({ context: { queryClient }, params: { organizationSlug }, location }) => {
+    const [session, organization, organizations, members, teams] = await Promise.all([
       ensureValidSession(queryClient, location),
       ensureValidOrganization(queryClient, organizationSlug),
       queryClient.ensureQueryData(listOrganizationsQueryOptions()),
       queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
       queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
     ]);
+    return { session, organization, organizations, members, teams };
+  },
+  head: async ({ loaderData }) => {
+    return {
+      meta: [
+        {
+          title: `${loaderData?.organization.organization.name} - AsyncStatus`,
+        },
+      ],
+    };
   },
 });
 

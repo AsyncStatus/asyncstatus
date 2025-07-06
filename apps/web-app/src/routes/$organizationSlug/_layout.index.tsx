@@ -22,13 +22,37 @@ import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { z } from "zod/v4";
 import { EmptyState } from "@/components/empty-state";
 import { getInitials } from "@/lib/utils";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { getStatusUpdatesByDateQueryOptions } from "@/rpc/organization/status-update";
 import { typedUrl } from "@/typed-handlers";
+import { ensureValidOrganization } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
+  validateSearch: z.object({
+    date: z.string().optional().default(dayjs(new Date()).format("YYYY-MM-DD")),
+  }),
+  loaderDeps: ({ search: { date } }) => ({ date }),
+  loader: async ({ context: { queryClient }, params: { organizationSlug }, deps: { date } }) => {
+    const [organization] = await Promise.all([
+      ensureValidOrganization(queryClient, organizationSlug),
+      getStatusUpdatesByDateQueryOptions({
+        idOrSlug: organizationSlug,
+        date,
+      }),
+    ]);
+    return { organization };
+  },
+  head: async ({ loaderData }) => {
+    return {
+      meta: [
+        {
+          title: `Status updates - ${loaderData?.organization.organization.name} - AsyncStatus`,
+        },
+      ],
+    };
+  },
   component: RouteComponent,
 });
 
@@ -66,23 +90,17 @@ type StatusUpdate = {
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { date } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const organizationQuery = useQuery(getOrganizationQueryOptions(organizationSlug));
-  const organization = organizationQuery.data?.organization;
-  const member = organizationQuery.data?.member;
-
   const { data: statusUpdates } = useQuery(
-    getStatusUpdatesByDateQueryOptions({
-      idOrSlug: organizationSlug,
-      date: dayjs(selectedDate).format("YYYY-MM-DD"),
-    }),
+    getStatusUpdatesByDateQueryOptions({ idOrSlug: organizationSlug, date }),
   );
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      setSelectedDate(date);
+      navigate({ search: { date: dayjs(date).format("YYYY-MM-DD") } });
       setIsCalendarOpen(false);
     }
   };
@@ -162,17 +180,17 @@ function RouteComponent() {
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal sm:w-[240px]",
-                  !selectedDate && "text-muted-foreground",
+                  !date && "text-muted-foreground",
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                {date ? format(date, "PPP") : "Pick a date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={selectedDate}
+                selected={date ? dayjs(date, "YYYY-MM-DD").toDate() : undefined}
                 onSelect={handleDateSelect}
                 initialFocus
               />
@@ -271,7 +289,7 @@ function RouteComponent() {
         ) : (
           <EmptyState
             icon={<CircleHelpIcon className="h-10 w-10" />}
-            title={`No status updates for ${format(selectedDate, "PPP")}`}
+            title={`No status updates for ${format(date, "PPP")}`}
             description="Try selecting a different date or create a new status update."
             action={
               <Button asChild>
