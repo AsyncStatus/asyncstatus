@@ -11,7 +11,12 @@ export const getOrganizationContract = typedContract(
 export const listOrganizationsContract = typedContract(
   "get /organizations",
   z.undefined(),
-  z.array(Organization),
+  z.array(
+    z.strictObject({
+      ...Organization.shape,
+      members: z.array(Member),
+    }),
+  ),
 );
 
 export const setActiveOrganizationContract = typedContract(

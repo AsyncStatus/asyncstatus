@@ -4,7 +4,7 @@ import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
@@ -33,13 +33,13 @@ export const Route = createFileRoute("/(auth)/_layout/login")({
 });
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8),
   rememberMe: z.boolean().default(false),
 });
 
 function RouteComponent() {
-  // const router = useRouter();
+  const router = useRouter();
   const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -64,7 +64,7 @@ function RouteComponent() {
   const loginEmail = useMutation({
     ...loginEmailMutationOptions(),
     async onSuccess() {
-      // await router.invalidate();
+      await router.invalidate();
       queryClient.clear();
       await navigate({ to: search.redirect ?? "/" });
     },

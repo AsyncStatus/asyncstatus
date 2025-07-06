@@ -33,11 +33,7 @@ export const listOrganizationsHandler = typedHandler<
   typeof listOrganizationsContract
 >(listOrganizationsContract, requiredSession, async ({ db, session }) => {
   return await db.query.organization.findMany({
-    with: {
-      members: {
-        where: eq(member.userId, session.user.id),
-      },
-    },
+    with: { members: { where: eq(member.userId, session.user.id) } },
   });
 });
 

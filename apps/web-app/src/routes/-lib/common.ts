@@ -28,8 +28,9 @@ export async function ensureNotLoggedIn(queryClient: QueryClient, search: { redi
 
 export async function getDefaultOrganization(queryClient: QueryClient) {
   const orgs = await queryClient
-    .fetchQuery(typedQueryOptions(listOrganizationsContract, undefined))
+    .fetchQuery(typedQueryOptions(listOrganizationsContract, undefined, { throwOnError: false }))
     .catch(() => {});
+  console.log("orgs", orgs);
   if (!orgs || orgs.length === 0 || !orgs[0]) {
     throw redirect({ to: "/create-organization" });
   }
@@ -42,7 +43,13 @@ export async function ensureValidOrganization(
   organizationIdOrSlug: string,
 ) {
   const org = await queryClient
-    .fetchQuery(typedQueryOptions(getOrganizationContract, { idOrSlug: organizationIdOrSlug }))
+    .fetchQuery(
+      typedQueryOptions(
+        getOrganizationContract,
+        { idOrSlug: organizationIdOrSlug },
+        { throwOnError: false },
+      ),
+    )
     .catch(() => {});
   if (!org?.organization.slug) {
     const org = await getDefaultOrganization(queryClient);

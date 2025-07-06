@@ -9,7 +9,7 @@ import {
 export const Route = createFileRoute("/_layout")({
   component: RouteComponent,
   pendingComponent: AppSidebarSkeleton,
-  beforeLoad: async ({ context: { queryClient }, location }) => {
+  loader: async ({ context: { queryClient }, location }) => {
     const { session } = await ensureValidSession(queryClient, location);
     console.log("session", session);
     if (!session.activeOrganizationId) {

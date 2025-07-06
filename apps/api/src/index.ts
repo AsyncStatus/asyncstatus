@@ -70,7 +70,7 @@ const app = new Hono<HonoEnv>()
     c.set("anthropicClient", context.anthropicClient);
     c.set("voyageClient", context.voyageClient);
     c.set("githubWebhooks", context.githubWebhooks);
-    c.set("session", context.session);
+    c.set("session" as any, context.session);
     return next();
   })
   .route("/auth", authRouter)

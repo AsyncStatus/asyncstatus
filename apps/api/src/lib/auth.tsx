@@ -2,6 +2,8 @@ import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { customSession } from "better-auth/plugins";
+import { desc, eq } from "drizzle-orm";
 import type { Resend } from "resend";
 import * as schema from "../db";
 import type { Db } from "../db/db";
@@ -31,6 +33,20 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         });
       },
     },
+    plugins: [
+      customSession(async (session) => {
+        let activeOrganizationId = (session.session as any).activeOrganizationId;
+        if (!activeOrganizationId) {
+          const orgs = await db.query.organization.findMany({
+            with: { members: { where: eq(schema.member.userId, session.user.id) } },
+            orderBy: [desc(schema.organization.createdAt)],
+            limit: 1,
+          });
+          activeOrganizationId = orgs[0]?.id;
+        }
+        return { ...session, session: { ...session.session, activeOrganizationId } };
+      }),
+    ],
     trustedOrigins: [
       "http://localhost:3000",
       "http://localhost:3001",
@@ -108,7 +124,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     advanced: {
       cookiePrefix: "as",
-      crossSubDomainCookies: { enabled: true, domain: ".asyncstatus.com" },
+      crossSubDomainCookies: { enabled: env.NODE_ENV === "production", domain: ".asyncstatus.com" },
       useSecureCookies: false,
     },
   });
