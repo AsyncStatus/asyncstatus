@@ -10,9 +10,6 @@ const searchSchema = z.object({ redirect: z.string().optional() });
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   validateSearch: searchSchema,
   component: RootComponent,
-  // shellComponent: ({ children }) => {
-  //   return <div className="flex h-screen w-screen bg-red-500">{children}</div>;
-  // },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

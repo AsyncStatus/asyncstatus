@@ -35,7 +35,6 @@
     "react-hook-form": "catalog:",
     "react-markdown": "10.1.0",
     "remark-gfm": "4.0.1",
-    "unenv": "1.10.0",
     "zod": "catalog:"
   },
   "devDependencies": {
