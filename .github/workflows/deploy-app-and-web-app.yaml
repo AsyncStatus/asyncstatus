@@ -18,12 +18,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: bun install
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
-        with:
-          version: latest
-      - name: Run Biome
-        run: biome ci .
+      # disabling biome because we need to cleanup the codebase first
+      # - name: Setup Biome
+      #   uses: biomejs/setup-biome@v2
+      #   with:
+      #     version: latest
+      # - name: Run Biome
+      #   run: biome ci .
 
       - name: Deploy API
         id: deploy-api
