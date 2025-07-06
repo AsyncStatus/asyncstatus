@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Breadcrumb,
@@ -19,9 +20,9 @@ import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
-
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
+import { typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/status-update/$statusUpdateId")({
   component: RouteComponent,
@@ -156,9 +157,9 @@ function ExistingStatusUpdateComponent() {
                 <AvatarImage
                   src={
                     statusUpdate?.member.user.image
-                      ? getFileUrl({
-                          param: { idOrSlug: organizationSlug },
-                          query: { fileKey: statusUpdate.member.user.image },
+                      ? typedUrl(getFileContract, {
+                          idOrSlug: organizationSlug,
+                          fileKey: statusUpdate.member.user.image,
                         })
                       : undefined
                   }
@@ -233,9 +234,9 @@ function ExistingStatusUpdateComponent() {
               <AvatarImage
                 src={
                   statusUpdate?.member.user.image
-                    ? getFileUrl({
-                        param: { idOrSlug: organizationSlug },
-                        query: { fileKey: statusUpdate.member.user.image },
+                    ? typedUrl(getFileContract, {
+                        idOrSlug: organizationSlug,
+                        fileKey: statusUpdate.member.user.image,
                       })
                     : undefined
                 }

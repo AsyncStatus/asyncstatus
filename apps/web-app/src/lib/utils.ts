@@ -1,5 +1,4 @@
 import type { DefaultError, UseMutationOptions } from "@tanstack/react-query";
-import { rpc } from "@/rpc/rpc";
 
 export function upperFirst(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -22,10 +21,4 @@ export function mutationOptions<
   options: UseMutationOptions<TData, TError, TVariables, TContext>,
 ): UseMutationOptions<TData, TError, TVariables, TContext> {
   return options;
-}
-
-export function getFileUrl(
-  param: Parameters<(typeof rpc.organization)[":idOrSlug"]["file"]["$get"]>[0],
-) {
-  return rpc.organization[":idOrSlug"].file.$url(param).toString();
 }

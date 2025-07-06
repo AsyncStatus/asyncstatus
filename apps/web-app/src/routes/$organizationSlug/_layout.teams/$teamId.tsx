@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +48,7 @@ import { useState } from "react";
 import { AddTeamMemberForm } from "@/components/add-team-member-form";
 import { UpdateTeamForm } from "@/components/update-team-form";
 
-import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { getInitials, upperFirst } from "@/lib/utils";
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import {
   deleteTeamMutationOptions,
@@ -55,6 +56,7 @@ import {
   getTeamQueryOptions,
   removeTeamMemberMutationOptions,
 } from "@/rpc/organization/teams";
+import { typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/$teamId")({
   component: TeamDetailsPage,
@@ -271,11 +273,9 @@ function TeamDetailsPage() {
                       <AvatarImage
                         src={
                           membership.member.user.image
-                            ? getFileUrl({
-                                param: { idOrSlug: organizationSlug },
-                                query: {
-                                  fileKey: membership.member.user.image,
-                                },
+                            ? typedUrl(getFileContract, {
+                                idOrSlug: organizationSlug,
+                                fileKey: membership.member.user.image,
                               })
                             : undefined
                         }

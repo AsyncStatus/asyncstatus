@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Dialog,
@@ -26,13 +27,13 @@ import { Check, ChevronsUpDown, Plus } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   listOrganizationsQueryOptions,
   setActiveOrganizationMutationOptions,
 } from "@/rpc/organization/organization";
-
+import { typedUrl } from "@/typed-handlers";
 import { CreateOrganizationForm } from "./create-organization-form";
 
 export function OrganizationMenu(props: { organizationSlug: string }) {
@@ -92,9 +93,9 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                   <AvatarImage
                     src={
                       activeOrganization?.logo
-                        ? getFileUrl({
-                            param: { idOrSlug: props.organizationSlug },
-                            query: { fileKey: activeOrganization.logo },
+                        ? typedUrl(getFileContract, {
+                            idOrSlug: props.organizationSlug,
+                            fileKey: activeOrganization.logo,
                           })
                         : undefined
                     }
@@ -140,9 +141,9 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                           <AvatarImage
                             src={
                               organization.logo
-                                ? getFileUrl({
-                                    param: { idOrSlug: organization.slug },
-                                    query: { fileKey: organization.logo },
+                                ? typedUrl(getFileContract, {
+                                    idOrSlug: organization.slug,
+                                    fileKey: organization.logo,
                                   })
                                 : undefined
                             }

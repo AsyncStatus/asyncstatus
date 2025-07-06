@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import {
@@ -22,9 +23,10 @@ import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { EmptyState } from "@/components/empty-state";
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { getStatusUpdatesByDateQueryOptions } from "@/rpc/organization/status-update";
+import { typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
   component: RouteComponent,
@@ -218,9 +220,9 @@ function RouteComponent() {
                     <AvatarImage
                       src={
                         memberInfo.user.image
-                          ? getFileUrl({
-                              param: { idOrSlug: organizationSlug },
-                              query: { fileKey: memberInfo.user.image },
+                          ? typedUrl(getFileContract, {
+                              idOrSlug: organizationSlug,
+                              fileKey: memberInfo.user.image,
                             })
                           : undefined
                       }

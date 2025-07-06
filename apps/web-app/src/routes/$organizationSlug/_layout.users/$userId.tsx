@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -21,7 +22,7 @@ import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
@@ -168,9 +169,9 @@ function RouteComponent() {
                 <AvatarImage
                   src={
                     user.image
-                      ? getFileUrl({
-                          param: { idOrSlug: organizationSlug },
-                          query: { fileKey: user.image },
+                      ? typedUrl(getFileContract, {
+                          idOrSlug: organizationSlug,
+                          fileKey: user.image,
                         })
                       : undefined
                   }

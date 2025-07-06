@@ -1,4 +1,5 @@
 import { zOrganizationUpdate } from "@asyncstatus/api/schema/organization";
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   Breadcrumb,
@@ -23,14 +24,13 @@ import { z } from "zod/v4";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { GitHubIntegrationCard } from "@/components/github-integration-card";
 import { UpdateMemberForm } from "@/components/update-member-form";
-import { getFileUrl } from "@/lib/utils";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getOrganizationQueryOptions,
   listOrganizationsQueryOptions,
   updateOrganizationMutationOptions,
 } from "@/rpc/organization/organization";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
@@ -197,9 +197,9 @@ function RouteComponent() {
                         render={({ field }) => {
                           const value =
                             typeof field.value === "string"
-                              ? getFileUrl({
-                                  param: { idOrSlug: params.organizationSlug },
-                                  query: { fileKey: field.value },
+                              ? typedUrl(getFileContract, {
+                                  idOrSlug: params.organizationSlug,
+                                  fileKey: field.value,
                                 })
                               : field.value;
 

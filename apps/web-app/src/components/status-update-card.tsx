@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -18,14 +19,13 @@ import {
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { format } from "date-fns";
 import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { formatInTimezone } from "@/lib/timezone";
-import { getFileUrl } from "@/lib/utils";
 import { sessionQueryOptions } from "@/rpc/auth";
+import { typedUrl } from "@/typed-handlers";
 
 type StatusUpdateItem = {
   id: string;
@@ -94,9 +94,9 @@ export function StatusUpdateCard({
               <AvatarImage
                 src={
                   statusUpdate.member.user.image
-                    ? getFileUrl({
-                        param: { idOrSlug: organizationSlug },
-                        query: { fileKey: statusUpdate.member.user.image },
+                    ? typedUrl(getFileContract, {
+                        idOrSlug: organizationSlug,
+                        fileKey: statusUpdate.member.user.image,
                       })
                     : undefined
                 }

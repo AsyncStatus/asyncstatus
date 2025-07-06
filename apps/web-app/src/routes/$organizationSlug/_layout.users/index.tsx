@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -48,13 +49,13 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
-import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { getInitials, upperFirst } from "@/lib/utils";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
 import {
   cancelInvitationMutationOptions,
   getOrganizationQueryOptions,
 } from "@/rpc/organization/organization";
-import { typedMutationOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   component: RouteComponent,
@@ -228,9 +229,9 @@ function RouteComponent() {
                             <AvatarImage
                               src={
                                 member.user.image
-                                  ? getFileUrl({
-                                      param: { idOrSlug: organizationSlug },
-                                      query: { fileKey: member.user.image },
+                                  ? typedUrl(getFileContract, {
+                                      idOrSlug: organizationSlug,
+                                      fileKey: member.user.image,
                                     })
                                   : undefined
                               }
@@ -335,9 +336,9 @@ function RouteComponent() {
                             <AvatarImage
                               src={
                                 member.user.image
-                                  ? getFileUrl({
-                                      param: { idOrSlug: organizationSlug },
-                                      query: { fileKey: member.user.image },
+                                  ? typedUrl(getFileContract, {
+                                      idOrSlug: organizationSlug,
+                                      fileKey: member.user.image,
                                     })
                                   : undefined
                               }

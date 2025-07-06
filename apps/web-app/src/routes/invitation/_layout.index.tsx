@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -12,7 +13,7 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { Mail, User } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { sessionQueryOptions } from "@/rpc/auth";
 import {
   acceptInvitationMutationOptions,
@@ -20,6 +21,7 @@ import {
   getInvitationQueryOptions,
   rejectInvitationMutationOptions,
 } from "@/rpc/organization/organization";
+import { typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/invitation/_layout/")({
   component: RouteComponent,
@@ -82,9 +84,9 @@ function RouteComponent() {
   // Get organization avatar URL if logo exists
   const organizationAvatarUrl =
     data?.organization.logo && data.organization.slug
-      ? getFileUrl({
-          param: { idOrSlug: data.organization.slug },
-          query: { fileKey: data.organization.logo },
+      ? typedUrl(getFileContract, {
+          idOrSlug: data.organization.slug,
+          fileKey: data.organization.logo,
         })
       : null;
 

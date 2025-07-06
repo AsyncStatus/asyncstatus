@@ -1,3 +1,4 @@
+import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   DropdownMenu,
@@ -18,9 +19,9 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { ChevronsUpDown, CreditCard, LogOut, Settings } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { getFileUrl, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { logoutMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
-
+import { typedUrl } from "@/typed-handlers";
 import { ThemeToggle } from "./toggle-theme";
 
 export function UserMenu(props: { organizationSlug: string }) {
@@ -58,9 +59,9 @@ export function UserMenu(props: { organizationSlug: string }) {
                 <AvatarImage
                   src={
                     session.data.user.image
-                      ? getFileUrl({
-                          param: { idOrSlug: props.organizationSlug },
-                          query: { fileKey: session.data.user.image },
+                      ? typedUrl(getFileContract, {
+                          idOrSlug: props.organizationSlug,
+                          fileKey: session.data.user.image,
                         })
                       : undefined
                   }
@@ -92,9 +93,9 @@ export function UserMenu(props: { organizationSlug: string }) {
                   <AvatarImage
                     src={
                       session.data.user.image
-                        ? getFileUrl({
-                            param: { idOrSlug: props.organizationSlug },
-                            query: { fileKey: session.data.user.image },
+                        ? typedUrl(getFileContract, {
+                            idOrSlug: props.organizationSlug,
+                            fileKey: session.data.user.image,
                           })
                         : undefined
                     }
