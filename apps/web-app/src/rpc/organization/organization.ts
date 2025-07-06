@@ -4,9 +4,7 @@ import type {
 } from "@asyncstatus/api/schema/organization";
 import { queryOptions } from "@tanstack/react-query";
 import type { z } from "zod/v4";
-
 import { mutationOptions } from "@/lib/utils";
-
 import { rpc } from "../rpc";
 
 export function getOrganizationQueryOptions(idOrSlug?: string) {
@@ -149,18 +147,5 @@ export function getInvitationByEmailQueryOptions(
       return response.json();
     },
     enabled: Boolean(invitationId) && Boolean(email),
-  });
-}
-
-export function updateOrganizationMutationOptions() {
-  return mutationOptions({
-    mutationKey: ["updateOrganization"],
-    mutationFn: async (input: Parameters<(typeof rpc.organization)[":idOrSlug"]["$patch"]>[0]) => {
-      const response = await rpc.organization[":idOrSlug"].$patch(input);
-      if (!response.ok) {
-        throw await response.json();
-      }
-      return response.json();
-    },
   });
 }

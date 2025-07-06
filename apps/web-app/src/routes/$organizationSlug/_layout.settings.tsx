@@ -2,6 +2,11 @@ import { zOrganizationUpdate } from "@asyncstatus/api/schema/organization";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
+  getOrganizationContract,
+  updateOrganizationContract,
+} from "@asyncstatus/api/typed-handlers/organization";
+import { serializeFormData } from "@asyncstatus/typed-handlers";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
@@ -28,9 +33,8 @@ import { sessionQueryOptions } from "@/rpc/auth";
 import {
   getOrganizationQueryOptions,
   listOrganizationsQueryOptions,
-  updateOrganizationMutationOptions,
 } from "@/rpc/organization/organization";
-import { typedQueryOptions, typedUrl } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
@@ -45,7 +49,11 @@ export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
     ]);
 
     await Promise.all([
-      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getOrganizationContract, {
+          idOrSlug: organizationSlug,
+        }),
+      ),
       queryClient.ensureQueryData(
         typedQueryOptions(getMemberContract, {
           idOrSlug: organizationSlug,
@@ -62,36 +70,39 @@ function RouteComponent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const organizationQuery = useSuspenseQuery(getOrganizationQueryOptions(params.organizationSlug));
-  const updateOrganizationMutation = useMutation({
-    ...updateOrganizationMutationOptions(),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: getOrganizationQueryOptions(data.slug).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: getOrganizationQueryOptions(params.organizationSlug).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: listOrganizationsQueryOptions().queryKey,
-      });
-      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
-        if (!sessionData) {
-          return sessionData;
-        }
-        return {
-          ...sessionData,
-          session: { ...sessionData.session, activeOrganizationId: data.id },
-        };
-      });
-      navigate({
-        to: "/$organizationSlug/settings",
-        params: { organizationSlug: data.slug },
-        search,
-        replace: true,
-      });
-    },
-  });
+  const organizationQuery = useSuspenseQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: params.organizationSlug }),
+  );
+  const updateOrganizationMutation = useMutation(
+    typedMutationOptions(updateOrganizationContract, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: getOrganizationQueryOptions(data.slug).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: getOrganizationQueryOptions(params.organizationSlug).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: listOrganizationsQueryOptions().queryKey,
+        });
+        queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+          if (!sessionData) {
+            return sessionData;
+          }
+          return {
+            ...sessionData,
+            session: { ...sessionData.session, activeOrganizationId: data.id },
+          };
+        });
+        navigate({
+          to: "/$organizationSlug/settings",
+          params: { organizationSlug: data.slug },
+          search,
+          replace: true,
+        });
+      },
+    }),
+  );
   const form = useForm({
     resolver: zodResolver(zOrganizationUpdate as any),
     defaultValues: {
@@ -169,10 +180,14 @@ function RouteComponent() {
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit((values) => {
-                      updateOrganizationMutation.mutate({
-                        param: { idOrSlug: params.organizationSlug },
-                        form: { ...values, slug: slugify(values.name) },
-                      });
+                      updateOrganizationMutation.mutate(
+                        serializeFormData({
+                          idOrSlug: params.organizationSlug,
+                          name: values.name,
+                          slug: slugify(values.name),
+                          logo: values.logo,
+                        }),
+                      );
                     })}
                     className="space-y-4"
                   >

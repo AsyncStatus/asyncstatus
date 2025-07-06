@@ -4,6 +4,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "verbatimModuleSyntax": false,
     "types": ["vite/client", "@cloudflare/workers-types/2023-07-01"],
     "baseUrl": ".",
     "paths": {

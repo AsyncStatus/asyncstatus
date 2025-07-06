@@ -5,11 +5,10 @@ import {
   Link,
   rootRouteId,
   useMatch,
-  useRouter,
 } from "@tanstack/react-router";
 
 export function DefaultErrorBoundary({ error }: Readonly<ErrorComponentProps>) {
-  const router = useRouter();
+  // const router = useRouter();
   const isRoot = useMatch({
     strict: false,
     select: (state) => state.id === rootRouteId,
@@ -22,7 +21,7 @@ export function DefaultErrorBoundary({ error }: Readonly<ErrorComponentProps>) {
         <Button
           type="button"
           onClick={() => {
-            router.invalidate();
+            // router.invalidate();
           }}
         >
           Try Again

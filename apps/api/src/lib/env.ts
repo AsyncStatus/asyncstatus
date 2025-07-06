@@ -10,7 +10,7 @@ import { createDb } from "../db/db";
 import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
-import type { Auth } from "./auth";
+import type { Auth, Session } from "./auth";
 import { createAuth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
@@ -110,7 +110,7 @@ export type ASContext = Awaited<ReturnType<typeof createContext>>;
 
 export type TypedHandlersContext = ASContext;
 export type TypedHandlersContextWithSession = ASContext & {
-  session: Auth["$Infer"]["Session"];
+  session: Session;
 };
 export type TypedHandlersContextWithOrganization = TypedHandlersContextWithSession & {
   organization: InferSelectModel<typeof schema.organization>;

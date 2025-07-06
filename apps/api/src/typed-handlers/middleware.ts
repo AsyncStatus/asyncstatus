@@ -20,9 +20,10 @@ export const requiredSession = typedMiddleware<TypedHandlersContextWithSession>(
 
 export const requiredOrganization = typedMiddleware<TypedHandlersContextWithOrganization>(
   async ({ req, db, set, session }, next) => {
-    const idOrSlug = req.url.includes("/organization/")
-      ? req.url.split("/organization/")[1]?.split("/")[0]
+    let idOrSlug = req.url.includes("/organizations/")
+      ? req.url.split("/organizations/")[1]?.split("/")[0]
       : undefined;
+    idOrSlug = idOrSlug?.endsWith("?") ? idOrSlug.slice(0, -1) : idOrSlug;
     if (!idOrSlug) {
       throw new TypedHandlersError({
         code: "BAD_REQUEST",

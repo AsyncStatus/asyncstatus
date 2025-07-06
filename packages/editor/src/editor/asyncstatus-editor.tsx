@@ -7,22 +7,21 @@ import { useCurrentEditor } from "@tiptap/react";
 import dayjs from "dayjs";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { AddStatusUpdateButton } from "@/components/add-status-update-button";
-import EditorBubble from "@/components/editor-bubble";
-import { EditorCommand, EditorCommandList } from "@/components/editor-command";
-import EditorCommandItem, { EditorCommandEmpty } from "@/components/editor-command-item";
-import { EditorContent } from "@/components/editor-content";
-import { EditorRoot } from "@/components/editor-root";
-import { EmojiSelector } from "@/components/emoji-selector";
-import { LinkSelector } from "@/components/link-selector";
-import { TextButtons } from "@/components/text-buttons";
-import { countJSONStats } from "@/utils/count-json-stats";
+import { AddStatusUpdateButton } from "../components/add-status-update-button";
+import EditorBubble from "../components/editor-bubble";
+import { EditorCommand, EditorCommandList } from "../components/editor-command";
+import EditorCommandItem, { EditorCommandEmpty } from "../components/editor-command-item";
+import { EditorContent } from "../components/editor-content";
+import { EditorRoot } from "../components/editor-root";
+import { EmojiSelector } from "../components/emoji-selector";
+import { LinkSelector } from "../components/link-selector";
+import { TextButtons } from "../components/text-buttons";
+import { handleCommandNavigation } from "../extensions/slash-command";
+import { countJSONStats } from "../utils/count-json-stats";
 import {
   type ExtractedStatusUpdateData,
   extractStatusUpdateData,
-} from "@/utils/extract-status-update-data";
-
-import { handleCommandNavigation } from "../extensions/slash-command";
+} from "../utils/extract-status-update-data";
 import { getAsyncStatusEditorDefaultContent } from "./asyncstatus-editor-default-content";
 import { asyncStatusEditorExtensions } from "./asyncstatus-editor-extensions";
 import { getSuggestionItems, slashCommand } from "./asyncstatus-editor-suggestion-items";

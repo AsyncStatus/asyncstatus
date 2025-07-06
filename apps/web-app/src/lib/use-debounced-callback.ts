@@ -172,7 +172,8 @@ export default function useDebouncedCallback<T extends (...args: any) => ReturnT
 
       lastArgs.current = lastThis.current = null;
       lastInvokeTime.current = time;
-      return (result.current = funcRef.current.apply(thisArg, args));
+      result.current = funcRef.current.apply(thisArg, args);
+      return result.current;
     };
 
     const startTimer = (pendingFunc: () => void, wait: number) => {

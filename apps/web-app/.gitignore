@@ -6,6 +6,8 @@ dist-ssr
 .env.development
 .env.production
 .env.test
+.nitro
+.tanstack
 
 .data
 .vercel

@@ -16,7 +16,7 @@ export default function useDebounce<T>(
     equalityFn?: (left: T, right: T) => boolean;
   },
 ): [T, DebouncedState<(value: T) => void>] {
-  const eq = (options && options.equalityFn) || valueEquality;
+  const eq = options?.equalityFn || valueEquality;
 
   const activeValue = useRef(value);
   const [, forceUpdate] = useState({});

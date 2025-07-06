@@ -1,0 +1,8 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style>
+    @media (prefers-color-scheme: dark) {
+        .p { fill: #fff }
+    }
+</style>
+<path class="p" fill-rule="evenodd" clip-rule="evenodd" d="M342.594 255.679L512 468.369H0.00898681L169.406 255.69L0 43L511.991 43L342.594 255.679Z" fill="#000"/>
+</svg>

@@ -1,6 +1,5 @@
 import { Button } from "@asyncstatus/ui/components/button";
-import { Checkbox } from "@asyncstatus/ui/components/checkbox";
-import { Ban, Check, CircleDashed, ClockAlert, Play, X } from "@asyncstatus/ui/icons";
+import { Ban, Check, CircleDashed, Play } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { TextSelection } from "@tiptap/pm/state";
 import type { NodeViewProps } from "@tiptap/react";
@@ -11,7 +10,6 @@ import {
   NodeViewWrapper,
   ReactNodeViewRenderer,
 } from "@tiptap/react";
-import React from "react";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {

@@ -26,6 +26,13 @@ import { waitlistRouter } from "./routers/waitlist";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
 import { getMemberHandler, updateMemberHandler } from "./typed-handlers/member-handlers";
+import {
+  createOrganizationHandler,
+  getOrganizationHandler,
+  listOrganizationsHandler,
+  setActiveOrganizationHandler,
+  updateOrganizationHandler,
+} from "./typed-handlers/organization-handlers";
 import { joinWaitlistHandler } from "./typed-handlers/waitlist-handlers";
 
 const app = new Hono<HonoEnv>()
@@ -107,6 +114,11 @@ const typedHandlersApp = typedHandlersHonoServer(
     updateMemberHandler,
     getMemberHandler,
     getFileHandler,
+    getOrganizationHandler,
+    listOrganizationsHandler,
+    setActiveOrganizationHandler,
+    createOrganizationHandler,
+    updateOrganizationHandler,
   ],
   {
     getContext: (c) => ({

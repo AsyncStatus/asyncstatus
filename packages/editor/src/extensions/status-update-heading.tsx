@@ -48,6 +48,7 @@ const StatusUpdateHeadingComponent = ({ node, updateAttributes }: NodeViewProps)
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
+              type="button"
               className={cn(
                 "text-muted-foreground flex items-center justify-start rounded-lg text-left",
                 open && "text-foreground",

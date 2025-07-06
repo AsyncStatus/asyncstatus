@@ -18,7 +18,7 @@ import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { ChevronsUpDown, CreditCard, LogOut, Settings } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { getInitials } from "@/lib/utils";
 import { logoutMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedUrl } from "@/typed-handlers";
@@ -26,14 +26,14 @@ import { ThemeToggle } from "./toggle-theme";
 
 export function UserMenu(props: { organizationSlug: string }) {
   const { isMobile } = useSidebar();
-  const router = useRouter();
+  // const router = useRouter();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
   const logout = useMutation({
     ...logoutMutationOptions(),
     onSuccess: async () => {
-      await router.invalidate();
+      // await router.invalidate();
       queryClient.clear();
       await navigate({ to: "/login" });
     },

@@ -1,15 +1,16 @@
 import tailwindcss from "@tailwindcss/vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import viteReact from "@vitejs/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+import tsConfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   plugins: [
-    tsconfigPaths(),
+    tsConfigPaths({ projects: ["./tsconfig.json"] }),
+    tanstackStart({ target: "cloudflare-module" }),
     tailwindcss(),
-    tanstackRouter({ autoCodeSplitting: true }),
-    viteReact(),
   ],
 });

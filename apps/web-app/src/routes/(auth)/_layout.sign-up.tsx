@@ -4,7 +4,7 @@ import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
@@ -47,7 +47,7 @@ const schema = z
 
 function RouteComponent() {
   const navigate = useNavigate();
-  const router = useRouter();
+  // const router = useRouter();
   const queryClient = useQueryClient();
   const search = Route.useSearch();
   const invitation = useQuery(
@@ -101,7 +101,7 @@ function RouteComponent() {
             name: `${data.firstName} ${data.lastName}`,
             callbackURL: import.meta.env.VITE_WEB_APP_URL,
           });
-          await router.invalidate();
+          // await router.invalidate();
           queryClient.clear();
           navigate({ to: search.redirect ?? "/" });
           if (!invitation.data) {

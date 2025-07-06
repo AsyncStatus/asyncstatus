@@ -171,7 +171,7 @@ function RouteComponent() {
                 <InviteMemberForm
                   organizationSlug={organizationSlug}
                   onSuccess={() => setInviteMemberDialogOpen(false)}
-                  onCancel={() => setInviteMemberDialogOpen(false)}
+                  // onCancel={() => setInviteMemberDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>
@@ -457,11 +457,13 @@ function RouteComponent() {
                       <CardContent className="py-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {upperFirst(invitation.role)}
+                            {upperFirst((invitation as any).role ?? "")}
                           </Badge>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Calendar className="size-3" />
-                            <span>Invited {dayjs(invitation.createdAt).format("MMM D, YYYY")}</span>
+                            <span>
+                              Invited {dayjs((invitation as any).createdAt).format("MMM D, YYYY")}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -472,7 +474,7 @@ function RouteComponent() {
                             size="sm"
                             onClick={() => {
                               toast.promise(
-                                navigator.clipboard.writeText(invitation.invitationLink),
+                                navigator.clipboard.writeText((invitation as any).invitationLink),
                                 {
                                   loading: "Copying invitation link...",
                                   success: "Invitation link copied!",
@@ -494,11 +496,9 @@ function RouteComponent() {
                               disabled={cancelInvitation.isPending}
                               onClick={() => {
                                 cancelInvitation.mutate({
-                                  param: {
-                                    idOrSlug: organizationSlug,
-                                    invitationId: invitation.id,
-                                  },
-                                });
+                                  idOrSlug: organizationSlug,
+                                  invitationId: invitation.id,
+                                } as any);
                               }}
                               title="Cancel invitation"
                               className="flex-initial"

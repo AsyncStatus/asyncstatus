@@ -1,35 +1,97 @@
+/// <reference types="vite/client" />
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { z } from "zod/v4";
+import globalsCss from "../globals.css?url";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
-export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient;
-}>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   validateSearch: searchSchema,
-  component: RouteComponent,
+  component: RootComponent,
+  // shellComponent: ({ children }) => {
+  //   return <div className="flex h-screen w-screen bg-red-500">{children}</div>;
+  // },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "AsyncStatus" },
     ],
+    links: [
+      { rel: "stylesheet", href: globalsCss },
+      {
+        url: "/favicon.ico",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/favicon-dark.ico",
+        sizes: "32x32",
+        media: "(prefers-color-scheme: dark)",
+      },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      {
+        url: "/apple-touch-icon.png",
+        href: "/apple-touch-icon.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/apple-touch-icon-dark.png",
+        href: "/apple-touch-icon-dark.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        rel: "preload",
+        href: "/ABCFavorit-Regular.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossorigin: "true",
+      },
+      {
+        rel: "preload",
+        href: "/ABCFavorit-Medium.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossorigin: "true",
+      },
+      {
+        rel: "preload",
+        href: "/ABCFavorit-Bold.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossorigin: "true",
+      },
+    ],
   }),
 });
 
-function RouteComponent() {
+function RootComponent() {
   return (
-    <>
+    <RootDocument>
       <Outlet />
-      <Suspense>
-        <TanStackRouterDevtools position="bottom-right" />
-      </Suspense>
-      <Suspense>
-        <ReactQueryDevtools />
-      </Suspense>
-    </>
+    </RootDocument>
+  );
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Suspense>
+          <TanStackRouterDevtools position="bottom-right" />
+        </Suspense>
+        <Suspense>
+          <ReactQueryDevtools />
+        </Suspense>
+        <Scripts />
+      </body>
+    </html>
   );
 }
 

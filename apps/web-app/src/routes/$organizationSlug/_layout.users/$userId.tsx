@@ -25,7 +25,7 @@ import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials } from "@/lib/utils";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
 import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/$userId")({
   component: RouteComponent,
@@ -141,6 +141,9 @@ function RouteComponent() {
                   idOrSlug: organizationSlug,
                   memberId: member.data.id,
                   archivedAt: new Date().toISOString(),
+                  firstName: user.name,
+                  lastName: user.name,
+                  role: "member",
                 });
               }}
               className="flex-initial"

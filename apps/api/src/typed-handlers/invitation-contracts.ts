@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { Invitation, Organization, Team, User } from "../db";
 
 export const getInvitationContract = typedContract(
-  "get /invitation/:id",
+  "get /invitations/:id",
   z.strictObject({ id: z.string(), email: z.email() }),
   z.strictObject({
     ...Invitation.shape,

@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-
+import { getIncomingHeaders } from "@/get-incoming-headers";
 import { authClient } from "@/lib/auth";
 import { mutationOptions } from "@/lib/utils";
 
@@ -8,8 +8,10 @@ export function sessionQueryOptions() {
     queryKey: ["session"],
     staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.getSession({
-        fetchOptions: { signal },
+        fetchOptions: { signal, headers },
       });
       if (error) {
         throw new Error(error.message);
@@ -24,8 +26,10 @@ export function sessionBetterAuthQueryOptions() {
     queryKey: ["session"],
     staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
+      const headers = new Headers();
+      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
       const { data, error } = await authClient.getSession({
-        fetchOptions: { signal },
+        fetchOptions: { signal, headers },
       });
       if (error) {
         throw new Error(error.message);

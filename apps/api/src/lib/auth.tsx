@@ -114,3 +114,4 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+export type Session = Auth["$Infer"]["Session"];

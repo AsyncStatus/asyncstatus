@@ -1,12 +1,16 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "compatibility_date": "2025-04-02",
   "name": "web-app",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2025-07-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".output/public"
+  },
   "observability": {
     "enabled": true
   },
-  "pages_build_output_dir": "dist",
   "placement": {
-    "mode": "off"
+    "mode": "smart"
   }
 }

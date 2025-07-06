@@ -4,7 +4,10 @@ import { deserializeFormData, serializeFormData } from "./core/form-data";
 import { isNonJsonSerializable } from "./core/is-non-json-serializable";
 import type { TypedContract } from "./core/typed-contract";
 
-export function typedContractFetchFactory(baseUrl: string, defaultInit?: RequestInit) {
+export function typedContractFetchFactory(
+  baseUrl: string,
+  getDefaultInit?: (contract: TypedContract<any, any, any>) => RequestInit,
+) {
   return async <TC extends TypedContract<any, any, any>>(
     contract: TC,
     input: TC["$infer"]["input"],
@@ -12,7 +15,7 @@ export function typedContractFetchFactory(baseUrl: string, defaultInit?: Request
   ) => {
     const requestData = getRequestData(contract, input);
     const init: RequestInit = {
-      ...defaultInit,
+      ...(getDefaultInit?.(contract) ?? {}),
       ...overrideInit,
       method: contract.methodUppercase,
     };

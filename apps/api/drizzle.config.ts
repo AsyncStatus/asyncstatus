@@ -10,7 +10,7 @@ if (!processEnv.TURSO_URL) {
 
 export default defineConfig({
   out: "./drizzle",
-  schema: "./src/db/schema.ts",
+  schema: "./src/db/index.ts",
   strict: true,
   verbose: true,
   dialect: "turso",
