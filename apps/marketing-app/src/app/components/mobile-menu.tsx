@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Link from "next/link";
-import { AnimatePresence, motion, Variants } from "framer-motion";
+import { useState } from "react";
 
 import { WaitlistDialog } from "./waitlist-dialog";
 
@@ -61,6 +61,7 @@ export function MobileMenu() {
   return (
     <div className="z-50 hidden items-center justify-center gap-6 max-sm:flex">
       <button
+        type="button"
         className="relative flex h-6 w-6 touch-manipulation flex-col justify-center gap-2"
         aria-label="Toggle menu"
         onClick={() => setIsOpen(!isOpen)}
@@ -112,21 +113,17 @@ export function MobileMenu() {
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <Link
-                  href="/#team"
-                  className="block w-full py-6"
-                  onClick={() => setIsOpen(false)}
-                >
+                <Link href="#team" className="block w-full py-6" onClick={() => setIsOpen(false)}>
                   Use cases
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="/why-to-use-our-app"
+                  href="/why-use-our-app"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
-                  Why AsyncStatus
+                  Why use AsyncStatus?
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
@@ -140,10 +137,7 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <div className="block w-full py-6">
-                  <WaitlistDialog
-                    buttonSize="lg"
-                    className="h-12 w-full text-lg font-normal"
-                  />
+                  <WaitlistDialog buttonSize="lg" className="h-12 w-full text-lg font-normal" />
                 </div>
               </motion.div>
             </motion.nav>

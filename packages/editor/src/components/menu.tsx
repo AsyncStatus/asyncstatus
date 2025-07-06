@@ -1,5 +1,5 @@
-import { type ReactNode } from "react";
 import { useCurrentEditor } from "@tiptap/react";
+import type { ReactNode } from "react";
 
 import EditorBubble from "./editor-bubble";
 

@@ -1,10 +1,5 @@
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  getOrganizationQueryOptions,
-  listOrganizationsQueryOptions,
-  updateOrganizationMutationOptions,
-} from "@/rpc/organization/organization";
 import { zOrganizationUpdate } from "@asyncstatus/api/schema/organization";
+import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,59 +12,57 @@ import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@asyncstatus/ui/components/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@asyncstatus/ui/components/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/components/tabs";
 import { CreditCard } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { toast } from "@asyncstatus/ui/components/sonner";
-
-import { getFileUrl } from "@/lib/utils";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { z } from "zod/v4";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { GitHubIntegrationCard } from "@/components/github-integration-card";
-import { TimezoneSettings } from "@/components/timezone-settings";
+import { UpdateMemberForm } from "@/components/update-member-form";
+import { getFileUrl } from "@/lib/utils";
+import { sessionQueryOptions } from "@/rpc/auth";
+import {
+  getOrganizationQueryOptions,
+  listOrganizationsQueryOptions,
+  updateOrganizationMutationOptions,
+} from "@/rpc/organization/organization";
+import { typedQueryOptions } from "@/typed-handlers";
+import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
+  validateSearch: z.object({
+    tab: z.enum(["workspace", "profile", "integrations"]).default("workspace"),
+  }),
+  loader: async ({ context: { queryClient }, location, params: { organizationSlug } }) => {
+    const [organization] = await Promise.all([
+      ensureValidOrganization(queryClient, organizationSlug),
+      ensureValidSession(queryClient, location),
+    ]);
+
+    await Promise.all([
+      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getMemberContract, {
+          idOrSlug: organizationSlug,
+          memberId: organization.member.id,
+        }),
+      ),
+    ]);
+  },
 });
 
 function RouteComponent() {
-  const params = useParams({ from: "/$organizationSlug" });
+  const params = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const organizationQuery = useSuspenseQuery(
-    getOrganizationQueryOptions(params.organizationSlug),
-  );
+  const organizationQuery = useSuspenseQuery(getOrganizationQueryOptions(params.organizationSlug));
   const updateOrganizationMutation = useMutation({
     ...updateOrganizationMutationOptions(),
     onSuccess: (data) => {
@@ -82,27 +75,25 @@ function RouteComponent() {
       queryClient.invalidateQueries({
         queryKey: listOrganizationsQueryOptions().queryKey,
       });
-      queryClient.setQueryData(
-        sessionQueryOptions().queryKey,
-        (sessionData) => {
-          if (!sessionData) {
-            return sessionData;
-          }
-          return {
-            ...sessionData,
-            session: { ...sessionData.session, activeOrganizationId: data.id },
-          };
-        },
-      );
+      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+        if (!sessionData) {
+          return sessionData;
+        }
+        return {
+          ...sessionData,
+          session: { ...sessionData.session, activeOrganizationId: data.id },
+        };
+      });
       navigate({
         to: "/$organizationSlug/settings",
         params: { organizationSlug: data.slug },
+        search,
         replace: true,
       });
     },
   });
   const form = useForm({
-    resolver: zodResolver(zOrganizationUpdate),
+    resolver: zodResolver(zOrganizationUpdate as any),
     defaultValues: {
       name: organizationQuery.data?.organization.name || "",
       slug: organizationQuery.data?.organization.slug || "",
@@ -119,7 +110,14 @@ function RouteComponent() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Settings</BreadcrumbPage>
+                <BreadcrumbPage>
+                  <Link
+                    to="/$organizationSlug/settings"
+                    params={{ organizationSlug: params.organizationSlug }}
+                  >
+                    Settings
+                  </Link>
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -127,11 +125,7 @@ function RouteComponent() {
 
         <div className="flex gap-2">
           <Button variant="secondary" asChild>
-            <a
-              href={import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL} target="_blank" rel="noreferrer">
               <CreditCard />
               Plan and billing
             </a>
@@ -140,14 +134,37 @@ function RouteComponent() {
       </header>
 
       <div className="py-4">
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs
+          value={search.tab}
+          onValueChange={(value) => {
+            navigate({
+              to: "/$organizationSlug/settings",
+              params: { organizationSlug: params.organizationSlug },
+              search: { tab: value as typeof search.tab },
+              replace: true,
+            });
+          }}
+          className="w-full"
+        >
           <TabsList className="mb-4">
-            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="workspace">Workspace</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="general" className="space-y-4">
+          <TabsContent
+            value="workspace"
+            onChange={() => {
+              navigate({
+                to: "/$organizationSlug/settings",
+                params: { organizationSlug: params.organizationSlug },
+                search: { tab: search.tab },
+                replace: true,
+              });
+            }}
+            className="space-y-4"
+          >
             <Card>
               <CardContent>
                 <Form {...form}>
@@ -191,10 +208,7 @@ function RouteComponent() {
                             <FormItem>
                               <FormLabel className="mb-2">Logo</FormLabel>
                               <FormControl>
-                                <ImageUpload
-                                  value={value}
-                                  onChange={field.onChange}
-                                />
+                                <ImageUpload value={value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -203,10 +217,7 @@ function RouteComponent() {
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      disabled={updateOrganizationMutation.isPending}
-                    >
+                    <Button type="submit" disabled={updateOrganizationMutation.isPending}>
                       Save changes
                     </Button>
                   </form>
@@ -219,10 +230,13 @@ function RouteComponent() {
             <GitHubIntegrationCard organizationSlug={params.organizationSlug} />
           </TabsContent>
 
-          <TabsContent value="preferences" className="space-y-4">
+          <TabsContent value="profile" className="space-y-4">
             <Card>
               <CardContent>
-                <TimezoneSettings organizationSlug={params.organizationSlug} />
+                <UpdateMemberForm
+                  organizationSlugOrId={params.organizationSlug}
+                  memberId={organizationQuery.data.member.id}
+                />
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,9 +1,3 @@
-import { useEffect, useState } from "react";
-import {
-  disconnectGithubMutationOptions,
-  getGithubIntegrationQueryOptions,
-} from "@/rpc/organization/github";
-import { rpc } from "@/rpc/rpc";
 import {
   SyncGithubWorkflowStatusName,
   SyncGithubWorkflowStatusStep,
@@ -19,24 +13,22 @@ import {
 } from "@asyncstatus/ui/components/dialog";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Github } from "@asyncstatus/ui/icons";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+  disconnectGithubMutationOptions,
+  getGithubIntegrationQueryOptions,
+} from "@/rpc/organization/github";
+import { rpc } from "@/rpc/rpc";
 
 type GitHubIntegrationButtonProps = {
   organizationSlug: string;
 };
 
-export function GitHubIntegrationButton({
-  organizationSlug,
-}: GitHubIntegrationButtonProps) {
+export function GitHubIntegrationButton({ organizationSlug }: GitHubIntegrationButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
-  const githubIntegration = useSuspenseQuery(
-    getGithubIntegrationQueryOptions(organizationSlug),
-  );
+  const githubIntegration = useSuspenseQuery(getGithubIntegrationQueryOptions(organizationSlug));
   const githubAppInstallUrl = `https://github.com/apps/asyncstatus-local/installations/new?state=${organizationSlug}`;
   const disconnectGithub = useMutation({
     ...disconnectGithubMutationOptions(),
@@ -60,9 +52,7 @@ export function GitHubIntegrationButton({
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to disconnect GitHub. Please try again.",
+        error instanceof Error ? error.message : "Failed to disconnect GitHub. Please try again.",
       );
     },
   });
@@ -97,26 +87,18 @@ export function GitHubIntegrationButton({
   return (
     <>
       {githubIntegration.data?.syncId && (
-        <p className="text-sm text-gray-500">
-          {githubIntegration.data.syncStatusName}
-        </p>
+        <p className="text-sm text-gray-500">{githubIntegration.data.syncStatusName}</p>
       )}
 
       {!githubIntegration.data ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsDialogOpen(true)}
-        >
+        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(true)}>
           Connect
         </Button>
       ) : (
         <Button
           type="button"
           variant="destructive"
-          onClick={() =>
-            disconnectGithub.mutate({ param: { idOrSlug: organizationSlug } })
-          }
+          onClick={() => disconnectGithub.mutate({ param: { idOrSlug: organizationSlug } })}
           disabled={disconnectGithub.isPending}
         >
           Disconnect
@@ -128,24 +110,20 @@ export function GitHubIntegrationButton({
           <DialogHeader>
             <DialogTitle>Connect GitHub</DialogTitle>
             <DialogDescription>
-              Connect your GitHub organization to enable integration with your
-              AsyncStatus organization.
+              Connect your GitHub organization to enable integration with your AsyncStatus
+              organization.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col space-y-4 py-4">
             <p className="text-sm text-gray-500">
-              After connecting, you'll be able to access information about your
-              repositories, pull requests, and more.
+              After connecting, you'll be able to access information about your repositories, pull
+              requests, and more.
             </p>
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              className="mr-2"
-            >
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="mr-2">
               Cancel
             </Button>
             <Button asChild>

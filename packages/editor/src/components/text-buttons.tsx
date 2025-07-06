@@ -50,8 +50,7 @@ export const TextButtons = () => {
     {
       name: "blockableTodo",
       isActive: (editor) => editor.isActive("blockableTodoItem"),
-      command: (editor) =>
-        editor.chain().focus().toggleBlockableTodoItem().run(),
+      command: (editor) => editor.chain().focus().toggleBlockableTodoItem().run(),
       icon: Ban,
     },
   ];
@@ -64,12 +63,7 @@ export const TextButtons = () => {
             item.command(editor);
           }}
         >
-          <Button
-            size="sm"
-            className="rounded-none"
-            variant="ghost"
-            type="button"
-          >
+          <Button size="sm" className="rounded-none" variant="ghost" type="button">
             <item.icon
               className={cn("h-4 w-4", {
                 "text-blue-500": item.isActive(editor),

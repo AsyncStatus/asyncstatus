@@ -1,15 +1,4 @@
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  acceptInvitationMutationOptions,
-  getInvitationByEmailQueryOptions,
-  getInvitationQueryOptions,
-  rejectInvitationMutationOptions,
-} from "@/rpc/organization/organization";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -21,14 +10,16 @@ import {
 } from "@asyncstatus/ui/components/card";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Mail, User } from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-
 import { getFileUrl, getInitials } from "@/lib/utils";
+import { sessionQueryOptions } from "@/rpc/auth";
+import {
+  acceptInvitationMutationOptions,
+  getInvitationByEmailQueryOptions,
+  getInvitationQueryOptions,
+  rejectInvitationMutationOptions,
+} from "@/rpc/organization/organization";
 
 export const Route = createFileRoute("/invitation/_layout/")({
   component: RouteComponent,
@@ -36,11 +27,7 @@ export const Route = createFileRoute("/invitation/_layout/")({
     const [session, invitation] = await Promise.all([
       queryClient.ensureQueryData(sessionQueryOptions()).catch(() => {}),
       queryClient.ensureQueryData(
-        getInvitationByEmailQueryOptions(
-          search.invitationId,
-          search.invitationEmail,
-          false,
-        ),
+        getInvitationByEmailQueryOptions(search.invitationId, search.invitationEmail, false),
       ),
     ]);
     if (!session && invitation?.hasUser) {
@@ -64,11 +51,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const invitation = useSuspenseQuery(
-    getInvitationByEmailQueryOptions(
-      search.invitationId,
-      search.invitationEmail,
-      true,
-    ),
+    getInvitationByEmailQueryOptions(search.invitationId, search.invitationEmail, true),
   );
   const acceptInvitation = useMutation({
     ...acceptInvitationMutationOptions(),
@@ -80,10 +63,7 @@ function RouteComponent() {
         replace: true,
       });
       queryClient.invalidateQueries({
-        queryKey: getInvitationQueryOptions(
-          search.invitationId,
-          search.invitationEmail,
-        ).queryKey,
+        queryKey: getInvitationQueryOptions(search.invitationId, search.invitationEmail).queryKey,
       });
     },
   });
@@ -92,10 +72,7 @@ function RouteComponent() {
     onSuccess() {
       toast.success("Invitation rejected");
       queryClient.invalidateQueries({
-        queryKey: getInvitationQueryOptions(
-          search.invitationId,
-          search.invitationEmail,
-        ).queryKey,
+        queryKey: getInvitationQueryOptions(search.invitationId, search.invitationEmail).queryKey,
       });
     },
   });
@@ -130,8 +107,7 @@ function RouteComponent() {
           <div className="mt-4 text-center">
             <CardTitle className="text-xl">{data?.organization.name}</CardTitle>
             <CardDescription>
-              Join {data?.organization.name} to start collaborating with the
-              team.
+              Join {data?.organization.name} to start collaborating with the team.
             </CardDescription>
           </div>
         </div>
@@ -148,13 +124,9 @@ function RouteComponent() {
           <div className="flex items-center gap-3">
             <Mail className="text-primary size-5" />
             <div>
-              <div className="text-muted-foreground text-sm">
-                Invitation sent to
-              </div>
+              <div className="text-muted-foreground text-sm">Invitation sent to</div>
               <span className="font-medium">{data?.name} </span>
-              <span className="text-muted-foreground text-sm">
-                {data?.email}
-              </span>
+              <span className="text-muted-foreground text-sm">{data?.email}</span>
             </div>
           </div>
 
@@ -167,9 +139,7 @@ function RouteComponent() {
             {data?.team && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Team:</span>
-                <span className="font-medium capitalize">
-                  {data?.team.name}
-                </span>
+                <span className="font-medium capitalize">{data?.team.name}</span>
               </div>
             )}
           </div>
@@ -181,9 +151,7 @@ function RouteComponent() {
           <div className="flex w-full gap-2">
             <Button
               className="flex-1"
-              onClick={() =>
-                acceptInvitation.mutate({ id: search.invitationId })
-              }
+              onClick={() => acceptInvitation.mutate({ id: search.invitationId })}
               disabled={acceptInvitation.isPending}
             >
               {acceptInvitation.isPending ? "Accepting..." : "Accept"}
@@ -191,9 +159,7 @@ function RouteComponent() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() =>
-                rejectInvitation.mutate({ id: search.invitationId })
-              }
+              onClick={() => rejectInvitation.mutate({ id: search.invitationId })}
               disabled={rejectInvitation.isPending}
             >
               {rejectInvitation.isPending ? "Rejecting..." : "Reject"}

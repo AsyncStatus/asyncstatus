@@ -1,11 +1,4 @@
-import { useState } from "react";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import { getStatusUpdatesByDateQueryOptions } from "@/rpc/organization/status-update";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
@@ -15,11 +8,7 @@ import {
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Calendar } from "@asyncstatus/ui/components/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { CalendarIcon } from "@asyncstatus/ui/icons";
@@ -29,11 +18,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { CircleHelpIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-import { getFileUrl, getInitials } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
+import { getFileUrl, getInitials } from "@/lib/utils";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { getStatusUpdatesByDateQueryOptions } from "@/rpc/organization/status-update";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
   component: RouteComponent,
@@ -76,9 +67,7 @@ function RouteComponent() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const organizationQuery = useQuery(
-    getOrganizationQueryOptions(organizationSlug),
-  );
+  const organizationQuery = useQuery(getOrganizationQueryOptions(organizationSlug));
   const organization = organizationQuery.data?.organization;
   const member = organizationQuery.data?.member;
 
@@ -100,20 +89,17 @@ function RouteComponent() {
     const getItemStyle = () => {
       if (item.isBlocker) {
         return {
-          color:
-            "color-mix(in oklab, hsl(var(--destructive)) 70%, hsl(var(--foreground)) 30%)",
+          color: "color-mix(in oklab, hsl(var(--destructive)) 70%, hsl(var(--foreground)) 30%)",
         };
       }
       if (!item.isInProgress && !item.isBlocker) {
         return {
-          color:
-            "color-mix(in oklab, hsl(142.1 76.2% 36.3%) 65%, hsl(var(--foreground)) 35%)",
+          color: "color-mix(in oklab, hsl(142.1 76.2% 36.3%) 65%, hsl(var(--foreground)) 35%)",
         };
       }
       if (item.isInProgress && !item.isBlocker) {
         return {
-          color:
-            "color-mix(in oklab, hsl(32.1 94.6% 43.7%) 70%, hsl(var(--foreground)) 30%)",
+          color: "color-mix(in oklab, hsl(32.1 94.6% 43.7%) 70%, hsl(var(--foreground)) 30%)",
         };
       }
       return {};
@@ -128,9 +114,7 @@ function RouteComponent() {
             strong: ({ children }) => <strong>{children}</strong>,
             em: ({ children }) => <em>{children}</em>,
             code: ({ children }) => (
-              <code className="bg-muted rounded px-1 py-0.5 text-xs">
-                {children}
-              </code>
+              <code className="bg-muted rounded px-1 py-0.5 text-xs">{children}</code>
             ),
           }}
         >
@@ -212,10 +196,7 @@ function RouteComponent() {
             {Object.entries(groupedByMember).map(([memberId, updates]) => {
               // Combine all items from all updates for this member
               const allItems = updates.flatMap((update: StatusUpdate) =>
-                update.items.sort(
-                  (a: StatusUpdateItem, b: StatusUpdateItem) =>
-                    a.order - b.order,
-                ),
+                update.items.sort((a: StatusUpdateItem, b: StatusUpdateItem) => a.order - b.order),
               );
               const displayItems = allItems.slice(0, 3);
               const remainingCount = allItems.length - 3;
@@ -245,15 +226,11 @@ function RouteComponent() {
                       }
                       alt={memberInfo.user.name}
                     />
-                    <AvatarFallback>
-                      {getInitials(memberInfo.user.name)}
-                    </AvatarFallback>
+                    <AvatarFallback>{getInitials(memberInfo.user.name)}</AvatarFallback>
                   </Avatar>
 
                   <div className="mt-1 inline flex-1">
-                    <span className="font-medium">
-                      {memberInfo.user.name.split(" ")[0]}{" "}
-                    </span>
+                    <span className="font-medium">{memberInfo.user.name.split(" ")[0]} </span>
                     {mostRecentUpdate?.emoji && (
                       <span role="img" aria-label="mood">
                         {mostRecentUpdate.emoji}{" "}
@@ -264,16 +241,14 @@ function RouteComponent() {
                         {mostRecentUpdate.team.name}
                       </Badge>
                     )}
-                    {displayItems.map(
-                      (item: StatusUpdateItem, index: number) => (
-                        <span key={item.id}>
-                          {renderStatusUpdateItem(item)}
-                          {index < displayItems.length - 1 && (
-                            <span className="text-muted-foreground">, </span>
-                          )}
-                        </span>
-                      ),
-                    )}{" "}
+                    {displayItems.map((item: StatusUpdateItem, index: number) => (
+                      <span key={item.id}>
+                        {renderStatusUpdateItem(item)}
+                        {index < displayItems.length - 1 && (
+                          <span className="text-muted-foreground">, </span>
+                        )}
+                      </span>
+                    ))}{" "}
                     {remainingCount > 0 && (
                       <Link
                         to="/$organizationSlug/status-update/$statusUpdateId"

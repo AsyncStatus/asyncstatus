@@ -16,6 +16,8 @@ export interface ImageUploadProps {
   error?: string;
   disabled?: boolean;
   className?: string;
+  onBlur?: () => void;
+  onFocus?: () => void;
 }
 
 export function ImageUpload({
@@ -26,6 +28,8 @@ export function ImageUpload({
   fallbackClassName,
   error,
   disabled,
+  onBlur,
+  onFocus,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(value ?? null);
@@ -98,6 +102,8 @@ export function ImageUpload({
             onChange={handleFileChange}
             disabled={disabled}
             className={cn("hidden", className)}
+            onBlur={onBlur}
+            onFocus={onFocus}
           />
           <Button
             type="button"

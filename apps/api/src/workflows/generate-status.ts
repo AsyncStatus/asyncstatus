@@ -1,14 +1,9 @@
-import {
-  WorkflowEntrypoint,
-  WorkflowStep,
-  type WorkflowEvent,
-} from "cloudflare:workers";
+import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { App, Octokit } from "octokit";
-
-import { createDb } from "../db";
-import * as schema from "../db/schema";
+import { App, type Octokit } from "octokit";
+import * as schema from "../db";
+import { createDb } from "../db/db";
 import type { HonoEnv } from "../lib/env";
 
 export type GenerateStatusWorkflowParams = {
@@ -124,9 +119,7 @@ async function canonicalizeEvent(
       case "PushEvent": {
         // Summarize commits with Gemma model
         const commits = (payload?.commits ?? []) as any[];
-        const commitMessages: string[] = commits
-          .slice(0, 20)
-          .map((c: any) => `- ${c.message}`);
+        const commitMessages: string[] = commits.slice(0, 20).map((c: any) => `- ${c.message}`);
 
         const changedFiles: Set<string> = new Set();
         const fileInfos: FileInfo[] = [];
@@ -181,10 +174,7 @@ async function canonicalizeEvent(
           },
           fileInfos,
         );
-        const gemmaResp = await env.AI.run(
-          "@cf/meta/llama-4-scout-17b-16e-instruct",
-          { prompt },
-        );
+        const gemmaResp = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { prompt });
         let summaryText: string = Array.isArray(gemmaResp)
           ? gemmaResp.join("\n")
           : (((gemmaResp as any)?.response as string) ?? "");
@@ -240,10 +230,7 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
   HonoEnv["Bindings"],
   GenerateStatusWorkflowParams
 > {
-  async run(
-    event: WorkflowEvent<GenerateStatusWorkflowParams>,
-    step: WorkflowStep,
-  ) {
+  async run(event: WorkflowEvent<GenerateStatusWorkflowParams>, step: WorkflowStep) {
     const { jobId } = event.payload;
     const db = createDb(this.env);
 
@@ -289,17 +276,12 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
       // Find mapping in github_user table for this integration
       const githubUser = await db.query.githubUser.findFirst({
         where: and(
-          eq(
-            schema.githubUser.integrationId,
-            job.member.organization.githubIntegration.id,
-          ),
+          eq(schema.githubUser.integrationId, job.member.organization.githubIntegration.id),
           eq(schema.githubUser.githubId, job.member.githubId),
         ),
       });
       if (!githubUser) {
-        throw new Error(
-          "GitHub user record not found for this account and integration",
-        );
+        throw new Error("GitHub user record not found for this account and integration");
       }
 
       // 4. Fetch events between effectiveFrom & effectiveTo
@@ -312,8 +294,7 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
         const to = new Date(job.effectiveTo);
 
         // First get repos accessible to installation
-        const reposResp =
-          await octokit.rest.apps.listReposAccessibleToInstallation();
+        const reposResp = await octokit.rest.apps.listReposAccessibleToInstallation();
         if (reposResp.status !== 200) {
           throw new Error("Failed to fetch repositories for installation");
         }
@@ -324,15 +305,12 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
           console.log(`Processing repo ${repo.name}`);
           page = 1;
           while (page <= 10) {
-            const resp = await octokit.request(
-              "GET /repos/{owner}/{repo}/events",
-              {
-                owner: repo.owner.login,
-                repo: repo.name,
-                per_page: perPage,
-                page,
-              },
-            );
+            const resp = await octokit.request("GET /repos/{owner}/{repo}/events", {
+              owner: repo.owner.login,
+              repo: repo.name,
+              per_page: perPage,
+              page,
+            });
 
             if (resp.status !== 200) break;
             const batch = resp.data as any[];
@@ -356,9 +334,7 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
           }
         }
 
-        console.log(
-          `Fetched ${collected.length} events for user ${job.member.githubId}`,
-        );
+        console.log(`Fetched ${collected.length} events for user ${job.member.githubId}`);
 
         return collected;
       });
@@ -390,13 +366,10 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
 
           // embedding
           console.log(`Generating embedding for ${canonical}`);
-          const modelResponse: any = await (this.env.AI as any).run(
-            "@cf/baai/bge-m3",
-            {
-              text: canonical,
-              truncate_inputs: true,
-            },
-          );
+          const modelResponse: any = await (this.env.AI as any).run("@cf/baai/bge-m3", {
+            text: canonical,
+            truncate_inputs: true,
+          });
 
           if (!modelResponse?.data || !Array.isArray(modelResponse.data)) {
             throw new Error("Invalid embedding data");
@@ -430,11 +403,7 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
 
       let summaryBullets: string[] = [];
       if (allEventLines.length > 0) {
-        const summaryPrompt = buildSummaryPrompt(
-          allEventLines,
-          job.effectiveFrom,
-          job.effectiveTo,
-        );
+        const summaryPrompt = buildSummaryPrompt(allEventLines, job.effectiveFrom, job.effectiveTo);
         const gemmaResp = await (this.env.AI as any).run(
           "@cf/meta/llama-4-scout-17b-16e-instruct",
           { prompt: summaryPrompt },
@@ -447,8 +416,7 @@ export class GenerateStatusWorkflow extends WorkflowEntrypoint<
           .map((l: string) => l.trim())
           .filter(Boolean);
         // Fallback to raw events if model produced nothing useful
-        if (summaryBullets.length === 0)
-          summaryBullets = allEventLines.slice(0, 10);
+        if (summaryBullets.length === 0) summaryBullets = allEventLines.slice(0, 10);
       }
 
       const statusUpdateId = nanoid();

@@ -1,9 +1,4 @@
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -28,9 +23,9 @@ import dayjs from "dayjs";
 import { ShareIcon } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
 import { formatInTimezone } from "@/lib/timezone";
 import { getFileUrl } from "@/lib/utils";
+import { sessionQueryOptions } from "@/rpc/auth";
 
 type StatusUpdateItem = {
   id: string;
@@ -80,30 +75,12 @@ export function StatusUpdateCard({
   // Get user's preferred timezone, fallback to UTC
   const userTimezone = session.data?.user?.timezone || "UTC";
 
-  // Check if both dates are on the same day in user's timezone
-  const effectiveFromDate = formatInTimezone(
-    effectiveFrom,
-    userTimezone,
-    "yyyy-MM-dd",
-  );
-  const effectiveToDate = formatInTimezone(
-    effectiveTo,
-    userTimezone,
-    "yyyy-MM-dd",
-  );
-  const isSameDay = effectiveFromDate === effectiveToDate;
-
   // Format dates in user's timezone
-  const formattedEffectiveFrom = formatInTimezone(
-    effectiveFrom,
-    userTimezone,
-    "MMM d",
-  );
-  const formattedEffectiveTo = formatInTimezone(
-    effectiveTo,
-    userTimezone,
-    "MMM d, yyyy",
-  );
+  const formattedEffectiveFrom = formatInTimezone(effectiveFrom, userTimezone, "MMM d");
+  const formattedEffectiveTo = formatInTimezone(effectiveTo, userTimezone, "MMM d, yyyy");
+  const effectiveFromDate = formatInTimezone(effectiveFrom, userTimezone, "yyyy-MM-dd");
+  const effectiveToDate = formatInTimezone(effectiveTo, userTimezone, "yyyy-MM-dd");
+  const isSameDay = effectiveFromDate === effectiveToDate;
 
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);
@@ -125,18 +102,12 @@ export function StatusUpdateCard({
                 }
                 alt={statusUpdate.member.user?.name}
               />
-              <AvatarFallback>
-                {statusUpdate.member.user?.name.charAt(0)}
-              </AvatarFallback>
+              <AvatarFallback>{statusUpdate.member.user?.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-base">
-                {statusUpdate.member.user?.name}
-              </CardTitle>
+              <CardTitle className="text-base">{statusUpdate.member.user?.name}</CardTitle>
               {statusUpdate.team && (
-                <CardDescription className="text-xs">
-                  {statusUpdate.team.name}
-                </CardDescription>
+                <CardDescription className="text-xs">{statusUpdate.team.name}</CardDescription>
               )}
             </div>
           </div>
@@ -181,12 +152,8 @@ export function StatusUpdateCard({
                 key={item.id}
                 className={cn(
                   item.isBlocker && "marker:text-destructive",
-                  !item.isInProgress &&
-                    !item.isBlocker &&
-                    "marker:text-green-500",
-                  item.isInProgress &&
-                    !item.isBlocker &&
-                    "marker:text-amber-500",
+                  !item.isInProgress && !item.isBlocker && "marker:text-green-500",
+                  item.isInProgress && !item.isBlocker && "marker:text-amber-500",
                 )}
               >
                 <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
@@ -194,20 +161,14 @@ export function StatusUpdateCard({
             ))}
           </ul>
         ) : (
-          <p className="text-muted-foreground text-xs italic">
-            No updates provided
-          </p>
+          <p className="text-muted-foreground text-xs italic">No updates provided</p>
         )}
 
         {statusUpdate.notes && (
           <div className="border-t pt-1">
-            <h4 className="text-muted-foreground mb-1 text-xs font-medium">
-              Notes
-            </h4>
+            <h4 className="text-muted-foreground mb-1 text-xs font-medium">Notes</h4>
             <div className="prose prose-neutral dark:prose-invert prose-xs">
-              <Markdown remarkPlugins={[remarkGfm]}>
-                {statusUpdate.notes}
-              </Markdown>
+              <Markdown remarkPlugins={[remarkGfm]}>{statusUpdate.notes}</Markdown>
             </div>
           </div>
         )}
@@ -215,15 +176,10 @@ export function StatusUpdateCard({
         {statusUpdate.mood && (
           <div className="border-t pt-1">
             <h4 className="text-muted-foreground mb-1 flex items-center gap-1 text-xs font-medium">
-              Mood{" "}
-              {statusUpdate.emoji && (
-                <span className="text-sm">{statusUpdate.emoji}</span>
-              )}
+              Mood {statusUpdate.emoji && <span className="text-sm">{statusUpdate.emoji}</span>}
             </h4>
             <div className="prose prose-neutral dark:prose-invert prose-xs">
-              <Markdown remarkPlugins={[remarkGfm]}>
-                {statusUpdate.mood}
-              </Markdown>
+              <Markdown remarkPlugins={[remarkGfm]}>{statusUpdate.mood}</Markdown>
             </div>
           </div>
         )}
@@ -231,20 +187,13 @@ export function StatusUpdateCard({
       <CardFooter className="pt-2">
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2"
-            >
+            <Button asChild variant="ghost" size="sm" className="flex items-center gap-2">
               <Link
                 to="/$organizationSlug/status-update/$statusUpdateId"
                 params={{
                   organizationSlug,
                   statusUpdateId: statusUpdate.isDraft
-                    ? dayjs(statusUpdate.effectiveFrom)
-                        .startOf("day")
-                        .format("YYYY-MM-DD")
+                    ? dayjs(statusUpdate.effectiveFrom).startOf("day").format("YYYY-MM-DD")
                     : statusUpdate.id,
                 }}
               >

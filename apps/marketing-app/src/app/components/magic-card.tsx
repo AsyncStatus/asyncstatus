@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface MagicCardProps {
   children?: React.ReactNode;
@@ -77,10 +78,7 @@ export function MagicCard({
   return (
     <div
       ref={cardRef}
-      className={cn(
-        "group relative overflow-hidden rounded-[inherit]",
-        className,
-      )}
+      className={cn("group relative overflow-hidden rounded-[inherit]", className)}
     >
       <motion.div
         className="bg-border pointer-events-none absolute inset-0 rounded-[inherit] duration-300 group-hover:opacity-100"

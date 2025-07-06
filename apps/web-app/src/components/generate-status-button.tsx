@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import { DatePickerWithPresets } from "@asyncstatus/ui/components/date-picker";
 import {
@@ -12,6 +11,7 @@ import {
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation } from "@tanstack/react-query";
 import { addDays, endOfDay, startOfDay } from "date-fns";
+import { useState } from "react";
 
 type GenerateStatusButtonProps = {
   organizationSlug: string;
@@ -61,9 +61,7 @@ export function GenerateStatusButton({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Generate status</DialogTitle>
-          <DialogDescription>
-            Generate a status update for the selected period.
-          </DialogDescription>
+          <DialogDescription>Generate a status update for the selected period.</DialogDescription>
         </DialogHeader>
 
         <DatePickerWithPresets

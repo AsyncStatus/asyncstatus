@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { Hono } from "hono";
 
-import * as schema from "../../db/schema";
+import * as schema from "../../db";
 import {
   AsyncStatusForbiddenError,
   AsyncStatusNotFoundError,
@@ -85,10 +85,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
 
     // Verify team belongs to this organization
     const team = await c.var.db.query.team.findFirst({
-      where: and(
-        eq(schema.team.id, teamId),
-        eq(schema.team.organizationId, c.var.organization.id),
-      ),
+      where: and(eq(schema.team.id, teamId), eq(schema.team.organizationId, c.var.organization.id)),
     });
 
     if (!team) {
@@ -147,9 +144,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       }
 
       if (effectiveFrom) {
-        where.push(
-          eq(schema.statusUpdate.effectiveFrom, new Date(effectiveFrom)),
-        );
+        where.push(eq(schema.statusUpdate.effectiveFrom, new Date(effectiveFrom)));
       }
 
       const statusUpdates = await c.var.db.query.statusUpdate.findMany({
@@ -179,9 +174,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
         const statusUpdate = await c.var.db.query.statusUpdate.findFirst({
           where: eq(
             schema.statusUpdate.effectiveFrom,
-            dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true)
-              .startOf("day")
-              .toDate(),
+            dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).startOf("day").toDate(),
           ),
           with: {
             member: { with: { user: true } },
@@ -238,216 +231,196 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
     },
   )
   // Create or update a status update (upsert based on effectiveFrom date)
-  .post(
-    "/:idOrSlug/status-update",
-    zValidator("json", zStatusUpdateCreate),
-    async (c) => {
-      const {
-        teamId,
-        effectiveFrom,
-        effectiveTo,
-        mood,
-        emoji,
-        isDraft,
-        notes,
-        items,
-        editorJson,
-      } = c.req.valid("json");
-      const memberId = c.var.member.id;
+  .post("/:idOrSlug/status-update", zValidator("json", zStatusUpdateCreate), async (c) => {
+    const { teamId, effectiveFrom, effectiveTo, mood, emoji, isDraft, notes, items, editorJson } =
+      c.req.valid("json");
+    const memberId = c.var.member.id;
 
-      // Verify member belongs to this organization
-      const member = await c.var.db.query.member.findFirst({
+    // Verify member belongs to this organization
+    const member = await c.var.db.query.member.findFirst({
+      where: and(
+        eq(schema.member.id, memberId),
+        eq(schema.member.organizationId, c.var.organization.id),
+      ),
+    });
+
+    if (!member) {
+      throw new AsyncStatusNotFoundError({
+        message: "Member not found",
+      });
+    }
+
+    // If teamId is provided, verify it belongs to this organization
+    if (teamId) {
+      const team = await c.var.db.query.team.findFirst({
         where: and(
-          eq(schema.member.id, memberId),
-          eq(schema.member.organizationId, c.var.organization.id),
+          eq(schema.team.id, teamId),
+          eq(schema.team.organizationId, c.var.organization.id),
         ),
       });
 
-      if (!member) {
+      if (!team) {
         throw new AsyncStatusNotFoundError({
-          message: "Member not found",
+          message: "Team not found",
         });
       }
+    }
 
-      // If teamId is provided, verify it belongs to this organization
-      if (teamId) {
-        const team = await c.var.db.query.team.findFirst({
-          where: and(
-            eq(schema.team.id, teamId),
-            eq(schema.team.organizationId, c.var.organization.id),
-          ),
-        });
+    const now = new Date();
 
-        if (!team) {
-          throw new AsyncStatusNotFoundError({
-            message: "Team not found",
-          });
-        }
+    // Check if a status update already exists for this member on the effectiveFrom date
+    const effectiveFromStartOfDay = dayjs(effectiveFrom).startOf("day").toDate();
+
+    // Use a transaction to ensure all operations are atomic
+    const statusUpdate = await c.var.db.transaction(async (tx) => {
+      const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.memberId, memberId),
+          eq(schema.statusUpdate.organizationId, c.var.organization.id),
+          eq(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+        ),
+      });
+
+      // Get the user's current timezone
+      const user = await tx.query.user.findFirst({
+        where: eq(schema.user.id, c.var.session.user.id),
+      });
+
+      const userTimezone = user?.timezone || "UTC";
+
+      let statusUpdateId: string;
+
+      if (existingStatusUpdate) {
+        // Update existing status update
+        statusUpdateId = existingStatusUpdate.id;
+
+        await tx
+          .update(schema.statusUpdate)
+          .set({
+            teamId: teamId || null,
+            editorJson,
+            effectiveTo,
+            mood,
+            emoji,
+            notes,
+            isDraft,
+            timezone: userTimezone,
+            updatedAt: now,
+          })
+          .where(eq(schema.statusUpdate.id, statusUpdateId));
+      } else {
+        // Create new status update
+        statusUpdateId = generateId();
+
+        await tx
+          .insert(schema.statusUpdate)
+          .values({
+            id: statusUpdateId,
+            memberId,
+            organizationId: c.var.organization.id,
+            teamId: teamId || null,
+            editorJson,
+            effectiveFrom: effectiveFromStartOfDay,
+            effectiveTo,
+            mood,
+            emoji,
+            notes,
+            isDraft,
+            timezone: userTimezone,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
       }
 
-      const now = new Date();
-
-      // Check if a status update already exists for this member on the effectiveFrom date
-      const effectiveFromStartOfDay = dayjs(effectiveFrom)
-        .startOf("day")
-        .toDate();
-
-      // Use a transaction to ensure all operations are atomic
-      const statusUpdate = await c.var.db.transaction(async (tx) => {
-        const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
-          where: and(
-            eq(schema.statusUpdate.memberId, memberId),
-            eq(schema.statusUpdate.organizationId, c.var.organization.id),
-            eq(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
-          ),
-        });
-
-        // Get the user's current timezone
-        const user = await tx.query.user.findFirst({
-          where: eq(schema.user.id, c.var.session.user.id),
-        });
-
-        const userTimezone = user?.timezone || "UTC";
-
-        let statusUpdateId: string;
-
-        if (existingStatusUpdate) {
-          // Update existing status update
-          statusUpdateId = existingStatusUpdate.id;
-
-          await tx
-            .update(schema.statusUpdate)
-            .set({
-              teamId: teamId || null,
-              editorJson,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
-              updatedAt: now,
+      // Handle items - only insert new unique items
+      if (items && items.length > 0) {
+        // Get existing items for comparison
+        const existingItems = existingStatusUpdate
+          ? await tx.query.statusUpdateItem.findMany({
+              where: eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId),
             })
-            .where(eq(schema.statusUpdate.id, statusUpdateId));
-        } else {
-          // Create new status update
-          statusUpdateId = generateId();
+          : [];
 
-          await tx
-            .insert(schema.statusUpdate)
-            .values({
-              id: statusUpdateId,
-              memberId,
-              organizationId: c.var.organization.id,
-              teamId: teamId || null,
-              editorJson,
-              effectiveFrom: effectiveFromStartOfDay,
-              effectiveTo,
-              mood,
-              emoji,
-              notes,
-              isDraft,
-              timezone: userTimezone,
+        // Create a set of existing item signatures for quick lookup
+        const existingItemSignatures = new Set(
+          existingItems.map(
+            (item) => `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
+          ),
+        );
+
+        // Filter out duplicate items
+        const newItems = items.filter((item) => {
+          const signature = `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`;
+          return !existingItemSignatures.has(signature);
+        });
+
+        // Only insert truly new items
+        if (newItems.length > 0) {
+          await tx.insert(schema.statusUpdateItem).values(
+            newItems.map((item) => ({
+              id: generateId(),
+              statusUpdateId,
+              content: item.content,
+              isBlocker: item.isBlocker,
+              isInProgress: item.isInProgress,
+              order: item.order,
               createdAt: now,
               updatedAt: now,
-            })
-            .returning();
+            })),
+          );
         }
 
-        // Handle items - only insert new unique items
-        if (items && items.length > 0) {
-          // Get existing items for comparison
-          const existingItems = existingStatusUpdate
-            ? await tx.query.statusUpdateItem.findMany({
-                where: eq(
-                  schema.statusUpdateItem.statusUpdateId,
-                  statusUpdateId,
-                ),
-              })
-            : [];
-
-          // Create a set of existing item signatures for quick lookup
-          const existingItemSignatures = new Set(
-            existingItems.map(
-              (item) =>
-                `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
+        // Delete items that are no longer present
+        if (existingStatusUpdate && existingItems.length > 0) {
+          const newItemSignatures = new Set(
+            items.map(
+              (item) => `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
             ),
           );
 
-          // Filter out duplicate items
-          const newItems = items.filter((item) => {
+          const itemsToDelete = existingItems.filter((item) => {
             const signature = `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`;
-            return !existingItemSignatures.has(signature);
+            return !newItemSignatures.has(signature);
           });
 
-          // Only insert truly new items
-          if (newItems.length > 0) {
-            await tx.insert(schema.statusUpdateItem).values(
-              newItems.map((item) => ({
-                id: generateId(),
-                statusUpdateId,
-                content: item.content,
-                isBlocker: item.isBlocker,
-                isInProgress: item.isInProgress,
-                order: item.order,
-                createdAt: now,
-                updatedAt: now,
-              })),
-            );
-          }
-
-          // Delete items that are no longer present
-          if (existingStatusUpdate && existingItems.length > 0) {
-            const newItemSignatures = new Set(
-              items.map(
-                (item) =>
-                  `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
+          if (itemsToDelete.length > 0) {
+            await tx.delete(schema.statusUpdateItem).where(
+              and(
+                eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId),
+                inArray(
+                  schema.statusUpdateItem.id,
+                  itemsToDelete.map((item) => item.id),
+                ),
               ),
             );
-
-            const itemsToDelete = existingItems.filter((item) => {
-              const signature = `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`;
-              return !newItemSignatures.has(signature);
-            });
-
-            if (itemsToDelete.length > 0) {
-              await tx.delete(schema.statusUpdateItem).where(
-                and(
-                  eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId),
-                  inArray(
-                    schema.statusUpdateItem.id,
-                    itemsToDelete.map((item) => item.id),
-                  ),
-                ),
-              );
-            }
           }
         }
+      }
 
-        // Return the complete status update
-        const result = await tx.query.statusUpdate.findFirst({
-          where: eq(schema.statusUpdate.id, statusUpdateId),
-          with: {
-            member: true,
-            team: true,
-            items: {
-              orderBy: (items) => [items.order],
-            },
+      // Return the complete status update
+      const result = await tx.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: true,
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
           },
-        });
-
-        if (!result) {
-          throw new AsyncStatusUnexpectedApiError({
-            message: "Failed to create or update status update",
-          });
-        }
-
-        return result;
+        },
       });
 
-      return c.json(statusUpdate);
-    },
-  )
+      if (!result) {
+        throw new AsyncStatusUnexpectedApiError({
+          message: "Failed to create or update status update",
+        });
+      }
+
+      return result;
+    });
+
+    return c.json(statusUpdate);
+  })
   // Update a status update
   .patch(
     "/:idOrSlug/status-update/:statusUpdateId",
@@ -572,9 +545,7 @@ export const statusUpdateRouter = new Hono<HonoEnvWithOrganization>()
       }
 
       // Delete the status update
-      await c.var.db
-        .delete(schema.statusUpdate)
-        .where(eq(schema.statusUpdate.id, statusUpdateId));
+      await c.var.db.delete(schema.statusUpdate).where(eq(schema.statusUpdate.id, statusUpdateId));
 
       return c.json({ success: true });
     },

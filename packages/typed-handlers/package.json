@@ -1,0 +1,31 @@
+{
+  "name": "@asyncstatus/typed-handlers",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/core/index.ts",
+    "./fetch": "./src/fetch.ts",
+    "./hono": "./src/hono.ts",
+    "./tanstack-query": "./src/tanstack-query.ts",
+    "./url": "./src/url.ts"
+  },
+  "scripts": {},
+  "peerDependencies": {
+    "@tanstack/react-query": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

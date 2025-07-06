@@ -6,13 +6,13 @@
   "compatibility_date": "2025-04-02",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
-    "enabled": true,
+    "enabled": true
   },
   "placement": {
-    "mode": "smart",
+    "mode": "smart"
   },
   "ai": {
-    "binding": "AI",
+    "binding": "AI"
   },
   "queues": {
     "consumers": [
@@ -21,61 +21,61 @@
         "max_batch_size": 100,
         "max_batch_timeout": 2,
         "retry_delay": 10,
-        "max_retries": 3,
+        "max_retries": 3
       },
       {
         "queue": "github-process-events",
         "max_batch_size": 10,
         "max_batch_timeout": 2,
         "retry_delay": 60,
-        "max_retries": 10,
-      },
+        "max_retries": 10
+      }
     ],
     "producers": [
       {
         "queue": "github-webhook-events",
-        "binding": "GITHUB_WEBHOOK_EVENTS_QUEUE",
+        "binding": "GITHUB_WEBHOOK_EVENTS_QUEUE"
       },
       {
         "queue": "github-process-events",
-        "binding": "GITHUB_PROCESS_EVENTS_QUEUE",
-      },
-    ],
+        "binding": "GITHUB_PROCESS_EVENTS_QUEUE"
+      }
+    ]
   },
   "workflows": [
     {
       "name": "sync-github",
       "binding": "SYNC_GITHUB_WORKFLOW",
-      "class_name": "SyncGithubWorkflow",
+      "class_name": "SyncGithubWorkflow"
     },
     {
       "name": "delete-github-integration",
       "binding": "DELETE_GITHUB_INTEGRATION_WORKFLOW",
-      "class_name": "DeleteGithubIntegrationWorkflow",
+      "class_name": "DeleteGithubIntegrationWorkflow"
     },
     {
       "name": "generate-status",
       "binding": "GENERATE_STATUS_WORKFLOW",
-      "class_name": "GenerateStatusWorkflow",
-    },
+      "class_name": "GenerateStatusWorkflow"
+    }
   ],
   "kv_namespaces": [
     {
       "binding": "AS_PROD_AUTH_KV",
       "id": "380a39bf817b489db941d31f17184104",
-      "preview_id": "c2e056e361dc4bc7b12d77fb51e08e28",
+      "preview_id": "c2e056e361dc4bc7b12d77fb51e08e28"
     },
     {
       "binding": "RATE_LIMITER",
       "id": "10299c05cd3e41abb39b89f1c9d32af7",
-      "preview_id": "3aab4f81b8b54b8a966a2d1d1eec1e25",
-    },
+      "preview_id": "3aab4f81b8b54b8a966a2d1d1eec1e25"
+    }
   ],
   "r2_buckets": [
     {
       "binding": "PRIVATE_BUCKET",
       "bucket_name": "private",
-      "preview_bucket_name": "private-preview",
-    },
-  ],
+      "preview_bucket_name": "private-preview"
+    }
+  ]
 }

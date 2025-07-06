@@ -14,10 +14,16 @@ jobs:
     steps:
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.15
+          bun-version: 1.2.17
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: bun install
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+      - name: Run Biome
+        run: biome ci .
 
       - name: Deploy API
         id: deploy-api

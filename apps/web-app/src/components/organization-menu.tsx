@@ -1,14 +1,4 @@
-import { useMemo, useState } from "react";
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  listOrganizationsQueryOptions,
-  setActiveOrganizationMutationOptions,
-} from "@/rpc/organization/organization";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Dialog,
   DialogContent,
@@ -33,14 +23,15 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Check, ChevronsUpDown, Plus } from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-
+import { useMemo, useState } from "react";
 import { getFileUrl, getInitials } from "@/lib/utils";
+import { sessionQueryOptions } from "@/rpc/auth";
+import {
+  listOrganizationsQueryOptions,
+  setActiveOrganizationMutationOptions,
+} from "@/rpc/organization/organization";
 
 import { CreateOrganizationForm } from "./create-organization-form";
 
@@ -56,9 +47,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
         return data;
       }
 
-      return data.sort((a) =>
-        session.data.session.activeOrganizationId === a.id ? -1 : 1,
-      );
+      return data.sort((a) => (session.data?.session.activeOrganizationId === a.id ? -1 : 1));
     },
   });
   const setActiveOrganization = useMutation({
@@ -72,22 +61,18 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
       }
     },
     onSuccess(data) {
-      queryClient.setQueryData(
-        sessionQueryOptions().queryKey,
-        (sessionData) => {
-          if (!sessionData) {
-            return sessionData;
-          }
-          return {
-            ...sessionData,
-            session: { ...sessionData.session, activeOrganizationId: data.id },
-          };
-        },
-      );
+      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+        if (!sessionData) {
+          return sessionData;
+        }
+        return {
+          ...sessionData,
+          session: { ...sessionData.session, activeOrganizationId: data.id },
+        };
+      });
     },
   });
-  const [createOrganizationDialogOpen, setCreateOrganizationDialogOpen] =
-    useState(false);
+  const [createOrganizationDialogOpen, setCreateOrganizationDialogOpen] = useState(false);
   const activeOrganization = useMemo(
     () => organizations.data?.find((o) => o.slug === props.organizationSlug),
     [organizations.data, props.organizationSlug],
@@ -115,9 +100,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                     }
                     alt={activeOrganization?.name}
                   />
-                  <AvatarFallback>
-                    {getInitials(activeOrganization?.name ?? "")}
-                  </AvatarFallback>
+                  <AvatarFallback>{getInitials(activeOrganization?.name ?? "")}</AvatarFallback>
                 </Avatar>
 
                 <div className="grid flex-1 text-left text-sm">
@@ -140,16 +123,10 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
 
               <ScrollArea className="h-36 w-full">
                 {organizations.data?.map((organization) => {
-                  const isActive =
-                    session.data?.session.activeOrganizationId ===
-                    organization.id;
+                  const isActive = session.data?.session.activeOrganizationId === organization.id;
 
                   return (
-                    <DropdownMenuItem
-                      asChild
-                      key={organization.id}
-                      className="gap-2 p-2"
-                    >
+                    <DropdownMenuItem asChild key={organization.id} className="gap-2 p-2">
                       <Link
                         to="/$organizationSlug"
                         params={{ organizationSlug: organization.slug }}
@@ -171,9 +148,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                             }
                             alt={organization.name}
                           />
-                          <AvatarFallback>
-                            {getInitials(organization.name)}
-                          </AvatarFallback>
+                          <AvatarFallback>{getInitials(organization.name)}</AvatarFallback>
                         </Avatar>
 
                         <div className="flex w-full items-center justify-between gap-2">
@@ -181,9 +156,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                             {organization.name}
                           </p>
                           <div className="ml-auto flex h-auto items-center">
-                            {isActive && (
-                              <Check className="inline-block size-4" />
-                            )}
+                            {isActive && <Check className="inline-block size-4" />}
                           </div>
                         </div>
                       </Link>
@@ -202,25 +175,19 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                   <Plus className="size-4" />
                 </div>
 
-                <div className="text-muted-foreground font-medium">
-                  Create organization
-                </div>
+                <div className="text-muted-foreground font-medium">Create organization</div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
 
-      <Dialog
-        open={createOrganizationDialogOpen}
-        onOpenChange={setCreateOrganizationDialogOpen}
-      >
+      <Dialog open={createOrganizationDialogOpen} onOpenChange={setCreateOrganizationDialogOpen}>
         <DialogContent className="gap-8">
           <DialogHeader>
             <DialogTitle>Create organization</DialogTitle>
             <DialogDescription>
-              We will create a new organization for you and set it as the active
-              one.
+              We will create a new organization for you and set it as the active one.
             </DialogDescription>
           </DialogHeader>
 

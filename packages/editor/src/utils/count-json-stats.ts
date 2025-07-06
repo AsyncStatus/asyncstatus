@@ -9,9 +9,7 @@ export interface JSONDocStats {
  * Traverse a TipTap JSON document once and return both task item and word counts.
  * This is more efficient than running the two independent counters.
  */
-export const countJSONStats = (
-  doc: JSONContent | null | undefined,
-): JSONDocStats => {
+export const countJSONStats = (doc: JSONContent | null | undefined): JSONDocStats => {
   const result: JSONDocStats = { taskItems: 0, words: 0 };
 
   if (!doc) {

@@ -1,7 +1,7 @@
-import { lazy, Suspense } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
-import { z } from "zod";
+import { lazy, Suspense } from "react";
+import { z } from "zod/v4";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 

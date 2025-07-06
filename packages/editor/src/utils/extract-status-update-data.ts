@@ -122,9 +122,7 @@ function extractEmojiFromText(text: string): {
  * console.log(data.moodEmoji); // Emoji from mood section
  * console.log(data.notes); // Notes content
  */
-export function extractStatusUpdateData(
-  content: JSONContent,
-): ExtractedStatusUpdateData {
+export function extractStatusUpdateData(content: JSONContent): ExtractedStatusUpdateData {
   const result: ExtractedStatusUpdateData = {
     statusUpdateItems: [],
     mood: null,
@@ -186,12 +184,7 @@ export function extractStatusUpdateData(
 
     // Collect content based on current section
     // Skip only specific heading types and blockable todo lists
-    const skipTypes = [
-      "statusUpdateHeading",
-      "notesHeading",
-      "moodHeading",
-      "blockableTodoList",
-    ];
+    const skipTypes = ["statusUpdateHeading", "notesHeading", "moodHeading", "blockableTodoList"];
     const shouldSkip = skipTypes.includes(node.type || "");
 
     if (currentSection === "notes" && !shouldSkip) {

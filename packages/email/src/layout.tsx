@@ -1,19 +1,6 @@
-import {
-  Body,
-  Container,
-  Font,
-  Head,
-  Html,
-  Preview,
-} from "@react-email/components";
+import { Body, Container, Font, Head, Html, Preview } from "@react-email/components";
 
-export function Layout({
-  children,
-  preview,
-}: {
-  children: React.ReactNode;
-  preview?: string;
-}) {
+export function Layout({ children, preview }: { children: React.ReactNode; preview?: string }) {
   return (
     <Html lang="en">
       <Head>

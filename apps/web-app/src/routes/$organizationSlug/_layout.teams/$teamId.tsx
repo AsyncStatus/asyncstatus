@@ -1,11 +1,3 @@
-import { useState } from "react";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import {
-  deleteTeamMutationOptions,
-  getTeamMembersQueryOptions,
-  getTeamQueryOptions,
-  removeTeamMemberMutationOptions,
-} from "@/rpc/organization/teams";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,11 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@asyncstatus/ui/components/alert-dialog";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
@@ -51,46 +39,31 @@ import { Input } from "@asyncstatus/ui/components/input";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
-import {
-  Calendar,
-  Edit,
-  Plus,
-  Search,
-  Trash,
-  UserRound,
-  Users,
-} from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQueries,
-} from "@tanstack/react-query";
+import { Calendar, Edit, Plus, Search, Trash, UserRound, Users } from "@asyncstatus/ui/icons";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-
-import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { useState } from "react";
 import { AddTeamMemberForm } from "@/components/add-team-member-form";
 import { UpdateTeamForm } from "@/components/update-team-form";
 
-export const Route = createFileRoute(
-  "/$organizationSlug/_layout/teams/$teamId",
-)({
+import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import {
+  deleteTeamMutationOptions,
+  getTeamMembersQueryOptions,
+  getTeamQueryOptions,
+  removeTeamMemberMutationOptions,
+} from "@/rpc/organization/teams";
+
+export const Route = createFileRoute("/$organizationSlug/_layout/teams/$teamId")({
   component: TeamDetailsPage,
   pendingComponent: PendingComponent,
-  loader: async ({
-    context: { queryClient },
-    params: { organizationSlug, teamId },
-  }) => {
+  loader: async ({ context: { queryClient }, params: { organizationSlug, teamId } }) => {
     await Promise.all([
-      queryClient.ensureQueryData(
-        getTeamQueryOptions(organizationSlug, teamId),
-      ),
-      queryClient.ensureQueryData(
-        getTeamMembersQueryOptions(organizationSlug, teamId),
-      ),
-      queryClient.ensureQueryData(
-        getOrganizationQueryOptions(organizationSlug),
-      ),
+      queryClient.ensureQueryData(getTeamQueryOptions(organizationSlug, teamId)),
+      queryClient.ensureQueryData(getTeamMembersQueryOptions(organizationSlug, teamId)),
+      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
     ]);
   },
 });
@@ -139,18 +112,13 @@ function TeamDetailsPage() {
   });
 
   const isAdmin =
-    organization.data.member.role === "admin" ||
-    organization.data.member.role === "owner";
+    organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
   // Filter members based on search query
   const filteredMembers = teamMembers.data.filter(
     (membership) =>
-      membership.member.user.name
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      membership.member.user.email
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()),
+      membership.member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      membership.member.user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -163,10 +131,7 @@ function TeamDetailsPage() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link
-                    to="/$organizationSlug/teams"
-                    params={{ organizationSlug }}
-                  >
+                  <Link to="/$organizationSlug/teams" params={{ organizationSlug }}>
                     Teams
                   </Link>
                 </BreadcrumbLink>
@@ -194,10 +159,7 @@ function TeamDetailsPage() {
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             {isAdmin && (
-              <Dialog
-                open={editTeamDialogOpen}
-                onOpenChange={setEditTeamDialogOpen}
-              >
+              <Dialog open={editTeamDialogOpen} onOpenChange={setEditTeamDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Edit className="size-4" />
@@ -208,9 +170,7 @@ function TeamDetailsPage() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Edit Team</DialogTitle>
-                    <DialogDescription>
-                      Update team name or other details.
-                    </DialogDescription>
+                    <DialogDescription>Update team name or other details.</DialogDescription>
                   </DialogHeader>
 
                   <UpdateTeamForm
@@ -224,10 +184,7 @@ function TeamDetailsPage() {
             )}
 
             {isAdmin && (
-              <AlertDialog
-                open={deleteDialogOpen}
-                onOpenChange={setDeleteDialogOpen}
-              >
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -242,8 +199,7 @@ function TeamDetailsPage() {
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                       This will permanently delete the team &quot;{team.data.name}
-                      &quot; and remove all member associations. This action
-                      cannot be undone.
+                      &quot; and remove all member associations. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -265,10 +221,7 @@ function TeamDetailsPage() {
             )}
 
             {isAdmin && (
-              <Dialog
-                open={addMemberDialogOpen}
-                onOpenChange={setAddMemberDialogOpen}
-              >
+              <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="w-full sm:w-auto">
                     <Plus className="size-4" />
@@ -348,12 +301,7 @@ function TeamDetailsPage() {
                     </Badge>
                     <div className="text-muted-foreground flex items-center gap-1 text-xs">
                       <Calendar className="size-3" />
-                      <span>
-                        Joined{" "}
-                        {dayjs(membership.member.createdAt).format(
-                          "MMM D, YYYY",
-                        )}
-                      </span>
+                      <span>Joined {dayjs(membership.member.createdAt).format("MMM D, YYYY")}</span>
                     </div>
                   </div>
                 </CardContent>

@@ -1,9 +1,4 @@
-import { logoutMutationOptions, sessionQueryOptions } from "@/rpc/auth";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,15 +15,11 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { ChevronsUpDown, CreditCard, LogOut } from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-
+import { ChevronsUpDown, CreditCard, LogOut, Settings } from "@asyncstatus/ui/icons";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { getFileUrl, getInitials } from "@/lib/utils";
+import { logoutMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
 
 import { ThemeToggle } from "./toggle-theme";
 
@@ -37,7 +28,7 @@ export function UserMenu(props: { organizationSlug: string }) {
   const router = useRouter();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const session = useSuspenseQuery(sessionQueryOptions());
+  const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
   const logout = useMutation({
     ...logoutMutationOptions(),
     onSuccess: async () => {
@@ -49,6 +40,10 @@ export function UserMenu(props: { organizationSlug: string }) {
       toast.error(error.message);
     },
   });
+
+  if (!session.data) {
+    return null;
+  }
 
   return (
     <SidebarMenu>
@@ -71,15 +66,11 @@ export function UserMenu(props: { organizationSlug: string }) {
                   }
                   alt={session.data.user.name}
                 />
-                <AvatarFallback>
-                  {getInitials(session.data.user.name)}
-                </AvatarFallback>
+                <AvatarFallback>{getInitials(session.data.user.name)}</AvatarFallback>
               </Avatar>
 
               <div className="grid flex-1 pt-1 text-left text-sm leading-3">
-                <span className="truncate font-semibold">
-                  {session.data.user.name}
-                </span>
+                <span className="truncate font-semibold">{session.data.user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
                   {session.data.user.email}
                 </span>
@@ -109,15 +100,11 @@ export function UserMenu(props: { organizationSlug: string }) {
                     }
                     alt={session.data.user.name}
                   />
-                  <AvatarFallback>
-                    {getInitials(session.data.user.name)}
-                  </AvatarFallback>
+                  <AvatarFallback>{getInitials(session.data.user.name)}</AvatarFallback>
                 </Avatar>
 
                 <div className="grid flex-1 pt-1 text-left text-sm leading-3">
-                  <span className="truncate font-semibold">
-                    {session.data.user.name}
-                  </span>
+                  <span className="truncate font-semibold">{session.data.user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
                     {session.data.user.email}
                   </span>
@@ -142,10 +129,20 @@ export function UserMenu(props: { organizationSlug: string }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
-            <DropdownMenuItem
-              onClick={() => logout.mutate()}
-              disabled={logout.isPending}
-            >
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/$organizationSlug/settings"
+                  params={{ organizationSlug: props.organizationSlug }}
+                  search={{ tab: "profile" }}
+                >
+                  <Settings />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuItem onClick={() => logout.mutate()} disabled={logout.isPending}>
               <LogOut />
               Sign out
             </DropdownMenuItem>

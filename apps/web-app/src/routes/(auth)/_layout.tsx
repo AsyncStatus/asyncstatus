@@ -1,7 +1,7 @@
 import { SimpleLayout } from "@asyncstatus/ui/components/simple-layout";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { ensureNotLoggedIn } from "../-lib/common";
 

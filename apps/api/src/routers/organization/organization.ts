@@ -2,9 +2,9 @@ import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
+import { z } from "zod/v4";
 
-import * as schema from "../../db/schema";
+import * as schema from "../../db";
 import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
@@ -131,10 +131,9 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       };
     });
 
-    const data = await c.env.AS_PROD_AUTH_KV.get<any>(
-      c.var.session.session.token,
-      { type: "json" },
-    );
+    const data = await c.env.AS_PROD_AUTH_KV.get<any>(c.var.session.session.token, {
+      type: "json",
+    });
     if (!data) {
       throw new AsyncStatusUnauthorizedError({
         message: "Unauthorized",
@@ -168,10 +167,9 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
     requiredOrganization,
     zValidator("param", zOrganizationIdOrSlug),
     async (c) => {
-      const data = await c.env.AS_PROD_AUTH_KV.get<any>(
-        c.var.session.session.token,
-        { type: "json" },
-      );
+      const data = await c.env.AS_PROD_AUTH_KV.get<any>(c.var.session.session.token, {
+        type: "json",
+      });
       if (!data) {
         throw new AsyncStatusUnauthorizedError({
           message: "Unauthorized",
@@ -213,10 +211,7 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
       const updates = c.req.valid("form");
 
       if (updates.logo instanceof File) {
-        const image = await c.env.PRIVATE_BUCKET.put(
-          generateId(),
-          updates.logo,
-        );
+        const image = await c.env.PRIVATE_BUCKET.put(generateId(), updates.logo);
         if (!image) {
           throw new AsyncStatusUnexpectedApiError({
             message: "Failed to upload image",
@@ -256,8 +251,11 @@ export const organizationRouter = new Hono<HonoEnvWithOrganization>()
 
       const headers = new Headers();
       object.writeHttpMetadata(headers);
-      headers.set("etag", object.httpEtag);
-      headers.set("cache-control", "private, max-age=600");
+      headers.set("ETag", object.httpEtag);
+      headers.set("Cache-Control", "private, max-age=600"); // 10 minutes
+      if (object.httpMetadata?.contentType) {
+        headers.set("Content-Type", object.httpMetadata.contentType);
+      }
 
       return new Response(object.body, { headers });
     },

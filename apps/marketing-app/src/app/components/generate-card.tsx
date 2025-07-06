@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 // Status update types
 type StatusUpdate = {
@@ -479,9 +479,7 @@ export function GenerateCard() {
   // Get the update for a particular slot
   const getSlotUpdate = (slot: number) => {
     const index = slotIndices[slot];
-    return index >= 0 && index < statusUpdates.length
-      ? statusUpdates[index]
-      : null;
+    return index >= 0 && index < statusUpdates.length ? statusUpdates[index] : null;
   };
 
   // Initialize animation sequence
@@ -526,15 +524,13 @@ export function GenerateCard() {
     }
 
     // Choose next index - either specified or random from available
-    let nextIndex =
+    const nextIndex =
       specificIndex !== undefined
         ? specificIndex
         : availableIndices[Math.floor(Math.random() * availableIndices.length)];
 
     // Remove the chosen index from available indices
-    const updatedAvailableIndices = availableIndices.filter(
-      (idx) => idx !== nextIndex,
-    );
+    const updatedAvailableIndices = availableIndices.filter((idx) => idx !== nextIndex);
     setSlotAvailableIndices((prev) => ({
       ...prev,
       [slot]: updatedAvailableIndices,
@@ -581,9 +577,7 @@ export function GenerateCard() {
       <div className="bg-background relative mt-3 aspect-video w-full overflow-hidden rounded-md border max-sm:h-[320px]">
         <div className="h-full w-full p-3">
           {/* Date header */}
-          <div className="mb-2 text-left text-sm font-medium">
-            {formattedDate}
-          </div>
+          <div className="mb-2 text-left text-sm font-medium">{formattedDate}</div>
 
           {/* Generation status */}
           <AnimatePresence>
@@ -615,10 +609,7 @@ export function GenerateCard() {
             <div className="flex h-full flex-col gap-2.5">
               {/* Three slots for updates with min height */}
               {[0, 1, 2].map((slot) => (
-                <div
-                  key={`slot-${slot}`}
-                  className="flex min-h-[66px] items-stretch"
-                >
+                <div key={`slot-${slot}`} className="flex min-h-[66px] items-stretch">
                   <AnimatePresence mode="popLayout">
                     {getSlotUpdate(slot) && (
                       <motion.div
@@ -632,9 +623,7 @@ export function GenerateCard() {
                       >
                         <div
                           className={`flex min-h-[66px] items-center gap-2 rounded-lg p-3 ${
-                            getSlotUpdate(slot)?.type === "blocker"
-                              ? "bg-red-50"
-                              : "bg-gray-50"
+                            getSlotUpdate(slot)?.type === "blocker" ? "bg-red-50" : "bg-gray-50"
                           }`}
                         >
                           <div className="flex min-w-0 flex-1 items-start gap-2 overflow-hidden">
@@ -644,9 +633,7 @@ export function GenerateCard() {
                                   className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
                                     getSlotUpdate(slot)?.type === "blocker"
                                       ? "bg-red-100 text-red-700"
-                                      : getPerson(
-                                          getSlotUpdate(slot)?.person || "",
-                                        ).color
+                                      : getPerson(getSlotUpdate(slot)?.person || "").color
                                   }`}
                                 >
                                   {getSlotUpdate(slot)?.type === "blocker" ? (
@@ -686,11 +673,7 @@ export function GenerateCard() {
                                         : "text-gray-800"
                                     }`}
                                   >
-                                    {
-                                      getPerson(
-                                        getSlotUpdate(slot)?.person || "",
-                                      ).name
-                                    }
+                                    {getPerson(getSlotUpdate(slot)?.person || "").name}
                                   </span>
                                   <span
                                     className={`text-base leading-tight ${
@@ -699,8 +682,7 @@ export function GenerateCard() {
                                         : "text-gray-700"
                                     }`}
                                   >
-                                    {getSlotUpdate(slot)?.type === "blocker" &&
-                                      "⚠️ "}
+                                    {getSlotUpdate(slot)?.type === "blocker" && "⚠️ "}
                                     {getSlotUpdate(slot)?.content}
                                   </span>
                                 </div>
@@ -718,9 +700,7 @@ export function GenerateCard() {
         </div>
       </div>
       <h4 className="mt-4 text-base font-medium">Generate</h4>
-      <p className="text-muted-foreground text-sm">
-        Actions are compiled into status updates
-      </p>
+      <p className="text-muted-foreground text-sm">Actions are compiled into status updates</p>
     </div>
   );
 }

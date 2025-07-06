@@ -1,5 +1,3 @@
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import { getStatusUpdatesByMemberQueryOptions } from "@/rpc/organization/status-update";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,19 +8,15 @@ import {
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import dayjs from "dayjs";
-
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { getStatusUpdatesByMemberQueryOptions } from "@/rpc/organization/status-update";
 
-export const Route = createFileRoute(
-  "/$organizationSlug/_layout/status-update/",
-)({
+export const Route = createFileRoute("/$organizationSlug/_layout/status-update/")({
   component: RouteComponent,
-  beforeLoad: async ({
-    params: { organizationSlug },
-    context: { queryClient },
-  }) => {
+  beforeLoad: async ({ params: { organizationSlug }, context: { queryClient } }) => {
     const { member } = await queryClient.ensureQueryData(
       getOrganizationQueryOptions(organizationSlug),
     );
@@ -34,10 +28,7 @@ export const Route = createFileRoute(
       ),
     );
 
-    if (
-      (statusUpdates as any).length === 0 ||
-      !(statusUpdates as any)[0].isDraft
-    ) {
+    if ((statusUpdates as any).length === 0 || !(statusUpdates as any)[0].isDraft) {
       throw redirect({
         to: "/$organizationSlug/status-update/$statusUpdateId",
         params: {
@@ -70,10 +61,7 @@ function RouteComponent() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link
-                    to="/$organizationSlug"
-                    params={{ organizationSlug }}
-                  >
+                  <Link to="/$organizationSlug" params={{ organizationSlug }}>
                     Status updates
                   </Link>
                 </BreadcrumbLink>

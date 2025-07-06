@@ -1,10 +1,3 @@
-import { useState } from "react";
-import { listMembersQueryOptions } from "@/rpc/organization/member";
-import {
-  addTeamMemberMutationOptions,
-  getTeamMembersQueryOptions,
-  getTeamQueryOptions,
-} from "@/rpc/organization/teams";
 import { zTeamMemberAdd } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -15,25 +8,20 @@ import {
   CommandItem,
   CommandList,
 } from "@asyncstatus/ui/components/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { listMembersQueryOptions } from "@/rpc/organization/member";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+  addTeamMemberMutationOptions,
+  getTeamMembersQueryOptions,
+  getTeamQueryOptions,
+} from "@/rpc/organization/teams";
 
 export function AddTeamMemberForm(props: {
   organizationSlug: string;
@@ -67,14 +55,10 @@ export function AddTeamMemberForm(props: {
     onSuccess: () => {
       // Invalidate queries to refresh the data
       queryClient.invalidateQueries({
-        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId)
-          .queryKey,
+        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId).queryKey,
       });
       queryClient.invalidateQueries({
-        queryKey: getTeamMembersQueryOptions(
-          props.organizationSlug,
-          props.teamId,
-        ).queryKey,
+        queryKey: getTeamMembersQueryOptions(props.organizationSlug, props.teamId).queryKey,
       });
 
       // Call success callback and reset form
@@ -87,9 +71,7 @@ export function AddTeamMemberForm(props: {
   const availableMembers =
     membersData?.members?.filter(
       (member) =>
-        !teamMembers?.some(
-          (teamMember) => teamMember.member.id === member.id,
-        ) &&
+        !teamMembers?.some((teamMember) => teamMember.member.id === member.id) &&
         // Also filter out archived members
         member.archivedAt === null,
     ) || [];
@@ -115,10 +97,7 @@ export function AddTeamMemberForm(props: {
             <FormItem>
               <FormLabel>Select user</FormLabel>
               <FormControl>
-                <Popover
-                  open={memberPopoverOpen}
-                  onOpenChange={setMemberPopoverOpen}
-                >
+                <Popover open={memberPopoverOpen} onOpenChange={setMemberPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -128,9 +107,8 @@ export function AddTeamMemberForm(props: {
                       disabled={isLoading}
                     >
                       {field.value
-                        ? availableMembers.find(
-                            (member) => member.id === field.value,
-                          )?.user?.name || "Select user..."
+                        ? availableMembers.find((member) => member.id === field.value)?.user
+                            ?.name || "Select user..."
                         : "Select user..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -153,9 +131,7 @@ export function AddTeamMemberForm(props: {
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  field.value === user.id
-                                    ? "opacity-100"
-                                    : "opacity-0",
+                                  field.value === user.id ? "opacity-100" : "opacity-0",
                                 )}
                               />
                               <div className="flex flex-col">

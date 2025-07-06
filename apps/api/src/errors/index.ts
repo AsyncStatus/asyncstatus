@@ -1,5 +1,4 @@
 import { HTTPException } from "hono/http-exception";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 type HTTPExceptionOptions = {
   res?: Response;
@@ -14,9 +13,7 @@ export type AsyncStatusApiJsonError = {
   message: string;
 };
 
-export function isAsyncStatusApiJsonError(
-  error: unknown,
-): error is AsyncStatusApiJsonError {
+export function isAsyncStatusApiJsonError(error: unknown): error is AsyncStatusApiJsonError {
   if (
     typeof error === "object" &&
     error !== null &&
@@ -44,9 +41,6 @@ export class AsyncStatusUnexpectedApiError extends HTTPException {
 
 export class AsyncStatusApiError extends HTTPException {
   name = `${ASAPIErrorPrefix}Error`;
-  constructor(status: ContentfulStatusCode, options: HTTPExceptionOptions) {
-    super(status, options);
-  }
 }
 
 export class AsyncStatusBadRequestError extends AsyncStatusApiError {

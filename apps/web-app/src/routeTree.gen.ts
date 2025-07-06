@@ -10,376 +10,489 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
+import { Route as InvitationLayoutRouteImport } from './routes/invitation/_layout'
+import { Route as CreateOrganizationLayoutRouteImport } from './routes/create-organization/_layout'
+import { Route as authLayoutRouteImport } from './routes/(auth)/_layout'
+import { Route as OrganizationSlugLayoutRouteImport } from './routes/$organizationSlug/_layout'
+import { Route as InvitationLayoutIndexRouteImport } from './routes/invitation/_layout.index'
+import { Route as CreateOrganizationLayoutIndexRouteImport } from './routes/create-organization/_layout.index'
+import { Route as OrganizationSlugLayoutIndexRouteImport } from './routes/$organizationSlug/_layout.index'
+import { Route as authLayoutSignUpRouteImport } from './routes/(auth)/_layout.sign-up'
+import { Route as authLayoutResetPasswordRouteImport } from './routes/(auth)/_layout.reset-password'
+import { Route as authLayoutLoginRouteImport } from './routes/(auth)/_layout.login'
+import { Route as authLayoutForgotPasswordRouteImport } from './routes/(auth)/_layout.forgot-password'
+import { Route as OrganizationSlugLayoutSettingsRouteImport } from './routes/$organizationSlug/_layout.settings'
+import { Route as OrganizationSlugLayoutOldRouteImport } from './routes/$organizationSlug/_layout.old'
+import { Route as OrganizationSlugLayoutUsersIndexRouteImport } from './routes/$organizationSlug/_layout.users/index'
+import { Route as OrganizationSlugLayoutTeamsIndexRouteImport } from './routes/$organizationSlug/_layout.teams/index'
+import { Route as OrganizationSlugLayoutStatusUpdateIndexRouteImport } from './routes/$organizationSlug/_layout.status-update/index'
+import { Route as OrganizationSlugLayoutUsersUserIdRouteImport } from './routes/$organizationSlug/_layout.users/$userId'
+import { Route as OrganizationSlugLayoutTeamsTeamIdRouteImport } from './routes/$organizationSlug/_layout.teams/$teamId'
+import { Route as OrganizationSlugLayoutStatusUpdateStatusUpdateIdRouteImport } from './routes/$organizationSlug/_layout.status-update/$statusUpdateId'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LayoutImport } from './routes/_layout'
-import { Route as LayoutIndexImport } from './routes/_layout.index'
-import { Route as InvitationLayoutImport } from './routes/invitation/_layout'
-import { Route as CreateOrganizationLayoutImport } from './routes/create-organization/_layout'
-import { Route as authLayoutImport } from './routes/(auth)/_layout'
-import { Route as OrganizationSlugLayoutImport } from './routes/$organizationSlug/_layout'
-import { Route as InvitationLayoutIndexImport } from './routes/invitation/_layout.index'
-import { Route as CreateOrganizationLayoutIndexImport } from './routes/create-organization/_layout.index'
-import { Route as OrganizationSlugLayoutIndexImport } from './routes/$organizationSlug/_layout.index'
-import { Route as authLayoutSignUpImport } from './routes/(auth)/_layout.sign-up'
-import { Route as authLayoutResetPasswordImport } from './routes/(auth)/_layout.reset-password'
-import { Route as authLayoutLoginImport } from './routes/(auth)/_layout.login'
-import { Route as authLayoutForgotPasswordImport } from './routes/(auth)/_layout.forgot-password'
-import { Route as OrganizationSlugLayoutSettingsImport } from './routes/$organizationSlug/_layout.settings'
-import { Route as OrganizationSlugLayoutOldImport } from './routes/$organizationSlug/_layout.old'
-import { Route as OrganizationSlugLayoutUsersIndexImport } from './routes/$organizationSlug/_layout.users/index'
-import { Route as OrganizationSlugLayoutTeamsIndexImport } from './routes/$organizationSlug/_layout.teams/index'
-import { Route as OrganizationSlugLayoutStatusUpdateIndexImport } from './routes/$organizationSlug/_layout.status-update/index'
-import { Route as OrganizationSlugLayoutUsersUserIdImport } from './routes/$organizationSlug/_layout.users/$userId'
-import { Route as OrganizationSlugLayoutTeamsTeamIdImport } from './routes/$organizationSlug/_layout.teams/$teamId'
-import { Route as OrganizationSlugLayoutStatusUpdateStatusUpdateIdImport } from './routes/$organizationSlug/_layout.status-update/$statusUpdateId'
+const InvitationRouteImport = createFileRoute('/invitation')()
+const CreateOrganizationRouteImport = createFileRoute('/create-organization')()
+const authRouteImport = createFileRoute('/(auth)')()
+const OrganizationSlugRouteImport = createFileRoute('/$organizationSlug')()
 
-// Create Virtual Routes
-
-const InvitationImport = createFileRoute('/invitation')()
-const CreateOrganizationImport = createFileRoute('/create-organization')()
-const authImport = createFileRoute('/(auth)')()
-const OrganizationSlugImport = createFileRoute('/$organizationSlug')()
-
-// Create/Update Routes
-
-const InvitationRoute = InvitationImport.update({
+const InvitationRoute = InvitationRouteImport.update({
   id: '/invitation',
   path: '/invitation',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CreateOrganizationRoute = CreateOrganizationImport.update({
+const CreateOrganizationRoute = CreateOrganizationRouteImport.update({
   id: '/create-organization',
   path: '/create-organization',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const authRoute = authImport.update({
+const authRoute = authRouteImport.update({
   id: '/(auth)',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const OrganizationSlugRoute = OrganizationSlugImport.update({
+const OrganizationSlugRoute = OrganizationSlugRouteImport.update({
   id: '/$organizationSlug',
   path: '/$organizationSlug',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LayoutRoute = LayoutImport.update({
+const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LayoutIndexRoute = LayoutIndexImport.update({
+const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const InvitationLayoutRoute = InvitationLayoutImport.update({
+const InvitationLayoutRoute = InvitationLayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => InvitationRoute,
 } as any)
-
-const CreateOrganizationLayoutRoute = CreateOrganizationLayoutImport.update({
-  id: '/_layout',
-  getParentRoute: () => CreateOrganizationRoute,
-} as any)
-
-const authLayoutRoute = authLayoutImport.update({
+const CreateOrganizationLayoutRoute =
+  CreateOrganizationLayoutRouteImport.update({
+    id: '/_layout',
+    getParentRoute: () => CreateOrganizationRoute,
+  } as any)
+const authLayoutRoute = authLayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => authRoute,
 } as any)
-
-const OrganizationSlugLayoutRoute = OrganizationSlugLayoutImport.update({
+const OrganizationSlugLayoutRoute = OrganizationSlugLayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => OrganizationSlugRoute,
 } as any)
-
-const InvitationLayoutIndexRoute = InvitationLayoutIndexImport.update({
+const InvitationLayoutIndexRoute = InvitationLayoutIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => InvitationLayoutRoute,
 } as any)
-
 const CreateOrganizationLayoutIndexRoute =
-  CreateOrganizationLayoutIndexImport.update({
+  CreateOrganizationLayoutIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => CreateOrganizationLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutIndexRoute =
-  OrganizationSlugLayoutIndexImport.update({
+  OrganizationSlugLayoutIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
-const authLayoutSignUpRoute = authLayoutSignUpImport.update({
+const authLayoutSignUpRoute = authLayoutSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
   getParentRoute: () => authLayoutRoute,
 } as any)
-
-const authLayoutResetPasswordRoute = authLayoutResetPasswordImport.update({
+const authLayoutResetPasswordRoute = authLayoutResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => authLayoutRoute,
 } as any)
-
-const authLayoutLoginRoute = authLayoutLoginImport.update({
+const authLayoutLoginRoute = authLayoutLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => authLayoutRoute,
 } as any)
-
-const authLayoutForgotPasswordRoute = authLayoutForgotPasswordImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => authLayoutRoute,
-} as any)
-
+const authLayoutForgotPasswordRoute =
+  authLayoutForgotPasswordRouteImport.update({
+    id: '/forgot-password',
+    path: '/forgot-password',
+    getParentRoute: () => authLayoutRoute,
+  } as any)
 const OrganizationSlugLayoutSettingsRoute =
-  OrganizationSlugLayoutSettingsImport.update({
+  OrganizationSlugLayoutSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
-const OrganizationSlugLayoutOldRoute = OrganizationSlugLayoutOldImport.update({
-  id: '/old',
-  path: '/old',
-  getParentRoute: () => OrganizationSlugLayoutRoute,
-} as any)
-
+const OrganizationSlugLayoutOldRoute =
+  OrganizationSlugLayoutOldRouteImport.update({
+    id: '/old',
+    path: '/old',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
 const OrganizationSlugLayoutUsersIndexRoute =
-  OrganizationSlugLayoutUsersIndexImport.update({
+  OrganizationSlugLayoutUsersIndexRouteImport.update({
     id: '/users/',
     path: '/users/',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutTeamsIndexRoute =
-  OrganizationSlugLayoutTeamsIndexImport.update({
+  OrganizationSlugLayoutTeamsIndexRouteImport.update({
     id: '/teams/',
     path: '/teams/',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutStatusUpdateIndexRoute =
-  OrganizationSlugLayoutStatusUpdateIndexImport.update({
+  OrganizationSlugLayoutStatusUpdateIndexRouteImport.update({
     id: '/status-update/',
     path: '/status-update/',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutUsersUserIdRoute =
-  OrganizationSlugLayoutUsersUserIdImport.update({
+  OrganizationSlugLayoutUsersUserIdRouteImport.update({
     id: '/users/$userId',
     path: '/users/$userId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutTeamsTeamIdRoute =
-  OrganizationSlugLayoutTeamsTeamIdImport.update({
+  OrganizationSlugLayoutTeamsTeamIdRouteImport.update({
     id: '/teams/$teamId',
     path: '/teams/$teamId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-
 const OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute =
-  OrganizationSlugLayoutStatusUpdateStatusUpdateIdImport.update({
+  OrganizationSlugLayoutStatusUpdateStatusUpdateIdRouteImport.update({
     id: '/status-update/$statusUpdateId',
     path: '/status-update/$statusUpdateId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
+  '/': typeof LayoutIndexRoute
+  '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
+  '/invitation': typeof InvitationLayoutRouteWithChildren
+  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
+  '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/forgot-password': typeof authLayoutForgotPasswordRoute
+  '/login': typeof authLayoutLoginRoute
+  '/reset-password': typeof authLayoutResetPasswordRoute
+  '/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
+  '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation/': typeof InvitationLayoutIndexRoute
+  '/$organizationSlug/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
+  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
+  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
+  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
+  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
+}
+export interface FileRoutesByTo {
+  '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
+  '/': typeof LayoutIndexRoute
+  '/create-organization': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation': typeof InvitationLayoutIndexRoute
+  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
+  '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/forgot-password': typeof authLayoutForgotPasswordRoute
+  '/login': typeof authLayoutLoginRoute
+  '/reset-password': typeof authLayoutResetPasswordRoute
+  '/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
+  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
+  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
+  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
+  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/_layout': typeof LayoutRouteWithChildren
+  '/$organizationSlug': typeof OrganizationSlugRouteWithChildren
+  '/$organizationSlug/_layout': typeof OrganizationSlugLayoutRouteWithChildren
+  '/(auth)': typeof authRouteWithChildren
+  '/(auth)/_layout': typeof authLayoutRouteWithChildren
+  '/create-organization': typeof CreateOrganizationRouteWithChildren
+  '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
+  '/invitation': typeof InvitationRouteWithChildren
+  '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
+  '/_layout/': typeof LayoutIndexRoute
+  '/$organizationSlug/_layout/old': typeof OrganizationSlugLayoutOldRoute
+  '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
+  '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
+  '/(auth)/_layout/login': typeof authLayoutLoginRoute
+  '/(auth)/_layout/reset-password': typeof authLayoutResetPasswordRoute
+  '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
+  '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
+  '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
+  '/invitation/_layout/': typeof InvitationLayoutIndexRoute
+  '/$organizationSlug/_layout/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
+  '/$organizationSlug/_layout/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
+  '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
+  '/$organizationSlug/_layout/status-update/': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
+  '/$organizationSlug/_layout/teams/': typeof OrganizationSlugLayoutTeamsIndexRoute
+  '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/$organizationSlug'
+    | '/'
+    | '/create-organization'
+    | '/invitation'
+    | '/$organizationSlug/old'
+    | '/$organizationSlug/settings'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/sign-up'
+    | '/$organizationSlug/'
+    | '/create-organization/'
+    | '/invitation/'
+    | '/$organizationSlug/status-update/$statusUpdateId'
+    | '/$organizationSlug/teams/$teamId'
+    | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/status-update'
+    | '/$organizationSlug/teams'
+    | '/$organizationSlug/users'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/$organizationSlug'
+    | '/'
+    | '/create-organization'
+    | '/invitation'
+    | '/$organizationSlug/old'
+    | '/$organizationSlug/settings'
+    | '/forgot-password'
+    | '/login'
+    | '/reset-password'
+    | '/sign-up'
+    | '/$organizationSlug/status-update/$statusUpdateId'
+    | '/$organizationSlug/teams/$teamId'
+    | '/$organizationSlug/users/$userId'
+    | '/$organizationSlug/status-update'
+    | '/$organizationSlug/teams'
+    | '/$organizationSlug/users'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/$organizationSlug'
+    | '/$organizationSlug/_layout'
+    | '/(auth)'
+    | '/(auth)/_layout'
+    | '/create-organization'
+    | '/create-organization/_layout'
+    | '/invitation'
+    | '/invitation/_layout'
+    | '/_layout/'
+    | '/$organizationSlug/_layout/old'
+    | '/$organizationSlug/_layout/settings'
+    | '/(auth)/_layout/forgot-password'
+    | '/(auth)/_layout/login'
+    | '/(auth)/_layout/reset-password'
+    | '/(auth)/_layout/sign-up'
+    | '/$organizationSlug/_layout/'
+    | '/create-organization/_layout/'
+    | '/invitation/_layout/'
+    | '/$organizationSlug/_layout/status-update/$statusUpdateId'
+    | '/$organizationSlug/_layout/teams/$teamId'
+    | '/$organizationSlug/_layout/users/$userId'
+    | '/$organizationSlug/_layout/status-update/'
+    | '/$organizationSlug/_layout/teams/'
+    | '/$organizationSlug/_layout/users/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  LayoutRoute: typeof LayoutRouteWithChildren
+  OrganizationSlugRoute: typeof OrganizationSlugRouteWithChildren
+  authRoute: typeof authRouteWithChildren
+  CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
+  InvitationRoute: typeof InvitationRouteWithChildren
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_layout': {
-      id: '/_layout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof LayoutImport
-      parentRoute: typeof rootRoute
-    }
-    '/$organizationSlug': {
-      id: '/$organizationSlug'
-      path: '/$organizationSlug'
-      fullPath: '/$organizationSlug'
-      preLoaderRoute: typeof OrganizationSlugImport
-      parentRoute: typeof rootRoute
-    }
-    '/$organizationSlug/_layout': {
-      id: '/$organizationSlug/_layout'
-      path: '/$organizationSlug'
-      fullPath: '/$organizationSlug'
-      preLoaderRoute: typeof OrganizationSlugLayoutImport
-      parentRoute: typeof OrganizationSlugRoute
-    }
-    '/(auth)': {
-      id: '/(auth)'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof authImport
-      parentRoute: typeof rootRoute
-    }
-    '/(auth)/_layout': {
-      id: '/(auth)/_layout'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof authLayoutImport
-      parentRoute: typeof authRoute
+    '/invitation': {
+      id: '/invitation'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/create-organization': {
       id: '/create-organization'
       path: '/create-organization'
       fullPath: '/create-organization'
-      preLoaderRoute: typeof CreateOrganizationImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof CreateOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/create-organization/_layout': {
-      id: '/create-organization/_layout'
-      path: '/create-organization'
-      fullPath: '/create-organization'
-      preLoaderRoute: typeof CreateOrganizationLayoutImport
-      parentRoute: typeof CreateOrganizationRoute
+    '/(auth)': {
+      id: '/(auth)'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof authRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/invitation': {
-      id: '/invitation'
-      path: '/invitation'
-      fullPath: '/invitation'
-      preLoaderRoute: typeof InvitationImport
-      parentRoute: typeof rootRoute
+    '/$organizationSlug': {
+      id: '/$organizationSlug'
+      path: '/$organizationSlug'
+      fullPath: '/$organizationSlug'
+      preLoaderRoute: typeof OrganizationSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/invitation/_layout': {
-      id: '/invitation/_layout'
-      path: '/invitation'
-      fullPath: '/invitation'
-      preLoaderRoute: typeof InvitationLayoutImport
-      parentRoute: typeof InvitationRoute
+    '/_layout': {
+      id: '/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
       id: '/_layout/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof LayoutIndexImport
-      parentRoute: typeof LayoutImport
+      preLoaderRoute: typeof LayoutIndexRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/$organizationSlug/_layout/old': {
-      id: '/$organizationSlug/_layout/old'
-      path: '/old'
-      fullPath: '/$organizationSlug/old'
-      preLoaderRoute: typeof OrganizationSlugLayoutOldImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/invitation/_layout': {
+      id: '/invitation/_layout'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationLayoutRouteImport
+      parentRoute: typeof InvitationRoute
     }
-    '/$organizationSlug/_layout/settings': {
-      id: '/$organizationSlug/_layout/settings'
-      path: '/settings'
-      fullPath: '/$organizationSlug/settings'
-      preLoaderRoute: typeof OrganizationSlugLayoutSettingsImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/create-organization/_layout': {
+      id: '/create-organization/_layout'
+      path: '/create-organization'
+      fullPath: '/create-organization'
+      preLoaderRoute: typeof CreateOrganizationLayoutRouteImport
+      parentRoute: typeof CreateOrganizationRoute
     }
-    '/(auth)/_layout/forgot-password': {
-      id: '/(auth)/_layout/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof authLayoutForgotPasswordImport
-      parentRoute: typeof authLayoutImport
-    }
-    '/(auth)/_layout/login': {
-      id: '/(auth)/_layout/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof authLayoutLoginImport
-      parentRoute: typeof authLayoutImport
-    }
-    '/(auth)/_layout/reset-password': {
-      id: '/(auth)/_layout/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof authLayoutResetPasswordImport
-      parentRoute: typeof authLayoutImport
-    }
-    '/(auth)/_layout/sign-up': {
-      id: '/(auth)/_layout/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof authLayoutSignUpImport
-      parentRoute: typeof authLayoutImport
-    }
-    '/$organizationSlug/_layout/': {
-      id: '/$organizationSlug/_layout/'
+    '/(auth)/_layout': {
+      id: '/(auth)/_layout'
       path: '/'
-      fullPath: '/$organizationSlug/'
-      preLoaderRoute: typeof OrganizationSlugLayoutIndexImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+      fullPath: '/'
+      preLoaderRoute: typeof authLayoutRouteImport
+      parentRoute: typeof authRoute
     }
-    '/create-organization/_layout/': {
-      id: '/create-organization/_layout/'
-      path: '/'
-      fullPath: '/create-organization/'
-      preLoaderRoute: typeof CreateOrganizationLayoutIndexImport
-      parentRoute: typeof CreateOrganizationLayoutImport
+    '/$organizationSlug/_layout': {
+      id: '/$organizationSlug/_layout'
+      path: '/$organizationSlug'
+      fullPath: '/$organizationSlug'
+      preLoaderRoute: typeof OrganizationSlugLayoutRouteImport
+      parentRoute: typeof OrganizationSlugRoute
     }
     '/invitation/_layout/': {
       id: '/invitation/_layout/'
       path: '/'
       fullPath: '/invitation/'
-      preLoaderRoute: typeof InvitationLayoutIndexImport
-      parentRoute: typeof InvitationLayoutImport
+      preLoaderRoute: typeof InvitationLayoutIndexRouteImport
+      parentRoute: typeof InvitationLayoutRoute
     }
-    '/$organizationSlug/_layout/status-update/$statusUpdateId': {
-      id: '/$organizationSlug/_layout/status-update/$statusUpdateId'
-      path: '/status-update/$statusUpdateId'
-      fullPath: '/$organizationSlug/status-update/$statusUpdateId'
-      preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/create-organization/_layout/': {
+      id: '/create-organization/_layout/'
+      path: '/'
+      fullPath: '/create-organization/'
+      preLoaderRoute: typeof CreateOrganizationLayoutIndexRouteImport
+      parentRoute: typeof CreateOrganizationLayoutRoute
     }
-    '/$organizationSlug/_layout/teams/$teamId': {
-      id: '/$organizationSlug/_layout/teams/$teamId'
-      path: '/teams/$teamId'
-      fullPath: '/$organizationSlug/teams/$teamId'
-      preLoaderRoute: typeof OrganizationSlugLayoutTeamsTeamIdImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/$organizationSlug/_layout/': {
+      id: '/$organizationSlug/_layout/'
+      path: '/'
+      fullPath: '/$organizationSlug/'
+      preLoaderRoute: typeof OrganizationSlugLayoutIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
     }
-    '/$organizationSlug/_layout/users/$userId': {
-      id: '/$organizationSlug/_layout/users/$userId'
-      path: '/users/$userId'
-      fullPath: '/$organizationSlug/users/$userId'
-      preLoaderRoute: typeof OrganizationSlugLayoutUsersUserIdImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/(auth)/_layout/sign-up': {
+      id: '/(auth)/_layout/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof authLayoutSignUpRouteImport
+      parentRoute: typeof authLayoutRoute
     }
-    '/$organizationSlug/_layout/status-update/': {
-      id: '/$organizationSlug/_layout/status-update/'
-      path: '/status-update'
-      fullPath: '/$organizationSlug/status-update'
-      preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdateIndexImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/(auth)/_layout/reset-password': {
+      id: '/(auth)/_layout/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof authLayoutResetPasswordRouteImport
+      parentRoute: typeof authLayoutRoute
     }
-    '/$organizationSlug/_layout/teams/': {
-      id: '/$organizationSlug/_layout/teams/'
-      path: '/teams'
-      fullPath: '/$organizationSlug/teams'
-      preLoaderRoute: typeof OrganizationSlugLayoutTeamsIndexImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+    '/(auth)/_layout/login': {
+      id: '/(auth)/_layout/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof authLayoutLoginRouteImport
+      parentRoute: typeof authLayoutRoute
+    }
+    '/(auth)/_layout/forgot-password': {
+      id: '/(auth)/_layout/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof authLayoutForgotPasswordRouteImport
+      parentRoute: typeof authLayoutRoute
+    }
+    '/$organizationSlug/_layout/settings': {
+      id: '/$organizationSlug/_layout/settings'
+      path: '/settings'
+      fullPath: '/$organizationSlug/settings'
+      preLoaderRoute: typeof OrganizationSlugLayoutSettingsRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/old': {
+      id: '/$organizationSlug/_layout/old'
+      path: '/old'
+      fullPath: '/$organizationSlug/old'
+      preLoaderRoute: typeof OrganizationSlugLayoutOldRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
     }
     '/$organizationSlug/_layout/users/': {
       id: '/$organizationSlug/_layout/users/'
       path: '/users'
       fullPath: '/$organizationSlug/users'
-      preLoaderRoute: typeof OrganizationSlugLayoutUsersIndexImport
-      parentRoute: typeof OrganizationSlugLayoutImport
+      preLoaderRoute: typeof OrganizationSlugLayoutUsersIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/teams/': {
+      id: '/$organizationSlug/_layout/teams/'
+      path: '/teams'
+      fullPath: '/$organizationSlug/teams'
+      preLoaderRoute: typeof OrganizationSlugLayoutTeamsIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/status-update/': {
+      id: '/$organizationSlug/_layout/status-update/'
+      path: '/status-update'
+      fullPath: '/$organizationSlug/status-update'
+      preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdateIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/users/$userId': {
+      id: '/$organizationSlug/_layout/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/$organizationSlug/users/$userId'
+      preLoaderRoute: typeof OrganizationSlugLayoutUsersUserIdRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/teams/$teamId': {
+      id: '/$organizationSlug/_layout/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/$organizationSlug/teams/$teamId'
+      preLoaderRoute: typeof OrganizationSlugLayoutTeamsTeamIdRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/status-update/$statusUpdateId': {
+      id: '/$organizationSlug/_layout/status-update/$statusUpdateId'
+      path: '/status-update/$statusUpdateId'
+      fullPath: '/$organizationSlug/status-update/$statusUpdateId'
+      preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -515,156 +628,6 @@ const InvitationRouteWithChildren = InvitationRoute._addFileChildren(
   InvitationRouteChildren,
 )
 
-export interface FileRoutesByFullPath {
-  '': typeof LayoutRouteWithChildren
-  '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
-  '/': typeof LayoutIndexRoute
-  '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
-  '/invitation': typeof InvitationLayoutRouteWithChildren
-  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
-  '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/forgot-password': typeof authLayoutForgotPasswordRoute
-  '/login': typeof authLayoutLoginRoute
-  '/reset-password': typeof authLayoutResetPasswordRoute
-  '/sign-up': typeof authLayoutSignUpRoute
-  '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
-  '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation/': typeof InvitationLayoutIndexRoute
-  '/$organizationSlug/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
-  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
-  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
-  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
-  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
-  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
-  '/': typeof LayoutIndexRoute
-  '/create-organization': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation': typeof InvitationLayoutIndexRoute
-  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
-  '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/forgot-password': typeof authLayoutForgotPasswordRoute
-  '/login': typeof authLayoutLoginRoute
-  '/reset-password': typeof authLayoutResetPasswordRoute
-  '/sign-up': typeof authLayoutSignUpRoute
-  '/$organizationSlug/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
-  '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
-  '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
-  '/$organizationSlug/status-update': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
-  '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
-  '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/_layout': typeof LayoutRouteWithChildren
-  '/$organizationSlug': typeof OrganizationSlugRouteWithChildren
-  '/$organizationSlug/_layout': typeof OrganizationSlugLayoutRouteWithChildren
-  '/(auth)': typeof authRouteWithChildren
-  '/(auth)/_layout': typeof authLayoutRouteWithChildren
-  '/create-organization': typeof CreateOrganizationRouteWithChildren
-  '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
-  '/invitation': typeof InvitationRouteWithChildren
-  '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
-  '/_layout/': typeof LayoutIndexRoute
-  '/$organizationSlug/_layout/old': typeof OrganizationSlugLayoutOldRoute
-  '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
-  '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
-  '/(auth)/_layout/login': typeof authLayoutLoginRoute
-  '/(auth)/_layout/reset-password': typeof authLayoutResetPasswordRoute
-  '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
-  '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
-  '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation/_layout/': typeof InvitationLayoutIndexRoute
-  '/$organizationSlug/_layout/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
-  '/$organizationSlug/_layout/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
-  '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
-  '/$organizationSlug/_layout/status-update/': typeof OrganizationSlugLayoutStatusUpdateIndexRoute
-  '/$organizationSlug/_layout/teams/': typeof OrganizationSlugLayoutTeamsIndexRoute
-  '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | ''
-    | '/$organizationSlug'
-    | '/'
-    | '/create-organization'
-    | '/invitation'
-    | '/$organizationSlug/old'
-    | '/$organizationSlug/settings'
-    | '/forgot-password'
-    | '/login'
-    | '/reset-password'
-    | '/sign-up'
-    | '/$organizationSlug/'
-    | '/create-organization/'
-    | '/invitation/'
-    | '/$organizationSlug/status-update/$statusUpdateId'
-    | '/$organizationSlug/teams/$teamId'
-    | '/$organizationSlug/users/$userId'
-    | '/$organizationSlug/status-update'
-    | '/$organizationSlug/teams'
-    | '/$organizationSlug/users'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/$organizationSlug'
-    | '/'
-    | '/create-organization'
-    | '/invitation'
-    | '/$organizationSlug/old'
-    | '/$organizationSlug/settings'
-    | '/forgot-password'
-    | '/login'
-    | '/reset-password'
-    | '/sign-up'
-    | '/$organizationSlug/status-update/$statusUpdateId'
-    | '/$organizationSlug/teams/$teamId'
-    | '/$organizationSlug/users/$userId'
-    | '/$organizationSlug/status-update'
-    | '/$organizationSlug/teams'
-    | '/$organizationSlug/users'
-  id:
-    | '__root__'
-    | '/_layout'
-    | '/$organizationSlug'
-    | '/$organizationSlug/_layout'
-    | '/(auth)'
-    | '/(auth)/_layout'
-    | '/create-organization'
-    | '/create-organization/_layout'
-    | '/invitation'
-    | '/invitation/_layout'
-    | '/_layout/'
-    | '/$organizationSlug/_layout/old'
-    | '/$organizationSlug/_layout/settings'
-    | '/(auth)/_layout/forgot-password'
-    | '/(auth)/_layout/login'
-    | '/(auth)/_layout/reset-password'
-    | '/(auth)/_layout/sign-up'
-    | '/$organizationSlug/_layout/'
-    | '/create-organization/_layout/'
-    | '/invitation/_layout/'
-    | '/$organizationSlug/_layout/status-update/$statusUpdateId'
-    | '/$organizationSlug/_layout/teams/$teamId'
-    | '/$organizationSlug/_layout/users/$userId'
-    | '/$organizationSlug/_layout/status-update/'
-    | '/$organizationSlug/_layout/teams/'
-    | '/$organizationSlug/_layout/users/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  LayoutRoute: typeof LayoutRouteWithChildren
-  OrganizationSlugRoute: typeof OrganizationSlugRouteWithChildren
-  authRoute: typeof authRouteWithChildren
-  CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
-  InvitationRoute: typeof InvitationRouteWithChildren
-}
-
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   OrganizationSlugRoute: OrganizationSlugRouteWithChildren,
@@ -672,157 +635,6 @@ const rootRouteChildren: RootRouteChildren = {
   CreateOrganizationRoute: CreateOrganizationRouteWithChildren,
   InvitationRoute: InvitationRouteWithChildren,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/_layout",
-        "/$organizationSlug",
-        "/(auth)",
-        "/create-organization",
-        "/invitation"
-      ]
-    },
-    "/_layout": {
-      "filePath": "_layout.tsx",
-      "children": [
-        "/_layout/"
-      ]
-    },
-    "/$organizationSlug": {
-      "filePath": "$organizationSlug",
-      "children": [
-        "/$organizationSlug/_layout"
-      ]
-    },
-    "/$organizationSlug/_layout": {
-      "filePath": "$organizationSlug/_layout.tsx",
-      "parent": "/$organizationSlug",
-      "children": [
-        "/$organizationSlug/_layout/old",
-        "/$organizationSlug/_layout/settings",
-        "/$organizationSlug/_layout/",
-        "/$organizationSlug/_layout/status-update/$statusUpdateId",
-        "/$organizationSlug/_layout/teams/$teamId",
-        "/$organizationSlug/_layout/users/$userId",
-        "/$organizationSlug/_layout/status-update/",
-        "/$organizationSlug/_layout/teams/",
-        "/$organizationSlug/_layout/users/"
-      ]
-    },
-    "/(auth)": {
-      "filePath": "(auth)",
-      "children": [
-        "/(auth)/_layout"
-      ]
-    },
-    "/(auth)/_layout": {
-      "filePath": "(auth)/_layout.tsx",
-      "parent": "/(auth)",
-      "children": [
-        "/(auth)/_layout/forgot-password",
-        "/(auth)/_layout/login",
-        "/(auth)/_layout/reset-password",
-        "/(auth)/_layout/sign-up"
-      ]
-    },
-    "/create-organization": {
-      "filePath": "create-organization",
-      "children": [
-        "/create-organization/_layout"
-      ]
-    },
-    "/create-organization/_layout": {
-      "filePath": "create-organization/_layout.tsx",
-      "parent": "/create-organization",
-      "children": [
-        "/create-organization/_layout/"
-      ]
-    },
-    "/invitation": {
-      "filePath": "invitation",
-      "children": [
-        "/invitation/_layout"
-      ]
-    },
-    "/invitation/_layout": {
-      "filePath": "invitation/_layout.tsx",
-      "parent": "/invitation",
-      "children": [
-        "/invitation/_layout/"
-      ]
-    },
-    "/_layout/": {
-      "filePath": "_layout.index.tsx",
-      "parent": "/_layout"
-    },
-    "/$organizationSlug/_layout/old": {
-      "filePath": "$organizationSlug/_layout.old.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/settings": {
-      "filePath": "$organizationSlug/_layout.settings.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/(auth)/_layout/forgot-password": {
-      "filePath": "(auth)/_layout.forgot-password.tsx",
-      "parent": "/(auth)/_layout"
-    },
-    "/(auth)/_layout/login": {
-      "filePath": "(auth)/_layout.login.tsx",
-      "parent": "/(auth)/_layout"
-    },
-    "/(auth)/_layout/reset-password": {
-      "filePath": "(auth)/_layout.reset-password.tsx",
-      "parent": "/(auth)/_layout"
-    },
-    "/(auth)/_layout/sign-up": {
-      "filePath": "(auth)/_layout.sign-up.tsx",
-      "parent": "/(auth)/_layout"
-    },
-    "/$organizationSlug/_layout/": {
-      "filePath": "$organizationSlug/_layout.index.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/create-organization/_layout/": {
-      "filePath": "create-organization/_layout.index.tsx",
-      "parent": "/create-organization/_layout"
-    },
-    "/invitation/_layout/": {
-      "filePath": "invitation/_layout.index.tsx",
-      "parent": "/invitation/_layout"
-    },
-    "/$organizationSlug/_layout/status-update/$statusUpdateId": {
-      "filePath": "$organizationSlug/_layout.status-update/$statusUpdateId.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/teams/$teamId": {
-      "filePath": "$organizationSlug/_layout.teams/$teamId.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/users/$userId": {
-      "filePath": "$organizationSlug/_layout.users/$userId.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/status-update/": {
-      "filePath": "$organizationSlug/_layout.status-update/index.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/teams/": {
-      "filePath": "$organizationSlug/_layout.teams/index.tsx",
-      "parent": "/$organizationSlug/_layout"
-    },
-    "/$organizationSlug/_layout/users/": {
-      "filePath": "$organizationSlug/_layout.users/index.tsx",
-      "parent": "/$organizationSlug/_layout"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

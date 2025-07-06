@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
+import Link from "next/link";
 
 import { BetaMessage } from "../components/beta-message";
 import { ConnectCard } from "../components/connect-card";
@@ -48,9 +48,7 @@ export default async function Page(props: {
           <div className="flex flex-col">
             <Link href="/" className="flex items-center gap-2">
               <AsyncStatusLogo className="h-3.5 w-auto" />
-              <h1 className="text-lg font-medium max-sm:text-base">
-                AsyncStatus
-              </h1>
+              <h1 className="text-lg font-medium max-sm:text-base">AsyncStatus</h1>
             </Link>
           </div>
 
@@ -71,10 +69,7 @@ export default async function Page(props: {
         </div>
 
         <div className="z-10 flex items-center gap-7 text-sm max-sm:hidden">
-          <Link
-            href={process.env.NEXT_PUBLIC_APP_URL ?? ""}
-            className="hover:text-foreground"
-          >
+          <Link href={process.env.NEXT_PUBLIC_APP_URL ?? ""} className="hover:text-foreground">
             Login
           </Link>
 
@@ -129,10 +124,9 @@ export default async function Page(props: {
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Your team already pushed code, closed tickets, replied in threads,
-          fixed small things no one asked them to. We turn it into an update. Or
-          you can write it yourself. Either way, no one has to talk about it at
-          9:30 a.m.
+          Your team already pushed code, closed tickets, replied in threads, fixed small things no
+          one asked them to. We turn it into an update. Or you can write it yourself. Either way, no
+          one has to talk about it at 9:30 a.m.
         </h3>
 
         <div className="mt-14 flex justify-center max-sm:mt-6">
@@ -151,19 +145,14 @@ export default async function Page(props: {
               <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
                 <div className="inline-flex items-center gap-0.5 max-sm:gap-1.5">
                   <span className="text-lg">Standup for</span>
-                  <PersonSelect
-                    defaultValue="frontend-developer"
-                    value={person}
-                  />
+                  <PersonSelect defaultValue="frontend-developer" value={person} />
                 </div>
               </div>
             </div>
 
             <div className="mt-4 flex flex-col gap-12">
               <div>
-                <h4 className="text-muted-foreground mb-3 text-sm font-medium">
-                  In the meeting
-                </h4>
+                <h4 className="text-muted-foreground mb-3 text-sm font-medium">In the meeting</h4>
                 <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
                   <p className="text-muted-foreground/90 text-lg text-balance">
                     {(() => {
@@ -188,14 +177,10 @@ export default async function Page(props: {
                     <span>{peopleSummary[person].meetingDetails.time}</span>
                     <span>·</span>
                     <span>
-                      {peopleSummary[person].meetingDetails.peopleListening}{" "}
-                      people listening
+                      {peopleSummary[person].meetingDetails.peopleListening} people listening
                     </span>
                     <span>·</span>
-                    <span>
-                      {peopleSummary[person].meetingDetails.peopleTyping} people
-                      typing
-                    </span>
+                    <span>{peopleSummary[person].meetingDetails.peopleTyping} people typing</span>
                   </div>
                 </div>
               </div>
@@ -207,9 +192,7 @@ export default async function Page(props: {
                 <div className="flex flex-col gap-2">
                   {peopleSummary[person].summary.map((summary, index) => (
                     <div key={summary} className="flex items-start gap-4">
-                      <span className="text-primary mt-1 text-sm font-medium">
-                        0{index + 1}
-                      </span>
+                      <span className="text-primary mt-1 text-sm font-medium">0{index + 1}</span>
                       <div className="flex-1">
                         <p className="text-lg">{summary}</p>
                       </div>
@@ -221,10 +204,7 @@ export default async function Page(props: {
           </div>
         </div>
 
-        <h3
-          className="mt-36 text-center text-6xl font-bold max-sm:text-5xl"
-          id="how-it-works"
-        >
+        <h3 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
           How it works
         </h3>
         <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
@@ -250,20 +230,19 @@ export default async function Page(props: {
               Calculate your savings
             </h3>
             <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              See how much time and money your team can save by replacing
-              synchronous standups with AsyncStatus.
+              See how much time and money your team can save by replacing synchronous standups with
+              AsyncStatus.
             </h3>
           </div>
           <SavingsCalculator />
 
           <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
-            <strong>Disclaimer</strong>: These figures are estimates provided
-            for illustrative purposes only and may not accurately reflect your
-            team's specific situation. They do not constitute financial advice
-            or a guarantee of actual savings. <br />
+            <strong>Disclaimer</strong>: These figures are estimates provided for illustrative
+            purposes only and may not accurately reflect your team's specific situation. They do not
+            constitute financial advice or a guarantee of actual savings. <br />
             <br />
-            <strong>How we calculate your savings</strong>: Hourly rate is
-            derived from the average salary divided by{" "}
+            <strong>How we calculate your savings</strong>: Hourly rate is derived from the average
+            salary divided by{" "}
             <code className="whitespace-nowrap max-sm:whitespace-normal">
               260&nbsp;working&nbsp;days&nbsp;×&nbsp;8&nbsp;hours
             </code>
@@ -273,14 +252,13 @@ export default async function Page(props: {
             </code>
             . We assume each developer still spends the
             <strong>&nbsp;async follow-up time&nbsp;</strong>
-            (default&nbsp;10&nbsp;min/day) that you set in the slider updating
-            or reading status. Hours saved per month therefore use
+            (default&nbsp;10&nbsp;min/day) that you set in the slider updating or reading status.
+            Hours saved per month therefore use
             <code className="whitespace-nowrap max-sm:whitespace-normal">
               (stand-up&nbsp;length&nbsp;−&nbsp;async&nbsp;follow-up&nbsp;time)
             </code>
-            . Monthly savings are those hours multiplied by the hourly rate;
-            annual savings are simply monthly savings × 12. Your numbers update
-            live as you move the sliders.
+            . Monthly savings are those hours multiplied by the hourly rate; annual savings are
+            simply monthly savings × 12. Your numbers update live as you move the sliders.
           </p>
         </section>
 

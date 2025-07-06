@@ -1,9 +1,3 @@
-import { Suspense } from "react";
-import {
-  sendVerificationEmailMutationOptions,
-  sessionQueryOptions,
-} from "@/rpc/auth";
-import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -31,11 +25,11 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
+import { Suspense } from "react";
+import { sendVerificationEmailMutationOptions, sessionQueryOptions } from "@/rpc/auth";
+import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 
-import {
-  OrganizationMenu,
-  OrganizationMenuSkeleton,
-} from "./organization-menu";
+import { OrganizationMenu, OrganizationMenuSkeleton } from "./organization-menu";
 import { UserMenu, UserMenuSkeleton } from "./user-menu";
 
 function AppSidebarLinks(props: { organizationSlug: string }) {
@@ -43,10 +37,7 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
     <>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
-          <Link
-            to="/$organizationSlug"
-            params={{ organizationSlug: props.organizationSlug }}
-          >
+          <Link to="/$organizationSlug" params={{ organizationSlug: props.organizationSlug }}>
             <Sun />
             <span>Status updates</span>
           </Link>
@@ -86,34 +77,20 @@ function AppSidebarBetaNotice() {
       <CardHeader className="px-0">
         <CardTitle className="text-md">We&apos;re in beta</CardTitle>
         <CardDescription className="text-xs text-pretty">
-          We&apos;re working hard to bring you the best experience but there are
-          some features that are still under development or might not work as
-          expected.
+          We&apos;re working hard to bring you the best experience but there are some features that
+          are still under development or might not work as expected.
         </CardDescription>
       </CardHeader>
       <CardFooter className="px-0">
         <div className="flex w-full flex-col items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-            asChild
-          >
-            <a
-              href="mailto:support@asyncstatus.com"
-              target="_blank"
-              rel="noreferrer"
-            >
+          <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+            <a href="mailto:support@asyncstatus.com" target="_blank" rel="noreferrer">
               <LifeBuoy className="size-3" />
               <span>Report an issue</span>
             </a>
           </Button>
           <Button size="sm" className="w-full text-xs" asChild>
-            <a
-              href="mailto:kacper@asyncstatus.com"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="mailto:kacper@asyncstatus.com" target="_blank" rel="noreferrer">
               <Send className="size-3" />
               <span>Give feedback</span>
             </a>
@@ -155,13 +132,11 @@ function AppSidebarUserEmailNotVerified() {
   const sendVerificationEmail = useMutation({
     ...sendVerificationEmailMutationOptions(),
     onSuccess() {
-      toast.success(
-        "We've sent you a verification link, please check your email.",
-      );
+      toast.success("We've sent you a verification link, please check your email.");
     },
   });
 
-  if (session.data.user.emailVerified) {
+  if (session.data?.user.emailVerified) {
     return null;
   }
 
@@ -170,8 +145,7 @@ function AppSidebarUserEmailNotVerified() {
       <CardHeader className="px-0">
         <CardTitle className="text-md">Email not verified</CardTitle>
         <CardDescription className="text-xs text-pretty">
-          Your email is not verified. Please verify your email to unlock all
-          features.
+          Your email is not verified. Please verify your email to unlock all features.
         </CardDescription>
       </CardHeader>
       <CardFooter className="px-0">
@@ -181,6 +155,10 @@ function AppSidebarUserEmailNotVerified() {
             size="sm"
             className="w-full text-xs"
             onClick={() => {
+              if (!session.data) {
+                toast.error("You are not logged in");
+                return;
+              }
               sendVerificationEmail.mutate({
                 email: session.data.user.email,
                 callbackURL: import.meta.env.VITE_WEB_APP_URL,
@@ -269,9 +247,7 @@ export function AppSidebarSkeleton() {
             <SidebarGroupLabel>Organization</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <AppSidebarLinks
-                  organizationSlug={params?.organizationSlug ?? ""}
-                />
+                <AppSidebarLinks organizationSlug={params?.organizationSlug ?? ""} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

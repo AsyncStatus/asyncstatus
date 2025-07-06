@@ -1,54 +1,34 @@
-import { useEffect } from "react";
-import {
-  sendVerificationEmailMutationOptions,
-  signUpEmailMutationOptions,
-} from "@/rpc/auth";
-import { getInvitationByEmailQueryOptions } from "@/rpc/organization/organization";
+import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-  useRouter,
-} from "@tanstack/react-router";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { z } from "zod/v4";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { sendVerificationEmailMutationOptions, signUpEmailMutationOptions } from "@/rpc/auth";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/(auth)/_layout/sign-up")({
   component: RouteComponent,
   beforeLoad: async ({ context: { queryClient }, search }) => {
-    if (search.invitationId && search.invitationEmail) {
-      const data = await queryClient
-        .ensureQueryData({
-          ...getInvitationByEmailQueryOptions(
-            search.invitationId,
-            search.invitationEmail,
-            false,
-          ),
-          retry: false,
-        })
-        .catch(() => {});
-      if (data && data?.hasUser) {
-        throw redirect({ to: "/login", search });
-      }
+    if (!search.invitationId || !search.invitationEmail) {
+      return;
+    }
+
+    const invitation = await queryClient.ensureQueryData(
+      typedQueryOptions(
+        getInvitationContract,
+        { id: search.invitationId, email: search.invitationEmail },
+        { throwOnError: false },
+      ),
+    );
+
+    if (invitation?.hasUser) {
+      throw redirect({ to: "/login", search });
     }
   },
 });
@@ -70,11 +50,13 @@ function RouteComponent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const search = Route.useSearch();
-  const invitation = useSuspenseQuery(
-    getInvitationByEmailQueryOptions(
-      search.invitationId,
-      search.invitationEmail,
-      false,
+  const invitation = useQuery(
+    typedQueryOptions(
+      getInvitationContract,
+      search.invitationId && search.invitationEmail
+        ? { id: search.invitationId, email: search.invitationEmail }
+        : skipToken,
+      { throwOnError: false },
     ),
   );
 
@@ -102,10 +84,9 @@ function RouteComponent() {
   const sendVerificationEmail = useMutation({
     ...sendVerificationEmailMutationOptions(),
     onSuccess() {
-      toast.success(
-        "We've sent you a verification link, please check your email.",
-        { position: "top-center" },
-      );
+      toast.success("We've sent you a verification link, please check your email.", {
+        position: "top-center",
+      });
     },
   });
 
@@ -180,11 +161,7 @@ function RouteComponent() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="john.doe@example.com"
-                    autoComplete="work email"
-                    {...field}
-                  />
+                  <Input placeholder="john.doe@example.com" autoComplete="work email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,40 +207,28 @@ function RouteComponent() {
           />
 
           {signUpEmail.error && (
-            <div className="text-destructive text-sm text-pretty">
-              {signUpEmail.error.message}
-            </div>
+            <div className="text-destructive text-sm text-pretty">{signUpEmail.error.message}</div>
           )}
 
           <p className="text-muted-foreground text-xs">
             By signing up, you agree to our{" "}
-            <a
-              className="underline"
-              href={import.meta.env.VITE_MARKETING_APP_URL + "/terms"}
-            >
+            <a className="underline" href={`${import.meta.env.VITE_MARKETING_APP_URL}/terms`}>
               Terms of Service
             </a>
             ,{" "}
-            <a
-              className="underline"
-              href={import.meta.env.VITE_MARKETING_APP_URL + "/privacy"}
-            >
+            <a className="underline" href={`${import.meta.env.VITE_MARKETING_APP_URL}/privacy`}>
               Privacy Policy
             </a>{" "}
             and{" "}
             <a
               className="underline"
-              href={import.meta.env.VITE_MARKETING_APP_URL + "/acceptable-use"}
+              href={`${import.meta.env.VITE_MARKETING_APP_URL}/acceptable-use`}
             >
               Acceptable Use
             </a>
             .
           </p>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={signUpEmail.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={signUpEmail.isPending}>
             Create an account
           </Button>
         </div>

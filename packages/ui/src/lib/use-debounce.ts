@@ -1,8 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-import useDebouncedCallback, {
-  type DebouncedState,
-} from "./use-debounced-callback";
+import useDebouncedCallback, { type DebouncedState } from "./use-debounced-callback";
 
 function valueEquality<T>(left: T, right: T): boolean {
   return left === right;

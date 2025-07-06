@@ -1,10 +1,9 @@
 import { eq } from "drizzle-orm";
-
-import type { Db } from "../../../db";
-import * as schema from "../../../db/schema";
+import * as schema from "../../../db";
+import type { Db } from "../../../db/db";
 import {
-  SyncGithubWorkflowStatusStep,
   type SyncGithubWorkflowStatusName,
+  SyncGithubWorkflowStatusStep,
 } from "../../../schema/github-integration";
 
 type WithSafeSyncStatusParams = {
@@ -12,10 +11,7 @@ type WithSafeSyncStatusParams = {
   integrationId: string;
 };
 
-export function createReportStatusFn({
-  db,
-  integrationId,
-}: WithSafeSyncStatusParams) {
+export function createReportStatusFn({ db, integrationId }: WithSafeSyncStatusParams) {
   return async (
     syncStatusName: (typeof SyncGithubWorkflowStatusName)[keyof typeof SyncGithubWorkflowStatusName],
     fn: () => Promise<void>,

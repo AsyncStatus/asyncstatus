@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,9 +17,10 @@ import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CircleHelpIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-
 import { GenerateStatusButton } from "@/components/generate-status-button";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 
 import { EmptyState } from "../../components/empty-state";
 import { StatusUpdateCard } from "../../components/status-update-card";
@@ -39,9 +38,7 @@ const filterOptions = {
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const organizationQuery = useQuery(
-    getOrganizationQueryOptions(organizationSlug),
-  );
+  const organizationQuery = useQuery(getOrganizationQueryOptions(organizationSlug));
   const organization = organizationQuery.data?.organization;
   const member = organizationQuery.data?.member;
 
@@ -55,16 +52,12 @@ function RouteComponent() {
 
       let result;
       if (filter === "mine" && member) {
-        result = await rpc.organization[":idOrSlug"]["status-update"].member[
-          ":memberId"
-        ].$get({
+        result = await rpc.organization[":idOrSlug"]["status-update"].member[":memberId"].$get({
           param: { memberId: member.id, idOrSlug: organizationSlug },
           query: {},
         });
       } else if (filter === "team" && selectedTeamId) {
-        result = await rpc.organization[":idOrSlug"]["status-update"].team[
-          ":teamId"
-        ].$get({
+        result = await rpc.organization[":idOrSlug"]["status-update"].team[":teamId"].$get({
           param: { teamId: selectedTeamId, idOrSlug: organizationSlug },
         });
       } else {
@@ -103,9 +96,7 @@ function RouteComponent() {
   // Handle creating public share links
   const createShareMutation = useMutation({
     mutationFn: async (statusUpdateId: string) => {
-      const response = await rpc.organization[":idOrSlug"][
-        "public-share"
-      ].$post({
+      const response = await rpc.organization[":idOrSlug"]["public-share"].$post({
         param: { idOrSlug: organizationSlug },
         json: {
           statusUpdateId,
@@ -173,10 +164,7 @@ function RouteComponent() {
             </Select>
 
             {filter === "team" && teams && (
-              <Select
-                value={selectedTeamId || ""}
-                onValueChange={setSelectedTeamId}
-              >
+              <Select value={selectedTeamId || ""} onValueChange={setSelectedTeamId}>
                 <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
@@ -192,10 +180,7 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <GenerateStatusButton
-              organizationSlug={organizationSlug}
-              memberId={member?.id ?? ""}
-            />
+            <GenerateStatusButton organizationSlug={organizationSlug} memberId={member?.id ?? ""} />
             <Button asChild size="sm" className="w-full sm:w-auto">
               <Link
                 to="/$organizationSlug/status-update"

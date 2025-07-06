@@ -1,9 +1,3 @@
-import { useState } from "react";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import {
-  deleteTeamMutationOptions,
-  listTeamsQueryOptions,
-} from "@/rpc/organization/teams";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,27 +36,20 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Layers, Plus, Search, Trash, Users } from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQueries,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-
+import { useState } from "react";
 import { CreateTeamForm } from "@/components/create-team-form";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { deleteTeamMutationOptions, listTeamsQueryOptions } from "@/rpc/organization/teams";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/")({
   component: TeamsListPage,
   pendingComponent: PendingComponent,
-  loader: async ({
-    context: { queryClient },
-    params: { organizationSlug },
-  }) => {
+  loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
     await Promise.all([
       queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(
-        getOrganizationQueryOptions(organizationSlug),
-      ),
+      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
     ]);
   },
 });
@@ -92,8 +79,7 @@ function TeamsListPage() {
   });
 
   const isAdmin =
-    organization.data.member.role === "admin" ||
-    organization.data.member.role === "owner";
+    organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
   // Filter teams based on search query
   const filteredTeams = teamList.data.filter((team) =>
@@ -129,10 +115,7 @@ function TeamsListPage() {
           </div>
 
           {isAdmin && (
-            <Dialog
-              open={createTeamDialogOpen}
-              onOpenChange={setCreateTeamDialogOpen}
-            >
+            <Dialog open={createTeamDialogOpen} onOpenChange={setCreateTeamDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="size-4" />
@@ -143,9 +126,7 @@ function TeamsListPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Create Team</DialogTitle>
-                  <DialogDescription>
-                    Create a new team for your organization.
-                  </DialogDescription>
+                  <DialogDescription>Create a new team for your organization.</DialogDescription>
                 </DialogHeader>
 
                 <CreateTeamForm
@@ -168,8 +149,7 @@ function TeamsListPage() {
                   This will permanently delete the team
                   {teamToDelete &&
                     ` "${teamList.data.find((team) => team.id === teamToDelete)?.name}"`}
-                  and remove all member associations. This action cannot be
-                  undone.
+                  and remove all member associations. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -225,7 +205,12 @@ function TeamsListPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="bg-muted/20 flex gap-2 border-t pb-3">
-                  <Button asChild variant="secondary" size="sm" className="flex-1 text-xs sm:text-sm">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 text-xs sm:text-sm"
+                  >
                     <Link
                       to="/$organizationSlug/teams/$teamId"
                       params={{ organizationSlug, teamId: team.id }}

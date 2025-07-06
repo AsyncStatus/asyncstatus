@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@react-email/components": "0.0.36",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "1.2.14",
+    "@types/bun": "catalog:",
     "react-email": "4.0.7",
-    "typescript": "5.8.3"
+    "typescript": "catalog:"
   }
 }

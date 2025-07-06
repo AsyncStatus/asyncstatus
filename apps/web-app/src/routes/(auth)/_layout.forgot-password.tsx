@@ -1,4 +1,3 @@
-import { forgotPasswordMutationOptions } from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
@@ -7,16 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { z } from "zod/v4";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { forgotPasswordMutationOptions } from "@/rpc/auth";
 
 export const Route = createFileRoute("/(auth)/_layout/forgot-password")({
   component: RouteComponent,
@@ -37,8 +29,7 @@ function RouteComponent() {
     ...forgotPasswordMutationOptions(),
     onSuccess() {
       toast.success("Email sent", {
-        description:
-          "We've sent you a link to reset your password. Please check your email.",
+        description: "We've sent you a link to reset your password. Please check your email.",
       });
     },
   });
@@ -69,11 +60,7 @@ function RouteComponent() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="john.doe@example.com"
-                    autoComplete="work email"
-                    {...field}
-                  />
+                  <Input placeholder="john.doe@example.com" autoComplete="work email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -87,19 +74,11 @@ function RouteComponent() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={forgotPassword.isPending}
-            >
+            <Button type="submit" className="w-full" disabled={forgotPassword.isPending}>
               Reset password
             </Button>
 
-            <Button
-              asChild
-              variant="ghost"
-              className="text-muted-foreground gap-0.5"
-            >
+            <Button asChild variant="ghost" className="text-muted-foreground gap-0.5">
               <Link to="/login" search={search}>
                 <ChevronLeft />
                 Go back to login

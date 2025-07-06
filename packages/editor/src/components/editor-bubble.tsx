@@ -1,7 +1,7 @@
-import { forwardRef, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
-import { BubbleMenu, isNodeSelection, useCurrentEditor } from "@tiptap/react";
 import type { BubbleMenuProps } from "@tiptap/react";
+import { BubbleMenu, isNodeSelection, useCurrentEditor } from "@tiptap/react";
+import type { ReactNode } from "react";
+import { forwardRef, useEffect, useMemo, useRef } from "react";
 import type { Instance, Props } from "tippy.js";
 
 export interface EditorBubbleProps extends Omit<BubbleMenuProps, "editor"> {
@@ -30,12 +30,7 @@ export const EditorBubble = forwardRef<HTMLDivElement, EditorBubbleProps>(
         // - the selected node is an image
         // - the selection is empty
         // - the selection is a node selection (for drag handles)
-        if (
-          !editor.isEditable ||
-          editor.isActive("image") ||
-          empty ||
-          isNodeSelection(selection)
-        ) {
+        if (!editor.isEditable || editor.isActive("image") || empty || isNodeSelection(selection)) {
           return false;
         }
         return true;
@@ -47,13 +42,10 @@ export const EditorBubble = forwardRef<HTMLDivElement, EditorBubbleProps>(
           onCreate: (val) => {
             instanceRef.current = val;
 
-            instanceRef.current.popper.firstChild?.addEventListener(
-              "blur",
-              (event) => {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-              },
-            );
+            instanceRef.current.popper.firstChild?.addEventListener("blur", (event) => {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            });
           },
           moveTransition: "transform 0.15s ease-out",
           ...tippyOptions,

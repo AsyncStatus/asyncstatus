@@ -1,17 +1,6 @@
-import { Suspense, useState } from "react";
-import {
-  listMembersQueryOptions,
-  updateMemberMutationOptions,
-} from "@/rpc/organization/member";
-import {
-  cancelInvitationMutationOptions,
-  getOrganizationQueryOptions,
-} from "@/rpc/organization/organization";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { serializeFormData } from "@asyncstatus/typed-handlers";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
@@ -41,49 +30,39 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@asyncstatus/ui/components/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/components/tabs";
 import {
   Archive,
   Calendar,
-  Edit,
+  Copy,
   Mail,
-  Plus,
   Search,
   Trash,
+  UserPlus,
   UserRound,
   Users,
-  UserPlus,
-  Copy,
 } from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQueries,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
-
-import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { useState } from "react";
 import { InviteMemberForm } from "@/components/invite-member-form";
-import { UpdateMemberForm } from "@/components/update-member-form";
+import { UpdateMemberFormDialog } from "@/components/update-member-form";
+import { getFileUrl, getInitials, upperFirst } from "@/lib/utils";
+import { listMembersQueryOptions } from "@/rpc/organization/member";
+import {
+  cancelInvitationMutationOptions,
+  getOrganizationQueryOptions,
+} from "@/rpc/organization/organization";
+import { typedMutationOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   component: RouteComponent,
   pendingComponent: PendingComponent,
-  loader: async ({
-    context: { queryClient },
-    params: { organizationSlug },
-  }) => {
+  loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
     await Promise.all([
       queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(
-        getOrganizationQueryOptions(organizationSlug),
-      ),
+      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
     ]);
   },
 });
@@ -92,8 +71,6 @@ function RouteComponent() {
   const { organizationSlug } = Route.useParams();
   const queryClient = useQueryClient();
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
-  const [updateMemberDialogOpen, setUpdateMemberDialogOpen] = useState(false);
-  const [updateMemberId, setUpdateMemberId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<string>("members");
   const [organization, members] = useSuspenseQueries({
@@ -103,7 +80,7 @@ function RouteComponent() {
     ],
   });
   const updateMember = useMutation({
-    ...updateMemberMutationOptions(),
+    ...typedMutationOptions(updateMemberContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: listMembersQueryOptions(organizationSlug).queryKey,
@@ -119,20 +96,19 @@ function RouteComponent() {
     },
   });
   const isAdmin =
-    organization.data.member.role === "admin" ||
-    organization.data.member.role === "owner";
+    organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
   // Filter members based on archived status and search query
   const activeMembers = members.data.members?.filter(
     (member) =>
-      !member.archivedAt &&
+      !member?.archivedAt &&
       (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const archivedMembers = members.data.members?.filter(
     (member) =>
-      member.archivedAt &&
+      member?.archivedAt &&
       (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
@@ -175,10 +151,7 @@ function RouteComponent() {
           </div>
 
           {isAdmin && (
-            <Dialog
-              open={inviteMemberDialogOpen}
-              onOpenChange={setInviteMemberDialogOpen}
-            >
+            <Dialog open={inviteMemberDialogOpen} onOpenChange={setInviteMemberDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="w-full sm:w-auto">
                   <UserPlus className="size-4" />
@@ -212,9 +185,7 @@ function RouteComponent() {
               <Users className="size-3" />
               <span className="hidden sm:inline">Users</span>
               <span className="sm:hidden">All</span>
-              <span className="text-muted-foreground/60 text-xs">
-                {activeMembers?.length ?? 0}
-              </span>
+              <span className="text-muted-foreground/60 text-xs">{activeMembers?.length ?? 0}</span>
             </TabsTrigger>
             <TabsTrigger value="archived" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <Archive className="size-3" />
@@ -224,7 +195,10 @@ function RouteComponent() {
                 {archivedMembers?.length ?? 0}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="invitations" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <TabsTrigger
+              value="invitations"
+              className="flex items-center gap-1.5 text-xs sm:text-sm"
+            >
               <Mail className="size-3" />
               <span className="hidden sm:inline">Invitations</span>
               <span className="sm:hidden">Inv.</span>
@@ -241,9 +215,7 @@ function RouteComponent() {
                   <Users className="mx-auto mb-2 size-10 opacity-50" />
                   <p className="text-base sm:text-lg font-medium">No members found</p>
                   <p className="text-sm max-w-sm mx-auto">
-                    {searchQuery
-                      ? "Try a different search query"
-                      : "Invite members to get started"}
+                    {searchQuery ? "Try a different search query" : "Invite members to get started"}
                   </p>
                 </div>
               ) : (
@@ -284,10 +256,7 @@ function RouteComponent() {
                           </Badge>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Calendar className="size-3" />
-                            <span>
-                              Joined{" "}
-                              {dayjs(member.createdAt).format("MMM D, YYYY")}
-                            </span>
+                            <span>Joined {dayjs(member.createdAt).format("MMM D, YYYY")}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -315,13 +284,13 @@ function RouteComponent() {
                               variant="destructive"
                               disabled={updateMember.isPending}
                               onClick={() => {
-                                updateMember.mutate({
-                                  param: {
+                                updateMember.mutate(
+                                  serializeFormData({
                                     idOrSlug: organizationSlug,
                                     memberId: member.id,
-                                  },
-                                  form: { archivedAt: new Date().toISOString() },
-                                });
+                                    archivedAt: new Date().toISOString(),
+                                  }),
+                                );
                               }}
                               title="Archive this user"
                               className="flex-initial"
@@ -331,55 +300,11 @@ function RouteComponent() {
                           )}
 
                           {isAdmin && (
-                            <Dialog
-                              open={
-                                updateMemberId === member.id &&
-                                updateMemberDialogOpen
-                              }
-                              onOpenChange={(open) => {
-                                setUpdateMemberDialogOpen(open);
-                                if (!open) {
-                                  setUpdateMemberId(null);
-                                }
-                              }}
-                            >
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  onClick={() => {
-                                    setUpdateMemberId(member.id);
-                                    setUpdateMemberDialogOpen(true);
-                                  }}
-                                  title="Edit user role"
-                                  className="flex-initial"
-                                >
-                                  <Edit className="size-4" />
-                                </Button>
-                              </DialogTrigger>
-
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Update User</DialogTitle>
-                                  <DialogDescription>
-                                    Update the user role or other details.
-                                  </DialogDescription>
-                                </DialogHeader>
-
-                                <UpdateMemberForm
-                                  organizationSlug={organizationSlug}
-                                  memberId={member.id}
-                                  onSuccess={() => {
-                                    setUpdateMemberDialogOpen(false);
-                                    setUpdateMemberId(null);
-                                  }}
-                                  onCancel={() => {
-                                    setUpdateMemberDialogOpen(false);
-                                    setUpdateMemberId(null);
-                                  }}
-                                />
-                              </DialogContent>
-                            </Dialog>
+                            <UpdateMemberFormDialog
+                              small
+                              organizationSlugOrId={organizationSlug}
+                              memberId={member.id}
+                            />
                           )}
                         </div>
                       </CardFooter>
@@ -397,18 +322,13 @@ function RouteComponent() {
                   <Archive className="mx-auto mb-2 size-10 opacity-50" />
                   <p className="text-base sm:text-lg font-medium">No archived users found</p>
                   <p className="text-sm max-w-sm mx-auto">
-                    {searchQuery
-                      ? "Try a different search query"
-                      : "There are no archived users"}
+                    {searchQuery ? "Try a different search query" : "There are no archived users"}
                   </p>
                 </div>
               ) : (
                 archivedMembers?.map((member) => {
                   return (
-                    <Card
-                      key={member.id}
-                      className="overflow-hidden pb-0 opacity-90"
-                    >
+                    <Card key={member.id} className="overflow-hidden pb-0 opacity-90">
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="size-10 sm:size-12 grayscale">
@@ -443,10 +363,7 @@ function RouteComponent() {
                           </Badge>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Archive className="size-3" />
-                            <span>
-                              Archived{" "}
-                              {formatArchiveDate(member.archivedAt)}
-                            </span>
+                            <span>Archived {formatArchiveDate(member?.archivedAt)}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -475,13 +392,11 @@ function RouteComponent() {
                               disabled={updateMember.isPending}
                               onClick={() => {
                                 updateMember.mutate(
-                                  {
-                                    param: {
-                                      idOrSlug: organizationSlug,
-                                      memberId: member.id,
-                                    },
-                                    form: { archivedAt: null as any },
-                                  },
+                                  serializeFormData({
+                                    idOrSlug: organizationSlug,
+                                    memberId: member.id,
+                                    archivedAt: null,
+                                  }),
                                   {
                                     onSuccess: () => {
                                       // Switch to members tab after unarchiving
@@ -525,9 +440,7 @@ function RouteComponent() {
                         <div className="flex items-center gap-3">
                           <Avatar className="size-10 sm:size-12">
                             <AvatarFallback className="text-sm sm:text-lg">
-                              {getInitials(
-                                invitation.email.split("@")[0] ?? "",
-                              )}
+                              {getInitials(invitation.email.split("@")[0] ?? "")}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
@@ -547,10 +460,7 @@ function RouteComponent() {
                           </Badge>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Calendar className="size-3" />
-                            <span>
-                              Invited{" "}
-                              {dayjs(invitation.createdAt).format("MMM D, YYYY")}
-                            </span>
+                            <span>Invited {dayjs(invitation.createdAt).format("MMM D, YYYY")}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -561,9 +471,7 @@ function RouteComponent() {
                             size="sm"
                             onClick={() => {
                               toast.promise(
-                                navigator.clipboard.writeText(
-                                  invitation.invitationLink,
-                                ),
+                                navigator.clipboard.writeText(invitation.invitationLink),
                                 {
                                   loading: "Copying invitation link...",
                                   success: "Invitation link copied!",

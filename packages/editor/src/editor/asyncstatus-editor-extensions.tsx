@@ -115,11 +115,7 @@ const placeholder = Placeholder.configure({
         // Find all paragraph nodes in notes section
         const notesNodes: (typeof node)[] = [];
         state.doc.descendants((docNode, pos) => {
-          if (
-            pos > notesHeadingPos &&
-            pos < moodHeadingPos &&
-            docNode.type.name === "paragraph"
-          ) {
+          if (pos > notesHeadingPos && pos < moodHeadingPos && docNode.type.name === "paragraph") {
             notesNodes.push(docNode);
           }
         });
@@ -133,8 +129,7 @@ const placeholder = Placeholder.configure({
       }
 
       // Check if we're in mood section (after mood heading)
-      const isInMoodSection =
-        moodHeadingPos !== -1 && currentNodePos > moodHeadingPos;
+      const isInMoodSection = moodHeadingPos !== -1 && currentNodePos > moodHeadingPos;
 
       if (isInMoodSection) {
         // Find all paragraph nodes in mood section

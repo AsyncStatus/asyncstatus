@@ -1,9 +1,8 @@
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Octokit } from "octokit";
-
-import type { Db } from "../../../db";
-import * as schema from "../../../db/schema";
+import * as schema from "../../../db";
+import type { Db } from "../../../db/db";
 import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncRepositoriesParams = {
@@ -17,10 +16,9 @@ export async function fetchAndSyncRepositories({
   db,
   integrationId,
 }: FetchAndSyncRepositoriesParams) {
-  for await (const repo of octokit.paginate.iterator(
-    "GET /installation/repositories",
-    { per_page: 100 },
-  )) {
+  for await (const repo of octokit.paginate.iterator("GET /installation/repositories", {
+    per_page: 100,
+  })) {
     const batchUpserts = repo.data.map((repo) => {
       return db
         .insert(schema.githubRepository)

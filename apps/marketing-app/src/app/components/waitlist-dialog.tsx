@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Dialog,
@@ -22,8 +21,9 @@ import {
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import posthog from "posthog-js";
+import * as React from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import * as z from "zod/v4";
 
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
@@ -38,10 +38,7 @@ interface WaitlistDialogProps {
   className?: string;
 }
 
-export function WaitlistDialog({
-  buttonSize = "default",
-  className,
-}: WaitlistDialogProps) {
+export function WaitlistDialog({ buttonSize = "default", className }: WaitlistDialogProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
@@ -56,18 +53,14 @@ export function WaitlistDialog({
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/waitlist`,
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/waitlist`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    });
     setIsLoading(false);
     if (response.status === 429) {
-      const retryAfterSeconds =
-        Number(response.headers.get("ratelimit-reset")) || 0;
+      const retryAfterSeconds = Number(response.headers.get("ratelimit-reset")) || 0;
       const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
       setError(
         retryAfterMinutes < 1
@@ -116,9 +109,7 @@ export function WaitlistDialog({
         <div className="pt-4 max-sm:py-8">
           {isSuccess ? (
             <div className="py-24 pt-20 text-center">
-              <h4 className="text-2xl font-medium">
-                Thank you for joining the waitlist!
-              </h4>
+              <h4 className="text-2xl font-medium">Thank you for joining the waitlist!</h4>
               <p className="text-muted-foreground mt-1 text-base">
                 We'll send you an email when we're ready to have you.
               </p>
@@ -138,10 +129,7 @@ export function WaitlistDialog({
             </div>
           ) : (
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="flex gap-4">
                   <FormField
                     control={form.control}
@@ -189,12 +177,7 @@ export function WaitlistDialog({
                   )}
                 />
                 {error && <p className="text-destructive text-sm">{error}</p>}
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="w-full"
-                  disabled={isLoading}
-                >
+                <Button type="submit" variant="outline" className="w-full" disabled={isLoading}>
                   Join waitlist
                 </Button>
               </form>
@@ -205,9 +188,7 @@ export function WaitlistDialog({
         <div className="bg-primary -mx-6 px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h4 className="text-primary-foreground text-lg font-medium">
-                Skip the line for $5
-              </h4>
+              <h4 className="text-primary-foreground text-lg font-medium">Skip the line for $5</h4>
               <p className="text-primary-foreground/60 text-sm">
                 No waiting, just access to beta.
                 <br />

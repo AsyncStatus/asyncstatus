@@ -1,11 +1,10 @@
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { AppSidebarSkeleton } from "@/components/app-sidebar";
 import {
   ensureValidOrganization,
   ensureValidSession,
   getDefaultOrganization,
 } from "@/routes/-lib/common";
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-
-import { AppSidebarSkeleton } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/_layout")({
   component: RouteComponent,
@@ -23,8 +22,8 @@ export const Route = createFileRoute("/_layout")({
       });
     }
     const { organization } = await ensureValidOrganization(
-      session.activeOrganizationId,
       queryClient,
+      session.activeOrganizationId,
     );
     throw redirect({
       to: "/$organizationSlug",

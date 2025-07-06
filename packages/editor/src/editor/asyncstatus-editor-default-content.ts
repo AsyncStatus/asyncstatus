@@ -1,8 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 
-export const getAsyncStatusEditorDefaultContent = (
-  date: string,
-): JSONContent => {
+export const getAsyncStatusEditorDefaultContent = (date: string): JSONContent => {
   return {
     type: "doc",
     content: [
