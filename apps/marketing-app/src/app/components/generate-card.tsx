@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Status update types
@@ -78,7 +78,7 @@ const getCustomTransition = (slot: number) => ({
 });
 
 // Animation variants for status update items
-const updateVariants = {
+const updateVariants: Variants = {
   initial: {
     opacity: 0,
     scale: 0.8,
@@ -643,6 +643,7 @@ export function GenerateCard() {
                                       fill="currentColor"
                                       className="h-3 w-3"
                                     >
+                                      <title>Blocker</title>
                                       <path
                                         fillRule="evenodd"
                                         d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
@@ -656,6 +657,7 @@ export function GenerateCard() {
                                       fill="currentColor"
                                       className="h-3 w-3"
                                     >
+                                      <title>Update</title>
                                       <path
                                         fillRule="evenodd"
                                         d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
