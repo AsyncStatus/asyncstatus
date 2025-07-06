@@ -10,7 +10,7 @@
       "@cloudflare/workers-types": "4.20250701.0",
       "@hookform/resolvers": "5.1.1",
       "@tanstack/react-query": "5.81.5",
-      "@types/bun": "1.2.17",
+      "@types/bun": "1.2.18",
       "@types/react": "19.1.1",
       "@types/react-dom": "19.1.2",
       "better-auth": "1.2.12",
@@ -26,11 +26,8 @@
       "zod": "3.25.74"
     }
   },
-  "dependencies": {
-    "bun": "1.2.17"
-  },
   "devDependencies": {
     "@biomejs/biome": "2.0.6"
   },
-  "packageManager": "bun@1.2.17"
+  "packageManager": "bun@1.2.18"
 }
