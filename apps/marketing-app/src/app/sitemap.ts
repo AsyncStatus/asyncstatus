@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: "https://asyncstatus.com/why-to-use-our-app",
+      url: "https://asyncstatus.com/why-use-our-app",
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,

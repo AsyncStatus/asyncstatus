@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
+import Link from "next/link";
 
 import { Footer } from "../components/footer";
 import { MobileMenu } from "../components/mobile-menu";
-import { WaitlistDialog } from "../components/waitlist-dialog";
 import SavingsCalculator from "../components/savings-calculator";
+import { WaitlistDialog } from "../components/waitlist-dialog";
 
 export default function WhyToUseOurAppPage() {
   return (
@@ -29,9 +29,7 @@ export default function WhyToUseOurAppPage() {
           <div className="flex flex-col">
             <Link href="/" className="flex items-center gap-2">
               <AsyncStatusLogo className="h-3.5 w-auto" />
-              <h1 className="text-lg font-medium max-sm:text-base">
-                AsyncStatus
-              </h1>
+              <h1 className="text-lg font-medium max-sm:text-base">AsyncStatus</h1>
             </Link>
           </div>
 
@@ -45,17 +43,14 @@ export default function WhyToUseOurAppPage() {
             <Link href="/#team" className="hover:text-foreground">
               Use cases
             </Link>
-            <Link href="/why-to-use-our-app" className="hover:text-foreground">
+            <Link href="/why-use-our-app" className="hover:text-foreground">
               Why AsyncStatus
             </Link>
           </div>
         </div>
 
         <div className="z-10 flex items-center gap-7 text-sm max-sm:hidden">
-          <Link
-            href={process.env.NEXT_PUBLIC_APP_URL ?? ""}
-            className="hover:text-foreground"
-          >
+          <Link href={process.env.NEXT_PUBLIC_APP_URL ?? ""} className="hover:text-foreground">
             Login
           </Link>
 
@@ -81,16 +76,17 @@ export default function WhyToUseOurAppPage() {
           <h2 className="text-4xl font-bold text-center mb-16 max-sm:text-3xl">
             Here's What Actually Happens
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
               <div className="text-primary text-2xl font-bold mb-3">2-3 hrs</div>
               <h3 className="text-xl font-semibold mb-2">Back per dev per week</h3>
               <p className="text-muted-foreground">
-                No more 15-30 min daily standups. No more "quick syncs" that aren't quick. Just actual work time.
+                No more 15-30 min daily standups. No more "quick syncs" that aren't quick. Just
+                actual work time.
               </p>
             </div>
-            
+
             <div className="bg-card border-border rounded-lg border p-6">
               <div className="text-primary text-2xl font-bold mb-3">~$30K</div>
               <h3 className="text-xl font-semibold mb-2">What that time costs you</h3>
@@ -98,7 +94,7 @@ export default function WhyToUseOurAppPage() {
                 For a 5-person team making $120K average. Yeah, standups are expensive.
               </p>
             </div>
-            
+
             <div className="bg-card border-border rounded-lg border p-6">
               <div className="text-primary text-2xl font-bold mb-3">2 mins</div>
               <h3 className="text-xl font-semibold mb-2">To connect your tools</h3>
@@ -118,55 +114,63 @@ export default function WhyToUseOurAppPage() {
                 <li className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">•</span>
                   <div>
-                    <strong>They kill flow state</strong> — You know that feeling when you're in the zone at 10:30am and then... standup.
+                    <strong>They kill flow state</strong> — You know that feeling when you're in the
+                    zone at 10:30am and then... standup.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">•</span>
                   <div>
-                    <strong>Timezone hell</strong> — Someone's always getting screwed. 6am calls or staying late, pick your poison.
+                    <strong>Timezone hell</strong> — Someone's always getting screwed. 6am calls or
+                    staying late, pick your poison.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">•</span>
                   <div>
-                    <strong>90% irrelevant info</strong> — You don't care about the CSS bug Sarah's fixing. She doesn't care about your API refactor.
+                    <strong>90% irrelevant info</strong> — You don't care about the CSS bug Sarah's
+                    fixing. She doesn't care about your API refactor.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">•</span>
                   <div>
-                    <strong>Theater, not communication</strong> — Everyone performs their status update then zones out.
+                    <strong>Theater, not communication</strong> — Everyone performs their status
+                    update then zones out.
                   </div>
                 </li>
               </ul>
             </div>
-            
+
             <div>
               <h2 className="text-3xl font-bold mb-6">What We Do Instead</h2>
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <span className="text-green-500 mt-1">•</span>
                   <div>
-                    <strong>Your tools already know what you did</strong> — Git commits, closed tickets, Slack messages. We just format it nicely.
+                    <strong>Your tools already know what you did</strong> — Git commits, closed
+                    tickets, Slack messages. We just format it nicely.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-500 mt-1">•</span>
                   <div>
-                    <strong>Works for humans across timezones</strong> — Read updates when you want. No more 5am "quick syncs."
+                    <strong>Works for humans across timezones</strong> — Read updates when you want.
+                    No more 5am "quick syncs."
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-500 mt-1">•</span>
                   <div>
-                    <strong>Filter the noise</strong> — Only see updates from people/projects you actually care about.
+                    <strong>Filter the noise</strong> — Only see updates from people/projects you
+                    actually care about.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-500 mt-1">•</span>
                   <div>
-                    <strong>Keep your flow</strong> — No scheduled interruptions. Just pure, uninterrupted coding time.
+                    <strong>Keep your flow</strong> — No scheduled interruptions. Just pure,
+                    uninterrupted coding time.
                   </div>
                 </li>
               </ul>
@@ -190,29 +194,32 @@ export default function WhyToUseOurAppPage() {
           <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
             "But What If It Doesn't Work?"
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-card border-border rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-4">Your team changes nothing</h3>
               <p className="text-muted-foreground">
-                Keep using Git, Jira, Slack like you always have. We just read the data and format it. No new tools to learn.
+                Keep using Git, Jira, Slack like you always have. We just read the data and format
+                it. No new tools to learn.
               </p>
             </div>
-            
+
             <div className="bg-card border-border rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-4">Test it with one team</h3>
               <p className="text-muted-foreground">
-                Pick your most fed-up-with-standups team. Run it alongside meetings for a week. See what happens.
+                Pick your most fed-up-with-standups team. Run it alongside meetings for a week. See
+                what happens.
               </p>
             </div>
-            
+
             <div className="bg-card border-border rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-4">Easy exit</h3>
               <p className="text-muted-foreground">
-                Don't like it? Just stop using it. Go back to meetings. We won't email you 47 times asking why you left.
+                Don't like it? Just stop using it. Go back to meetings. We won't email you 47 times
+                asking why you left.
               </p>
             </div>
-            
+
             <div className="bg-card border-border rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-4">🔒 Actually secure</h3>
               <p className="text-muted-foreground">
@@ -224,51 +231,45 @@ export default function WhyToUseOurAppPage() {
 
         {/* Common Objections Section */}
         <section className="mt-24">
-          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            "Yeah But..."
-          </h2>
-          
+          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">"Yeah But..."</h2>
+
           <div className="space-y-8">
             <div className="border-border bg-card rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-3">
-                "We need face-to-face collaboration!"
-              </h3>
+              <h3 className="text-xl font-semibold mb-3">"We need face-to-face collaboration!"</h3>
               <p className="text-muted-foreground">
-                Cool. Keep your design reviews, planning sessions, and architecture discussions. Those are useful meetings. Daily status theater? Not so much.
+                Cool. Keep your design reviews, planning sessions, and architecture discussions.
+                Those are useful meetings. Daily status theater? Not so much.
               </p>
             </div>
-            
+
             <div className="border-border bg-card rounded-lg border p-6">
               <h3 className="text-xl font-semibold mb-3">
                 "But then I won't know what everyone's doing!"
               </h3>
               <p className="text-muted-foreground">
-                You'll know more. Search for "what did Alex work on last week?" Try doing that with standup memories. Plus, it's all there when you need it — not just for 15 minutes at 9:30am.
+                You'll know more. Search for "what did Alex work on last week?" Try doing that with
+                standup memories. Plus, it's all there when you need it — not just for 15 minutes at
+                9:30am.
               </p>
             </div>
-            
+
             <div className="border-border bg-card rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-3">
-                "Our team will feel disconnected!"
-              </h3>
+              <h3 className="text-xl font-semibold mb-3">"Our team will feel disconnected!"</h3>
               <p className="text-muted-foreground">
-                Do you feel connected during standups now? Honestly? Use that time for actual team building. Lunch together. Pair programming. Literally anything else.
+                Do you feel connected during standups now? Honestly? Use that time for actual team
+                building. Lunch together. Pair programming. Literally anything else.
               </p>
             </div>
           </div>
         </section>
 
-
-
         {/* CTA Section */}
         <section className="mt-24 text-center">
           <div className="bg-card border-border rounded-lg border p-12 max-sm:p-8">
-            <h2 className="text-3xl font-bold mb-4">
-              Try It. What's The Worst That Could Happen?
-            </h2>
+            <h2 className="text-3xl font-bold mb-4">Try It. What's The Worst That Could Happen?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              You go back to standups. That's it. That's the worst case. 
-              But maybe — just maybe — you get your mornings back.
+              You go back to standups. That's it. That's the worst case. But maybe — just maybe —
+              you get your mornings back.
             </p>
             <WaitlistDialog buttonSize="lg" />
           </div>
