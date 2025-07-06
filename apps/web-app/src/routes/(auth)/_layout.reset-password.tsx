@@ -12,6 +12,11 @@ import { resetPasswordMutationOptions } from "@/rpc/auth";
 export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,
   validateSearch: z.object({ token: z.string() }),
+  head: () => {
+    return {
+      meta: [{ title: "Reset password - AsyncStatus" }],
+    };
+  },
 });
 
 const schema = z

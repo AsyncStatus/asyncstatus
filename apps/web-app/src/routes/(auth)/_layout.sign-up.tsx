@@ -31,6 +31,11 @@ export const Route = createFileRoute("/(auth)/_layout/sign-up")({
       throw redirect({ to: "/login", search });
     }
   },
+  head: () => {
+    return {
+      meta: [{ title: "Sign up - AsyncStatus" }],
+    };
+  },
 });
 const schema = z
   .object({

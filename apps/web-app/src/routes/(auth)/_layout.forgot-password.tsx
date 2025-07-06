@@ -12,6 +12,11 @@ import { forgotPasswordMutationOptions } from "@/rpc/auth";
 
 export const Route = createFileRoute("/(auth)/_layout/forgot-password")({
   component: RouteComponent,
+  head: () => {
+    return {
+      meta: [{ title: "Forgot password - AsyncStatus" }],
+    };
+  },
 });
 
 const schema = z.object({
