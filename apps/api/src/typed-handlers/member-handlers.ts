@@ -114,7 +114,10 @@ export const updateMemberHandler = typedHandler<
         }
         await authKv.put(
           session.session.token,
-          JSON.stringify({ ...data, user: { ...data.user, timezone: userUpdates.timezone } }),
+          JSON.stringify({
+            ...data,
+            user: { ...data.user, ...updatedMember.user },
+          }),
         );
       }
 
