@@ -1,13 +1,11 @@
 import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { zValidator } from "@hono/zod-validator";
-import { LibsqlError } from "@libsql/client";
 import { generateId } from "better-auth";
 import dayjs from "dayjs";
-import { and, DrizzleError, eq, not } from "drizzle-orm";
+import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 
-import * as schema from "../../db/schema";
+import * as schema from "../../db";
 import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
@@ -94,14 +92,10 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const { role, archivedAt, slackUsername, ...userUpdates } =
-        c.req.valid("form");
+      const { role, archivedAt, slackUsername, ...userUpdates } = c.req.valid("form");
       const updatedMember = await c.var.db.transaction(async (tx) => {
         if (role) {
-          await tx
-            .update(schema.member)
-            .set({ role })
-            .where(eq(schema.member.id, memberId));
+          await tx.update(schema.member).set({ role }).where(eq(schema.member.id, memberId));
         }
         if (archivedAt) {
           await tx
@@ -123,10 +117,7 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         }
 
         if (userUpdates.image instanceof File) {
-          const image = await c.env.PRIVATE_BUCKET.put(
-            generateId(),
-            userUpdates.image,
-          );
+          const image = await c.env.PRIVATE_BUCKET.put(generateId(), userUpdates.image);
           if (!image) {
             throw new AsyncStatusUnexpectedApiError({
               message: "Failed to upload image",
@@ -203,8 +194,7 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
       if (
-        (existingInvitation?.expiresAt &&
-          existingInvitation.expiresAt < new Date()) ||
+        (existingInvitation?.expiresAt && existingInvitation.expiresAt < new Date()) ||
         existingInvitation?.status === "canceled" ||
         existingInvitation?.status === "rejected"
       ) {
@@ -259,8 +249,7 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
       params.set("invitationId", invitation.id);
       params.set("invitationEmail", email);
       const inviteLink = `${c.env.WEB_APP_URL}/invitation?${params.toString()}`;
-      const invitedByUsername =
-        invitation.inviter.name?.split(" ")[0] ?? invitation.inviter.name;
+      const invitedByUsername = invitation.inviter.name?.split(" ")[0] ?? invitation.inviter.name;
 
       await c.var.resend.emails.send({
         from: "AsyncStatus <onboarding@a.asyncstatus.com>",
@@ -324,10 +313,9 @@ export const memberRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const data = await c.env.AS_PROD_AUTH_KV.get<any>(
-        c.var.session.session.token,
-        { type: "json" },
-      );
+      const data = await c.env.AS_PROD_AUTH_KV.get<any>(c.var.session.session.token, {
+        type: "json",
+      });
       if (!data) {
         throw new AsyncStatusUnauthorizedError({
           message: "Unauthorized",

@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { VoyageAIClient } from "voyageai";
 
-import * as schema from "../../../db/schema";
+import type * as schema from "../../../db";
 
 type GenerateEventSummary = {
   anthropicClient: Anthropic;
@@ -53,9 +53,7 @@ You MUST be helpful and concise. You MUST NOT hallucinate.`,
   });
   const embedding = embeddingResponse.data?.[0]?.embedding;
   if (!embedding) {
-    console.log(
-      `Failed to generate embedding. Skipping push event ${event.id}.`,
-    );
+    console.log(`Failed to generate embedding. Skipping push event ${event.id}.`);
     return { embedding: null, summary };
   }
 

@@ -39,12 +39,7 @@ const baseSuggestionItems = createSuggestionItems([
     searchTerms: ["p", "paragraph"],
     icon: <Text size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleNode("paragraph", "paragraph")
-        .run();
+      editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").run();
     },
   },
   {
@@ -53,12 +48,7 @@ const baseSuggestionItems = createSuggestionItems([
     searchTerms: ["title", "big", "large"],
     icon: <Heading1 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode("heading", { level: 1 })
-        .run();
+      editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
     },
   },
   {
@@ -67,12 +57,7 @@ const baseSuggestionItems = createSuggestionItems([
     searchTerms: ["subtitle", "medium"],
     icon: <Heading2 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode("heading", { level: 2 })
-        .run();
+      editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
     },
   },
   {
@@ -81,12 +66,7 @@ const baseSuggestionItems = createSuggestionItems([
     searchTerms: ["subtitle", "small"],
     icon: <Heading3 size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setNode("heading", { level: 3 })
-        .run();
+      editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
     },
   },
   {
@@ -113,12 +93,7 @@ const baseSuggestionItems = createSuggestionItems([
     searchTerms: ["blockquote"],
     icon: <TextQuote size={18} />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleNode("blockquote", "paragraph")
-        .run();
+      editor.chain().focus().deleteRange(range).toggleNode("blockquote", "paragraph").run();
     },
   },
 ]);
@@ -155,22 +130,12 @@ export const getSuggestionItems = (editor: Editor): SuggestionItem[] => {
     });
 
     // Between Status and Notes -> task items
-    if (
-      statusPos !== null &&
-      notesPos !== null &&
-      pos > statusPos &&
-      pos < notesPos
-    ) {
+    if (statusPos !== null && notesPos !== null && pos > statusPos && pos < notesPos) {
       return [];
     }
 
     // Between Notes and Mood -> notes section
-    if (
-      notesPos !== null &&
-      moodPos !== null &&
-      pos > notesPos &&
-      pos < moodPos
-    ) {
+    if (notesPos !== null && moodPos !== null && pos > notesPos && pos < moodPos) {
       return [textSuggestion];
     }
   } catch (_) {

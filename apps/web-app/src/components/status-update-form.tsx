@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Calendar } from "@asyncstatus/ui/components/calendar";
 import {
@@ -18,11 +16,7 @@ import {
   FormMessage,
 } from "@asyncstatus/ui/components/form";
 import { Input } from "@asyncstatus/ui/components/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -37,9 +31,11 @@ import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 
 import { rpc } from "../rpc/rpc";
 
@@ -58,10 +54,7 @@ type StatusUpdateFormProps = {
   onSuccess?: () => void;
 };
 
-export function StatusUpdateForm({
-  organizationSlug,
-  onSuccess,
-}: StatusUpdateFormProps) {
+export function StatusUpdateForm({ organizationSlug, onSuccess }: StatusUpdateFormProps) {
   const { data } = useQuery(getOrganizationQueryOptions(organizationSlug));
 
   const organization = data?.organization;
@@ -100,9 +93,7 @@ export function StatusUpdateForm({
   // Create status update mutation
   const createStatusUpdate = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const response = await rpc.organization[":idOrSlug"][
-        "status-update"
-      ].$post({
+      const response = await rpc.organization[":idOrSlug"]["status-update"].$post({
         param: { idOrSlug: organizationSlug },
         json: values,
       });
@@ -113,14 +104,10 @@ export function StatusUpdateForm({
     },
     onSuccess: async (data) => {
       // Create status items
-      const validItems = statusItems.filter(
-        (item) => item.content.trim() !== "",
-      );
+      const validItems = statusItems.filter((item) => item.content.trim() !== "");
 
       for (const item of validItems) {
-        const itemResponse = await rpc.organization[":idOrSlug"][
-          "status-update"
-        ].item.$post({
+        const itemResponse = await rpc.organization[":idOrSlug"]["status-update"].item.$post({
           param: { idOrSlug: organizationSlug },
           json: {
             statusUpdateId: data.id,
@@ -150,10 +137,7 @@ export function StatusUpdateForm({
   }
 
   function addStatusItem() {
-    setStatusItems([
-      ...statusItems,
-      { content: "", isBlocker: false, order: statusItems.length },
-    ]);
+    setStatusItems([...statusItems, { content: "", isBlocker: false, order: statusItems.length }]);
   }
 
   function removeStatusItem(index: number) {
@@ -198,10 +182,7 @@ export function StatusUpdateForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Team (optional)</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a team" />
@@ -215,9 +196,7 @@ export function StatusUpdateForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>
-                  Select a team this status update is related to
-                </FormDescription>
+                <FormDescription>Select a team this status update is related to</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -253,9 +232,7 @@ export function StatusUpdateForm({
                       </PopoverContent>
                     </Popover>
                   </FormControl>
-                  <FormDescription>
-                    How are you feeling about this update?
-                  </FormDescription>
+                  <FormDescription>How are you feeling about this update?</FormDescription>
                   <FormMessage />
                 </FormItem>
               );
@@ -280,11 +257,7 @@ export function StatusUpdateForm({
                           !field.value && "text-muted-foreground",
                         )}
                       >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
@@ -322,11 +295,7 @@ export function StatusUpdateForm({
                           !field.value && "text-muted-foreground",
                         )}
                       >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
+                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </FormControl>
@@ -340,9 +309,7 @@ export function StatusUpdateForm({
                     />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>
-                  When does this status update end?
-                </FormDescription>
+                <FormDescription>When does this status update end?</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -352,12 +319,7 @@ export function StatusUpdateForm({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Status Items</h3>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addStatusItem}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={addStatusItem}>
               Add Item
             </Button>
           </div>
@@ -368,9 +330,7 @@ export function StatusUpdateForm({
                 <Textarea
                   placeholder="What's your status update?"
                   value={item.content}
-                  onChange={(e) =>
-                    updateStatusItem(index, "content", e.target.value)
-                  }
+                  onChange={(e) => updateStatusItem(index, "content", e.target.value)}
                   className="min-h-[80px]"
                 />
               </div>
@@ -378,9 +338,7 @@ export function StatusUpdateForm({
                 <div className="flex items-center space-x-2">
                   <Switch
                     checked={item.isBlocker}
-                    onCheckedChange={(checked) =>
-                      updateStatusItem(index, "isBlocker", checked)
-                    }
+                    onCheckedChange={(checked) => updateStatusItem(index, "isBlocker", checked)}
                   />
                   <span className="text-sm">Blocker</span>
                 </div>
@@ -411,23 +369,14 @@ export function StatusUpdateForm({
                 </FormDescription>
               </div>
               <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={createStatusUpdate.isPending}
-        >
-          {createStatusUpdate.isPending
-            ? "Creating..."
-            : "Create Status Update"}
+        <Button type="submit" className="w-full" disabled={createStatusUpdate.isPending}>
+          {createStatusUpdate.isPending ? "Creating..." : "Create Status Update"}
         </Button>
       </form>
     </Form>

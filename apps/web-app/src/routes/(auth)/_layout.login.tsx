@@ -1,51 +1,33 @@
-import { useEffect } from "react";
-import { loginEmailMutationOptions } from "@/rpc/auth";
-import { getInvitationByEmailQueryOptions } from "@/rpc/organization/organization";
+import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-  useRouter,
-} from "@tanstack/react-router";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { z } from "zod/v4";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { loginEmailMutationOptions } from "@/rpc/auth";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,
   beforeLoad: async ({ context: { queryClient }, search }) => {
-    if (search.invitationId && search.invitationEmail) {
-      const data = await queryClient
-        .ensureQueryData({
-          ...getInvitationByEmailQueryOptions(
-            search.invitationId,
-            search.invitationEmail,
-            false,
-          ),
-          retry: false,
-        })
-        .catch(() => {});
-      if (data && !data?.hasUser) {
-        throw redirect({ to: "/sign-up", search });
-      }
+    if (!search.invitationId || !search.invitationEmail) {
+      return;
+    }
+
+    const invitation = await queryClient.ensureQueryData(
+      typedQueryOptions(
+        getInvitationContract,
+        { id: search.invitationId, email: search.invitationEmail },
+        { throwOnError: false },
+      ),
+    );
+    if (invitation && !invitation?.hasUser) {
+      throw redirect({ to: "/sign-up", search });
     }
   },
 });
@@ -61,12 +43,13 @@ function RouteComponent() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const invitation = useSuspenseQuery(
-    getInvitationByEmailQueryOptions(
-      search.invitationId,
-      search.invitationEmail,
-      false,
+  const invitation = useQuery(
+    typedQueryOptions(
+      getInvitationContract,
+      search.invitationId && search.invitationEmail
+        ? { id: search.invitationId, email: search.invitationEmail }
+        : skipToken,
+      { throwOnError: false },
     ),
   );
   const form = useForm({
@@ -86,6 +69,12 @@ function RouteComponent() {
       await navigate({ to: search.redirect ?? "/" });
     },
   });
+
+  useEffect(() => {
+    if (invitation.data?.email) {
+      form.setValue("email", invitation.data.email);
+    }
+  }, [invitation.data?.email]);
 
   return (
     <Form {...form}>
@@ -112,17 +101,13 @@ function RouteComponent() {
         <div className="grid gap-5">
           <FormField
             control={form.control}
-            disabled={Boolean(search.invitationEmail)}
+            disabled={Boolean(search.invitationEmail) && invitation.data?.hasUser}
             name="email"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="john.doe@example.com"
-                    autoComplete="work email"
-                    {...field}
-                  />
+                  <Input placeholder="john.doe@example.com" autoComplete="work email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -137,6 +122,7 @@ function RouteComponent() {
                 <div className="flex items-end justify-between">
                   <FormLabel>Password</FormLabel>
                   <Link
+                    // biome-ignore lint/a11y/noPositiveTabindex: better ux
                     tabIndex={1}
                     to="/forgot-password"
                     className="text-muted-foreground text-xs hover:underline"
@@ -148,7 +134,7 @@ function RouteComponent() {
                   <Input
                     type="password"
                     placeholder="********"
-                    autoComplete="password"
+                    autoComplete="current-password"
                     {...field}
                   />
                 </FormControl>
@@ -164,6 +150,9 @@ function RouteComponent() {
               <FormItem className="flex flex-row items-center space-x-1">
                 <FormControl>
                   <Checkbox
+                    ref={field.ref}
+                    name={field.name}
+                    onBlur={field.onBlur}
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
@@ -175,16 +164,10 @@ function RouteComponent() {
           />
 
           {loginEmail.error && (
-            <div className="text-destructive text-sm text-pretty">
-              {loginEmail.error.message}
-            </div>
+            <div className="text-destructive text-sm text-pretty">{loginEmail.error.message}</div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loginEmail.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={loginEmail.isPending}>
             Login
           </Button>
         </div>

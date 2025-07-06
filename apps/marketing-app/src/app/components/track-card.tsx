@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 type Activity = {
   id: string;
@@ -165,8 +165,7 @@ export function TrackCard() {
 
       // Calculate scroll position based on time elapsed
       const scrollHeight = scrollContainer.scrollHeight / 2; // Only need to scroll through first set
-      const scrollPosition =
-        ((elapsed % totalScrollDuration) / totalScrollDuration) * scrollHeight;
+      const scrollPosition = ((elapsed % totalScrollDuration) / totalScrollDuration) * scrollHeight;
 
       // Set scroll position
       scrollContainer.scrollTop = scrollPosition;
@@ -192,11 +191,8 @@ export function TrackCard() {
       switch (activity.type) {
         case "commit":
           return (
-            <svg
-              className="size-3 text-emerald-500"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-            >
+            <svg className="size-3 text-emerald-500" viewBox="0 0 16 16" fill="currentColor">
+              <title>Commit</title>
               <path d="M8 16a2 2 0 001.985-1.75c.017-.137-.097-.25-.235-.25h-3.5c-.138 0-.252.113-.235.25A2 2 0 008 16z"></path>
               <path
                 fillRule="evenodd"
@@ -206,11 +202,8 @@ export function TrackCard() {
           );
         case "pr":
           return (
-            <svg
-              className="size-3 text-blue-500"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-            >
+            <svg className="size-3 text-blue-500" viewBox="0 0 16 16" fill="currentColor">
+              <title>PR</title>
               <path
                 fillRule="evenodd"
                 d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"
@@ -219,11 +212,8 @@ export function TrackCard() {
           );
         case "issue":
           return (
-            <svg
-              className="size-3 text-purple-500"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-            >
+            <svg className="size-3 text-purple-500" viewBox="0 0 16 16" fill="currentColor">
+              <title>Issue</title>
               <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
               <path
                 fillRule="evenodd"
@@ -246,6 +236,7 @@ export function TrackCard() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
+          <title>Slack</title>
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       );
@@ -276,10 +267,7 @@ export function TrackCard() {
             ></div>
 
             {/* Scrolling container */}
-            <div
-              ref={scrollContainerRef}
-              className="h-full w-full overflow-hidden p-3"
-            >
+            <div ref={scrollContainerRef} className="h-full w-full overflow-hidden p-3">
               <div className="space-y-2">
                 {doubledActivities.map((activity, index) => (
                   <div
@@ -293,9 +281,7 @@ export function TrackCard() {
                           {activity.source === "github" ? "GitHub" : "Slack"}
                         </span>
                         {activity.source === "slack" && activity.time && (
-                          <span className="text-muted-foreground">
-                            {activity.time}
-                          </span>
+                          <span className="text-muted-foreground">{activity.time}</span>
                         )}
                       </div>
                       <p className="text-sm font-medium">{activity.content}</p>
@@ -332,9 +318,7 @@ export function TrackCard() {
         </div>
       </div>
       <h4 className="mt-4 text-base font-medium">Track</h4>
-      <p className="text-muted-foreground text-sm">
-        We track commits, PRs, issues, and messages
-      </p>
+      <p className="text-muted-foreground text-sm">We track commits, PRs, issues, and messages</p>
     </div>
   );
 }

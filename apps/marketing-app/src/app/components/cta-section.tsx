@@ -6,9 +6,7 @@ export function CtaSection() {
   return (
     <section className="mt-48">
       <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-        <h2 className="text-4xl font-bold text-balance sm:text-5xl">
-          Done with standups?
-        </h2>
+        <h2 className="text-4xl font-bold text-balance sm:text-5xl">Done with standups?</h2>
         <p className="text-muted-foreground mt-6 text-lg text-balance sm:text-xl">
           Remote teams are already saving hundreds of hours with async updates.
           <br />

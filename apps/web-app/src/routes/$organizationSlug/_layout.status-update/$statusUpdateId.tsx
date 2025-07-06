@@ -1,10 +1,4 @@
-import { useState } from "react";
-import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@asyncstatus/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,15 +15,15 @@ import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-import { getFileUrl, getInitials } from "@/lib/utils";
 import { StatusUpdateForm } from "@/components/status-update-form-v2";
 
-export const Route = createFileRoute(
-  "/$organizationSlug/_layout/status-update/$statusUpdateId",
-)({
+import { getFileUrl, getInitials } from "@/lib/utils";
+import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
+
+export const Route = createFileRoute("/$organizationSlug/_layout/status-update/$statusUpdateId")({
   component: RouteComponent,
 });
 
@@ -55,10 +49,7 @@ function RouteComponent() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link
-                      to="/$organizationSlug"
-                      params={{ organizationSlug }}
-                    >
+                    <Link to="/$organizationSlug" params={{ organizationSlug }}>
                       Status updates
                     </Link>
                   </BreadcrumbLink>
@@ -99,10 +90,7 @@ function RouteComponent() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link
-                      to="/$organizationSlug"
-                      params={{ organizationSlug }}
-                    >
+                    <Link to="/$organizationSlug" params={{ organizationSlug }}>
                       Status updates
                     </Link>
                   </BreadcrumbLink>
@@ -118,10 +106,7 @@ function RouteComponent() {
 
         <div className="py-4">
           <div className="mx-auto w-full max-w-3xl">
-            <StatusUpdateForm
-              initialDate={statusUpdateId}
-              organizationSlug={organizationSlug}
-            />
+            <StatusUpdateForm initialDate={statusUpdateId} organizationSlug={organizationSlug} />
           </div>
         </div>
       </>
@@ -152,10 +137,7 @@ function ExistingStatusUpdateComponent() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link
-                      to="/$organizationSlug"
-                      params={{ organizationSlug }}
-                    >
+                    <Link to="/$organizationSlug" params={{ organizationSlug }}>
                       Status updates
                     </Link>
                   </BreadcrumbLink>
@@ -232,19 +214,14 @@ function ExistingStatusUpdateComponent() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link
-                    to="/$organizationSlug"
-                    params={{ organizationSlug }}
-                  >
+                  <Link to="/$organizationSlug" params={{ organizationSlug }}>
                     Status updates
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>
-                  {statusUpdate?.member.user.name}
-                </BreadcrumbPage>
+                <BreadcrumbPage>{statusUpdate?.member.user.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -269,9 +246,7 @@ function ExistingStatusUpdateComponent() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold">
-                {statusUpdate?.member.user.name}
-              </h1>
+              <h1 className="text-lg sm:text-xl font-bold">{statusUpdate?.member.user.name}</h1>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Status for {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
               </p>
@@ -293,35 +268,36 @@ function ExistingStatusUpdateComponent() {
         <div className="prose prose-neutral dark:prose-invert prose-sm mx-auto w-full max-w-3xl px-3 sm:px-4">
           <section className="mt-6">
             <h2 className="text-base sm:text-lg font-semibold mb-4">
-              What&apos;s new for{" "}
-              {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
+              What&apos;s new for {dayjs(statusUpdate?.effectiveFrom).format("MMM D, YYYY")}
             </h2>
 
             <ul className="space-y-3 pl-0">
               {statusUpdate?.items.map((item) => (
-                                 <li
-                   key={item.id}
-                   className={cn(
-                     "flex items-center gap-3 p-3 rounded-md border",
-                     item.isBlocker && "border-destructive bg-destructive/5",
-                     !item.isInProgress &&
-                       !item.isBlocker &&
-                       "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
-                     item.isInProgress && !item.isBlocker && "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
-                   )}
-                   style={{ listStyle: "none" }}
-                 >
-                   <div className={cn(
-                     "w-2 h-2 rounded-full flex-shrink-0",
-                     item.isBlocker && "bg-destructive",
-                     !item.isInProgress && !item.isBlocker && "bg-green-500",
-                     item.isInProgress && !item.isBlocker && "bg-amber-500"
-                   )} />
-                                     <div className="flex-1 min-w-0 text-sm sm:text-base">
-                     <Markdown remarkPlugins={[remarkGfm]}>
-                       {item.content}
-                     </Markdown>
-                   </div>
+                <li
+                  key={item.id}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-md border",
+                    item.isBlocker && "border-destructive bg-destructive/5",
+                    !item.isInProgress &&
+                      !item.isBlocker &&
+                      "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
+                    item.isInProgress &&
+                      !item.isBlocker &&
+                      "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
+                  )}
+                  style={{ listStyle: "none" }}
+                >
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full flex-shrink-0",
+                      item.isBlocker && "bg-destructive",
+                      !item.isInProgress && !item.isBlocker && "bg-green-500",
+                      item.isInProgress && !item.isBlocker && "bg-amber-500",
+                    )}
+                  />
+                  <div className="flex-1 min-w-0 text-sm sm:text-base">
+                    <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
+                  </div>
                 </li>
               ))}
             </ul>

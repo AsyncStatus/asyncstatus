@@ -1,16 +1,9 @@
-import React from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
-import {
-  Ban,
-  Check,
-  CircleDashed,
-  ClockAlert,
-  Play,
-  X,
-} from "@asyncstatus/ui/icons";
+import { Ban, Check, CircleDashed, ClockAlert, Play, X } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { TextSelection } from "@tiptap/pm/state";
+import type { NodeViewProps } from "@tiptap/react";
 import {
   mergeAttributes,
   Node,
@@ -18,7 +11,7 @@ import {
   NodeViewWrapper,
   ReactNodeViewRenderer,
 } from "@tiptap/react";
-import type { NodeViewProps } from "@tiptap/react";
+import React from "react";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -33,11 +26,7 @@ export interface BlockableTodoListItemOptions {
   HTMLAttributes?: Record<string, any>;
 }
 
-const BlockableTodoItemComponent = ({
-  node,
-  updateAttributes,
-  view,
-}: NodeViewProps) => {
+const BlockableTodoItemComponent = ({ node, updateAttributes, view }: NodeViewProps) => {
   const { checked, blocked } = node.attrs;
 
   const toggleChecked = () => {
@@ -80,11 +69,7 @@ const BlockableTodoItemComponent = ({
           onClick={toggleChecked}
           title={checked ? "Uncheck item" : "Check item"}
         >
-          {checked ? (
-            <Check className="size-4" />
-          ) : (
-            <CircleDashed className="size-4" />
-          )}
+          {checked ? <Check className="size-4" /> : <CircleDashed className="size-4" />}
           {checked ? "Done" : "In progress"}
         </Button>
       </div>
@@ -300,11 +285,7 @@ export const BlockableTodoListItem = Node.create<BlockableTodoListItemOptions>({
 
         // Only proceed if this would delete the entire todo item
         const wouldDeleteEntireTodoItem =
-          isAtStart &&
-          isInParagraph &&
-          isParagraphEmpty &&
-          isFirstChild &&
-          childCount === 1;
+          isAtStart && isInParagraph && isParagraphEmpty && isFirstChild && childCount === 1;
 
         if (!wouldDeleteEntireTodoItem) {
           return false; // Allow deletion of paragraphs/content within todo items
@@ -375,15 +356,11 @@ export const BlockableTodoListItem = Node.create<BlockableTodoListItemOptions>({
 
           // Look for the first paragraph in the previous todo item
           const prevTodoItem = prevItemResolvedPos.nodeAfter;
-          if (
-            prevTodoItem &&
-            prevTodoItem.type.name === "blockableTodoListItem"
-          ) {
+          if (prevTodoItem && prevTodoItem.type.name === "blockableTodoListItem") {
             prevTodoItem.forEach((child, offset) => {
               if (child.type.name === "paragraph") {
                 // Position at the end of this paragraph
-                targetPos =
-                  previousTodoItemPos + offset + 2 + child.content.size;
+                targetPos = previousTodoItemPos + offset + 2 + child.content.size;
                 return false; // Stop iteration
               }
             });

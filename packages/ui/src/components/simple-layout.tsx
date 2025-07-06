@@ -1,10 +1,8 @@
-import { type PropsWithChildren } from "react";
 import { SimpleHeader } from "@asyncstatus/ui/components/simple-header";
 import { cn } from "@asyncstatus/ui/lib/utils";
+import type { PropsWithChildren } from "react";
 
-export function SimpleLayout(
-  props: PropsWithChildren<{ href: string; className?: string }>,
-) {
+export function SimpleLayout(props: PropsWithChildren<{ href: string; className?: string }>) {
   return (
     <>
       <SimpleHeader href={props.href} />

@@ -1,5 +1,5 @@
 import { Extension } from "@tiptap/core";
-import { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 
 export interface TaskItemCountOptions {
@@ -24,10 +24,7 @@ export interface TaskItemCountStorage {
  * This extension allows you to count the task items of your document.
  * It's heavily inspired by the CharacterCount extension from Tiptap.
  */
-export const TaskItemCount = Extension.create<
-  TaskItemCountOptions,
-  TaskItemCountStorage
->({
+export const TaskItemCount = Extension.create<TaskItemCountOptions, TaskItemCountStorage>({
   name: "taskItemCount",
 
   addOptions() {
@@ -114,12 +111,7 @@ export const TaskItemCount = Extension.create<
           const limit = this.options.limit;
 
           // Nothing has changed or no limit is defined. Allow.
-          if (
-            !transaction.docChanged ||
-            limit === 0 ||
-            limit === null ||
-            limit === undefined
-          ) {
+          if (!transaction.docChanged || limit === 0 || limit === null || limit === undefined) {
             return true;
           }
 

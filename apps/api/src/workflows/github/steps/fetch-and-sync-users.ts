@@ -1,9 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Octokit } from "octokit";
-
-import type { Db } from "../../../db";
-import * as schema from "../../../db/schema";
+import * as schema from "../../../db";
+import type { Db } from "../../../db/db";
 import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncUsersParams = {
@@ -12,11 +11,7 @@ type FetchAndSyncUsersParams = {
   integrationId: string;
 };
 
-export async function fetchAndSyncUsers({
-  octokit,
-  db,
-  integrationId,
-}: FetchAndSyncUsersParams) {
+export async function fetchAndSyncUsers({ octokit, db, integrationId }: FetchAndSyncUsersParams) {
   const orgs = await db
     .selectDistinct({ owner: schema.githubRepository.owner })
     .from(schema.githubRepository)
@@ -24,10 +19,10 @@ export async function fetchAndSyncUsers({
     .orderBy(asc(schema.githubRepository.createdAt));
 
   for (const { owner: org } of orgs) {
-    for await (const member of octokit.paginate.iterator(
-      "GET /orgs/{org}/members",
-      { org, per_page: 100 },
-    )) {
+    for await (const member of octokit.paginate.iterator("GET /orgs/{org}/members", {
+      org,
+      per_page: 100,
+    })) {
       const batchUpserts = member.data.map((user) => {
         return db
           .insert(schema.githubUser)

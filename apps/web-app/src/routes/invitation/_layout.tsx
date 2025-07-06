@@ -1,6 +1,6 @@
 import { SimpleLayout } from "@asyncstatus/ui/components/simple-layout";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const Route = createFileRoute("/invitation/_layout")({
   component: RouteComponent,

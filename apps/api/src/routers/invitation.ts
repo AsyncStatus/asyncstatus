@@ -2,9 +2,9 @@ import { zValidator } from "@hono/zod-validator";
 import { generateId } from "better-auth";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
+import { z } from "zod/v4";
 
-import * as schema from "../db/schema";
+import * as schema from "../db";
 import {
   AsyncStatusBadRequestError,
   AsyncStatusForbiddenError,
@@ -24,10 +24,7 @@ export const invitationRouter = new Hono<HonoEnvWithSession>()
       const { email } = c.req.valid("query");
       const [invitation, user] = await Promise.all([
         c.var.db.query.invitation.findFirst({
-          where: and(
-            eq(schema.invitation.id, id),
-            eq(schema.invitation.email, email),
-          ),
+          where: and(eq(schema.invitation.id, id), eq(schema.invitation.email, email)),
           with: {
             inviter: { columns: { name: true } },
             organization: { columns: { name: true, slug: true, logo: true } },
@@ -38,10 +35,7 @@ export const invitationRouter = new Hono<HonoEnvWithSession>()
           where: eq(schema.user.email, email),
         }),
       ]);
-      if (
-        !invitation ||
-        (c.var.session && c.var.session.user.email !== invitation.email)
-      ) {
+      if (!invitation || (c.var.session && c.var.session.user.email !== invitation.email)) {
         throw new AsyncStatusNotFoundError({
           message: "Invitation not found",
         });

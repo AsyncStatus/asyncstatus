@@ -1,9 +1,3 @@
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  createOrganizationMutationOptions,
-  getOrganizationQueryOptions,
-  listOrganizationsQueryOptions,
-} from "@/rpc/organization/organization";
 import type { Organization } from "@asyncstatus/api";
 import { zOrganizationCreate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -14,9 +8,7 @@ import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import useDebounce from "@/lib/use-debounce";
+import type { z } from "zod/v4";
 import {
   Form,
   FormControl,
@@ -26,10 +18,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/form";
+import useDebounce from "@/lib/use-debounce";
+import { sessionQueryOptions } from "@/rpc/auth";
+import {
+  createOrganizationMutationOptions,
+  getOrganizationQueryOptions,
+  listOrganizationsQueryOptions,
+} from "@/rpc/organization/organization";
 
-export function CreateOrganizationForm(props: {
-  onSuccess?: (data: Organization) => void;
-}) {
+export function CreateOrganizationForm(props: { onSuccess?: (data: Organization) => void }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const form = useForm({
@@ -55,21 +52,18 @@ export function CreateOrganizationForm(props: {
       queryClient.invalidateQueries({
         queryKey: listOrganizationsQueryOptions().queryKey,
       });
-      queryClient.setQueryData(
-        sessionQueryOptions().queryKey,
-        (sessionData) => {
-          if (!sessionData) {
-            return sessionData;
-          }
-          return {
-            ...sessionData,
-            session: {
-              ...sessionData.session,
-              activeOrganizationId: data.organization.id,
-            },
-          };
-        },
-      );
+      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+        if (!sessionData) {
+          return sessionData;
+        }
+        return {
+          ...sessionData,
+          session: {
+            ...sessionData.session,
+            activeOrganizationId: data.organization.id,
+          },
+        };
+      });
       props.onSuccess?.({
         ...data.organization,
         createdAt: new Date(data.organization.createdAt),

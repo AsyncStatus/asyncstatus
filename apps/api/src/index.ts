@@ -1,19 +1,17 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { Webhooks } from "@octokit/webhooks";
+import {
+  TYPED_HANDLERS_ERROR_STATUS_CODES_BY_KEY,
+  TypedHandlersError,
+} from "@asyncstatus/typed-handlers";
+import { typedHandlersHonoServer } from "@asyncstatus/typed-handlers/hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { Resend } from "resend";
-import { VoyageAIClient } from "voyageai";
-
-import { createDb } from "./db";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import {
   AsyncStatusApiError,
-  AsyncStatusUnexpectedApiError,
   type AsyncStatusApiJsonError,
+  AsyncStatusUnexpectedApiError,
 } from "./errors";
-import { createAuth } from "./lib/auth";
-import type { HonoEnv } from "./lib/env";
-import { createRateLimiter } from "./lib/rate-limiter";
+import { createContext, type HonoEnv } from "./lib/env";
 import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
@@ -24,60 +22,48 @@ import { organizationRouter } from "./routers/organization/organization";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
-import { publicStatusShareRouter } from "./routers/publicStatusShare";
-import { slackRouter } from "./routers/slack";
 import { waitlistRouter } from "./routers/waitlist";
+import { getFileHandler } from "./typed-handlers/file-handlers";
+import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
+import { getMemberHandler, updateMemberHandler } from "./typed-handlers/member-handlers";
+import { joinWaitlistHandler } from "./typed-handlers/waitlist-handlers";
 
 const app = new Hono<HonoEnv>()
   .use(
+    "*",
     cors({
-      origin: [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:8787",
-        "https://asyncstatus.com",
-        "https://dev.asyncstatus.com",
-        "https://beta.asyncstatus.com",
-        "https://app.asyncstatus.com",
+      origin: (origin, c) => {
+        if (c.env.NODE_ENV === "development") {
+          return origin;
+        }
+        if (origin.endsWith("asyncstatus.com")) {
+          return origin;
+        }
+        return "https://app.asyncstatus.com";
+      },
+      allowHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Content-Disposition",
+        "Content-Length",
+        "ETag",
+        "Cache-Control",
       ],
-      allowHeaders: ["Content-Type", "Authorization"],
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+      maxAge: 600,
       credentials: true,
     }),
   )
   .use(async (c, next) => {
-    const db = createDb(c.env);
-    c.set("db", db);
-    const resend = new Resend(c.env.RESEND_API_KEY);
-    c.set("resend", resend);
-    const auth = createAuth(c.env, db, resend);
-    c.set("auth", auth);
-    const waitlistRateLimiter = createRateLimiter(c.env, {
-      windowMs: 60 * 60 * 1000,
-      limit: 10,
-    });
-    c.set("waitlistRateLimiter", waitlistRateLimiter);
-
-    const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
-    c.set("anthropicClient", anthropicClient);
-
-    const voyageClient = new VoyageAIClient({
-      apiKey: c.env.VOYAGE_API_KEY,
-    });
-    c.set("voyageClient", voyageClient);
-
-    const githubWebhooks = new Webhooks({
-      secret: c.env.GITHUB_WEBHOOK_SECRET,
-    });
-    c.set("githubWebhooks", githubWebhooks);
-
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session) {
-      c.set("session", null);
-      return next();
-    }
-
-    c.set("session", session);
+    const context = await createContext(c);
+    c.set("db", context.db);
+    c.set("resend", context.resend);
+    c.set("auth", context.auth);
+    c.set("waitlistRateLimiter", context.waitlistRateLimiter);
+    c.set("anthropicClient", context.anthropicClient);
+    c.set("voyageClient", context.voyageClient);
+    c.set("githubWebhooks", context.githubWebhooks);
+    c.set("session", context.session);
     return next();
   })
   .route("/auth", authRouter)
@@ -87,13 +73,19 @@ const app = new Hono<HonoEnv>()
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
-  .route("/public-status-share", publicStatusShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
-  .route("/slack", slackRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
+    if (err instanceof TypedHandlersError) {
+      return c.json(
+        { type: err.name, message: err.message, code: err.code, cause: err.cause },
+        TYPED_HANDLERS_ERROR_STATUS_CODES_BY_KEY[
+          err.code ?? "INTERNAL_SERVER_ERROR"
+        ] as ContentfulStatusCode,
+      );
+    }
     if (err instanceof AsyncStatusUnexpectedApiError) {
       return c.json({ type: err.name, message: err.message }, err.status);
     }
@@ -107,11 +99,38 @@ const app = new Hono<HonoEnv>()
     return c.json(error, 500);
   });
 
+const typedHandlersApp = typedHandlersHonoServer(
+  app.basePath("/th"),
+  [
+    joinWaitlistHandler,
+    getInvitationHandler,
+    updateMemberHandler,
+    getMemberHandler,
+    getFileHandler,
+  ],
+  {
+    getContext: (c) => ({
+      db: c.get("db"),
+      session: c.get("session"),
+      resend: c.get("resend"),
+      auth: c.get("auth"),
+      waitlistRateLimiter: c.get("waitlistRateLimiter"),
+      anthropicClient: c.get("anthropicClient"),
+      voyageClient: c.get("voyageClient"),
+      githubWebhooks: c.get("githubWebhooks"),
+      bucket: { private: c.env.PRIVATE_BUCKET },
+      authKv: c.env.AS_PROD_AUTH_KV,
+      organization: c.get("organization" as any),
+      member: c.get("member" as any),
+    }),
+  },
+);
+
 export default {
-  fetch: app.fetch,
+  fetch: typedHandlersApp.fetch,
   queue: queue,
 };
 export type App = typeof app;
-export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
-export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { GenerateStatusWorkflow } from "./workflows/generate-status";
+export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
+export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";

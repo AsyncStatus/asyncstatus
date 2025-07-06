@@ -1,21 +1,6 @@
+import { Button, Heading, Img, Link, Section, Text } from "@react-email/components";
 import { Layout } from "../layout";
-import {
-  h1,
-  h2,
-  bodyText,
-  secondaryText,
-  primaryButton,
-  footerLink,
-  divider,
-} from "../styles";
-import {
-  Button,
-  Img,
-  Link,
-  Section,
-  Text,
-  Heading,
-} from "@react-email/components";
+import { bodyText, divider, footerLink, h1, h2, primaryButton, secondaryText } from "../styles";
 
 export function OrganizationInvitationEmail(props: {
   preview: string;

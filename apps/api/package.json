@@ -2,7 +2,6 @@
   "name": "@asyncstatus/api",
   "private": true,
   "type": "module",
-  "prettier": "@asyncstatus/prettier-config",
   "exports": {
     ".": {
       "types": "./src/rpc.ts"
@@ -11,7 +10,8 @@
       "types": "./src/lib/auth.tsx"
     },
     "./schema/*": "./src/schema/*.ts",
-    "./errors": "./src/errors/index.ts"
+    "./errors": "./src/errors/index.ts",
+    "./typed-handlers/*": "./src/typed-handlers/*-contracts.ts"
   },
   "scripts": {
     "dev": "wrangler dev",
@@ -28,34 +28,34 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.50.3",
+    "@anthropic-ai/sdk": "0.55.1",
+    "@asyncstatus/typed-handlers": "workspace:*",
     "@asyncstatus/email": "workspace:*",
     "@hono-rate-limiter/cloudflare": "0.2.2",
-    "@hono/zod-validator": "0.4.3",
+    "@hono/zod-validator": "0.7.0",
     "@langchain/textsplitters": "0.1.0",
-    "@libsql/client": "0.15.3",
+    "@libsql/client": "0.15.9",
     "@octokit/auth-oauth-user": "5.1.4",
-    "@octokit/webhooks": "14.0.0",
-    "better-auth": "1.2.5",
-    "bun": "1.2.14",
-    "dayjs": "1.11.13",
-    "drizzle-orm": "0.44.0",
-    "hono": "4.7.6",
+    "@octokit/webhooks": "14.1.0",
+    "better-auth": "catalog:",
+    "dayjs": "catalog:",
+    "drizzle-orm": "0.44.2",
+    "drizzle-zod": "0.8.2",
+    "hono": "catalog:",
     "hono-rate-limiter": "0.4.2",
     "nanoid": "5.1.5",
     "octokit": "4.1.3",
     "random-words": "2.0.1",
-    "resend": "4.2.0",
-    "voyageai": "0.0.4"
+    "resend": "4.6.0",
+    "voyageai": "0.0.4",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@asyncstatus/eslint-config": "workspace:*",
-    "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
-    "@cloudflare/workers-types": "4.20250528.0",
+    "@cloudflare/workers-types": "catalog:",
     "@octokit/openapi-webhooks-types": "11.0.0",
-    "@types/bun": "1.2.14",
+    "@types/bun": "catalog:",
     "drizzle-kit": "0.31.1",
-    "wrangler": "4.17.0"
+    "wrangler": "catalog:"
   }
 }

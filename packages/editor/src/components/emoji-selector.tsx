@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   EmojiPicker,
@@ -10,6 +9,7 @@ import { PopoverContent } from "@asyncstatus/ui/components/popover";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { useCurrentEditor } from "@tiptap/react";
 import { Smile } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const EmojiSelector = () => {
   const [open, setOpen] = useState(false);
@@ -24,16 +24,10 @@ export const EmojiSelector = () => {
       }
     };
 
-    document.addEventListener(
-      "openEmojiPicker",
-      handleOpenEmojiPicker as EventListener,
-    );
+    document.addEventListener("openEmojiPicker", handleOpenEmojiPicker as EventListener);
 
     return () => {
-      document.removeEventListener(
-        "openEmojiPicker",
-        handleOpenEmojiPicker as EventListener,
-      );
+      document.removeEventListener("openEmojiPicker", handleOpenEmojiPicker as EventListener);
     };
   }, [editor]);
 

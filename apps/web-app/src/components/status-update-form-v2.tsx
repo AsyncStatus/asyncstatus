@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { createStatusUpdateMutationOptions } from "@/rpc/organization/status-update";
 import { zStatusUpdateCreate } from "@asyncstatus/api/schema/statusUpdate";
 import { AsyncStatusEditor } from "@asyncstatus/editor";
 import {
@@ -19,8 +17,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod/v4";
+import { createStatusUpdateMutationOptions } from "@/rpc/organization/status-update";
 
 type StatusUpdateFormProps = {
   initialDate?: string;
@@ -36,8 +36,7 @@ export function StatusUpdateForm({
   organizationSlug,
 }: StatusUpdateFormProps) {
   const navigate = useNavigate();
-  const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] =
-    useState(false);
+  const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [isPublishConfirm, setIsPublishConfirm] = useState(false);
   const form = useForm<z.infer<typeof zStatusUpdateCreate>>({
     resolver: zodResolver(zStatusUpdateCreate),
@@ -64,10 +63,7 @@ export function StatusUpdateForm({
         "effectiveFrom",
         dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate(),
       );
-      form.setValue(
-        "effectiveTo",
-        dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate(),
-      );
+      form.setValue("effectiveTo", dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDate]);
@@ -108,10 +104,7 @@ export function StatusUpdateForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <AlertDialog
-          open={isPublishConfirmModalOpen}
-          onOpenChange={setIsPublishConfirmModalOpen}
-        >
+        <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -139,12 +132,8 @@ export function StatusUpdateForm({
           date={dayjs(effectiveFrom).startOf("day").format("YYYY-MM-DD")}
           initialContent={initialEditorJson}
           onDateChange={(date) => {
-            const nextEffectiveFrom = dayjs(date, "YYYY-MM-DD", true)
-              .startOf("day")
-              .toDate();
-            const nextEffectiveTo = dayjs(date, "YYYY-MM-DD", true)
-              .endOf("day")
-              .toDate();
+            const nextEffectiveFrom = dayjs(date, "YYYY-MM-DD", true).startOf("day").toDate();
+            const nextEffectiveTo = dayjs(date, "YYYY-MM-DD", true).endOf("day").toDate();
 
             form.setValue("effectiveFrom", nextEffectiveFrom);
             form.setValue("effectiveTo", nextEffectiveTo);
@@ -168,10 +157,7 @@ export function StatusUpdateForm({
 
             const nextEffectiveFrom = dayjs(data.date).startOf("day").toDate();
             form.setValue("effectiveFrom", nextEffectiveFrom);
-            form.setValue(
-              "effectiveTo",
-              dayjs(data.date).endOf("day").toDate(),
-            );
+            form.setValue("effectiveTo", dayjs(data.date).endOf("day").toDate());
 
             if (form.getValues("isDraft") && !isPending) {
               form.handleSubmit(onSubmit)();

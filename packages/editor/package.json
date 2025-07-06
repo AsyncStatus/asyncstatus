@@ -3,7 +3,6 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "prettier": "@asyncstatus/prettier-config",
   "exports": {
     ".": "./src/editor/asyncstatus-editor.tsx",
     "./styles.css": "./src/editor/asyncstatus-editor-styles.css"
@@ -15,24 +14,24 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@tiptap/core": "2.14.0",
-    "@tiptap/extension-bullet-list": "2.14.0",
-    "@tiptap/extension-character-count": "2.14.0",
-    "@tiptap/extension-color": "2.14.0",
-    "@tiptap/extension-document": "2.14.0",
-    "@tiptap/extension-highlight": "2.14.0",
-    "@tiptap/extension-link": "2.14.0",
-    "@tiptap/extension-paragraph": "2.14.0",
-    "@tiptap/extension-placeholder": "2.14.0",
-    "@tiptap/extension-task-item": "2.14.0",
-    "@tiptap/extension-task-list": "2.14.0",
-    "@tiptap/extension-text": "2.14.0",
-    "@tiptap/extension-text-style": "2.14.0",
-    "@tiptap/extension-underline": "2.14.0",
-    "@tiptap/pm": "2.14.0",
-    "@tiptap/react": "2.14.0",
-    "@tiptap/starter-kit": "2.14.0",
-    "@tiptap/suggestion": "2.14.0",
+    "@tiptap/core": "2.23.1",
+    "@tiptap/extension-bullet-list": "2.23.1",
+    "@tiptap/extension-character-count": "2.23.1",
+    "@tiptap/extension-color": "2.23.1",
+    "@tiptap/extension-document": "2.23.1",
+    "@tiptap/extension-highlight": "2.23.1",
+    "@tiptap/extension-link": "2.23.1",
+    "@tiptap/extension-paragraph": "2.23.1",
+    "@tiptap/extension-placeholder": "2.23.1",
+    "@tiptap/extension-task-item": "2.23.1",
+    "@tiptap/extension-task-list": "2.23.1",
+    "@tiptap/extension-text": "2.23.1",
+    "@tiptap/extension-text-style": "2.23.1",
+    "@tiptap/extension-underline": "2.23.1",
+    "@tiptap/pm": "2.23.1",
+    "@tiptap/react": "2.23.1",
+    "@tiptap/starter-kit": "2.23.1",
+    "@tiptap/suggestion": "2.23.1",
     "jotai": "2.12.5",
     "tippy.js": "6.3.7",
     "tiptap-extension-global-drag-handle": "0.1.18",
@@ -40,15 +39,13 @@
     "use-debounce": "10.0.5"
   },
   "devDependencies": {
-    "@asyncstatus/eslint-config": "workspace:*",
-    "@asyncstatus/prettier-config": "workspace:*",
     "@asyncstatus/typescript-config": "workspace:*",
-    "@types/bun": "1.2.14",
-    "typescript": "5.8.3"
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "@asyncstatus/ui": "workspace:*",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

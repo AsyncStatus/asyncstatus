@@ -145,8 +145,7 @@ export default function useDebouncedCallback<
   const leading = !!options.leading;
   const trailing = "trailing" in options ? !!options.trailing : true; // `true` by default
   const maxing = "maxWait" in options;
-  const debounceOnServer =
-    "debounceOnServer" in options ? !!options.debounceOnServer : false; // `false` by default
+  const debounceOnServer = "debounceOnServer" in options ? !!options.debounceOnServer : false; // `false` by default
   const maxWait = maxing ? Math.max(+options.maxWait || 0, wait) : null;
 
   useEffect(() => {
@@ -178,9 +177,7 @@ export default function useDebouncedCallback<
 
     const startTimer = (pendingFunc: () => void, wait: number) => {
       if (useRAF) cancelAnimationFrame(timerId.current);
-      timerId.current = useRAF
-        ? requestAnimationFrame(pendingFunc)
-        : setTimeout(pendingFunc, wait);
+      timerId.current = useRAF ? requestAnimationFrame(pendingFunc) : setTimeout(pendingFunc, wait);
     };
 
     const shouldInvoke = (time: number) => {
@@ -274,11 +271,7 @@ export default function useDebouncedCallback<
         }
       }
       lastInvokeTime.current = 0;
-      lastArgs.current =
-        lastCallTime.current =
-        lastThis.current =
-        timerId.current =
-          null;
+      lastArgs.current = lastCallTime.current = lastThis.current = timerId.current = null;
     };
 
     func.isPending = () => {
@@ -290,16 +283,7 @@ export default function useDebouncedCallback<
     };
 
     return func;
-  }, [
-    leading,
-    maxing,
-    wait,
-    maxWait,
-    trailing,
-    useRAF,
-    isClientSide,
-    debounceOnServer,
-  ]);
+  }, [leading, maxing, wait, maxWait, trailing, useRAF, isClientSide, debounceOnServer]);
 
   return debounced;
 }

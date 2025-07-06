@@ -1,6 +1,6 @@
-import { useRef } from "react";
-import type { FC, ReactNode } from "react";
 import { Provider } from "jotai";
+import type { FC, ReactNode } from "react";
+import { useRef } from "react";
 import tunnel from "tunnel-rat";
 
 import { editorStore } from "../store/editor-store";

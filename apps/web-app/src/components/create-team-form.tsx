@@ -1,22 +1,11 @@
-import {
-  createTeamMutationOptions,
-  listTeamsQueryOptions,
-} from "@/rpc/organization/teams";
 import { zTeamCreate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { createTeamMutationOptions, listTeamsQueryOptions } from "@/rpc/organization/teams";
 
 export function CreateTeamForm(props: {
   organizationSlug: string;
@@ -75,12 +64,7 @@ export function CreateTeamForm(props: {
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={props.onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={props.onCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading || !form.formState.isValid}>

@@ -3,11 +3,8 @@ import { generateId } from "better-auth";
 import { and, eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 
-import * as schema from "../../db/schema";
-import {
-  AsyncStatusNotFoundError,
-  AsyncStatusUnauthorizedError,
-} from "../../errors";
+import * as schema from "../../db";
+import { AsyncStatusNotFoundError, AsyncStatusUnauthorizedError } from "../../errors";
 import type { HonoEnvWithOrganization } from "../../lib/env";
 import { requiredOrganization, requiredSession } from "../../lib/middleware";
 import {
@@ -310,10 +307,7 @@ export const teamsRouter = new Hono<HonoEnvWithOrganization>()
   )
   .delete(
     "/:idOrSlug/teams/:teamId/members/:memberId",
-    zValidator(
-      "param",
-      zOrganizationTeamId.and(zOrganizationIdOrSlug).and(zTeamMemberRemove),
-    ),
+    zValidator("param", zOrganizationTeamId.and(zOrganizationIdOrSlug).and(zTeamMemberRemove)),
     async (c) => {
       // Only admins and owners can remove members from teams
       if (c.var.member.role !== "admin" && c.var.member.role !== "owner") {

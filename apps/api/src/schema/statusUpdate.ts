@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const zStatusUpdateUpdate = z
   .object({
@@ -57,9 +57,7 @@ export const zStatusUpdateCreate = z.object({
     }, "Editor JSON must be an object or nullish value")
     .nullish(),
   notes: z.string().nullish(),
-  items: z
-    .array(zStatusUpdateItemCreate.omit({ statusUpdateId: true }))
-    .optional(),
+  items: z.array(zStatusUpdateItemCreate.omit({ statusUpdateId: true })).optional(),
   isDraft: z.boolean().default(true),
 });
 

@@ -1,13 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Calendar } from "@asyncstatus/ui/components/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -18,6 +13,7 @@ import {
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import * as React from "react";
 import type { DateRange } from "react-day-picker";
 
 export function DatePickerWithPresets({
@@ -32,17 +28,13 @@ export function DatePickerWithPresets({
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
-          className={cn(
-            "justify-start text-left font-normal",
-            !value && "text-muted-foreground",
-          )}
+          className={cn("justify-start text-left font-normal", !value && "text-muted-foreground")}
         >
           <CalendarIcon />
           {value?.from ? (
             value.to ? (
               <>
-                {format(value.from, "LLL dd, y")} -{" "}
-                {format(value.to, "LLL dd, y")}
+                {format(value.from, "LLL dd, y")} - {format(value.to, "LLL dd, y")}
               </>
             ) : (
               format(value.from, "LLL dd, y")
@@ -52,10 +44,7 @@ export function DatePickerWithPresets({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="flex w-auto flex-col space-y-2 p-2"
-      >
+      <PopoverContent align="start" className="flex w-auto flex-col space-y-2 p-2">
         <Select
           onValueChange={(value) => {
             if (value === "0") {

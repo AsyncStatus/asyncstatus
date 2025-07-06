@@ -1,4 +1,3 @@
-import { resetPasswordMutationOptions } from "@/rpc/auth";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { ChevronLeft } from "@asyncstatus/ui/icons";
@@ -6,16 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { z } from "zod/v4";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
+import { resetPasswordMutationOptions } from "@/rpc/auth";
 
 export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,
@@ -109,19 +101,11 @@ function RouteComponent() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={resetPassword.isPending}
-            >
+            <Button type="submit" className="w-full" disabled={resetPassword.isPending}>
               Reset password
             </Button>
 
-            <Button
-              asChild
-              variant="ghost"
-              className="text-muted-foreground gap-0.5"
-            >
+            <Button asChild variant="ghost" className="text-muted-foreground gap-0.5">
               <Link to="/login">
                 <ChevronLeft />
                 Go back to login

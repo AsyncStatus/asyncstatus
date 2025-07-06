@@ -3,6 +3,6 @@
   "type": "module",
   "private": true,
   "peerDependencies": {
-    "typescript": "5.8.2"
+    "typescript": "catalog:"
   }
 }

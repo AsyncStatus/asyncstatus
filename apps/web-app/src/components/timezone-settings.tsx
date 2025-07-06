@@ -1,6 +1,3 @@
-import { useMemo, useState } from "react";
-import { sessionQueryOptions } from "@/rpc/auth";
-import { updateTimezoneMutationOptions } from "@/rpc/organization/member";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Command,
@@ -10,23 +7,15 @@ import {
   CommandItem,
   CommandList,
 } from "@asyncstatus/ui/components/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
+import { z } from "zod/v4";
 import {
   Form,
   FormControl,
@@ -36,6 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/form";
+import { sessionQueryOptions } from "@/rpc/auth";
+import { updateTimezoneMutationOptions } from "@/rpc/organization/member";
 
 const timezoneSchema = z.object({
   timezone: z.string().min(1, "Timezone is required"),
@@ -43,11 +34,7 @@ const timezoneSchema = z.object({
 
 type TimezoneFormValues = z.infer<typeof timezoneSchema>;
 
-export function TimezoneSettings({
-  organizationSlug,
-}: {
-  organizationSlug: string;
-}) {
+export function TimezoneSettings({ organizationSlug }: { organizationSlug: string }) {
   const queryClient = useQueryClient();
   const session = useSuspenseQuery(sessionQueryOptions());
   const [open, setOpen] = useState(false);
@@ -106,6 +93,7 @@ export function TimezoneSettings({
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
+                    {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a combobox */}
                     <Button
                       variant="outline"
                       role="combobox"
@@ -113,9 +101,7 @@ export function TimezoneSettings({
                       className="w-full justify-between"
                     >
                       {field.value
-                        ? timezones.find(
-                            (timezone) => timezone.value === field.value,
-                          )?.label
+                        ? timezones.find((timezone) => timezone.value === field.value)?.label
                         : "Select a timezone..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -123,10 +109,7 @@ export function TimezoneSettings({
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0">
                   <Command>
-                    <CommandInput
-                      placeholder="Search timezone..."
-                      className="h-9"
-                    />
+                    <CommandInput placeholder="Search timezone..." className="h-9" />
                     <CommandList>
                       <CommandEmpty>No timezone found.</CommandEmpty>
                       <CommandGroup>
@@ -135,11 +118,7 @@ export function TimezoneSettings({
                             key={timezone.value}
                             value={timezone.value}
                             onSelect={(currentValue) => {
-                              field.onChange(
-                                currentValue === field.value
-                                  ? ""
-                                  : currentValue,
-                              );
+                              field.onChange(currentValue === field.value ? "" : currentValue);
                               setOpen(false);
                             }}
                           >
@@ -147,9 +126,7 @@ export function TimezoneSettings({
                             <Check
                               className={cn(
                                 "ml-auto h-4 w-4",
-                                field.value === timezone.value
-                                  ? "opacity-100"
-                                  : "opacity-0",
+                                field.value === timezone.value ? "opacity-100" : "opacity-0",
                               )}
                             />
                           </CommandItem>
@@ -160,8 +137,8 @@ export function TimezoneSettings({
                 </PopoverContent>
               </Popover>
               <FormDescription>
-                Your timezone will be used to display dates and times correctly.
-                Status updates will capture the timezone they were created in.
+                Your timezone will be used to display dates and times correctly. Status updates will
+                capture the timezone they were created in.
               </FormDescription>
               <FormMessage />
             </FormItem>

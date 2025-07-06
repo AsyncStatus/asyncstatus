@@ -1,11 +1,11 @@
 import "./globals.css";
 
-import { StrictMode } from "react";
 import { isAsyncStatusApiJsonError } from "@asyncstatus/api/errors";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
-import { toast, Toaster } from "@asyncstatus/ui/components/sonner";
+import { Toaster, toast } from "@asyncstatus/ui/components/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
 import { DefaultErrorBoundary } from "./components/default-error-boundary";

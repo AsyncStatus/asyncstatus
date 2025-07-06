@@ -1,11 +1,11 @@
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   ErrorComponent,
+  type ErrorComponentProps,
   Link,
   rootRouteId,
   useMatch,
   useRouter,
-  type ErrorComponentProps,
 } from "@tanstack/react-router";
 
 export function DefaultErrorBoundary({ error }: Readonly<ErrorComponentProps>) {
@@ -14,8 +14,6 @@ export function DefaultErrorBoundary({ error }: Readonly<ErrorComponentProps>) {
     strict: false,
     select: (state) => state.id === rootRouteId,
   });
-
-  console.error(error);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-6 p-4">

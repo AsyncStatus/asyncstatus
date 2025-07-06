@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import { PopoverContent } from "@asyncstatus/ui/components/popover";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { useCurrentEditor } from "@tiptap/react";
 import { Check, Trash } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export function isValidUrl(url: string) {
   try {
@@ -42,11 +42,7 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
   return (
     <Popover modal={true} open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="gap-2 rounded-none border-none"
-        >
+        <Button size="sm" variant="ghost" className="gap-2 rounded-none border-none">
           <p className="text-base">↗</p>
           <p
             className={cn("underline decoration-stone-400 underline-offset-4", {

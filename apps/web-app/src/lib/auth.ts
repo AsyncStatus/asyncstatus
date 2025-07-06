@@ -6,8 +6,7 @@ export const roleOptions = [
   {
     label: "Member",
     value: "member",
-    description:
-      "Can interact with status updates, teams, own profile and personal settings.",
+    description: "Can interact with status updates, teams, own profile and personal settings.",
   },
   {
     label: "Admin",

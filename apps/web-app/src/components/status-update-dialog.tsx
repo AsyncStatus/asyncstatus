@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Dialog,
@@ -9,6 +8,7 @@ import {
   DialogTrigger,
 } from "@asyncstatus/ui/components/dialog";
 import { PlusIcon } from "lucide-react";
+import { useState } from "react";
 
 import { StatusUpdateForm } from "./status-update-form";
 
@@ -17,10 +17,7 @@ type StatusUpdateDialogProps = {
   onSuccess?: () => void;
 };
 
-export function StatusUpdateDialog({
-  organizationSlug,
-  onSuccess,
-}: StatusUpdateDialogProps) {
+export function StatusUpdateDialog({ organizationSlug, onSuccess }: StatusUpdateDialogProps) {
   const [open, setOpen] = useState(false);
 
   const handleSuccess = () => {
@@ -43,10 +40,7 @@ export function StatusUpdateDialog({
             Share your status with your team. Add updates and mark any blockers.
           </DialogDescription>
         </DialogHeader>
-        <StatusUpdateForm
-          organizationSlug={organizationSlug}
-          onSuccess={handleSuccess}
-        />
+        <StatusUpdateForm organizationSlug={organizationSlug} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

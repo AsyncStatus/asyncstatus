@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import {
   FolderIcon,
@@ -15,6 +13,8 @@ import {
   UserIcon,
 } from "@asyncstatus/ui/icons";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 function ScrambledText({ text }: { text: string }) {
   const [scrambledText, setScrambledText] = useState(text);
@@ -42,9 +42,7 @@ function ScrambledText({ text }: { text: string }) {
           .map((char, idx) => {
             // Always preserve spaces
             if (char === " " || lettersToKeep.has(idx)) return text[idx];
-            return scrambleCharacters[
-              Math.floor(Math.random() * scrambleCharacters.length)
-            ];
+            return scrambleCharacters[Math.floor(Math.random() * scrambleCharacters.length)];
           })
           .join(""),
       );
@@ -61,17 +59,10 @@ function ScrambledText({ text }: { text: string }) {
       }
 
       // Count non-space characters for completion check
-      const nonSpaceChars = text
-        .split("")
-        .filter((char) => char !== " ").length;
-      const keptNonSpaceChars = Array.from(lettersToKeep).filter(
-        (idx) => text[idx] !== " ",
-      ).length;
+      const nonSpaceChars = text.split("").filter((char) => char !== " ").length;
+      const keptNonSpaceChars = Array.from(lettersToKeep).filter((idx) => text[idx] !== " ").length;
 
-      if (
-        currentIteration >= maxIterations ||
-        keptNonSpaceChars === nonSpaceChars
-      ) {
+      if (currentIteration >= maxIterations || keptNonSpaceChars === nonSpaceChars) {
         clearInterval(interval);
         setTimeout(() => setScrambledText(text), 100);
       }
@@ -145,19 +136,13 @@ function TypewriterText({ text }: { text: string }) {
     }
   }, [isTyping, currentUpdateIndex]);
 
-  return (
-    <span className={`${isTyping ? "border-primary border-r-2" : ""}`}>
-      {displayedText}
-    </span>
-  );
+  return <span className={`${isTyping ? "border-primary border-r-2" : ""}`}>{displayedText}</span>;
 }
 
 export function FeaturesList() {
   return (
     <section className="mt-48">
-      <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
-        Core features
-      </h3>
+      <h3 className="text-center text-6xl font-bold max-sm:text-5xl">Core features</h3>
 
       <div className="mt-24 grid grid-cols-12 gap-4">
         {/* Row 1 */}
@@ -176,9 +161,8 @@ export function FeaturesList() {
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">
-              Automatically pulls signals from GitHub and Slack, clearly
-              surfacing important updates and work, so you don't have to keep
-              checking.
+              Automatically pulls signals from GitHub and Slack, clearly surfacing important updates
+              and work, so you don't have to keep checking.
             </p>
           </div>
         </div>
@@ -192,15 +176,12 @@ export function FeaturesList() {
                   strokeWidth={1.5}
                 />
               </div>
-              <h4 className="ml-3 text-lg font-medium tracking-tight">
-                Global team support
-              </h4>
+              <h4 className="ml-3 text-lg font-medium tracking-tight">Global team support</h4>
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">
-              Effortlessly manages timezones and multiple languages, so your
-              distributed team stays aligned without awkward schedules or
-              translations.
+              Effortlessly manages timezones and multiple languages, so your distributed team stays
+              aligned without awkward schedules or translations.
             </p>
 
             <div className="pointer-events-none mt-4 opacity-20 select-none">
@@ -302,8 +283,8 @@ export function FeaturesList() {
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">
-              Spots patterns in your team's workflow to quickly highlight
-              blockers and shifts in mood before they become real problems.
+              Spots patterns in your team's workflow to quickly highlight blockers and shifts in
+              mood before they become real problems.
             </p>
           </div>
         </div>
@@ -317,14 +298,12 @@ export function FeaturesList() {
                   strokeWidth={1.5}
                 />
               </div>
-              <h4 className="ml-3 text-lg font-medium tracking-tight">
-                Flexible delivery
-              </h4>
+              <h4 className="ml-3 text-lg font-medium tracking-tight">Flexible delivery</h4>
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">
-              Posts updates right where your team already talks, Slack or
-              otherwise, fitting into your workflow without friction.
+              Posts updates right where your team already talks, Slack or otherwise, fitting into
+              your workflow without friction.
             </p>
           </div>
         </div>
@@ -347,9 +326,8 @@ export function FeaturesList() {
                 </div>
 
                 <p className="text-muted-foreground flex-1 text-sm md:text-base">
-                  Gently nudges you in Slack when it's time for updates and
-                  delivers clear insights, keeping important tasks from slipping
-                  through the cracks.
+                  Gently nudges you in Slack when it's time for updates and delivers clear insights,
+                  keeping important tasks from slipping through the cracks.
                 </p>
               </div>
 
@@ -361,37 +339,31 @@ export function FeaturesList() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">
-                          AsyncStatus
-                        </span>
-                        <span className="mt-0.5 text-xs text-slate-500">
-                          11:30 AM
-                        </span>
+                        <span className="text-sm font-semibold">AsyncStatus</span>
+                        <span className="mt-0.5 text-xs text-slate-500">11:30 AM</span>
                       </div>
                       <div className="mt-0.5 text-sm">
                         <p className="font-medium">Updates from the team</p>
                         <div className="border-l-primary mt-2 rounded border-l-4 bg-slate-50 p-3">
                           <p className="text-neutral-600 dark:text-slate-300">
-                            <span className="font-semibold">Frontend:</span>{" "}
-                            Shipped new landing page design, working on auth
-                            improvements. Mobile responsiveness at 90%. Need
-                            design review for dark mode.
+                            <span className="font-semibold">Frontend:</span> Shipped new landing
+                            page design, working on auth improvements. Mobile responsiveness at 90%.
+                            Need design review for dark mode.
                           </p>
                           <p className="mt-2 text-slate-600 dark:text-slate-300">
-                            <span className="font-semibold">Backend:</span> API
-                            optimizations complete, deploying performance
-                            monitoring. Database queries 40% faster. Starting
-                            work on the analytics pipeline.
+                            <span className="font-semibold">Backend:</span> API optimizations
+                            complete, deploying performance monitoring. Database queries 40% faster.
+                            Starting work on the analytics pipeline.
                           </p>
                           <p className="mt-2 text-slate-600 dark:text-slate-300">
-                            <span className="font-semibold">Design:</span>{" "}
-                            Finalized component library v2. Working on
-                            accessibility improvements. Icons ready for review.
+                            <span className="font-semibold">Design:</span> Finalized component
+                            library v2. Working on accessibility improvements. Icons ready for
+                            review.
                           </p>
                           <p className="mt-2 text-slate-600 dark:text-slate-300">
-                            <span className="font-semibold">DevOps:</span> CI
-                            pipeline optimized, build times reduced by 60%.
-                            Setting up staging environment for new features.
+                            <span className="font-semibold">DevOps:</span> CI pipeline optimized,
+                            build times reduced by 60%. Setting up staging environment for new
+                            features.
                           </p>
                         </div>
                       </div>
@@ -412,15 +384,12 @@ export function FeaturesList() {
                   strokeWidth={1.5}
                 />
               </div>
-              <h4 className="ml-3 text-lg font-medium tracking-tight">
-                Manual mode
-              </h4>
+              <h4 className="ml-3 text-lg font-medium tracking-tight">Manual mode</h4>
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">
-              Prefer writing updates yourself? Our platform supports your
-              natural workflow with a manual mode that keeps things simple, no
-              GitHub or Slack required.
+              Prefer writing updates yourself? Our platform supports your natural workflow with a
+              manual mode that keeps things simple, no GitHub or Slack required.
             </p>
 
             <div className="mt-4">
@@ -431,10 +400,7 @@ export function FeaturesList() {
                       <UserIcon className="h-3 w-3" />
                     </div>
                     <div className="flex-1">
-                      <div
-                        className="text-xs font-medium"
-                        suppressHydrationWarning
-                      >
+                      <div className="text-xs font-medium" suppressHydrationWarning>
                         Update for {new Date().toLocaleDateString()}
                       </div>
                     </div>
@@ -458,14 +424,9 @@ export function FeaturesList() {
           <div>
             <div className="mb-3 flex items-center">
               <div className="border-border/60 bg-background/40 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border">
-                <FolderIcon
-                  className="text-primary h-4 w-4"
-                  strokeWidth={1.5}
-                />
+                <FolderIcon className="text-primary h-4 w-4" strokeWidth={1.5} />
               </div>
-              <h4 className="ml-3 text-lg font-medium tracking-tight">
-                Open source
-              </h4>
+              <h4 className="ml-3 text-lg font-medium tracking-tight">Open source</h4>
             </div>
 
             <p className="text-muted-foreground text-sm md:text-base">

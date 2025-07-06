@@ -1,18 +1,15 @@
 "use client";
 
-import { PropsWithChildren } from "react";
+import { cn } from "@asyncstatus/ui/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@asyncstatus/ui/lib/utils";
+import type { PropsWithChildren } from "react";
 
 export function ActivePrivacyLink(props: PropsWithChildren<{ href: string }>) {
   const pathname = usePathname();
 
   return (
-    <Link
-      href={props.href}
-      className={cn({ "text-primary": pathname === props.href })}
-    >
+    <Link href={props.href} className={cn({ "text-primary": pathname === props.href })}>
       {props.children}
     </Link>
   );

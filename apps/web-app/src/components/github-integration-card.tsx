@@ -1,10 +1,4 @@
-import { useEffect, useState } from "react";
-import {
-  disconnectGithubMutationOptions,
-  getGithubIntegrationQueryOptions,
-} from "@/rpc/organization/github";
-import { rpc } from "@/rpc/rpc";
-import {
+import type {
   SyncGithubWorkflowStatusName,
   SyncGithubWorkflowStatusStep,
 } from "@asyncstatus/api/schema/github-integration";
@@ -18,18 +12,15 @@ import {
   CardTitle,
 } from "@asyncstatus/ui/components/card";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import {
-  AlertCircle,
-  CheckCircle,
-  Github,
-  Loader2,
-} from "@asyncstatus/ui/icons";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { AlertCircle, CheckCircle, Github, Loader2 } from "@asyncstatus/ui/icons";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
+import {
+  disconnectGithubMutationOptions,
+  getGithubIntegrationQueryOptions,
+} from "@/rpc/organization/github";
+import { rpc } from "@/rpc/rpc";
 
 type GitHubIntegrationCardProps = {
   organizationSlug: string;
@@ -81,16 +72,12 @@ const getStepIcon = (step?: keyof typeof SyncGithubWorkflowStatusStep) => {
   }
 };
 
-export function GitHubIntegrationCard({
-  organizationSlug,
-}: GitHubIntegrationCardProps) {
+export function GitHubIntegrationCard({ organizationSlug }: GitHubIntegrationCardProps) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     status: "completed",
   });
   const queryClient = useQueryClient();
-  const githubIntegration = useSuspenseQuery(
-    getGithubIntegrationQueryOptions(organizationSlug),
-  );
+  const githubIntegration = useSuspenseQuery(getGithubIntegrationQueryOptions(organizationSlug));
   const githubAppInstallUrl = `https://github.com/apps/asyncstatus-local/installations/new?state=${organizationSlug}`;
 
   const disconnectGithub = useMutation({
@@ -115,9 +102,7 @@ export function GitHubIntegrationCard({
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to disconnect GitHub. Please try again.",
+        error instanceof Error ? error.message : "Failed to disconnect GitHub. Please try again.",
       );
     },
   });
@@ -276,15 +261,11 @@ export function GitHubIntegrationCard({
         ) : (
           <Button
             variant="destructive"
-            onClick={() =>
-              disconnectGithub.mutate({ param: { idOrSlug: organizationSlug } })
-            }
+            onClick={() => disconnectGithub.mutate({ param: { idOrSlug: organizationSlug } })}
             disabled={disconnectGithub.isPending}
             className="w-full"
           >
-            {disconnectGithub.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
+            {disconnectGithub.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Disconnect GitHub
           </Button>
         )}

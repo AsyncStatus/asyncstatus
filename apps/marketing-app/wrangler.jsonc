@@ -3,32 +3,32 @@
   "name": "marketing-app",
   "main": ".open-next/worker.js",
   "observability": {
-    "enabled": true,
+    "enabled": true
   },
   "compatibility_date": "2025-04-02",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS",
+    "binding": "ASSETS"
   },
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "marketing-app",
-    },
+      "service": "marketing-app"
+    }
   ],
   "kv_namespaces": [
     {
       "binding": "AS_PROD_MARKETING_APP",
       "id": "aa6d76cffe664618aedd4fa60082801b",
-      "preview_id": "5f8a3e1089f548f2a1c9553bd8105489",
-    },
+      "preview_id": "5f8a3e1089f548f2a1c9553bd8105489"
+    }
   ],
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "marketing-app-bucket",
-      "preview_bucket_name": "marketing-app-bucket",
-    },
-  ],
+      "preview_bucket_name": "marketing-app-bucket"
+    }
+  ]
 }

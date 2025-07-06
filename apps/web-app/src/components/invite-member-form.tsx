@@ -1,10 +1,3 @@
-import { useEffect, useState } from "react";
-import {
-  inviteMemberMutationOptions,
-  listMembersQueryOptions,
-} from "@/rpc/organization/member";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -16,30 +9,18 @@ import {
   CommandList,
 } from "@asyncstatus/ui/components/command";
 import { Input } from "@asyncstatus/ui/components/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQueries,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+import { inviteMemberMutationOptions, listMembersQueryOptions } from "@/rpc/organization/member";
+import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 
 export function InviteMemberForm(props: {
   organizationSlug: string;
@@ -161,10 +142,7 @@ export function InviteMemberForm(props: {
               <FormItem>
                 <FormLabel>Role</FormLabel>
                 <FormControl>
-                  <Popover
-                    open={rolePopoverOpen}
-                    onOpenChange={setRolePopoverOpen}
-                  >
+                  <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -173,19 +151,14 @@ export function InviteMemberForm(props: {
                         className="justify-between"
                       >
                         {field.value
-                          ? roleOptions.find(
-                              (role) => role.value === field.value,
-                            )?.label
+                          ? roleOptions.find((role) => role.value === field.value)?.label
                           : "Select role..."}
                         <ChevronsUpDown className="opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="p-0">
                       <Command>
-                        <CommandInput
-                          placeholder="Search roles..."
-                          className="h-9"
-                        />
+                        <CommandInput placeholder="Search roles..." className="h-9" />
                         <CommandList>
                           <CommandEmpty>No role found.</CommandEmpty>
                           <CommandGroup>
@@ -197,9 +170,7 @@ export function InviteMemberForm(props: {
                                 onSelect={(currentValue) => {
                                   form.setValue(
                                     "role",
-                                    (currentValue === field.value
-                                      ? ""
-                                      : currentValue) as any,
+                                    (currentValue === field.value ? "" : currentValue) as any,
                                   );
                                   setRolePopoverOpen(false);
                                 }}
@@ -213,9 +184,7 @@ export function InviteMemberForm(props: {
                                 <Check
                                   className={cn(
                                     "mt-0.5 ml-auto self-start",
-                                    role.value === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0",
+                                    role.value === field.value ? "opacity-100" : "opacity-0",
                                   )}
                                 />
                               </CommandItem>
@@ -238,10 +207,7 @@ export function InviteMemberForm(props: {
               <FormItem>
                 <FormLabel>Team</FormLabel>
                 <FormControl>
-                  <Popover
-                    open={teamPopoverOpen}
-                    onOpenChange={setTeamPopoverOpen}
-                  >
+                  <Popover open={teamPopoverOpen} onOpenChange={setTeamPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -250,18 +216,14 @@ export function InviteMemberForm(props: {
                         className="justify-between"
                       >
                         {field.value
-                          ? teams.data?.find((team) => team.id === field.value)
-                              ?.name
+                          ? teams.data?.find((team) => team.id === field.value)?.name
                           : "Select team..."}
                         <ChevronsUpDown className="opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="p-0">
                       <Command>
-                        <CommandInput
-                          placeholder="Search teams..."
-                          className="h-9"
-                        />
+                        <CommandInput placeholder="Search teams..." className="h-9" />
                         <CommandList>
                           <CommandEmpty>No team found.</CommandEmpty>
                           <CommandGroup>
@@ -280,9 +242,7 @@ export function InviteMemberForm(props: {
                                 <Check
                                   className={cn(
                                     "mt-0.5 ml-auto self-start",
-                                    team.id === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0",
+                                    team.id === field.value ? "opacity-100" : "opacity-0",
                                   )}
                                 />
                               </CommandItem>
@@ -298,11 +258,7 @@ export function InviteMemberForm(props: {
             )}
           />
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={inviteMember.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={inviteMember.isPending}>
             Invite user
           </Button>
         </div>

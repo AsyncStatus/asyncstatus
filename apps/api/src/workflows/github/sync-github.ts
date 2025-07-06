@@ -1,17 +1,12 @@
+import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import Anthropic from "@anthropic-ai/sdk";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import {
-  WorkflowEntrypoint,
-  WorkflowStep,
-  type WorkflowEvent,
-} from "cloudflare:workers";
 import { count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { App } from "octokit";
 import { VoyageAIClient } from "voyageai";
-
-import { createDb } from "../../db";
-import * as schema from "../../db/schema";
+import * as schema from "../../db";
+import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 
 function getConfig() {
@@ -36,10 +31,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
   HonoEnv["Bindings"],
   SyncGithubWorkflowParams
 > {
-  async run(
-    event: WorkflowEvent<SyncGithubWorkflowParams>,
-    step: WorkflowStep,
-  ) {
+  async run(event: WorkflowEvent<SyncGithubWorkflowParams>, step: WorkflowStep) {
     const { integrationId } = event.payload;
     const db = createDb(this.env);
     const integration = await db.query.githubIntegration.findFirst({
@@ -54,18 +46,14 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
       appId: this.env.GITHUB_APP_ID,
       privateKey: this.env.GITHUB_APP_PRIVATE_KEY,
     });
-    const octokit = await app.getInstallationOctokit(
-      Number(integration.installationId),
-    );
+    const octokit = await app.getInstallationOctokit(Number(integration.installationId));
 
     const repositories = await step.do("fetch-repositories", async () => {
       async function getPaginated(page: number) {
-        const repos = await octokit.rest.apps.listReposAccessibleToInstallation(
-          {
-            page,
-            per_page: 100,
-          },
-        );
+        const repos = await octokit.rest.apps.listReposAccessibleToInstallation({
+          page,
+          per_page: 100,
+        });
         if (repos.status !== 200) {
           throw new Error("Failed to fetch repositories");
         }
@@ -138,10 +126,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
             })
             .onConflictDoUpdate({
               target: schema.githubRepository.repoId,
-              setWhere: eq(
-                schema.githubRepository.integrationId,
-                integrationId,
-              ),
+              setWhere: eq(schema.githubRepository.integrationId, integrationId),
               set: {
                 description: repo.description,
                 name: repo.name,
@@ -273,15 +258,12 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
         .where(eq(schema.githubIntegration.id, integrationId));
     });
 
-    const updatedIntegration = await step.do(
-      "get-updated-integration",
-      async () => {
-        return await db.query.githubIntegration.findFirst({
-          where: eq(schema.githubIntegration.id, integrationId),
-          with: { repositories: true, users: true },
-        });
-      },
-    );
+    const updatedIntegration = await step.do("get-updated-integration", async () => {
+      return await db.query.githubIntegration.findFirst({
+        where: eq(schema.githubIntegration.id, integrationId),
+        with: { repositories: true, users: true },
+      });
+    });
     if (!updatedIntegration) {
       throw new Error("Integration not found");
     }
@@ -347,9 +329,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
                 id: nanoid(),
                 githubId: event.id.toString(),
                 insertedAt: new Date(),
-                createdAt: event.created_at
-                  ? new Date(event.created_at)
-                  : new Date(),
+                createdAt: event.created_at ? new Date(event.created_at) : new Date(),
                 repositoryId: repo.id,
                 type: event.type ?? "unknown",
                 payload: event,
@@ -359,9 +339,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
                 setWhere: eq(schema.githubEvent.githubId, event.id.toString()),
                 set: {
                   insertedAt: new Date(),
-                  createdAt: event.created_at
-                    ? new Date(event.created_at)
-                    : new Date(),
+                  createdAt: event.created_at ? new Date(event.created_at) : new Date(),
                   repositoryId: repo.id,
                   type: event.type ?? "unknown",
                   payload: event,
@@ -393,9 +371,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
         apiKey: this.env.VOYAGE_API_KEY,
       });
 
-      const [eventsCount] = await db
-        .select({ count: count() })
-        .from(schema.githubEvent);
+      const [eventsCount] = await db.select({ count: count() }).from(schema.githubEvent);
       console.log(`Found ${eventsCount?.count} events to process`);
       if (eventsCount?.count === 0) {
         return;
@@ -454,26 +430,16 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
         });
 
         for (const commit of (event.payload as any).payload.commits) {
-          const commitDetails = await octokit.request(
-            "GET /repos/{owner}/{repo}/commits/{sha}",
-            {
-              owner: (event.payload as any).org.login,
-              repo: (event.payload as any).repo.name.split("/")[1],
-              sha: commit.sha,
-            },
-          );
+          const commitDetails = await octokit.request("GET /repos/{owner}/{repo}/commits/{sha}", {
+            owner: (event.payload as any).org.login,
+            repo: (event.payload as any).repo.name.split("/")[1],
+            sha: commit.sha,
+          });
 
           const batchSize = 1;
 
-          for (
-            let i = 0;
-            i < Math.ceil(commitDetails.data.files.length / batchSize);
-            i++
-          ) {
-            const files = commitDetails.data.files.slice(
-              i * batchSize,
-              (i + 1) * batchSize,
-            );
+          for (let i = 0; i < Math.ceil(commitDetails.data.files.length / batchSize); i++) {
+            const files = commitDetails.data.files.slice(i * batchSize, (i + 1) * batchSize);
 
             await Promise.all(
               files.map(async (file: any) => {
@@ -492,11 +458,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
                     ? ["[PATCH OMMITTED DUE TO FILE SIZE OR TYPE]"]
                     : await textSplitter.splitText(file.patch ?? "[NO PATCH]");
 
-                console.log(
-                  file.filename,
-                  file.patch?.length,
-                  patchChunks.length,
-                );
+                console.log(file.filename, file.patch?.length, patchChunks.length);
 
                 await Promise.all(
                   patchChunks.map(async (chunk) => {
@@ -514,10 +476,9 @@ patch: ${chunk}`;
                       fileChanges,
                     );
 
-                    const summaryResponse =
-                      await anthropicClient.messages.create({
-                        model: "claude-3-5-haiku-20241022",
-                        system: `You are an expert technical summarizer.
+                    const summaryResponse = await anthropicClient.messages.create({
+                      model: "claude-3-5-haiku-20241022",
+                      system: `You are an expert technical summarizer.
 You are given a description of a git diff patch.
 You are also given a description of the changes made in the commit and other metadata about the commit.
 You are to write a concise summary of the changes made in the commit.
@@ -531,14 +492,11 @@ The summary must be self-contained, infer the purpose and outcome of the changes
 "changes" is the number of lines changed in the git commit.
 
 You MUST be helpful and concise. You MUST NOT hallucinate.`,
-                        max_tokens: 8192,
-                        messages: [{ role: "user", content: prompt }],
-                      });
+                      max_tokens: 8192,
+                      messages: [{ role: "user", content: prompt }],
+                    });
 
-                    if (
-                      !summaryResponse.content[0] ||
-                      summaryResponse.content[0].type !== "text"
-                    ) {
+                    if (!summaryResponse.content[0] || summaryResponse.content[0].type !== "text") {
                       return [];
                     }
 
@@ -637,11 +595,7 @@ You MUST be helpful and concise. You MUST NOT hallucinate.`,
   }
 }
 
-function buildPushEventPrompt(
-  repoName: string,
-  ref: string,
-  changes: string,
-): string {
+function buildPushEventPrompt(repoName: string, ref: string, changes: string): string {
   return `<metadata>
 <repo>${repoName}</repo>
 <ref>${ref}</ref>

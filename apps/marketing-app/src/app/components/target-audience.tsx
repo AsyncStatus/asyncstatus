@@ -50,9 +50,7 @@ export function TargetAudience() {
 
   return (
     <section className="mt-36">
-      <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
-        Built for your entire team
-      </h3>
+      <h3 className="text-center text-6xl font-bold max-sm:text-5xl">Built for your entire team</h3>
 
       <div className="mt-24 grid gap-8 md:grid-cols-3">
         {audiences.map((audience) => (
@@ -64,18 +62,11 @@ export function TargetAudience() {
               className={`mb-5 flex items-center justify-between border-b pb-4 ${audience.dividerClass}`}
             >
               <div className="flex flex-col">
-                <h4 className="text-2xl font-medium tracking-tight">
-                  {audience.role}
-                </h4>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {audience.description}
-                </p>
+                <h4 className="text-2xl font-medium tracking-tight">{audience.role}</h4>
+                <p className="text-muted-foreground mt-1 text-sm">{audience.description}</p>
               </div>
               <div className="border-border/70 bg-background/50 ml-4 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border">
-                <audience.icon
-                  className={`h-4.5 w-4.5 ${audience.iconClass}`}
-                  strokeWidth={1.5}
-                />
+                <audience.icon className={`h-4.5 w-4.5 ${audience.iconClass}`} strokeWidth={1.5} />
               </div>
             </div>
 
@@ -83,9 +74,7 @@ export function TargetAudience() {
               <ol className="space-y-4">
                 {audience.benefits.map((benefit, i) => (
                   <li key={i} className="flex items-start">
-                    <span
-                      className={`mt-0.5 mr-2.5 text-sm font-medium ${audience.numberClass}`}
-                    >
+                    <span className={`mt-0.5 mr-2.5 text-sm font-medium ${audience.numberClass}`}>
                       {i + 1}.
                     </span>
                     <span className="text-base leading-snug">{benefit}</span>

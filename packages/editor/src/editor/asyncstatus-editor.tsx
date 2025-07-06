@@ -1,9 +1,3 @@
-import { useEffect, useState, type PropsWithChildren } from "react";
-import { countJSONStats } from "@/utils/count-json-stats";
-import {
-  extractStatusUpdateData,
-  type ExtractedStatusUpdateData,
-} from "@/utils/extract-status-update-data";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { UndoIcon } from "@asyncstatus/ui/icons";
@@ -11,27 +5,27 @@ import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
 import dayjs from "dayjs";
+import { type PropsWithChildren, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-
 import { AddStatusUpdateButton } from "@/components/add-status-update-button";
 import EditorBubble from "@/components/editor-bubble";
 import { EditorCommand, EditorCommandList } from "@/components/editor-command";
-import EditorCommandItem, {
-  EditorCommandEmpty,
-} from "@/components/editor-command-item";
+import EditorCommandItem, { EditorCommandEmpty } from "@/components/editor-command-item";
 import { EditorContent } from "@/components/editor-content";
 import { EditorRoot } from "@/components/editor-root";
 import { EmojiSelector } from "@/components/emoji-selector";
 import { LinkSelector } from "@/components/link-selector";
 import { TextButtons } from "@/components/text-buttons";
+import { countJSONStats } from "@/utils/count-json-stats";
+import {
+  type ExtractedStatusUpdateData,
+  extractStatusUpdateData,
+} from "@/utils/extract-status-update-data";
 
 import { handleCommandNavigation } from "../extensions/slash-command";
 import { getAsyncStatusEditorDefaultContent } from "./asyncstatus-editor-default-content";
 import { asyncStatusEditorExtensions } from "./asyncstatus-editor-extensions";
-import {
-  getSuggestionItems,
-  slashCommand,
-} from "./asyncstatus-editor-suggestion-items";
+import { getSuggestionItems, slashCommand } from "./asyncstatus-editor-suggestion-items";
 
 const extensions = [...asyncStatusEditorExtensions, slashCommand];
 
@@ -52,9 +46,7 @@ export const AsyncStatusEditor = (
     date?: string;
     onDateChange?: (date: string) => void;
     initialContent?: JSONContent;
-    onUpdate?: (
-      statusUpdateData: ExtractedStatusUpdateData & { editorJson: JSONContent },
-    ) => void;
+    onUpdate?: (statusUpdateData: ExtractedStatusUpdateData & { editorJson: JSONContent }) => void;
   }>,
 ) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(
@@ -72,14 +64,8 @@ export const AsyncStatusEditor = (
     setWordCount(stats.words);
 
     if (props.date) {
-      window.localStorage.setItem(
-        `html-content-${props.date}`,
-        editor.getHTML(),
-      );
-      window.localStorage.setItem(
-        `json-content-${props.date}`,
-        JSON.stringify(json),
-      );
+      window.localStorage.setItem(`html-content-${props.date}`, editor.getHTML());
+      window.localStorage.setItem(`json-content-${props.date}`, JSON.stringify(json));
     } else {
       // Fallback to regular keys if no date found
       window.localStorage.setItem("html-content", editor.getHTML());
@@ -113,10 +99,7 @@ export const AsyncStatusEditor = (
           JSON.stringify(props.initialContent),
         );
       } else {
-        window.localStorage.setItem(
-          "json-content",
-          JSON.stringify(props.initialContent),
-        );
+        window.localStorage.setItem("json-content", JSON.stringify(props.initialContent));
       }
 
       return;
@@ -126,11 +109,7 @@ export const AsyncStatusEditor = (
       ? window.localStorage.getItem(`json-content-${props.date}`)
       : window.localStorage.getItem("json-content");
 
-    if (
-      (content &&
-        content === `{"type":"doc","content":[{"type":"paragraph"}]}`) ||
-      !content
-    ) {
+    if ((content && content === `{"type":"doc","content":[{"type":"paragraph"}]}`) || !content) {
       const defaultContent = getAsyncStatusEditorDefaultContent(
         props.date
           ? dayjs(props.date, "YYYY-MM-DD", true).toISOString()
@@ -166,9 +145,7 @@ export const AsyncStatusEditor = (
           }}
           onCreate={({ editor }) => {
             if (props.date) {
-              editor.commands.setStatusUpdateDate(
-                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
-              );
+              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
             }
             onUpdate(editor);
           }}
@@ -177,22 +154,15 @@ export const AsyncStatusEditor = (
             if (
               editorDate &&
               props.date &&
-              dayjs(editorDate).startOf("day").format("YYYY-MM-DD") !==
-                props.date
+              dayjs(editorDate).startOf("day").format("YYYY-MM-DD") !== props.date
             ) {
-              props.onDateChange?.(
-                dayjs(editorDate).startOf("day").format("YYYY-MM-DD"),
-              );
-              editor.commands.setStatusUpdateDate(
-                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
-              );
+              props.onDateChange?.(dayjs(editorDate).startOf("day").format("YYYY-MM-DD"));
+              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
               return;
             }
 
             if (props.date) {
-              editor.commands.setStatusUpdateDate(
-                dayjs(props.date, "YYYY-MM-DD", true).toDate(),
-              );
+              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
             }
 
             debouncedOnUpdate(editor);
@@ -282,25 +252,20 @@ function EditorStatus({
           !wordCount && "opacity-0",
         )}
       >
-        {taskItemCount} update item{taskItemCount === 1 ? "" : "s"}, {wordCount}{" "}
-        word{wordCount === 1 ? "" : "s"}
+        {taskItemCount} update item{taskItemCount === 1 ? "" : "s"}, {wordCount} word
+        {wordCount === 1 ? "" : "s"}
       </div>
 
       <div className="flex h-auto items-center gap-2 p-0">
         <Button
-          className={cn(
-            "opacity-100 transition-opacity duration-75",
-            !wordCount && "opacity-0",
-          )}
+          className={cn("opacity-100 transition-opacity duration-75", !wordCount && "opacity-0")}
           variant="ghost"
           size="sm"
           onClick={() => {
             window.localStorage.removeItem(`html-content-${date}`);
             window.localStorage.removeItem(`json-content-${date}`);
             editor?.commands.setContent(
-              getAsyncStatusEditorDefaultContent(
-                dayjs().startOf("day").toISOString(),
-              ),
+              getAsyncStatusEditorDefaultContent(dayjs().startOf("day").toISOString()),
               true,
             );
           }}

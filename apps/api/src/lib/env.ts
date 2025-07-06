@@ -1,19 +1,23 @@
-import type Anthropic from "@anthropic-ai/sdk";
-import type { Webhooks } from "@octokit/webhooks";
+import Anthropic from "@anthropic-ai/sdk";
+import { Webhooks as GithubWebhooks } from "@octokit/webhooks";
 import type { InferSelectModel } from "drizzle-orm";
-import type { Resend } from "resend";
-import type { VoyageAIClient } from "voyageai";
-
-import type { Db } from "../db";
-import * as schema from "../db/schema";
+import type { Context } from "hono";
+import { Resend } from "resend";
+import { VoyageAIClient } from "voyageai";
+import type * as schema from "../db";
+import type { Db } from "../db/db";
+import { createDb } from "../db/db";
 import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
 import type { Auth } from "./auth";
+import { createAuth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
+import { createRateLimiter } from "./rate-limiter";
 
 export type Bindings = {
+  NODE_ENV: string;
   TURSO_URL: string;
   TURSO_AUTH_TOKEN: string;
   TURSO_ENCRYPTION_KEY: string;
@@ -49,7 +53,8 @@ export type Variables = {
   waitlistRateLimiter: RateLimiter;
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
-  githubWebhooks: Webhooks;
+  githubWebhooks: GithubWebhooks;
+  authKv: KVNamespace;
 };
 
 export type HonoEnv = {
@@ -66,4 +71,48 @@ export type HonoEnvWithOrganization = HonoEnvWithSession & {
     organization: InferSelectModel<typeof schema.organization>;
     member: InferSelectModel<typeof schema.member>;
   };
+};
+
+export async function createContext(c: Context<HonoEnv>) {
+  const db = createDb(c.env);
+  const resend = new Resend(c.env.RESEND_API_KEY);
+  const auth = createAuth(c.env, db, resend);
+  const waitlistRateLimiter = createRateLimiter(c.env, {
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+  });
+  const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
+  const voyageClient = new VoyageAIClient({
+    apiKey: c.env.VOYAGE_API_KEY,
+  });
+  const githubWebhooks = new GithubWebhooks({
+    secret: c.env.GITHUB_WEBHOOK_SECRET,
+  });
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+  return {
+    db,
+    resend,
+    auth,
+    waitlistRateLimiter,
+    anthropicClient,
+    voyageClient,
+    githubWebhooks,
+    session,
+    authKv: c.env.AS_PROD_AUTH_KV,
+    bucket: {
+      private: c.env.PRIVATE_BUCKET,
+    },
+  };
+}
+
+export type ASContext = Awaited<ReturnType<typeof createContext>>;
+
+export type TypedHandlersContext = ASContext;
+export type TypedHandlersContextWithSession = ASContext & {
+  session: Auth["$Infer"]["Session"];
+};
+export type TypedHandlersContextWithOrganization = TypedHandlersContextWithSession & {
+  organization: InferSelectModel<typeof schema.organization>;
+  member: InferSelectModel<typeof schema.member>;
 };

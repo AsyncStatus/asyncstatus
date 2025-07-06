@@ -1,13 +1,9 @@
-import type { ReactNode, RefObject } from "react";
-import { Extension } from "@tiptap/core";
 import type { Editor, Range } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionOptions } from "@tiptap/suggestion";
-import tippy, {
-  type GetReferenceClientRect,
-  type Instance,
-  type Props,
-} from "tippy.js";
+import type { ReactNode, RefObject } from "react";
+import tippy, { type GetReferenceClientRect, type Instance, type Props } from "tippy.js";
 
 import { EditorCommandOut } from "../components/editor-command";
 
@@ -63,10 +59,7 @@ const renderItems = (elementRef?: RefObject<Element> | null) => {
         placement: "bottom-start",
       });
     },
-    onUpdate: (props: {
-      editor: Editor;
-      clientRect: GetReferenceClientRect;
-    }) => {
+    onUpdate: (props: { editor: Editor; clientRect: GetReferenceClientRect }) => {
       component?.updateProps(props);
 
       popup?.[0]?.setProps({

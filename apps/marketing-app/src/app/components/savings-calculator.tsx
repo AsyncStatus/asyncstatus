@@ -1,13 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@asyncstatus/ui/components/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@asyncstatus/ui/components/form";
 import {
   Select,
   SelectContent,
@@ -18,6 +11,7 @@ import {
 import { Slider } from "@asyncstatus/ui/components/slider";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { motion } from "framer-motion";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { DotPattern } from "./dot-pattern";
@@ -82,28 +76,23 @@ export default function SavingsCalculator() {
   }, [asyncTime, meetingLength, form]);
 
   // Derived calculations memoized for performance
-  const {
-    hoursStandupPerMonth,
-    standupCostMonthly,
-    monthlySavings,
-    annualSavings,
-  } = useMemo(() => {
-    const rate = avgSalary / (260 * 8);
-    const hrsStandup = (teamSize * meetingLength * workingDays) / 60;
-    const minutesSavedPerPersonPerDay = Math.max(meetingLength - asyncTime, 0);
-    const hrsSaved =
-      (teamSize * minutesSavedPerPersonPerDay * workingDays) / 60;
-    const standupCost = hrsStandup * rate;
-    const monthlySave = hrsSaved * rate;
-    const annualSave = monthlySave * 12;
+  const { hoursStandupPerMonth, standupCostMonthly, monthlySavings, annualSavings } =
+    useMemo(() => {
+      const rate = avgSalary / (260 * 8);
+      const hrsStandup = (teamSize * meetingLength * workingDays) / 60;
+      const minutesSavedPerPersonPerDay = Math.max(meetingLength - asyncTime, 0);
+      const hrsSaved = (teamSize * minutesSavedPerPersonPerDay * workingDays) / 60;
+      const standupCost = hrsStandup * rate;
+      const monthlySave = hrsSaved * rate;
+      const annualSave = monthlySave * 12;
 
-    return {
-      hoursStandupPerMonth: hrsStandup,
-      standupCostMonthly: standupCost,
-      monthlySavings: monthlySave,
-      annualSavings: annualSave,
-    };
-  }, [avgSalary, teamSize, meetingLength, workingDays, asyncTime]);
+      return {
+        hoursStandupPerMonth: hrsStandup,
+        standupCostMonthly: standupCost,
+        monthlySavings: monthlySave,
+        annualSavings: annualSave,
+      };
+    }, [avgSalary, teamSize, meetingLength, workingDays, asyncTime]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -120,9 +109,7 @@ export default function SavingsCalculator() {
         <Form {...form}>
           <form className="w-full space-y-6">
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700">
-                Choose a preset:
-              </label>
+              <label className="text-sm font-medium text-gray-700">Choose a preset:</label>
               <Select
                 value={preset}
                 onValueChange={(value) => {
@@ -149,8 +136,7 @@ export default function SavingsCalculator() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Team size: {field.value}{" "}
-                    {field.value === 1 ? "person" : "people"}
+                    Team size: {field.value} {field.value === 1 ? "person" : "people"}
                   </FormLabel>
                   <FormControl>
                     <Slider
@@ -175,9 +161,7 @@ export default function SavingsCalculator() {
               name="avgSalary"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Average salary: {formatCurrency(field.value)}
-                  </FormLabel>
+                  <FormLabel>Average salary: {formatCurrency(field.value)}</FormLabel>
                   <FormControl>
                     <Slider
                       min={30000}
@@ -201,9 +185,7 @@ export default function SavingsCalculator() {
               name="meetingLength"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Daily standup length: {field.value} minutes
-                  </FormLabel>
+                  <FormLabel>Daily standup length: {field.value} minutes</FormLabel>
                   <FormControl>
                     <Slider
                       min={5}
@@ -227,9 +209,7 @@ export default function SavingsCalculator() {
               name="workingDays"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Working days per month: {field.value} days
-                  </FormLabel>
+                  <FormLabel>Working days per month: {field.value} days</FormLabel>
                   <FormControl>
                     <Slider
                       min={15}
@@ -253,9 +233,7 @@ export default function SavingsCalculator() {
               name="asyncTime"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Async follow-up time: {field.value} minutes
-                  </FormLabel>
+                  <FormLabel>Async follow-up time: {field.value} minutes</FormLabel>
                   <FormControl>
                     <Slider
                       min={2}
@@ -280,9 +258,7 @@ export default function SavingsCalculator() {
           <DotPattern
             width={14}
             height={14}
-            className={cn(
-              "[mask-image:radial-gradient(350px_circle_at_center,transparent,white)]",
-            )}
+            className={cn("[mask-image:radial-gradient(350px_circle_at_center,transparent,white)]")}
           />
 
           <h4 className="text-muted-foreground mt-12 mb-6 text-center text-base">
@@ -292,40 +268,24 @@ export default function SavingsCalculator() {
           <div className="m-6 flex flex-col items-center gap-12">
             <p className="from-primary to-primary/90 via-primary/80 bg-gradient-to-r bg-clip-text text-6xl font-extrabold text-transparent">
               $
-              <NumberTicker
-                value={annualSavings}
-                decimalPlaces={0}
-                className="inline"
-              />
+              <NumberTicker value={annualSavings} decimalPlaces={0} className="inline" />
             </p>
 
             <div className="flex flex-col gap-2">
               {/* Monthly savings */}
               <div className="flex items-baseline justify-between">
-                <p className="text-muted-foreground flex-none text-xs">
-                  Monthly
-                </p>
+                <p className="text-muted-foreground flex-none text-xs">Monthly</p>
                 <p className="text-primary w-[196px] text-right text-xl font-semibold">
                   $
-                  <NumberTicker
-                    value={monthlySavings}
-                    decimalPlaces={0}
-                    className="inline"
-                  />
+                  <NumberTicker value={monthlySavings} decimalPlaces={0} className="inline" />
                 </p>
               </div>
 
               {/* Time spent */}
               <div className="flex items-baseline justify-between">
-                <p className="text-muted-foreground flex-none text-xs">
-                  Time / month
-                </p>
+                <p className="text-muted-foreground flex-none text-xs">Time / month</p>
                 <p className="text-primary w-[164px] text-right text-lg font-medium">
-                  <NumberTicker
-                    value={hoursStandupPerMonth}
-                    decimalPlaces={1}
-                    className="inline"
-                  />
+                  <NumberTicker value={hoursStandupPerMonth} decimalPlaces={1} className="inline" />
                   &nbsp;hrs
                 </p>
               </div>
@@ -344,9 +304,8 @@ export default function SavingsCalculator() {
 
             <p className="text-base leading-snug text-pretty text-neutral-700 italic max-sm:text-sm">
               Here's why stand-ups suck: {meetingLength} min × {teamSize} devs ={" "}
-              {hoursStandupPerMonth.toFixed(0)} h/mo →{" "}
-              {formatCurrency(standupCostMonthly)} burn. How many more numbers
-              do you need?
+              {hoursStandupPerMonth.toFixed(0)} h/mo → {formatCurrency(standupCostMonthly)} burn.
+              How many more numbers do you need?
             </p>
             <div className="mt-3 flex items-center justify-end gap-2">
               <motion.button

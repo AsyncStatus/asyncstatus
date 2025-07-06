@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const zOrganizationIdOrSlug = z.object({ idOrSlug: z.string().min(1) });
 export const zOrganizationTeamId = z.object({ teamId: z.string().min(1) });

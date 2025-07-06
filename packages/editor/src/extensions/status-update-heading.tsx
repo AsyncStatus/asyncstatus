@@ -1,23 +1,14 @@
-import { useState } from "react";
 import { Calendar } from "@asyncstatus/ui/components/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@asyncstatus/ui/components/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { CommandProps } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import {
-  mergeAttributes,
-  Node,
-  NodeViewWrapper,
-  ReactNodeViewRenderer,
-} from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
+import { mergeAttributes, Node, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 export interface StatusUpdateHeadingOptions {
   /** Additional CSS classes applied to the heading element */
@@ -35,10 +26,7 @@ declare module "@tiptap/core" {
   }
 }
 
-const StatusUpdateHeadingComponent = ({
-  node,
-  updateAttributes,
-}: NodeViewProps) => {
+const StatusUpdateHeadingComponent = ({ node, updateAttributes }: NodeViewProps) => {
   const [open, setOpen] = useState(false);
   const date = node.attrs.date
     ? dayjs(node.attrs.date).startOf("day").toDate()
@@ -67,20 +55,12 @@ const StatusUpdateHeadingComponent = ({
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
               <ChevronDown
-                className={cn(
-                  "mx-1 size-6 transition-transform",
-                  open && "-rotate-180",
-                )}
+                className={cn("mx-1 size-6 transition-transform", open && "-rotate-180")}
               />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={handleDateSelect}
-              initialFocus
-            />
+            <Calendar mode="single" selected={date} onSelect={handleDateSelect} initialFocus />
           </PopoverContent>
         </Popover>
       </h2>

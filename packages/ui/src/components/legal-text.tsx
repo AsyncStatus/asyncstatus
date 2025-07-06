@@ -1,5 +1,5 @@
-import React from "react";
 import { cn } from "@asyncstatus/ui/lib/utils";
+import type React from "react";
 
 export const LegalHeading = ({
   children,
@@ -7,11 +7,7 @@ export const LegalHeading = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <h2 className={cn("mt-8 mb-4 text-2xl font-semibold", className)}>
-    {children}
-  </h2>
-);
+}) => <h2 className={cn("mt-8 mb-4 text-2xl font-semibold", className)}>{children}</h2>;
 
 export const LegalSubheading = ({
   children,
@@ -19,9 +15,7 @@ export const LegalSubheading = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <h3 className={cn("mt-6 mb-3 text-xl font-medium", className)}>{children}</h3>
-);
+}) => <h3 className={cn("mt-6 mb-3 text-xl font-medium", className)}>{children}</h3>;
 
 export const LegalSmallHeading = ({
   children,
@@ -29,9 +23,7 @@ export const LegalSmallHeading = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <h4 className={cn("mt-5 mb-2 text-lg font-medium", className)}>{children}</h4>
-);
+}) => <h4 className={cn("mt-5 mb-2 text-lg font-medium", className)}>{children}</h4>;
 
 export const LegalParagraph = ({
   children,
@@ -39,9 +31,7 @@ export const LegalParagraph = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <p className={cn("mb-4 text-base leading-relaxed", className)}>{children}</p>
-);
+}) => <p className={cn("mb-4 text-base leading-relaxed", className)}>{children}</p>;
 
 export const LegalList = ({
   children,
@@ -123,11 +113,7 @@ export const LegalDate = ({
 }: {
   children: React.ReactNode;
   className?: string;
-}) => (
-  <p className={cn("text-muted-foreground mb-6 text-sm italic", className)}>
-    {children}
-  </p>
-);
+}) => <p className={cn("text-muted-foreground mb-6 text-sm italic", className)}>{children}</p>;
 
 export const LegalStrong = ({
   children,

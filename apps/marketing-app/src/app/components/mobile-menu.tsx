@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Link from "next/link";
-import { AnimatePresence, motion, Variants } from "framer-motion";
+import { useState } from "react";
 
 import { WaitlistDialog } from "./waitlist-dialog";
 
@@ -112,29 +112,18 @@ export function MobileMenu() {
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <Link
-                  href="#team"
-                  className="block w-full py-6"
-                  onClick={() => setIsOpen(false)}
-                >
+                <Link href="#team" className="block w-full py-6" onClick={() => setIsOpen(false)}>
                   Use cases
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <Link
-                  href="/"
-                  className="block w-full py-6"
-                  onClick={() => setIsOpen(false)}
-                >
+                <Link href="/" className="block w-full py-6" onClick={() => setIsOpen(false)}>
                   Login
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
                 <div className="block w-full py-6">
-                  <WaitlistDialog
-                    buttonSize="lg"
-                    className="h-12 w-full text-lg font-normal"
-                  />
+                  <WaitlistDialog buttonSize="lg" className="h-12 w-full text-lg font-normal" />
                 </div>
               </motion.div>
             </motion.nav>

@@ -1,5 +1,5 @@
-import { rpc } from "@/rpc/rpc";
 import type { DefaultError, UseMutationOptions } from "@tanstack/react-query";
+import { rpc } from "@/rpc/rpc";
 
 export function upperFirst(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);

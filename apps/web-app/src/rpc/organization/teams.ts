@@ -5,7 +5,7 @@ import type {
   zTeamUpdate,
 } from "@asyncstatus/api/schema/organization";
 import { queryOptions } from "@tanstack/react-query";
-import type { z } from "zod";
+import type { z } from "zod/v4";
 
 import { mutationOptions } from "@/lib/utils";
 
@@ -30,9 +30,7 @@ export function getTeamQueryOptions(idOrSlug: string, teamId: string) {
   return queryOptions({
     queryKey: ["teams", idOrSlug, teamId],
     queryFn: async () => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].$get({
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].$get({
         param: { idOrSlug, teamId },
       });
       if (!response.ok) {
@@ -47,9 +45,9 @@ export function getTeamMembersQueryOptions(idOrSlug: string, teamId: string) {
   return queryOptions({
     queryKey: ["teams", idOrSlug, teamId, "members"],
     queryFn: async () => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].members.$get({ param: { idOrSlug, teamId } });
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].members.$get({
+        param: { idOrSlug, teamId },
+      });
       if (!response.ok) {
         throw await response.json();
       }
@@ -61,9 +59,7 @@ export function getTeamMembersQueryOptions(idOrSlug: string, teamId: string) {
 export function createTeamMutationOptions() {
   return mutationOptions({
     mutationKey: ["createTeam"],
-    mutationFn: async (
-      data: z.infer<typeof zTeamCreate> & { idOrSlug: string },
-    ) => {
+    mutationFn: async (data: z.infer<typeof zTeamCreate> & { idOrSlug: string }) => {
       const response = await rpc.organization[":idOrSlug"].teams.$post({
         param: { idOrSlug: data.idOrSlug },
         json: data,
@@ -84,9 +80,7 @@ export function updateTeamMutationOptions() {
     mutationFn: async (
       data: z.infer<typeof zTeamUpdate> & { idOrSlug: string; teamId: string },
     ) => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].$put({
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].$put({
         param: { idOrSlug: data.idOrSlug, teamId: data.teamId },
         json: data,
       });
@@ -104,9 +98,7 @@ export function deleteTeamMutationOptions() {
   return mutationOptions({
     mutationKey: ["deleteTeam"],
     mutationFn: async (data: { idOrSlug: string; teamId: string }) => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].$delete({
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].$delete({
         param: { idOrSlug: data.idOrSlug, teamId: data.teamId },
       });
 
@@ -128,9 +120,7 @@ export function addTeamMemberMutationOptions() {
         teamId: string;
       },
     ) => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].members.$post({
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].members.$post({
         param: { idOrSlug: data.idOrSlug, teamId: data.teamId },
         json: { memberId: data.memberId },
       });
@@ -153,9 +143,9 @@ export function removeTeamMemberMutationOptions() {
         teamId: string;
       },
     ) => {
-      const response = await rpc.organization[":idOrSlug"].teams[
-        ":teamId"
-      ].members[":memberId"].$delete({
+      const response = await rpc.organization[":idOrSlug"].teams[":teamId"].members[
+        ":memberId"
+      ].$delete({
         param: {
           idOrSlug: data.idOrSlug,
           teamId: data.teamId,

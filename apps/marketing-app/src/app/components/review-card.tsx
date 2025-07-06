@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 // Define review editing sequence
 type EditStep = {
@@ -271,10 +271,7 @@ export function ReviewCard() {
 
       switch (step.cursorTarget) {
         case "line":
-          if (
-            step.targetLine !== undefined &&
-            lineRefs.current[step.targetLine]
-          ) {
+          if (step.targetLine !== undefined && lineRefs.current[step.targetLine]) {
             const lineRef = lineRefs.current[step.targetLine];
             if (lineRef) {
               const lineRect = lineRef.getBoundingClientRect();
@@ -282,12 +279,8 @@ export function ReviewCard() {
 
               newTarget = {
                 left:
-                  lineRect.left -
-                  containerRect.left +
-                  10 +
-                  (step.targetColumn || 0) * charWidth,
-                top:
-                  lineRect.top - containerRect.top + lineRef.offsetHeight / 2,
+                  lineRect.left - containerRect.left + 10 + (step.targetColumn || 0) * charWidth,
+                top: lineRect.top - containerRect.top + lineRef.offsetHeight / 2,
               };
             }
           }
@@ -319,13 +312,11 @@ export function ReviewCard() {
             actionButtonRefs.current[step.targetLine] &&
             actionButtonRefs.current[step.targetLine].markAsBlocker
           ) {
-            const buttonRef =
-              actionButtonRefs.current[step.targetLine].markAsBlocker;
+            const buttonRef = actionButtonRefs.current[step.targetLine].markAsBlocker;
             if (buttonRef) {
               const buttonRect = buttonRef.getBoundingClientRect();
               newTarget = {
-                left:
-                  buttonRect.left - containerRect.left + buttonRect.width / 2,
+                left: buttonRect.left - containerRect.left + buttonRect.width / 2,
                 top: buttonRect.top - containerRect.top + buttonRect.height / 2,
               };
             }
@@ -342,8 +333,7 @@ export function ReviewCard() {
             if (buttonRef) {
               const buttonRect = buttonRef.getBoundingClientRect();
               newTarget = {
-                left:
-                  buttonRect.left - containerRect.left + buttonRect.width / 2,
+                left: buttonRect.left - containerRect.left + buttonRect.width / 2,
                 top: buttonRect.top - containerRect.top + buttonRect.height / 2,
               };
             }
@@ -396,10 +386,7 @@ export function ReviewCard() {
 
       switch (step.cursorTarget) {
         case "line":
-          if (
-            step.targetLine !== undefined &&
-            lineRefs.current[step.targetLine]
-          ) {
+          if (step.targetLine !== undefined && lineRefs.current[step.targetLine]) {
             const lineRef = lineRefs.current[step.targetLine];
             if (lineRef) {
               const lineRect = lineRef.getBoundingClientRect();
@@ -407,12 +394,8 @@ export function ReviewCard() {
 
               newTarget = {
                 left:
-                  lineRect.left -
-                  containerRect.left +
-                  10 +
-                  (step.targetColumn || 0) * charWidth,
-                top:
-                  lineRect.top - containerRect.top + lineRef.offsetHeight / 2,
+                  lineRect.left - containerRect.left + 10 + (step.targetColumn || 0) * charWidth,
+                top: lineRect.top - containerRect.top + lineRef.offsetHeight / 2,
               };
             }
           }
@@ -444,13 +427,11 @@ export function ReviewCard() {
             actionButtonRefs.current[step.targetLine] &&
             actionButtonRefs.current[step.targetLine].markAsBlocker
           ) {
-            const buttonRef =
-              actionButtonRefs.current[step.targetLine].markAsBlocker;
+            const buttonRef = actionButtonRefs.current[step.targetLine].markAsBlocker;
             if (buttonRef) {
               const buttonRect = buttonRef.getBoundingClientRect();
               newTarget = {
-                left:
-                  buttonRect.left - containerRect.left + buttonRect.width / 2,
+                left: buttonRect.left - containerRect.left + buttonRect.width / 2,
                 top: buttonRect.top - containerRect.top + buttonRect.height / 2,
               };
             }
@@ -467,8 +448,7 @@ export function ReviewCard() {
             if (buttonRef) {
               const buttonRect = buttonRef.getBoundingClientRect();
               newTarget = {
-                left:
-                  buttonRect.left - containerRect.left + buttonRect.width / 2,
+                left: buttonRect.left - containerRect.left + buttonRect.width / 2,
                 top: buttonRect.top - containerRect.top + buttonRect.height / 2,
               };
             }
@@ -517,9 +497,7 @@ export function ReviewCard() {
       if (typingProgress < currentStepData.textToType.length) {
         const typingTimer = setTimeout(() => {
           setTypingProgress((prev) => prev + 1);
-          setTypingText(
-            currentStepData.textToType!.substring(0, typingProgress + 1),
-          );
+          setTypingText(currentStepData.textToType!.substring(0, typingProgress + 1));
 
           // Update the edited text with current typing progress
           updateEditedTextWithTyping(currentStepData);
@@ -635,8 +613,7 @@ export function ReviewCard() {
         textLines[line] = baseText + typingText;
       } else {
         // For other edits (like adding "⚠️ Blocked: ")
-        textLines[line] =
-          beforeCursor + typingText + lineText.substring(column);
+        textLines[line] = beforeCursor + typingText + lineText.substring(column);
       }
 
       setCurrentlyEditedText(textLines.join("\n"));
@@ -677,10 +654,7 @@ export function ReviewCard() {
         } else {
           // Normal case for other edits
           const beforeDeletePos = lineToModify.substring(0, column);
-          const textBeingDeleted = lineToModify.substring(
-            column,
-            column + charsToDelete,
-          );
+          const textBeingDeleted = lineToModify.substring(column, column + charsToDelete);
           const afterDeletePos = lineToModify.substring(column + charsToDelete);
 
           // Show remaining text that hasn't been deleted yet
@@ -689,8 +663,7 @@ export function ReviewCard() {
             textBeingDeleted.length - deletedSoFar,
           );
 
-          currentLines[line] =
-            beforeDeletePos + remainingTextToDelete + afterDeletePos;
+          currentLines[line] = beforeDeletePos + remainingTextToDelete + afterDeletePos;
         }
 
         setCurrentlyEditedText(currentLines.join("\n"));
@@ -701,7 +674,7 @@ export function ReviewCard() {
   // Get current text with typing animation applied
   const getCurrentTextWithAnimation = () => {
     const currentStepData = editSequence[currentStep];
-    let text = currentStepData.text;
+    const text = currentStepData.text;
 
     // Handle typing animation
     if (
@@ -762,20 +735,13 @@ export function ReviewCard() {
             // For the first line issue, special handling
             if (line === 0 && column === 37) {
               const beforeDeletePos = prevLineText.substring(0, column);
-              const remainingText = prevLineText.substring(
-                column + deletedSoFar,
-              );
+              const remainingText = prevLineText.substring(column + deletedSoFar);
               textLines[line] = beforeDeletePos + remainingText;
             } else {
               // Normal case for other edits
               const beforeDeletePos = prevLineText.substring(0, column);
-              const deletingPart = prevLineText.substring(
-                column,
-                column + remainingToDelete,
-              );
-              const afterDeletePos = prevLineText.substring(
-                column + (charsToDelete || 0),
-              );
+              const deletingPart = prevLineText.substring(column, column + remainingToDelete);
+              const afterDeletePos = prevLineText.substring(column + (charsToDelete || 0));
 
               textLines[line] = beforeDeletePos + deletingPart + afterDeletePos;
             }
@@ -810,10 +776,7 @@ export function ReviewCard() {
               className="relative mt-1 h-[calc(100%-90px)] overflow-auto rounded-md border p-2"
             >
               {currentText.map((line, i) => (
-                <div
-                  key={`line-container-${i}`}
-                  className="group relative mb-1"
-                >
+                <div key={`line-container-${i}`} className="group relative mb-1">
                   <motion.div
                     key={`line-${i}`}
                     ref={(el) => {
@@ -823,11 +786,7 @@ export function ReviewCard() {
                     className="rounded-md px-2 py-1 text-xs transition-colors"
                     variants={lineVariants}
                     initial="normal"
-                    animate={
-                      isHighlighting && highlightedLine === i
-                        ? "highlight"
-                        : "normal"
-                    }
+                    animate={isHighlighting && highlightedLine === i ? "highlight" : "normal"}
                     whileHover={{ backgroundColor: "rgba(243, 244, 246, 0.5)" }}
                   >
                     {line}
@@ -962,11 +921,7 @@ export function ReviewCard() {
                 className="rounded-md bg-blue-500 px-2.5 py-1 text-[10px] font-medium text-white shadow-sm transition-colors hover:bg-blue-600"
                 variants={buttonVariants}
                 initial="idle"
-                animate={
-                  isClicking && currentStepData.cursorTarget === "save"
-                    ? "tap"
-                    : "idle"
-                }
+                animate={isClicking && currentStepData.cursorTarget === "save" ? "tap" : "idle"}
                 whileHover="hover"
               >
                 Save
@@ -1068,9 +1023,7 @@ export function ReviewCard() {
                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
                     />
                   </svg>
-                  <span className="text-xs">
-                    Commented on issue #23, working on a fix
-                  </span>
+                  <span className="text-xs">Commented on issue #23, working on a fix</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-600">
                   <svg
@@ -1106,9 +1059,7 @@ export function ReviewCard() {
                       <span className="text-[8px] text-purple-600">AL</span>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    Seen by 3 teammates
-                  </span>
+                  <span className="text-xs text-gray-500">Seen by 3 teammates</span>
                 </div>
                 <div className="flex gap-2">
                   <motion.button
@@ -1147,8 +1098,7 @@ export function ReviewCard() {
                 opacity: cursorVisible ? 1 : 0.7,
                 left: targetPosition.left,
                 top: targetPosition.top,
-                scale:
-                  isClicking || isClickingButton || isClickingDelete ? 0.92 : 1,
+                scale: isClicking || isClickingButton || isClickingDelete ? 0.92 : 1,
               }}
               exit={{ opacity: 0 }}
               transition={{
@@ -1177,14 +1127,8 @@ export function ReviewCard() {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <polygon
-                  fill="#FFFFFF"
-                  points="8.2,20.9 8.2,4.9 19.8,16.5 13,16.5 12.6,16.6 "
-                />
-                <polygon
-                  fill="#FFFFFF"
-                  points="17.3,21.6 13.7,23.1 9,12 12.7,10.5 "
-                />
+                <polygon fill="#FFFFFF" points="8.2,20.9 8.2,4.9 19.8,16.5 13,16.5 12.6,16.6 " />
+                <polygon fill="#FFFFFF" points="17.3,21.6 13.7,23.1 9,12 12.7,10.5 " />
                 <rect
                   x="12.5"
                   y="13.6"
@@ -1299,9 +1243,7 @@ export function ReviewCard() {
                       d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="font-medium">
-                    Fixed navigation sidebar alignment issues{" "}
-                  </span>
+                  <span className="font-medium">Fixed navigation sidebar alignment issues </span>
                   <motion.span
                     className="font-medium text-green-600"
                     initial={{ backgroundColor: "rgba(220, 252, 231, 0)" }}
@@ -1351,9 +1293,7 @@ export function ReviewCard() {
                       d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="font-medium">
-                    Opened PR for dashboard charts feature (#42)
-                  </span>
+                  <span className="font-medium">Opened PR for dashboard charts feature (#42)</span>
                 </div>
                 <div className="mt-1 flex items-center gap-1.5 text-gray-500">
                   <svg
@@ -1439,11 +1379,7 @@ export function ReviewCard() {
                     stroke="currentColor"
                     className="h-3.5 w-3.5"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span className="font-medium line-through">
                     Planning to deploy changes after lunch
@@ -1490,9 +1426,7 @@ export function ReviewCard() {
         </AnimatePresence>
       </div>
       <h4 className="mt-4 text-base font-medium">Review</h4>
-      <p className="text-muted-foreground text-sm">
-        Edit if needed (most don't)
-      </p>
+      <p className="text-muted-foreground text-sm">Edit if needed (most don't)</p>
     </div>
   );
 }

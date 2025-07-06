@@ -5,8 +5,7 @@ export function ThemeToggle() {
   function toggleTheme() {
     if (
       document.documentElement.classList.contains("dark") ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
+      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
     ) {
       document.documentElement.classList.remove("dark");
       localStorage.theme = "light";

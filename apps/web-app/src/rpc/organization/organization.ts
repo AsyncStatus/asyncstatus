@@ -1,9 +1,9 @@
-import {
+import type {
   zOrganizationCreate,
   zOrganizationIdOrSlug,
 } from "@asyncstatus/api/schema/organization";
 import { queryOptions } from "@tanstack/react-query";
-import type { z } from "zod";
+import type { z } from "zod/v4";
 
 import { mutationOptions } from "@/lib/utils";
 
@@ -58,9 +58,7 @@ export function setActiveOrganizationMutationOptions() {
   return mutationOptions({
     mutationKey: ["setActiveOrganization"],
     mutationFn: async (param: z.infer<typeof zOrganizationIdOrSlug>) => {
-      const response = await rpc.organization[":idOrSlug"]["set-active"].$patch(
-        { param },
-      );
+      const response = await rpc.organization[":idOrSlug"]["set-active"].$patch({ param });
       if (!response.ok) {
         throw await response.json();
       }
@@ -157,9 +155,7 @@ export function getInvitationByEmailQueryOptions(
 export function updateOrganizationMutationOptions() {
   return mutationOptions({
     mutationKey: ["updateOrganization"],
-    mutationFn: async (
-      input: Parameters<(typeof rpc.organization)[":idOrSlug"]["$patch"]>[0],
-    ) => {
+    mutationFn: async (input: Parameters<(typeof rpc.organization)[":idOrSlug"]["$patch"]>[0]) => {
       const response = await rpc.organization[":idOrSlug"].$patch(input);
       if (!response.ok) {
         throw await response.json();

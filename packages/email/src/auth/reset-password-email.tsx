@@ -1,21 +1,6 @@
+import { Button, Heading, Img, Link, Section, Text } from "@react-email/components";
 import { Layout } from "../layout";
-import {
-  h1,
-  h2,
-  bodyText,
-  secondaryText,
-  primaryButton,
-  footerLink,
-  divider,
-} from "../styles";
-import {
-  Button,
-  Img,
-  Link,
-  Section,
-  Text,
-  Heading,
-} from "@react-email/components";
+import { bodyText, divider, footerLink, h1, h2, primaryButton, secondaryText } from "../styles";
 
 export function ResetPasswordEmail(props: {
   preview: string;
@@ -39,8 +24,8 @@ export function ResetPasswordEmail(props: {
           Hi {props.firstName},
         </Heading>
         <Heading as="h2" style={h2}>
-          We've received a request to reset your password. Please click the
-          button below to reset your password.
+          We've received a request to reset your password. Please click the button below to reset
+          your password.
         </Heading>
       </Section>
 
@@ -49,8 +34,7 @@ export function ResetPasswordEmail(props: {
       </Button>
 
       <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
-        If you did not request a password reset, please ignore this email.{" "}
-        <br />
+        If you did not request a password reset, please ignore this email. <br />
         This link will expire in {props.expiration}.
       </Text>
 
@@ -72,8 +56,7 @@ export function ResetPasswordEmail(props: {
 }
 
 ResetPasswordEmail.PreviewProps = {
-  preview:
-    "Reset your password with https://app.asyncstatus.com/reset-password",
+  preview: "Reset your password with https://app.asyncstatus.com/reset-password",
   firstName: "Michael",
   expiration: "24 hours",
   resetLink: "https://app.asyncstatus.com/reset-password",

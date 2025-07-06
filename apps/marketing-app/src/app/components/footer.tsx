@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
+import Link from "next/link";
 
 import { WaitlistDialog } from "./waitlist-dialog";
 
@@ -24,22 +24,13 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <span className="font-medium">Product</span>
               <div className="text-muted-foreground flex flex-col gap-2">
-                <Link
-                  href="#how-it-works"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="#how-it-works" className="hover:text-foreground transition-colors">
                   How it works
                 </Link>
-                <Link
-                  href="#features"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="#features" className="hover:text-foreground transition-colors">
                   Features
                 </Link>
-                <Link
-                  href="#team"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="#team" className="hover:text-foreground transition-colors">
                   Use cases
                 </Link>
                 <WaitlistDialog buttonSize="sm" />
@@ -61,28 +52,16 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <span className="font-medium">Legal</span>
               <div className="text-muted-foreground flex flex-col gap-2">
-                <Link
-                  href="/privacy"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/privacy" className="hover:text-foreground transition-colors">
                   Privacy
                 </Link>
-                <Link
-                  href="/terms"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/terms" className="hover:text-foreground transition-colors">
                   Terms
                 </Link>
-                <Link
-                  href="/cookies"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/cookies" className="hover:text-foreground transition-colors">
                   Cookies
                 </Link>
-                <Link
-                  href="/acceptable-use"
-                  className="hover:text-foreground transition-colors"
-                >
+                <Link href="/acceptable-use" className="hover:text-foreground transition-colors">
                   Acceptable Use
                 </Link>
               </div>
@@ -91,9 +70,7 @@ export function Footer() {
         </div>
 
         <div className="text-muted-foreground mt-12 flex flex-col justify-between gap-4 border-t pt-4 text-sm sm:flex-row">
-          <div>
-            © {new Date().getFullYear()} AsyncStatus. All rights reserved.
-          </div>
+          <div>© {new Date().getFullYear()} AsyncStatus. All rights reserved.</div>
           <div className="flex gap-4">
             <Link
               href="https://x.com/asyncstatus"

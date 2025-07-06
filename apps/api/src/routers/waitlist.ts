@@ -3,7 +3,7 @@ import { generateId, z } from "better-auth";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
-import * as schema from "../db/schema";
+import * as schema from "../db";
 import { AsyncStatusUnexpectedApiError } from "../errors";
 import type { HonoEnv } from "../lib/env";
 import { zCreateWaitlistUser } from "../schema/waitlist";

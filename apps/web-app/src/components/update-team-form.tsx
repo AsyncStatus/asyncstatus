@@ -1,24 +1,16 @@
-import { useEffect } from "react";
-import {
-  getTeamQueryOptions,
-  listTeamsQueryOptions,
-  updateTeamMutationOptions,
-} from "@/rpc/organization/teams";
 import { zTeamUpdate } from "@asyncstatus/api/schema/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/form";
+  getTeamQueryOptions,
+  listTeamsQueryOptions,
+  updateTeamMutationOptions,
+} from "@/rpc/organization/teams";
 
 export function UpdateTeamForm(props: {
   organizationSlug: string;
@@ -55,8 +47,7 @@ export function UpdateTeamForm(props: {
     onSuccess: () => {
       // Invalidate queries to refresh the data
       queryClient.invalidateQueries({
-        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId)
-          .queryKey,
+        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId).queryKey,
       });
       queryClient.invalidateQueries({
         queryKey: listTeamsQueryOptions(props.organizationSlug).queryKey,
@@ -97,12 +88,7 @@ export function UpdateTeamForm(props: {
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={props.onCancel}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={props.onCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading || !form.formState.isValid}>

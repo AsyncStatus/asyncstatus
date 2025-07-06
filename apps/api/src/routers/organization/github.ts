@@ -4,11 +4,8 @@ import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
-import * as schema from "../../db/schema";
-import {
-  AsyncStatusForbiddenError,
-  AsyncStatusUnexpectedApiError,
-} from "../../errors";
+import * as schema from "../../db";
+import { AsyncStatusForbiddenError, AsyncStatusUnexpectedApiError } from "../../errors";
 import type { HonoEnvWithOrganization } from "../../lib/env";
 import { requiredOrganization, requiredSession } from "../../lib/middleware";
 import { zOrganizationIdOrSlug } from "../../schema/organization";
@@ -19,9 +16,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
     const organizationSlug = c.req.query("state");
 
     if (!installationId || !organizationSlug) {
-      return c.redirect(
-        `${c.env.WEB_APP_URL}/error?message=Missing required parameters`,
-      );
+      return c.redirect(`${c.env.WEB_APP_URL}/error?message=Missing required parameters`);
     }
 
     const db = c.var.db;
@@ -30,9 +25,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         where: eq(schema.organization.slug, organizationSlug),
       });
       if (!organization) {
-        return c.redirect(
-          `${c.env.WEB_APP_URL}/error?message=Organization not found`,
-        );
+        return c.redirect(`${c.env.WEB_APP_URL}/error?message=Organization not found`);
       }
 
       const existingIntegration = await db
@@ -41,7 +34,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         .where(eq(schema.githubIntegration.organizationId, organization.id))
         .limit(1);
 
-      let integrationId;
+      let integrationId: string | undefined;
 
       if (existingIntegration[0]) {
         await db
@@ -69,9 +62,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         integrationId = newIntegration[0]?.id;
       }
       if (!integrationId) {
-        return c.redirect(
-          `${c.env.WEB_APP_URL}/error?message=Failed to create GitHub integration`,
-        );
+        return c.redirect(`${c.env.WEB_APP_URL}/error?message=Failed to create GitHub integration`);
       }
 
       const workflowInstance = await c.env.SYNC_GITHUB_WORKFLOW.create({
@@ -82,9 +73,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         .set({ syncId: workflowInstance.id })
         .where(eq(schema.githubIntegration.id, integrationId));
 
-      return c.redirect(
-        `${c.env.WEB_APP_URL}/${organization.slug}/settings?tab=integrations`,
-      );
+      return c.redirect(`${c.env.WEB_APP_URL}/${organization.slug}/settings?tab=integrations`);
     } catch (error) {
       console.error("GitHub callback error:", error);
       return c.redirect(
@@ -101,9 +90,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
       if (!integration || !integration.syncId) {
         // Return current sync status from database even if no active workflow
@@ -118,9 +105,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         return c.json(currentStatus);
       }
 
-      const workflowInstance = await c.env.SYNC_GITHUB_WORKFLOW.get(
-        integration.syncId,
-      );
+      const workflowInstance = await c.env.SYNC_GITHUB_WORKFLOW.get(integration.syncId);
       let statusInstance = await workflowInstance.status();
       const maxWaitTime = 1000 * 60 * 5; // 5 minutes
       const startTime = Date.now();
@@ -150,9 +135,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
             step: initialIntegration?.syncStatusStep || undefined,
           };
 
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify(initialResponseData)}\n\n`),
-          );
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(initialResponseData)}\n\n`));
 
           // Start polling
           const pollStatus = async () => {
@@ -182,24 +165,15 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
               const hasSyncStepChanged =
                 previousSyncStatusStep !== currentIntegration?.syncStatusStep;
 
-              if (
-                hasStatusChanged ||
-                hasSyncNameChanged ||
-                hasSyncStepChanged
-              ) {
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify(responseData)}\n\n`),
-                );
+              if (hasStatusChanged || hasSyncNameChanged || hasSyncStepChanged) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(responseData)}\n\n`));
                 previousStatus = statusInstance.status;
                 previousSyncStatusName = currentIntegration?.syncStatusName;
                 previousSyncStatusStep = currentIntegration?.syncStatusStep;
               }
 
               // Check if we should stop
-              if (
-                statusInstance.status === "complete" ||
-                Date.now() - startTime >= maxWaitTime
-              ) {
+              if (statusInstance.status === "complete" || Date.now() - startTime >= maxWaitTime) {
                 controller.close();
                 return;
               }
@@ -235,9 +209,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
       if (!integration || !integration.deleteId) {
         return c.json({ status: "completed" });
@@ -251,10 +223,9 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       headers.set("Cache-Control", "no-cache");
       headers.set("Connection", "keep-alive");
 
-      const workflowInstance =
-        await c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW.get(
-          integration.deleteId,
-        );
+      const workflowInstance = await c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW.get(
+        integration.deleteId,
+      );
       let statusInstance = await workflowInstance.status();
       const maxWaitTime = 1000 * 60 * 5; // 5 minutes
       const startTime = Date.now();
@@ -264,16 +235,11 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         try {
           statusInstance = await workflowInstance.status();
           if (previousStatus !== statusInstance.status) {
-            await writer.write(
-              encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`),
-            );
+            await writer.write(encoder.encode(`data: ${JSON.stringify(statusInstance)}\n\n`));
             previousStatus = statusInstance.status;
           }
 
-          if (
-            statusInstance.status === "complete" ||
-            Date.now() - startTime >= maxWaitTime
-          ) {
+          if (statusInstance.status === "complete" || Date.now() - startTime >= maxWaitTime) {
             clearInterval(checkStatus);
             await writer.close();
           }
@@ -296,9 +262,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
 
       if (!integration) {
@@ -318,9 +282,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
       if (!integration) {
         return c.json([]);
@@ -344,9 +306,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
 
       if (!integration) {
@@ -376,9 +336,7 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
       const [integration] = await c.var.db
         .select()
         .from(schema.githubIntegration)
-        .where(
-          eq(schema.githubIntegration.organizationId, c.var.organization.id),
-        )
+        .where(eq(schema.githubIntegration.organizationId, c.var.organization.id))
         .limit(1);
       if (!integration) {
         throw new AsyncStatusUnexpectedApiError({
@@ -386,10 +344,9 @@ export const githubRouter = new Hono<HonoEnvWithOrganization>()
         });
       }
 
-      const workflowInstance =
-        await c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW.create({
-          params: { integrationId: integration.id },
-        });
+      const workflowInstance = await c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW.create({
+        params: { integrationId: integration.id },
+      });
       const statusInstance = await workflowInstance.status();
       await c.var.db
         .update(schema.githubIntegration)

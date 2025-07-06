@@ -1,14 +1,14 @@
 "use client";
 
-import type * as React from "react";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import {
-  EmojiPicker as EmojiPickerPrimitive,
   type EmojiPickerListCategoryHeaderProps,
   type EmojiPickerListEmojiProps,
   type EmojiPickerListRowProps,
+  EmojiPicker as EmojiPickerPrimitive,
 } from "frimousse";
 import { LoaderIcon, SearchIcon } from "lucide-react";
+import type * as React from "react";
 
 function EmojiPicker({
   className,
@@ -53,11 +53,7 @@ function EmojiPickerRow({ children, ...props }: EmojiPickerListRowProps) {
   );
 }
 
-function EmojiPickerEmoji({
-  emoji,
-  className,
-  ...props
-}: EmojiPickerListEmojiProps) {
+function EmojiPickerEmoji({ emoji, className, ...props }: EmojiPickerListEmojiProps) {
   return (
     <button
       {...props}
@@ -72,10 +68,7 @@ function EmojiPickerEmoji({
   );
 }
 
-function EmojiPickerCategoryHeader({
-  category,
-  ...props
-}: EmojiPickerListCategoryHeaderProps) {
+function EmojiPickerCategoryHeader({ category, ...props }: EmojiPickerListCategoryHeaderProps) {
   return (
     <div
       {...props}
@@ -122,10 +115,7 @@ function EmojiPickerContent({
   );
 }
 
-function EmojiPickerFooter({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function EmojiPickerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
@@ -142,9 +132,7 @@ function EmojiPickerFooter({
               <div className="flex size-7 flex-none items-center justify-center text-lg">
                 {emoji.emoji}
               </div>
-              <span className="text-secondary-foreground truncate text-xs">
-                {emoji.label}
-              </span>
+              <span className="text-secondary-foreground truncate text-xs">{emoji.label}</span>
             </>
           ) : (
             <span className="text-muted-foreground ml-1.5 flex h-7 items-center truncate text-xs">
@@ -157,9 +145,4 @@ function EmojiPickerFooter({
   );
 }
 
-export {
-  EmojiPicker,
-  EmojiPickerSearch,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-};
+export { EmojiPicker, EmojiPickerSearch, EmojiPickerContent, EmojiPickerFooter };
