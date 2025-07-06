@@ -28,24 +28,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         url: "/favicon.ico",
         sizes: "32x32",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/favicon-dark.ico",
-        sizes: "32x32",
-        media: "(prefers-color-scheme: dark)",
       },
       { url: "/icon.svg", type: "image/svg+xml" },
-      {
-        url: "/apple-touch-icon.png",
-        href: "/apple-touch-icon.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/apple-touch-icon-dark.png",
-        href: "/apple-touch-icon-dark.png",
-        media: "(prefers-color-scheme: dark)",
-      },
       {
         rel: "preload",
         href: "/ABCFavorit-Regular.woff2",
