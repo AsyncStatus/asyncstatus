@@ -2,8 +2,6 @@ import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { customSession } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 import type { Resend } from "resend";
 import * as schema from "../db";
 import type { Db } from "../db/db";
@@ -41,6 +39,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       "https://dev.asyncstatus.com",
       "https://beta.asyncstatus.com",
       "https://app.asyncstatus.com",
+      "https://app-v2.asyncstatus.com",
       "https://supposedly-simple-mallard.ngrok-free.app",
     ],
     emailVerification: {
@@ -109,6 +108,8 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     advanced: {
       cookiePrefix: "as",
+      crossSubDomainCookies: { enabled: true, domain: ".asyncstatus.com" },
+      useSecureCookies: false,
     },
   });
 }
