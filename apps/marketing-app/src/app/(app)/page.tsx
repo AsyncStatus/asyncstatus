@@ -62,6 +62,9 @@ export default async function Page(props: {
             <Link href="#team" className="hover:text-foreground">
               Use cases
             </Link>
+            <Link href="/why-to-use-our-app" className="hover:text-foreground">
+              Why AsyncStatus
+            </Link>
           </div>
         </div>
 

@@ -61,6 +61,7 @@ export function MobileMenu() {
   return (
     <div className="z-50 hidden items-center justify-center gap-6 max-sm:flex">
       <button
+        type="button"
         className="relative flex h-6 w-6 touch-manipulation flex-col justify-center gap-2"
         aria-label="Toggle menu"
         onClick={() => setIsOpen(!isOpen)}
@@ -95,7 +96,7 @@ export function MobileMenu() {
             >
               <motion.div variants={linkVariants}>
                 <Link
-                  href="#how-it-works"
+                  href="/#how-it-works"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
@@ -104,7 +105,7 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="#features"
+                  href="/#features"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
@@ -117,7 +118,20 @@ export function MobileMenu() {
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
-                <Link href="/" className="block w-full py-6" onClick={() => setIsOpen(false)}>
+                <Link
+                  href="/why-use-our-app"
+                  className="block w-full py-6"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Why use AsyncStatus?
+                </Link>
+              </motion.div>
+              <motion.div variants={linkVariants}>
+                <Link
+                  href={process.env.NEXT_PUBLIC_APP_URL ?? ""}
+                  className="block w-full py-6"
+                  onClick={() => setIsOpen(false)}
+                >
                   Login
                 </Link>
               </motion.div>

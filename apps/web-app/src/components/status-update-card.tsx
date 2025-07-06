@@ -75,14 +75,12 @@ export function StatusUpdateCard({
   // Get user's preferred timezone, fallback to UTC
   const userTimezone = session.data?.user?.timezone || "UTC";
 
-  // Check if both dates are on the same day in user's timezone
-  const effectiveFromDate = formatInTimezone(effectiveFrom, userTimezone, "yyyy-MM-dd");
-  const effectiveToDate = formatInTimezone(effectiveTo, userTimezone, "yyyy-MM-dd");
-  const isSameDay = effectiveFromDate === effectiveToDate;
-
   // Format dates in user's timezone
   const formattedEffectiveFrom = formatInTimezone(effectiveFrom, userTimezone, "MMM d");
   const formattedEffectiveTo = formatInTimezone(effectiveTo, userTimezone, "MMM d, yyyy");
+  const effectiveFromDate = formatInTimezone(effectiveFrom, userTimezone, "yyyy-MM-dd");
+  const effectiveToDate = formatInTimezone(effectiveTo, userTimezone, "yyyy-MM-dd");
+  const isSameDay = effectiveFromDate === effectiveToDate;
 
   // Sort items by order
   const sortedItems = [...statusUpdate.items].sort((a, b) => a.order - b.order);

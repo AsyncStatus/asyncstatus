@@ -65,7 +65,6 @@ export function convertTimezone(
     second: "2-digit",
     hour12: false,
   });
-
   const sourceParts = sourceFormatter.formatToParts(d);
   const sourceObj: any = {};
   sourceParts.forEach((part) => {
