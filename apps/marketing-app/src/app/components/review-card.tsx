@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 // Define review editing sequence
@@ -187,19 +187,19 @@ const editSequence: EditStep[] = [
 ];
 
 // Animation variants
-const buttonVariants = {
+const buttonVariants: Variants = {
   idle: { scale: 1 },
   hover: { scale: 1.05 },
   tap: { scale: 0.95, backgroundColor: "rgb(37, 99, 235)" },
 };
 
-const lineVariants = {
+const lineVariants: Variants = {
   normal: { backgroundColor: "transparent" },
   highlight: { backgroundColor: "rgba(59, 130, 246, 0.1)" },
 };
 
 // Add refined button variants for action buttons
-const actionButtonVariants = {
+const actionButtonVariants: Variants = {
   initial: { opacity: 0, y: -5 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
   exit: { opacity: 0, y: 5, transition: { duration: 0.2, ease: "easeIn" } },
