@@ -29,9 +29,7 @@ import { typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
-  validateSearch: z.object({
-    date: z.string().optional().default(dayjs(new Date()).format("YYYY-MM-DD")),
-  }),
+  validateSearch: z.object({ date: z.string().optional() }),
   loaderDeps: ({ search: { date } }) => ({ date }),
   loader: async ({ context: { queryClient }, params: { organizationSlug }, deps: { date } }) => {
     const [organization, statusUpdates] = await Promise.all([
@@ -39,7 +37,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
       queryClient.ensureQueryData(
         getStatusUpdatesByDateQueryOptions({
           idOrSlug: organizationSlug,
-          date,
+          date: date ?? dayjs().format("YYYY-MM-DD"),
         }),
       ),
     ]);
@@ -91,12 +89,16 @@ type StatusUpdate = {
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const { date } = Route.useSearch();
+  const { date } = Route.useSearch({
+    select: (search) => ({
+      date: search.date
+        ? dayjs(search.date, "YYYY-MM-DD").format("YYYY-MM-DD")
+        : dayjs().format("YYYY-MM-DD"),
+    }),
+  });
   const navigate = Route.useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
   const { statusUpdates } = Route.useLoaderData();
-  console.log("statusUpdates", statusUpdates);
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       navigate({ search: { date: dayjs(date).format("YYYY-MM-DD") } });
