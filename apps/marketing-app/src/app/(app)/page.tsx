@@ -135,7 +135,7 @@ export default async function Page(props: {
 
         <video
           src="https://cdn.asyncstatus.com/BigBoss_5.mp4"
-          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
+          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16 aspect-[12/5]"
           autoPlay
           loop
           muted
