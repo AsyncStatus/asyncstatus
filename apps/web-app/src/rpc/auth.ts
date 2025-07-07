@@ -43,9 +43,7 @@ export function loginEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["loginEmail"],
     mutationFn: async (input: Parameters<typeof authClient.signIn.email>[0]) => {
-      const headers = new Headers();
-      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
-      const { data, error } = await authClient.signIn.email(input, { headers });
+      const { data, error } = await authClient.signIn.email(input);
       if (error) {
         throw new Error(error.message);
       }
@@ -58,9 +56,7 @@ export function signUpEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["signUpEmail"],
     mutationFn: async (input: Parameters<typeof authClient.signUp.email>[0]) => {
-      const headers = new Headers();
-      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
-      const { data, error } = await authClient.signUp.email(input, { headers });
+      const { data, error } = await authClient.signUp.email(input);
       if (error) {
         throw new Error(error.message);
       }

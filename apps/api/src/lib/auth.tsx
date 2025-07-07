@@ -91,6 +91,11 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     user: {
       additionalFields: {
+        activeOrganizationId: {
+          type: "string",
+          required: false,
+          input: false,
+        },
         timezone: {
           type: "string",
           required: true,
