@@ -54,6 +54,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       "https://asyncstatus.com",
       "https://dev.asyncstatus.com",
       "https://beta.asyncstatus.com",
+      "https://api.asyncstatus.com",
       "https://app.asyncstatus.com",
       "https://app-v2.asyncstatus.com",
       "https://supposedly-simple-mallard.ngrok-free.app",
@@ -130,7 +131,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     advanced: {
       cookiePrefix: "as",
       crossSubDomainCookies: { enabled: env.NODE_ENV === "production", domain: ".asyncstatus.com" },
-      useSecureCookies: false,
+      useSecureCookies: env.NODE_ENV === "production",
     },
   });
 }
