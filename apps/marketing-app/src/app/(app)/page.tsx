@@ -133,11 +133,21 @@ export default async function Page(props: {
           <WaitlistDialog buttonSize="lg" />
         </div>
 
-        <img
+        <video
+          src="https://cdn.asyncstatus.com/BigBoss_5.mp4"
+          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls
+        />
+        <p className="text-muted-foreground mt-6 text-center text-lg">Watch with sound on.</p>
+        {/* <img
           src="/hero-light.webp"
           alt="AsyncStatus app screenshot"
           className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
-        />
+        /> */}
 
         <div className="mt-36 flex flex-col items-center">
           <div className="relative w-full max-w-6xl">
