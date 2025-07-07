@@ -129,6 +129,17 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       },
     },
     advanced: {
+      cookies: {
+        session_token: {
+          attributes: {
+            domain: env.NODE_ENV === "production" ? ".asyncstatus.com" : undefined,
+            secure: env.NODE_ENV === "production",
+            httpOnly: true,
+            sameSite: "Lax",
+            path: "/",
+          },
+        },
+      },
       cookiePrefix: "as",
       crossSubDomainCookies: { enabled: env.NODE_ENV === "production", domain: ".asyncstatus.com" },
       useSecureCookies: env.NODE_ENV === "production",
