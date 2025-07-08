@@ -13,11 +13,6 @@ export const authCookiesPlugin = () => {
           },
           handler: createAuthMiddleware(async (ctx) => {
             const returned = ctx.context.responseHeaders;
-            console.log("_flag" in ctx && ctx._flag === "router");
-            console.log(returned?.get("set-cookie"));
-            if ("_flag" in ctx && ctx._flag === "router") {
-              return;
-            }
             if (returned instanceof Headers) {
               const setCookies = returned?.get("set-cookie");
               if (!setCookies) return;
@@ -28,7 +23,6 @@ export const authCookiesPlugin = () => {
                   `${key}=${value.value}; Domain=.asyncstatus.com; Path=/; SameSite=Lax; Secure; HttpOnly`,
                 );
               });
-              return { context: ctx };
             }
           }),
         },
