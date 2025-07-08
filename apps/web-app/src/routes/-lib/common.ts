@@ -30,7 +30,6 @@ export async function getDefaultOrganization(queryClient: QueryClient) {
   const orgs = await queryClient
     .fetchQuery(typedQueryOptions(listOrganizationsContract, undefined, { throwOnError: false }))
     .catch(() => {});
-  console.log("orgs", orgs);
   if (!orgs || orgs.length === 0 || !orgs[0]) {
     throw redirect({ to: "/create-organization" });
   }

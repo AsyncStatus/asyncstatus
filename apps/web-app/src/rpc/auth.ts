@@ -44,7 +44,6 @@ export function loginEmailMutationOptions() {
     mutationKey: ["loginEmail"],
     mutationFn: async (input: Parameters<typeof authClient.signIn.email>[0]) => {
       const { data, error } = await authClient.signIn.email(input);
-      console.log(data, error);
       if (error) {
         throw new Error(error.message);
       }
