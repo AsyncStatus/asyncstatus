@@ -20,24 +20,13 @@ export const authCookiesPlugin = () => {
               const setCookies = returned?.get("set-cookie");
               if (!setCookies) return;
               const parsed = parseSetCookieHeader(setCookies);
-              console.log("parsed", parsed);
-              //   parsed.forEach((value, key) => {
-              //     if (!key) return;
-              //     const opts = {
-              //       sameSite: value.samesite,
-              //       secure: value.secure,
-              //       maxAge: value["max-age"],
-              //       httpOnly: value.httponly,
-              //       domain: value.domain,
-              //       path: value.path,
-              //     } as const;
-              //     try {
-              //       setCookie(key, decodeURIComponent(value.value), opts);
-              //     } catch (e) {
-              //       // this will fail if the cookie is being set on server component
-              //     }
-              //   });
-              return;
+              parsed.forEach((value, key) => {
+                ctx.context.responseHeaders?.append(
+                  "set-cookie",
+                  `${key}=${value.value}; Domain=.asyncstatus.com; Path=/; SameSite=Lax; Secure; HttpOnly`,
+                );
+              });
+              return { context: ctx };
             }
           }),
         },
