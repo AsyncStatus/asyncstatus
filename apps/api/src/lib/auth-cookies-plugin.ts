@@ -13,7 +13,8 @@ export const authCookiesPlugin = () => {
           },
           handler: createAuthMiddleware(async (ctx) => {
             const returned = ctx.context.responseHeaders;
-            console.log(JSON.stringify(Object.fromEntries(returned?.entries() ?? [])));
+            console.log("_flag" in ctx && ctx._flag === "router");
+            console.log(returned?.get("set-cookie"));
             if ("_flag" in ctx && ctx._flag === "router") {
               return;
             }
