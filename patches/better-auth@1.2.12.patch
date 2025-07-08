@@ -9,7 +9,7 @@ index 80e7eecdf86b6ddab57c74ed51156a635fed63fa..2deb583132b299d0a3e877b43fd6f49d
 -      ctx.body.rememberMe === false
 +      ctx.body.rememberMe === false,
 +      {
-+        domain: ctx.context.options.advanced?.crossSubDomainCookies?.domain,
++        domain: ".asyncstatus.com",
 +      }
      );
      return ctx.json({
