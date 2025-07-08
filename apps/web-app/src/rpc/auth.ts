@@ -3,24 +3,6 @@ import { getIncomingHeaders } from "@/get-incoming-headers";
 import { authClient } from "@/lib/auth";
 import { mutationOptions } from "@/lib/utils";
 
-export function sessionQueryOptions() {
-  return queryOptions({
-    queryKey: ["session"],
-    staleTime: 10 * 60 * 1000,
-    queryFn: async ({ signal }) => {
-      const headers = new Headers();
-      headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
-      const { data, error } = await authClient.getSession({
-        fetchOptions: { signal, headers },
-      });
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data;
-    },
-  });
-}
-
 export function sessionBetterAuthQueryOptions() {
   return queryOptions({
     queryKey: ["session"],

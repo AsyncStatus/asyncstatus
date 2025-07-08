@@ -21,11 +21,14 @@ export const User = createSelectSchema(user, {
   name: z.string().trim().min(1),
   email: z.email(),
 });
+export type User = z.output<typeof User>;
 export const UserInsert = createInsertSchema(user, {
   name: z.string().trim().min(1),
   email: z.email(),
 });
+export type UserInsert = z.output<typeof UserInsert>;
 export const UserUpdate = createUpdateSchema(user, {
   name: z.string().trim().min(1),
   email: z.email(),
 });
+export type UserUpdate = z.output<typeof UserUpdate>;

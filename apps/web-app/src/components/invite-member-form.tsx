@@ -1,4 +1,5 @@
 import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Command,
@@ -13,14 +14,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/compone
 import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
 import { inviteMemberMutationOptions, listMembersQueryOptions } from "@/rpc/organization/member";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { listTeamsQueryOptions } from "@/rpc/organization/teams";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export function InviteMemberForm(props: {
   organizationSlug: string;
@@ -48,14 +49,13 @@ export function InviteMemberForm(props: {
       teamId: "",
     },
   });
-  const [organization, teams] = useSuspenseQueries({
-    queries: [
-      getOrganizationQueryOptions(props.organizationSlug),
-      listTeamsQueryOptions(props.organizationSlug),
-    ],
-  });
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: props.organizationSlug }),
+  );
+  const teams = useQuery(listTeamsQueryOptions(props.organizationSlug));
+
   useEffect(() => {
-    if (teams.data && teams.data[0]) {
+    if (teams.data?.[0]) {
       form.setValue("teamId", teams.data[0].id);
     }
   }, [teams.data, form]);
@@ -144,6 +144,7 @@ export function InviteMemberForm(props: {
                 <FormControl>
                   <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
                     <PopoverTrigger asChild>
+                      {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a trigger for a popover */}
                       <Button
                         variant="outline"
                         role="combobox"
@@ -209,6 +210,7 @@ export function InviteMemberForm(props: {
                 <FormControl>
                   <Popover open={teamPopoverOpen} onOpenChange={setTeamPopoverOpen}>
                     <PopoverTrigger asChild>
+                      {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a trigger for a popover */}
                       <Button
                         variant="outline"
                         role="combobox"

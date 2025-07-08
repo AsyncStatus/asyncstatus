@@ -1,8 +1,8 @@
-import { zOrganizationUpdate } from "@asyncstatus/api/schema/organization";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   getOrganizationContract,
+  listMemberOrganizationsContract,
   updateOrganizationContract,
 } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
@@ -22,18 +22,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/compon
 import { CreditCard } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { GitHubIntegrationCard } from "@/components/github-integration-card";
 import { UpdateMemberForm } from "@/components/update-member-form";
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  getOrganizationQueryOptions,
-  listOrganizationsQueryOptions,
-} from "@/rpc/organization/organization";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
@@ -48,19 +45,17 @@ export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
       ensureValidSession(queryClient, location),
     ]);
 
-    await Promise.all([
-      queryClient.ensureQueryData(
-        typedQueryOptions(getOrganizationContract, {
-          idOrSlug: organizationSlug,
-        }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(getMemberContract, {
-          idOrSlug: organizationSlug,
-          memberId: organization.member.id,
-        }),
-      ),
-    ]);
+    queryClient.prefetchQuery(
+      typedQueryOptions(getOrganizationContract, {
+        idOrSlug: organizationSlug,
+      }),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(getMemberContract, {
+        idOrSlug: organizationSlug,
+        memberId: organization.member.id,
+      }),
+    );
   },
 });
 
@@ -70,22 +65,19 @@ function RouteComponent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const organizationQuery = useSuspenseQuery(
+  const organizationQuery = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: params.organizationSlug }),
   );
   const updateOrganizationMutation = useMutation(
     typedMutationOptions(updateOrganizationContract, {
       onSuccess: (data) => {
         queryClient.invalidateQueries({
-          queryKey: getOrganizationQueryOptions(data.slug).queryKey,
+          queryKey: typedQueryOptions(getOrganizationContract, { idOrSlug: data.slug }).queryKey,
         });
         queryClient.invalidateQueries({
-          queryKey: getOrganizationQueryOptions(params.organizationSlug).queryKey,
+          queryKey: typedQueryOptions(listMemberOrganizationsContract, {}).queryKey,
         });
-        queryClient.invalidateQueries({
-          queryKey: listOrganizationsQueryOptions().queryKey,
-        });
-        queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
           if (!sessionData) {
             return sessionData;
           }
@@ -104,13 +96,23 @@ function RouteComponent() {
     }),
   );
   const form = useForm({
-    resolver: zodResolver(zOrganizationUpdate as any),
+    resolver: zodResolver(updateOrganizationContract.inputSchema),
     defaultValues: {
       name: organizationQuery.data?.organization.name || "",
       slug: organizationQuery.data?.organization.slug || "",
       logo: organizationQuery.data?.organization.logo || null,
     },
   });
+
+  useEffect(() => {
+    if (organizationQuery.data) {
+      form.reset({
+        name: organizationQuery.data.organization.name,
+        slug: organizationQuery.data.organization.slug,
+        logo: organizationQuery.data.organization.logo,
+      });
+    }
+  }, [organizationQuery.data]);
 
   return (
     <>
@@ -222,7 +224,7 @@ function RouteComponent() {
                             <FormItem>
                               <FormLabel className="mb-2">Logo</FormLabel>
                               <FormControl>
-                                <ImageUpload value={value} onChange={field.onChange} />
+                                <ImageUpload value={value as string} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

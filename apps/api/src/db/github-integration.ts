@@ -38,9 +38,12 @@ export const githubIntegration = sqliteTable(
 export const GithubIntegration = createSelectSchema(githubIntegration, {
   installationId: z.string().trim().min(1),
 });
+export type GithubIntegration = z.output<typeof GithubIntegration>;
 export const GithubIntegrationInsert = createInsertSchema(githubIntegration, {
   installationId: z.string().trim().min(1),
 });
+export type GithubIntegrationInsert = z.output<typeof GithubIntegrationInsert>;
 export const GithubIntegrationUpdate = createUpdateSchema(githubIntegration, {
   installationId: z.string().trim().min(1),
 });
+export type GithubIntegrationUpdate = z.output<typeof GithubIntegrationUpdate>;

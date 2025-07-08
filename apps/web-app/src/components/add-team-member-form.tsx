@@ -99,6 +99,7 @@ export function AddTeamMemberForm(props: {
               <FormControl>
                 <Popover open={memberPopoverOpen} onOpenChange={setMemberPopoverOpen}>
                   <PopoverTrigger asChild>
+                    {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a trigger for a popover */}
                     <Button
                       variant="outline"
                       role="combobox"
@@ -158,7 +159,7 @@ export function AddTeamMemberForm(props: {
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Adding..." : "Add Member"}
+            Add member
           </Button>
         </div>
       </form>

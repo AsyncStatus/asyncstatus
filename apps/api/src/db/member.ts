@@ -32,9 +32,12 @@ export const member = sqliteTable(
 export const Member = createSelectSchema(member, {
   role: memberRole,
 });
+export type Member = z.output<typeof Member>;
 export const MemberInsert = createInsertSchema(member, {
   role: memberRole,
 });
+export type MemberInsert = z.output<typeof MemberInsert>;
 export const MemberUpdate = createUpdateSchema(member, {
   role: memberRole,
 });
+export type MemberUpdate = z.output<typeof MemberUpdate>;

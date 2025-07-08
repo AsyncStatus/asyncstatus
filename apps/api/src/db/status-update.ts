@@ -43,13 +43,16 @@ export const StatusUpdate = createSelectSchema(statusUpdate, {
   emoji: z.string().trim().min(1),
   notes: z.string().trim().min(1),
 });
+export type StatusUpdate = z.output<typeof StatusUpdate>;
 export const StatusUpdateInsert = createInsertSchema(statusUpdate, {
   mood: z.string().trim().min(1),
   emoji: z.string().trim().min(1),
   notes: z.string().trim().min(1),
 });
+export type StatusUpdateInsert = z.output<typeof StatusUpdateInsert>;
 export const StatusUpdateUpdate = createUpdateSchema(statusUpdate, {
   mood: z.string().trim().min(1),
   emoji: z.string().trim().min(1),
   notes: z.string().trim().min(1),
 });
+export type StatusUpdateUpdate = z.output<typeof StatusUpdateUpdate>;

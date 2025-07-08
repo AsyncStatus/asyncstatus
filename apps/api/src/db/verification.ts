@@ -19,11 +19,14 @@ export const Verification = createSelectSchema(verification, {
   identifier: z.string().trim().min(1),
   value: z.string().trim().min(1),
 });
+export type Verification = z.output<typeof Verification>;
 export const VerificationInsert = createInsertSchema(verification, {
   identifier: z.string().trim().min(1),
   value: z.string().trim().min(1),
 });
+export type VerificationInsert = z.output<typeof VerificationInsert>;
 export const VerificationUpdate = createUpdateSchema(verification, {
   identifier: z.string().trim().min(1),
   value: z.string().trim().min(1),
 });
+export type VerificationUpdate = z.output<typeof VerificationUpdate>;

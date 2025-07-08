@@ -19,7 +19,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { StatusUpdateForm } from "@/components/status-update-form-v2";
+import { StatusUpdateForm } from "@/components/status-update-form";
 import { getInitials } from "@/lib/utils";
 import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
 import { typedUrl } from "@/typed-handlers";

@@ -1,3 +1,4 @@
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,15 +11,15 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { StatusUpdateForm } from "@/components/status-update-form-v2";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
+import { StatusUpdateForm } from "@/components/status-update-form";
 import { getStatusUpdatesByMemberQueryOptions } from "@/rpc/organization/status-update";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/status-update/")({
   component: RouteComponent,
   beforeLoad: async ({ params: { organizationSlug }, context: { queryClient } }) => {
     const { member } = await queryClient.ensureQueryData(
-      getOrganizationQueryOptions(organizationSlug),
+      typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
     );
 
     const statusUpdates = await queryClient.ensureQueryData(

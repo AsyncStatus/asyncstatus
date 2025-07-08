@@ -22,9 +22,12 @@ export const userTimezoneHistory = sqliteTable(
 export const UserTimezoneHistory = createSelectSchema(userTimezoneHistory, {
   timezone: z.string().trim().min(1),
 });
+export type UserTimezoneHistory = z.output<typeof UserTimezoneHistory>;
 export const UserTimezoneHistoryInsert = createInsertSchema(userTimezoneHistory, {
   timezone: z.string().trim().min(1),
 });
+export type UserTimezoneHistoryInsert = z.output<typeof UserTimezoneHistoryInsert>;
 export const UserTimezoneHistoryUpdate = createUpdateSchema(userTimezoneHistory, {
   timezone: z.string().trim().min(1),
 });
+export type UserTimezoneHistoryUpdate = z.output<typeof UserTimezoneHistoryUpdate>;

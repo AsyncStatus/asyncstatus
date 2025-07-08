@@ -1,3 +1,4 @@
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,21 +37,21 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Layers, Plus, Search, Trash, Users } from "@asyncstatus/ui/icons";
-import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CreateTeamForm } from "@/components/create-team-form";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { deleteTeamMutationOptions, listTeamsQueryOptions } from "@/rpc/organization/teams";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/")({
   component: TeamsListPage,
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
-    await Promise.all([
-      queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
-    ]);
+    queryClient.prefetchQuery(listTeamsQueryOptions(organizationSlug));
+    queryClient.prefetchQuery(
+      typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+    );
   },
 });
 
@@ -60,13 +61,10 @@ function TeamsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [createTeamDialogOpen, setCreateTeamDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
-
-  const [teamList, organization] = useSuspenseQueries({
-    queries: [
-      listTeamsQueryOptions(organizationSlug),
-      getOrganizationQueryOptions(organizationSlug),
-    ],
-  });
+  const teamList = useQuery(listTeamsQueryOptions(organizationSlug));
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+  );
 
   const deleteTeam = useMutation({
     ...deleteTeamMutationOptions(),
@@ -79,10 +77,10 @@ function TeamsListPage() {
   });
 
   const isAdmin =
-    organization.data.member.role === "admin" || organization.data.member.role === "owner";
+    organization.data?.member.role === "admin" || organization.data?.member.role === "owner";
 
   // Filter teams based on search query
-  const filteredTeams = teamList.data.filter((team) =>
+  const filteredTeams = teamList.data?.filter((team) =>
     team.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -148,7 +146,7 @@ function TeamsListPage() {
                 <AlertDialogDescription>
                   This will permanently delete the team
                   {teamToDelete &&
-                    ` "${teamList.data.find((team) => team.id === teamToDelete)?.name}"`}
+                    ` "${teamList.data?.find((team) => team.id === teamToDelete)?.name}"`}
                   and remove all member associations. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -175,7 +173,7 @@ function TeamsListPage() {
 
       <div className="py-4">
         <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredTeams.length === 0 ? (
+          {filteredTeams?.length === 0 ? (
             <div className="text-muted-foreground col-span-full py-8 text-center">
               <Layers className="mx-auto mb-2 size-10 opacity-50" />
               <p className="text-base sm:text-lg font-medium">No teams found</p>
@@ -186,7 +184,7 @@ function TeamsListPage() {
               </p>
             </div>
           ) : (
-            filteredTeams.map((team) => (
+            filteredTeams?.map((team) => (
               <Card key={team.id} className="overflow-hidden pb-0">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm sm:text-base font-medium">{team.name}</CardTitle>

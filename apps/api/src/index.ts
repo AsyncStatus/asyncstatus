@@ -18,7 +18,6 @@ import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
 import { memberRouter } from "./routers/organization/member";
-import { organizationRouter } from "./routers/organization/organization";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
@@ -75,7 +74,6 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
-  .route("/organization", organizationRouter)
   .route("/organization", memberRouter)
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
@@ -114,8 +112,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     updateMemberHandler,
     getMemberHandler,
     getFileHandler,
-    getOrganizationHandler,
     listMemberOrganizationsHandler,
+    getOrganizationHandler,
     setActiveOrganizationHandler,
     createOrganizationHandler,
     updateOrganizationHandler,

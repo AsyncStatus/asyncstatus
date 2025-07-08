@@ -1,5 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -27,14 +28,13 @@ import { Check, ChevronsUpDown, Edit } from "@asyncstatus/ui/icons";
 import { getIsFormDataChanged } from "@asyncstatus/ui/lib/get-is-form-data-changed";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@asyncstatus/ui/lib/zod-resolver";
-import { useMutation, useQuery, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
 import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { Form } from "./form";
 
@@ -57,16 +57,18 @@ export function UpdateMemberForm(props: {
   const queryClient = useQueryClient();
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const [timezonePopoverOpen, setTimezonePopoverOpen] = useState(false);
-  const [session, member, organization] = useSuspenseQueries({
-    queries: [
-      sessionBetterAuthQueryOptions(),
-      typedQueryOptions(getMemberContract, {
-        idOrSlug: props.organizationSlugOrId,
-        memberId: props.memberId,
-      }),
-      getOrganizationQueryOptions(props.organizationSlugOrId),
-    ],
-  });
+  const session = useQuery(sessionBetterAuthQueryOptions());
+  const member = useQuery(
+    typedQueryOptions(getMemberContract, {
+      idOrSlug: props.organizationSlugOrId,
+      memberId: props.memberId,
+    }),
+  );
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, {
+      idOrSlug: props.organizationSlugOrId,
+    }),
+  );
   const isOwner = organization.data.member.role === "owner";
   const form = useForm<
     typeof updateMemberContract.$infer.input,
@@ -99,7 +101,9 @@ export function UpdateMemberForm(props: {
       });
       if (data.userId === session.data?.user.id) {
         queryClient.invalidateQueries({
-          queryKey: getOrganizationQueryOptions(props.organizationSlugOrId).queryKey,
+          queryKey: typedQueryOptions(getOrganizationContract, {
+            idOrSlug: props.organizationSlugOrId,
+          }).queryKey,
         });
 
         queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {

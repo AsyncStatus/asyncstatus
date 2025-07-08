@@ -1,383 +1,199 @@
+import { zStatusUpdateCreate } from "@asyncstatus/api/schema/statusUpdate";
+import { AsyncStatusEditor } from "@asyncstatus/editor";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@asyncstatus/ui/components/alert-dialog";
 import { Button } from "@asyncstatus/ui/components/button";
-import { Calendar } from "@asyncstatus/ui/components/calendar";
-import {
-  EmojiPicker,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-  EmojiPickerSearch,
-} from "@asyncstatus/ui/components/emoji-picker";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@asyncstatus/ui/components/form";
-import { Input } from "@asyncstatus/ui/components/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@asyncstatus/ui/components/select";
-import { Switch } from "@asyncstatus/ui/components/switch";
-import { Textarea } from "@asyncstatus/ui/components/textarea";
-import { CalendarIcon } from "@asyncstatus/ui/icons";
-import { cn } from "@asyncstatus/ui/lib/utils";
+import { Form } from "@asyncstatus/ui/components/form";
+import { BookCheck, BookDashed } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod/v4";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-
-import { rpc } from "../rpc/rpc";
-
-const formSchema = z.object({
-  memberId: z.string().min(1, "Member is required"),
-  teamId: z.string().optional(),
-  effectiveFrom: z.date(),
-  effectiveTo: z.date(),
-  mood: z.string().optional(),
-  emoji: z.string().optional(),
-  isDraft: z.boolean().default(true),
-});
+import type { z } from "zod/v4";
+import { createStatusUpdateMutationOptions } from "@/rpc/organization/status-update";
 
 type StatusUpdateFormProps = {
+  initialDate?: string;
+  initialEditorJson?: any;
+  initialIsDraft?: boolean;
   organizationSlug: string;
-  onSuccess?: () => void;
 };
 
-export function StatusUpdateForm({ organizationSlug, onSuccess }: StatusUpdateFormProps) {
-  const { data } = useQuery(getOrganizationQueryOptions(organizationSlug));
-
-  const organization = data?.organization;
-  const member = data?.member;
-
-  const [statusItems, setStatusItems] = useState<
-    Array<{ content: string; isBlocker: boolean; order: number }>
-  >([{ content: "", isBlocker: false, order: 0 }]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+export function StatusUpdateForm({
+  initialDate,
+  initialEditorJson,
+  initialIsDraft,
+  organizationSlug,
+}: StatusUpdateFormProps) {
+  const navigate = useNavigate();
+  const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
+  const [isPublishConfirm, setIsPublishConfirm] = useState(false);
+  const form = useForm({
+    resolver: zodResolver(zStatusUpdateCreate),
     defaultValues: {
-      memberId: member?.id,
-      effectiveFrom: new Date(),
-      effectiveTo: new Date(),
-      isDraft: true,
+      emoji: "",
+      items: [],
+      mood: "",
+      notes: "",
+      teamId: "",
+      editorJson: initialEditorJson ?? null,
+      effectiveFrom: initialDate
+        ? dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate()
+        : new Date(),
+      effectiveTo: initialDate
+        ? dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate()
+        : new Date(),
+      isDraft: initialIsDraft ?? true,
     },
   });
 
-  // Fetch teams for dropdown
-  const { data: teamsData } = useQuery({
-    queryKey: ["teams", organization?.id],
-    queryFn: async () => {
-      if (!organization?.id) return [];
-      const response = await rpc.organization[":idOrSlug"].teams.$get({
-        param: { idOrSlug: organization.id },
-      });
-      if (!response.ok) {
-        throw await response.json();
-      }
-      return response.json();
-    },
-    enabled: !!organization?.id,
-  });
-
-  // Create status update mutation
-  const createStatusUpdate = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const response = await rpc.organization[":idOrSlug"]["status-update"].$post({
-        param: { idOrSlug: organizationSlug },
-        json: values,
-      });
-      if (!response.ok) {
-        throw await response.json();
-      }
-      return response.json();
-    },
-    onSuccess: async (data) => {
-      // Create status items
-      const validItems = statusItems.filter((item) => item.content.trim() !== "");
-
-      for (const item of validItems) {
-        const itemResponse = await rpc.organization[":idOrSlug"]["status-update"].item.$post({
-          param: { idOrSlug: organizationSlug },
-          json: {
-            statusUpdateId: data.id,
-            content: item.content,
-            isBlocker: item.isBlocker,
-            order: item.order,
-          },
-        });
-
-        if (!itemResponse.ok) {
-          throw await itemResponse.json();
-        }
-      }
-
-      toast.success("Status update created");
-      form.reset();
-      setStatusItems([{ content: "", isBlocker: false, order: 0 }]);
-      if (onSuccess) onSuccess();
-    },
-    onError: () => {
-      toast.error("Failed to create status update");
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    createStatusUpdate.mutate(values);
-  }
-
-  function addStatusItem() {
-    setStatusItems([...statusItems, { content: "", isBlocker: false, order: statusItems.length }]);
-  }
-
-  function removeStatusItem(index: number) {
-    if (statusItems.length > 1) {
-      const newItems = [...statusItems];
-      newItems.splice(index, 1);
-      // Update orders
-      const reorderedItems = newItems.map((item, idx) => ({
-        ...item,
-        order: idx,
-      }));
-      setStatusItems(reorderedItems);
+  useEffect(() => {
+    if (initialDate) {
+      form.setValue(
+        "effectiveFrom",
+        dayjs(initialDate, "YYYY-MM-DD", true).startOf("day").toDate(),
+      );
+      form.setValue("effectiveTo", dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDate]);
+
+  useEffect(() => {
+    if (initialEditorJson) {
+      form.setValue("editorJson", initialEditorJson);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialEditorJson]);
+
+  useEffect(() => {
+    if (initialIsDraft) {
+      form.setValue("isDraft", initialIsDraft);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialIsDraft]);
+
+  const effectiveFrom = form.watch("effectiveFrom");
+
+  const queryClient = useQueryClient();
+  const { mutate: createStatusUpdate, isPending } = useMutation(
+    createStatusUpdateMutationOptions(queryClient),
+  );
+
+  function onSubmit(values: z.infer<typeof zStatusUpdateCreate>) {
+    if (!values.isDraft && !isPublishConfirm) {
+      setIsPublishConfirmModalOpen(true);
+      return;
+    }
+
+    createStatusUpdate({
+      param: { idOrSlug: organizationSlug },
+      json: values,
+    });
   }
-
-  function updateStatusItem(index: number, field: string, value: any) {
-    const newItems = [...statusItems];
-    const currentItem = newItems[index] || {
-      content: "",
-      isBlocker: false,
-      order: index,
-    };
-
-    newItems[index] = {
-      ...currentItem,
-      [field]: value,
-    };
-
-    setStatusItems(newItems);
-  }
-
-  // Extract teams from the response for the dropdown
-  const teams = Array.isArray(teamsData) ? teamsData : [];
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="teamId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Team (optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a team" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {teams.map((team: any) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>Select a team this status update is related to</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will publish the status update to the organization.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setIsPublishConfirmModalOpen(false);
+                  setIsPublishConfirm(true);
+                  form.handleSubmit(onSubmit)();
+                }}
+              >
+                Publish
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-          <FormField
-            control={form.control}
-            name="emoji"
-            render={({ field }) => {
-              const [isOpen, setIsOpen] = useState(false);
-              return (
-                <FormItem>
-                  <FormLabel>Mood emoji (optional)</FormLabel>
-                  <FormControl>
-                    <Popover open={isOpen} onOpenChange={setIsOpen}>
-                      <PopoverTrigger asChild>
-                        <div className="relative">
-                          <Input {...field} placeholder="😊" />
-                        </div>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-fit p-0">
-                        <EmojiPicker
-                          className="h-[342px]"
-                          onEmojiSelect={(emoji) => {
-                            field.onChange(emoji.emoji);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <EmojiPickerSearch />
-                          <EmojiPickerContent />
-                          <EmojiPickerFooter />
-                        </EmojiPicker>
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                  <FormDescription>How are you feeling about this update?</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-        </div>
+        <AsyncStatusEditor
+          key={dayjs(effectiveFrom as Date)
+            .startOf("day")
+            .format("YYYY-MM-DD")}
+          date={dayjs(effectiveFrom as Date)
+            .startOf("day")
+            .format("YYYY-MM-DD")}
+          initialContent={initialEditorJson}
+          onDateChange={(date) => {
+            const nextEffectiveFrom = dayjs(date, "YYYY-MM-DD", true).startOf("day").toDate();
+            const nextEffectiveTo = dayjs(date, "YYYY-MM-DD", true).endOf("day").toDate();
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="effectiveFrom"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Effective from</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  When does this status update start being effective?
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            form.setValue("effectiveFrom", nextEffectiveFrom);
+            form.setValue("effectiveTo", nextEffectiveTo);
 
-          <FormField
-            control={form.control}
-            name="effectiveTo"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Effective to</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>When does this status update end?</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            if (effectiveFrom !== nextEffectiveFrom) {
+              navigate({
+                to: "/$organizationSlug/status-update/$statusUpdateId",
+                params: {
+                  organizationSlug,
+                  statusUpdateId: dayjs(nextEffectiveFrom).format("YYYY-MM-DD"),
+                },
+              });
+            }
+          }}
+          onUpdate={(data) => {
+            form.setValue("emoji", data.moodEmoji);
+            form.setValue("mood", data.mood);
+            form.setValue("notes", data.notes);
+            form.setValue("items", data.statusUpdateItems);
+            form.setValue("editorJson", data.editorJson);
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Status Items</h3>
-            <Button type="button" variant="outline" size="sm" onClick={addStatusItem}>
-              Add Item
+            const nextEffectiveFrom = dayjs(data.date).startOf("day").toDate();
+            form.setValue("effectiveFrom", nextEffectiveFrom);
+            form.setValue("effectiveTo", dayjs(data.date).endOf("day").toDate());
+
+            if (form.getValues("isDraft") && !isPending) {
+              form.handleSubmit(onSubmit)();
+            }
+          }}
+        >
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              type="submit"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => {
+                form.setValue("isDraft", true);
+              }}
+            >
+              <BookDashed className="size-4" />
+              Save as draft
+            </Button>
+            <Button
+              size="sm"
+              type="submit"
+              disabled={isPending}
+              onClick={() => {
+                form.setValue("isDraft", false);
+              }}
+            >
+              <BookCheck className="size-4" />
+              Publish
             </Button>
           </div>
-
-          {statusItems.map((item, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="flex-1">
-                <Textarea
-                  placeholder="What's your status update?"
-                  value={item.content}
-                  onChange={(e) => updateStatusItem(index, "content", e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </div>
-              <div className="flex flex-col space-y-2 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={item.isBlocker}
-                    onCheckedChange={(checked) => updateStatusItem(index, "isBlocker", checked)}
-                  />
-                  <span className="text-sm">Blocker</span>
-                </div>
-                {statusItems.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeStatusItem(index)}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <FormField
-          control={form.control}
-          name="isDraft"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Save as draft</FormLabel>
-                <FormDescription>
-                  Keep this as a draft until you're ready to publish
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full" disabled={createStatusUpdate.isPending}>
-          {createStatusUpdate.isPending ? "Creating..." : "Create Status Update"}
-        </Button>
+        </AsyncStatusEditor>
       </form>
     </Form>
   );

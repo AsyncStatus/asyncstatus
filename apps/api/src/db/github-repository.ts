@@ -32,15 +32,18 @@ export const GithubRepository = createSelectSchema(githubRepository, {
   owner: z.string().trim().min(1),
   fullName: z.string().trim().min(1),
 });
+export type GithubRepository = z.output<typeof GithubRepository>;
 export const GithubRepositoryInsert = createInsertSchema(githubRepository, {
   repoId: z.string().trim().min(1),
   name: z.string().trim().min(1),
   owner: z.string().trim().min(1),
   fullName: z.string().trim().min(1),
 });
+export type GithubRepositoryInsert = z.output<typeof GithubRepositoryInsert>;
 export const GithubRepositoryUpdate = createUpdateSchema(githubRepository, {
   repoId: z.string().trim().min(1),
   name: z.string().trim().min(1),
   owner: z.string().trim().min(1),
   fullName: z.string().trim().min(1),
 });
+export type GithubRepositoryUpdate = z.output<typeof GithubRepositoryUpdate>;

@@ -16,6 +16,16 @@ import {
   updateOrganizationContract,
 } from "./organization-contracts";
 
+export const listMemberOrganizationsHandler = typedHandler<
+  TypedHandlersContextWithSession,
+  typeof listMemberOrganizationsContract
+>(listMemberOrganizationsContract, requiredSession, async ({ db, session }) => {
+  return await db.query.organization.findMany({
+    with: { members: { where: eq(member.userId, session.user.id) } },
+    orderBy: [desc(organization.createdAt)],
+  });
+});
+
 export const getOrganizationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof getOrganizationContract
@@ -27,16 +37,6 @@ export const getOrganizationHandler = typedHandler<
     return { organization, member };
   },
 );
-
-export const listMemberOrganizationsHandler = typedHandler<
-  TypedHandlersContextWithSession,
-  typeof listMemberOrganizationsContract
->(listMemberOrganizationsContract, requiredSession, async ({ db, session }) => {
-  return await db.query.organization.findMany({
-    with: { members: { where: eq(member.userId, session.user.id) } },
-    orderBy: [desc(organization.createdAt)],
-  });
-});
 
 export const setActiveOrganizationHandler = typedHandler<
   TypedHandlersContextWithOrganization,

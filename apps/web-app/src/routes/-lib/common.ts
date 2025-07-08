@@ -1,11 +1,11 @@
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import type { QueryClient } from "@tanstack/react-query";
 import { type ParsedLocation, redirect } from "@tanstack/react-router";
-import { sessionBetterAuthQueryOptions, sessionQueryOptions } from "@/rpc/auth";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedQueryOptions } from "@/typed-handlers";
 
 export async function ensureValidSession(queryClient: QueryClient, location: ParsedLocation) {
-  const session = await queryClient.fetchQuery(sessionQueryOptions()).catch(() => {});
+  const session = await queryClient.fetchQuery(sessionBetterAuthQueryOptions()).catch(() => {});
   if (!session?.session) {
     throw redirect({
       to: location.href.includes("/invitation?invitationId=") ? "/sign-up" : "/login",

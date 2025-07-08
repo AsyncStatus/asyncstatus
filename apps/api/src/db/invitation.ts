@@ -31,9 +31,12 @@ export const invitation = sqliteTable(
 export const Invitation = createSelectSchema(invitation, {
   email: z.email(),
 });
+export type Invitation = z.output<typeof Invitation>;
 export const InvitationInsert = createInsertSchema(invitation, {
   email: z.email(),
 });
+export type InvitationInsert = z.output<typeof InvitationInsert>;
 export const InvitationUpdate = createUpdateSchema(invitation, {
   email: z.email(),
 });
+export type InvitationUpdate = z.output<typeof InvitationUpdate>;

@@ -1,5 +1,9 @@
-import type { Organization } from "@asyncstatus/api";
-import { zOrganizationCreate } from "@asyncstatus/api/schema/organization";
+import {
+  createOrganizationContract,
+  getOrganizationContract,
+  listMemberOrganizationsContract,
+} from "@asyncstatus/api/typed-handlers/organization";
+import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
@@ -8,7 +12,6 @@ import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
-import type { z } from "zod/v4";
 import {
   Form,
   FormControl,
@@ -19,40 +22,33 @@ import {
   FormMessage,
 } from "@/components/form";
 import useDebounce from "@/lib/use-debounce";
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  createOrganizationMutationOptions,
-  getOrganizationQueryOptions,
-  listOrganizationsQueryOptions,
-} from "@/rpc/organization/organization";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
-export function CreateOrganizationForm(props: { onSuccess?: (data: Organization) => void }) {
+export function CreateOrganizationForm(props: {
+  onSuccess?: (data: typeof createOrganizationContract.$infer.output) => void;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const form = useForm({
-    resolver: zodResolver(zOrganizationCreate),
+    resolver: zodResolver(createOrganizationContract.inputSchema),
     defaultValues: { name: "", slug: "" },
   });
   const name = form.watch("name");
   const slug = form.watch("slug");
   const [debouncedSlug] = useDebounce(slug, 300);
   const existingOrganization = useQuery({
-    ...getOrganizationQueryOptions(debouncedSlug),
+    ...typedQueryOptions(getOrganizationContract, { idOrSlug: debouncedSlug }),
     retry: 0,
     throwOnError: false,
   });
   const createOrganization = useMutation({
-    ...createOrganizationMutationOptions(),
+    ...typedMutationOptions(createOrganizationContract),
     onSuccess(data) {
-      if (!data.organization) {
-        toast.error("Failed to create organization");
-        return;
-      }
-
       queryClient.invalidateQueries({
-        queryKey: listOrganizationsQueryOptions().queryKey,
+        queryKey: typedQueryOptions(listMemberOrganizationsContract, {}).queryKey,
       });
-      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
+      queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
         if (!sessionData) {
           return sessionData;
         }
@@ -64,10 +60,7 @@ export function CreateOrganizationForm(props: { onSuccess?: (data: Organization)
           },
         };
       });
-      props.onSuccess?.({
-        ...data.organization,
-        createdAt: new Date(data.organization.createdAt),
-      });
+      props.onSuccess?.(data);
       navigate({
         to: "/$organizationSlug",
         params: { organizationSlug: data.organization.slug || "" },
@@ -78,8 +71,12 @@ export function CreateOrganizationForm(props: { onSuccess?: (data: Organization)
     },
   });
 
-  const onSubmit = (values: z.infer<typeof zOrganizationCreate>) => {
-    createOrganization.mutate(values);
+  const onSubmit = (values: typeof createOrganizationContract.$infer.input) => {
+    if (existingOrganization.data?.organization.slug === values.slug) {
+      toast.error("Organization already exists");
+      return;
+    }
+    createOrganization.mutate(serializeFormData(values));
   };
 
   return (
@@ -113,11 +110,7 @@ export function CreateOrganizationForm(props: { onSuccess?: (data: Organization)
 
         <Button
           type="submit"
-          disabled={
-            createOrganization.isPending ||
-            existingOrganization.isPending ||
-            Boolean(existingOrganization.data)
-          }
+          disabled={createOrganization.isPending || existingOrganization.isPending}
         >
           Create organization
         </Button>

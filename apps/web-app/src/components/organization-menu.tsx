@@ -1,4 +1,8 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import {
+  listMemberOrganizationsContract,
+  setActiveOrganizationContract,
+} from "@asyncstatus/api/typed-handlers/organization";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Dialog,
@@ -24,25 +28,21 @@ import {
 } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Check, ChevronsUpDown, Plus } from "@asyncstatus/ui/icons";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { getInitials } from "@/lib/utils";
-import { sessionQueryOptions } from "@/rpc/auth";
-import {
-  listOrganizationsQueryOptions,
-  setActiveOrganizationMutationOptions,
-} from "@/rpc/organization/organization";
-import { typedUrl } from "@/typed-handlers";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { CreateOrganizationForm } from "./create-organization-form";
 
 export function OrganizationMenu(props: { organizationSlug: string }) {
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const session = useSuspenseQuery(sessionQueryOptions());
-  const organizations = useSuspenseQuery({
-    ...listOrganizationsQueryOptions(),
+  const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
+  const organizations = useQuery({
+    ...typedQueryOptions(listMemberOrganizationsContract, {}),
     select(data) {
       if (!session.data?.session.activeOrganizationId) {
         return data;
@@ -51,28 +51,29 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
       return data.sort((a) => (session.data?.session.activeOrganizationId === a.id ? -1 : 1));
     },
   });
-  const setActiveOrganization = useMutation({
-    ...setActiveOrganizationMutationOptions(),
-    onMutate(data) {
-      if (data?.idOrSlug) {
-        navigate({
-          to: "/$organizationSlug",
-          params: { organizationSlug: data.idOrSlug },
-        });
-      }
-    },
-    onSuccess(data) {
-      queryClient.setQueryData(sessionQueryOptions().queryKey, (sessionData) => {
-        if (!sessionData) {
-          return sessionData;
+  const setActiveOrganization = useMutation(
+    typedMutationOptions(setActiveOrganizationContract, {
+      onMutate(data) {
+        if (!(data instanceof FormData)) {
+          navigate({
+            to: "/$organizationSlug",
+            params: { organizationSlug: data.idOrSlug },
+          });
         }
-        return {
-          ...sessionData,
-          session: { ...sessionData.session, activeOrganizationId: data.id },
-        };
-      });
-    },
-  });
+      },
+      onSuccess(data) {
+        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+          if (!sessionData) {
+            return sessionData;
+          }
+          return {
+            ...sessionData,
+            session: { ...sessionData.session, activeOrganizationId: data.id },
+          };
+        });
+      },
+    }),
+  );
   const [createOrganizationDialogOpen, setCreateOrganizationDialogOpen] = useState(false);
   const activeOrganization = useMemo(
     () => organizations.data?.find((o) => o.slug === props.organizationSlug),
@@ -197,7 +198,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
               setCreateOrganizationDialogOpen(false);
               navigate({
                 to: "/$organizationSlug",
-                params: { organizationSlug: data.slug },
+                params: { organizationSlug: data.organization.slug },
               });
             }}
           />

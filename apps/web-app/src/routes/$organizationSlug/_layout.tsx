@@ -1,10 +1,11 @@
+import { listMemberOrganizationsContract } from "@asyncstatus/api/typed-handlers/organization";
 import { SidebarInset, SidebarProvider } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar";
 import { ensureValidOrganization, ensureValidSession } from "@/routes/-lib/common";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
-import { listOrganizationsQueryOptions } from "@/rpc/organization/organization";
 import { listTeamsQueryOptions } from "@/rpc/organization/teams";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout")({
   component: RouteComponent,
@@ -13,9 +14,9 @@ export const Route = createFileRoute("/$organizationSlug/_layout")({
     const [session, organization, organizations, members, teams] = await Promise.all([
       ensureValidSession(queryClient, location),
       ensureValidOrganization(queryClient, organizationSlug),
-      queryClient.ensureQueryData(listOrganizationsQueryOptions()),
-      queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
+      queryClient.prefetchQuery(typedQueryOptions(listMemberOrganizationsContract, {})),
+      queryClient.prefetchQuery(listMembersQueryOptions(organizationSlug)),
+      queryClient.prefetchQuery(listTeamsQueryOptions(organizationSlug)),
     ]);
     return { session, organization, organizations, members, teams };
   },

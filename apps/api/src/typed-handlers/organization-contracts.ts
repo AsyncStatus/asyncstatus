@@ -2,21 +2,21 @@ import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
 import { Member, Organization, OrganizationUpdate, Team, TeamMembership } from "../db";
 
-export const getOrganizationContract = typedContract(
-  "get /organizations/:idOrSlug",
-  z.strictObject({ idOrSlug: z.string().min(1) }),
-  z.strictObject({ organization: Organization, member: Member }),
-);
-
 export const listMemberOrganizationsContract = typedContract(
   "get /organizations/member",
-  z.undefined(),
+  z.strictObject({}),
   z.array(
     z.strictObject({
       ...Organization.shape,
       members: z.array(Member),
     }),
   ),
+);
+
+export const getOrganizationContract = typedContract(
+  "get /organizations/:idOrSlug",
+  z.strictObject({ idOrSlug: z.string().min(1) }),
+  z.strictObject({ organization: Organization, member: Member }),
 );
 
 export const setActiveOrganizationContract = typedContract(

@@ -1,3 +1,4 @@
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,8 +21,7 @@ import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { GenerateStatusButton } from "@/components/generate-status-button";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
-
+import { typedQueryOptions } from "@/typed-handlers";
 import { EmptyState } from "../../components/empty-state";
 import { StatusUpdateCard } from "../../components/status-update-card";
 import { rpc } from "../../rpc/rpc";
@@ -38,7 +38,11 @@ const filterOptions = {
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const organizationQuery = useQuery(getOrganizationQueryOptions(organizationSlug));
+  const organizationQuery = useQuery(
+    typedQueryOptions(getOrganizationContract, {
+      idOrSlug: organizationSlug,
+    }),
+  );
   const organization = organizationQuery.data?.organization;
   const member = organizationQuery.data?.member;
 
@@ -50,7 +54,7 @@ function RouteComponent() {
     queryFn: async () => {
       if (!organization?.id) return [];
 
-      let result;
+      let result: any;
       if (filter === "mine" && member) {
         result = await rpc.organization[":idOrSlug"]["status-update"].member[":memberId"].$get({
           param: { memberId: member.id, idOrSlug: organizationSlug },

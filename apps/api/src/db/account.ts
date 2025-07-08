@@ -33,11 +33,14 @@ export const Account = createSelectSchema(account, {
   accountId: z.string().trim().min(1),
   providerId: z.string().trim().min(1),
 });
+export type Account = z.output<typeof Account>;
 export const AccountInsert = createInsertSchema(account, {
   accountId: z.string().trim().min(1),
   providerId: z.string().trim().min(1),
 });
+export type AccountInsert = z.output<typeof AccountInsert>;
 export const AccountUpdate = createUpdateSchema(account, {
   accountId: z.string().trim().min(1),
   providerId: z.string().trim().min(1),
 });
+export type AccountUpdate = z.output<typeof AccountUpdate>;

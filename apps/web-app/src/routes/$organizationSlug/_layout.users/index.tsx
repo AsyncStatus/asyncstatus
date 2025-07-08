@@ -1,5 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
@@ -43,7 +44,7 @@ import {
   UserRound,
   Users,
 } from "@asyncstatus/ui/icons";
-import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -51,19 +52,18 @@ import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials, upperFirst } from "@/lib/utils";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
-import {
-  cancelInvitationMutationOptions,
-  getOrganizationQueryOptions,
-} from "@/rpc/organization/organization";
-import { typedMutationOptions, typedUrl } from "@/typed-handlers";
+import { cancelInvitationMutationOptions } from "@/rpc/organization/organization";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   component: RouteComponent,
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
     await Promise.all([
-      queryClient.ensureQueryData(listMembersQueryOptions(organizationSlug)),
-      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
+      queryClient.prefetchQuery(listMembersQueryOptions(organizationSlug)),
+      queryClient.prefetchQuery(
+        typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+      ),
     ]);
   },
 });
@@ -74,12 +74,10 @@ function RouteComponent() {
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [tab, setTab] = useState<string>("members");
-  const [organization, members] = useSuspenseQueries({
-    queries: [
-      getOrganizationQueryOptions(organizationSlug),
-      listMembersQueryOptions(organizationSlug),
-    ],
-  });
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+  );
+  const members = useQuery(listMembersQueryOptions(organizationSlug));
   const updateMember = useMutation({
     ...typedMutationOptions(updateMemberContract),
     onSuccess: () => {
@@ -100,21 +98,21 @@ function RouteComponent() {
     organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
   // Filter members based on archived status and search query
-  const activeMembers = members.data.members?.filter(
+  const activeMembers = members.data?.members?.filter(
     (member) =>
       !member?.archivedAt &&
       (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const archivedMembers = members.data.members?.filter(
+  const archivedMembers = members.data?.members?.filter(
     (member) =>
       member?.archivedAt &&
       (member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.user.email?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const filteredInvitations = members.data.invitations?.filter((invitation) =>
+  const filteredInvitations = members.data?.invitations?.filter((invitation) =>
     invitation.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -204,7 +202,7 @@ function RouteComponent() {
               <span className="hidden sm:inline">Invitations</span>
               <span className="sm:hidden">Inv.</span>
               <span className="text-muted-foreground/60 text-xs">
-                {members.data.invitations?.length ?? 0}
+                {members.data?.invitations?.length ?? 0}
               </span>
             </TabsTrigger>
           </TabsList>

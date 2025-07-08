@@ -1,4 +1,5 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,32 +42,30 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Calendar, Edit, Plus, Search, Trash, UserRound, Users } from "@asyncstatus/ui/icons";
-import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { AddTeamMemberForm } from "@/components/add-team-member-form";
 import { UpdateTeamForm } from "@/components/update-team-form";
-
 import { getInitials, upperFirst } from "@/lib/utils";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import {
   deleteTeamMutationOptions,
   getTeamMembersQueryOptions,
   getTeamQueryOptions,
   removeTeamMemberMutationOptions,
 } from "@/rpc/organization/teams";
-import { typedUrl } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/$teamId")({
   component: TeamDetailsPage,
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug, teamId } }) => {
-    await Promise.all([
-      queryClient.ensureQueryData(getTeamQueryOptions(organizationSlug, teamId)),
-      queryClient.ensureQueryData(getTeamMembersQueryOptions(organizationSlug, teamId)),
-      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
-    ]);
+    queryClient.prefetchQuery(getTeamQueryOptions(organizationSlug, teamId));
+    queryClient.prefetchQuery(getTeamMembersQueryOptions(organizationSlug, teamId));
+    queryClient.prefetchQuery(
+      typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+    );
   },
 });
 
@@ -79,13 +78,11 @@ function TeamDetailsPage() {
   const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const [team, teamMembers, organization] = useSuspenseQueries({
-    queries: [
-      getTeamQueryOptions(organizationSlug, teamId),
-      getTeamMembersQueryOptions(organizationSlug, teamId),
-      getOrganizationQueryOptions(organizationSlug),
-    ],
-  });
+  const team = useQuery(getTeamQueryOptions(organizationSlug, teamId));
+  const teamMembers = useQuery(getTeamMembersQueryOptions(organizationSlug, teamId));
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+  );
 
   const removeTeamMember = useMutation({
     ...removeTeamMemberMutationOptions(),
@@ -117,7 +114,7 @@ function TeamDetailsPage() {
     organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
   // Filter members based on search query
-  const filteredMembers = teamMembers.data.filter(
+  const filteredMembers = teamMembers.data?.filter(
     (membership) =>
       membership.member.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       membership.member.user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -140,7 +137,7 @@ function TeamDetailsPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{team.data.name}</BreadcrumbPage>
+                <BreadcrumbPage>{team.data?.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -200,7 +197,7 @@ function TeamDetailsPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete the team &quot;{team.data.name}
+                      This will permanently delete the team &quot;{team.data?.name}
                       &quot; and remove all member associations. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -254,7 +251,7 @@ function TeamDetailsPage() {
 
       <div className="py-4">
         <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredMembers.length === 0 ? (
+          {filteredMembers?.length === 0 ? (
             <div className="text-muted-foreground col-span-full py-8 text-center">
               <Users className="mx-auto mb-2 size-10 opacity-50" />
               <p className="text-base sm:text-lg font-medium">No team members found</p>
@@ -265,7 +262,7 @@ function TeamDetailsPage() {
               </p>
             </div>
           ) : (
-            filteredMembers.map((membership) => (
+            filteredMembers?.map((membership) => (
               <Card key={membership.id} className="overflow-hidden pb-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">

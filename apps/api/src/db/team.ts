@@ -16,9 +16,12 @@ export const team = sqliteTable("team", {
 export const Team = createSelectSchema(team, {
   name: z.string().trim().min(1),
 });
+export type Team = z.output<typeof Team>;
 export const TeamInsert = createInsertSchema(team, {
   name: z.string().trim().min(1),
 });
+export type TeamInsert = z.output<typeof TeamInsert>;
 export const TeamUpdate = createUpdateSchema(team, {
   name: z.string().trim().min(1),
 });
+export type TeamUpdate = z.output<typeof TeamUpdate>;

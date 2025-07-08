@@ -9,6 +9,9 @@
     "./auth": {
       "types": "./src/lib/auth.tsx"
     },
+    "./db/*": {
+      "types": "./src/db/*.ts"
+    },
     "./schema/*": "./src/schema/*.ts",
     "./errors": "./src/errors/index.ts",
     "./typed-handlers/*": "./src/typed-handlers/*-contracts.ts"

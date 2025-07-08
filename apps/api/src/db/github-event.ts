@@ -37,13 +37,16 @@ export const GithubEvent = createSelectSchema(githubEvent, {
   githubActorId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
+export type GithubEvent = z.output<typeof GithubEvent>;
 export const GithubEventInsert = createInsertSchema(githubEvent, {
   githubId: z.string().trim().min(1),
   githubActorId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
+export type GithubEventInsert = z.output<typeof GithubEventInsert>;
 export const GithubEventUpdate = createUpdateSchema(githubEvent, {
   githubId: z.string().trim().min(1),
   githubActorId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
+export type GithubEventUpdate = z.output<typeof GithubEventUpdate>;

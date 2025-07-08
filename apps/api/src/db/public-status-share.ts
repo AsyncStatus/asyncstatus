@@ -31,9 +31,12 @@ export const publicStatusShare = sqliteTable(
 export const PublicStatusShare = createSelectSchema(publicStatusShare, {
   slug: z.string().trim().min(1),
 });
+export type PublicStatusShare = z.output<typeof PublicStatusShare>;
 export const PublicStatusShareInsert = createInsertSchema(publicStatusShare, {
   slug: z.string().trim().min(1),
 });
+export type PublicStatusShareInsert = z.output<typeof PublicStatusShareInsert>;
 export const PublicStatusShareUpdate = createUpdateSchema(publicStatusShare, {
   slug: z.string().trim().min(1),
 });
+export type PublicStatusShareUpdate = z.output<typeof PublicStatusShareUpdate>;

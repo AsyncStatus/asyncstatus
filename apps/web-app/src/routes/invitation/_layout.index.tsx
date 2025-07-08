@@ -14,7 +14,7 @@ import { Mail, User } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { getInitials } from "@/lib/utils";
-import { sessionQueryOptions } from "@/rpc/auth";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import {
   acceptInvitationMutationOptions,
   getInvitationByEmailQueryOptions,
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/invitation/_layout/")({
   component: RouteComponent,
   beforeLoad: async ({ context: { queryClient }, search, location }) => {
     const [session, invitation] = await Promise.all([
-      queryClient.ensureQueryData(sessionQueryOptions()).catch(() => {}),
+      queryClient.ensureQueryData(sessionBetterAuthQueryOptions()).catch(() => {}),
       queryClient.ensureQueryData(
         getInvitationByEmailQueryOptions(search.invitationId, search.invitationEmail, false),
       ),

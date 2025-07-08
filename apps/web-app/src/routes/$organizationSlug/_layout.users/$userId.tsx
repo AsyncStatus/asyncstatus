@@ -1,5 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getMemberContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
@@ -18,42 +19,38 @@ import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/components/tabs";
 import { Archive, Calendar, Copy, Mail, Trash, Users } from "@asyncstatus/ui/icons";
-import { useMutation, useQueryClient, useSuspenseQueries } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials } from "@/lib/utils";
 import { listMembersQueryOptions } from "@/rpc/organization/member";
-import { getOrganizationQueryOptions } from "@/rpc/organization/organization";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/$userId")({
   component: RouteComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug, userId } }) => {
-    await Promise.all([
-      queryClient.ensureQueryData(
-        typedQueryOptions(getMemberContract, {
-          idOrSlug: organizationSlug,
-          memberId: userId,
-        }),
-      ),
-      queryClient.ensureQueryData(getOrganizationQueryOptions(organizationSlug)),
-    ]);
+    queryClient.prefetchQuery(
+      typedQueryOptions(getMemberContract, {
+        idOrSlug: organizationSlug,
+        memberId: userId,
+      }),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+    );
   },
 });
 
 function RouteComponent() {
   const { organizationSlug, userId } = Route.useParams();
   const queryClient = useQueryClient();
-  const [member, organization] = useSuspenseQueries({
-    queries: [
-      typedQueryOptions(getMemberContract, {
-        idOrSlug: organizationSlug,
-        memberId: userId,
-      }),
-      getOrganizationQueryOptions(organizationSlug),
-    ],
-  });
+  const member = useQuery(
+    typedQueryOptions(getMemberContract, { idOrSlug: organizationSlug, memberId: userId }),
+  );
+  const organization = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+  );
   const updateMember = useMutation({
     ...typedMutationOptions(updateMemberContract),
     onSuccess: () => {

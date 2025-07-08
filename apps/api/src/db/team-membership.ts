@@ -25,11 +25,14 @@ export const TeamMembership = createSelectSchema(teamMembership, {
   teamId: z.string().trim().min(1),
   memberId: z.string().trim().min(1),
 });
+export type TeamMembership = z.output<typeof TeamMembership>;
 export const TeamMembershipInsert = createInsertSchema(teamMembership, {
   teamId: z.string().trim().min(1),
   memberId: z.string().trim().min(1),
 });
+export type TeamMembershipInsert = z.output<typeof TeamMembershipInsert>;
 export const TeamMembershipUpdate = createUpdateSchema(teamMembership, {
   teamId: z.string().trim().min(1),
   memberId: z.string().trim().min(1),
 });
+export type TeamMembershipUpdate = z.output<typeof TeamMembershipUpdate>;

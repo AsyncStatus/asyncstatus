@@ -26,7 +26,7 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 import { Suspense } from "react";
-import { sendVerificationEmailMutationOptions, sessionQueryOptions } from "@/rpc/auth";
+import { sendVerificationEmailMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 
 import { OrganizationMenu, OrganizationMenuSkeleton } from "./organization-menu";
@@ -128,7 +128,7 @@ function AppSidebarTeamsSkeleton() {
 }
 
 function AppSidebarUserEmailNotVerified() {
-  const session = useSuspenseQuery(sessionQueryOptions());
+  const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
   const sendVerificationEmail = useMutation({
     ...sendVerificationEmailMutationOptions(),
     onSuccess() {

@@ -24,7 +24,7 @@ import { ShareIcon } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { formatInTimezone } from "@/lib/timezone";
-import { sessionQueryOptions } from "@/rpc/auth";
+import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedUrl } from "@/typed-handlers";
 
 type StatusUpdateItem = {
@@ -68,7 +68,7 @@ export function StatusUpdateCard({
   statusUpdate,
   onShare,
 }: StatusUpdateCardProps) {
-  const session = useSuspenseQuery(sessionQueryOptions());
+  const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
   const effectiveFrom = new Date(statusUpdate.effectiveFrom);
   const effectiveTo = new Date(statusUpdate.effectiveTo);
 

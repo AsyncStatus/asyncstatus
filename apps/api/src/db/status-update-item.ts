@@ -29,15 +29,18 @@ export const StatusUpdateItem = createSelectSchema(statusUpdateItem, {
   isInProgress: z.boolean(),
   order: z.number(),
 });
+export type StatusUpdateItem = z.output<typeof StatusUpdateItem>;
 export const StatusUpdateItemInsert = createInsertSchema(statusUpdateItem, {
   content: z.string().trim().min(1),
   isBlocker: z.boolean(),
   isInProgress: z.boolean(),
   order: z.number(),
 });
+export type StatusUpdateItemInsert = z.output<typeof StatusUpdateItemInsert>;
 export const StatusUpdateItemUpdate = createUpdateSchema(statusUpdateItem, {
   content: z.string().trim().min(1),
   isBlocker: z.boolean(),
   isInProgress: z.boolean(),
   order: z.number(),
 });
+export type StatusUpdateItemUpdate = z.output<typeof StatusUpdateItemUpdate>;

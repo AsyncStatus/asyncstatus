@@ -19,11 +19,14 @@ export const Organization = createSelectSchema(organization, {
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
 });
+export type Organization = z.output<typeof Organization>;
 export const OrganizationInsert = createInsertSchema(organization, {
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
 });
+export type OrganizationInsert = z.output<typeof OrganizationInsert>;
 export const OrganizationUpdate = createUpdateSchema(organization, {
   name: z.string().trim().min(1),
   slug: z.string().trim().min(1),
 });
+export type OrganizationUpdate = z.output<typeof OrganizationUpdate>;
