@@ -1,5 +1,5 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { listMembersContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -51,7 +51,6 @@ import { useState } from "react";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials, upperFirst } from "@/lib/utils";
-import { listMembersQueryOptions } from "@/rpc/organization/member";
 import { cancelInvitationMutationOptions } from "@/rpc/organization/organization";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
@@ -60,7 +59,9 @@ export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
     await Promise.all([
-      queryClient.prefetchQuery(listMembersQueryOptions(organizationSlug)),
+      queryClient.prefetchQuery(
+        typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }),
+      ),
       queryClient.prefetchQuery(
         typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
       ),
@@ -77,12 +78,12 @@ function RouteComponent() {
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
-  const members = useQuery(listMembersQueryOptions(organizationSlug));
+  const members = useQuery(typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }));
   const updateMember = useMutation({
     ...typedMutationOptions(updateMemberContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: listMembersQueryOptions(organizationSlug).queryKey,
+        queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
       });
     },
   });
@@ -90,7 +91,7 @@ function RouteComponent() {
     ...cancelInvitationMutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: listMembersQueryOptions(organizationSlug).queryKey,
+        queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
       });
     },
   });
@@ -117,7 +118,7 @@ function RouteComponent() {
   );
 
   // Function to render archive date
-  const formatArchiveDate = (archivedAt: string | null) => {
+  const formatArchiveDate = (archivedAt: Date | null) => {
     return archivedAt ? dayjs(archivedAt).format("MMM D, YYYY") : "Unknown";
   };
 

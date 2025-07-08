@@ -1,5 +1,9 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { getMemberContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import {
+  getMemberContract,
+  listMembersContract,
+  updateMemberContract,
+} from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -34,7 +38,6 @@ import { useForm } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
 import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
-import { listMembersQueryOptions } from "@/rpc/organization/member";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { Form } from "./form";
 
@@ -106,7 +109,9 @@ export function UpdateMemberForm(props: {
     ...typedMutationOptions(updateMemberContract),
     onSuccess(data) {
       queryClient.invalidateQueries({
-        queryKey: listMembersQueryOptions(props.organizationSlugOrId).queryKey,
+        queryKey: typedQueryOptions(listMembersContract, {
+          idOrSlug: props.organizationSlugOrId,
+        }).queryKey,
       });
       queryClient.invalidateQueries({
         queryKey: typedQueryOptions(getMemberContract, {

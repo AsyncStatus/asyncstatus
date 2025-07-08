@@ -1,5 +1,9 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { getMemberContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import {
+  getMemberContract,
+  listMembersContract,
+  updateMemberContract,
+} from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -24,7 +28,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials } from "@/lib/utils";
-import { listMembersQueryOptions } from "@/rpc/organization/member";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/$userId")({
@@ -55,7 +58,7 @@ function RouteComponent() {
     ...typedMutationOptions(updateMemberContract),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: listMembersQueryOptions(organizationSlug).queryKey,
+        queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
       });
     },
   });

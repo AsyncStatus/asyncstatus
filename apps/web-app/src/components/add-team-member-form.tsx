@@ -1,4 +1,5 @@
 import { zTeamMemberAdd } from "@asyncstatus/api/schema/organization";
+import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Command,
@@ -16,12 +17,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { listMembersQueryOptions } from "@/rpc/organization/member";
 import {
   addTeamMemberMutationOptions,
   getTeamMembersQueryOptions,
   getTeamQueryOptions,
 } from "@/rpc/organization/teams";
+import { typedQueryOptions } from "@/typed-handlers";
 
 export function AddTeamMemberForm(props: {
   organizationSlug: string;
@@ -41,7 +42,7 @@ export function AddTeamMemberForm(props: {
 
   // Query to get all organization members to show in the dropdown
   const { data: membersData, isLoading: membersLoading } = useQuery(
-    listMembersQueryOptions(props.organizationSlug),
+    typedQueryOptions(listMembersContract, { idOrSlug: props.organizationSlug }),
   );
 
   // Query to get current team members to filter them out

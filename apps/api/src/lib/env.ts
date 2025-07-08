@@ -99,6 +99,7 @@ export async function createContext(c: Context<HonoEnv>) {
     voyageClient,
     githubWebhooks,
     session,
+    webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
     bucket: {
       private: c.env.PRIVATE_BUCKET,

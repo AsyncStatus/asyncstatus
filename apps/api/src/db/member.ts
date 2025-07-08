@@ -4,8 +4,8 @@ import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./co
 import { organization } from "./organization";
 import { user } from "./user";
 
-export const memberRole = z.enum(["member", "admin", "owner"]);
-export type MemberRole = z.infer<typeof memberRole>;
+export const MemberRole = z.enum(["member", "admin", "owner"]);
+export type MemberRole = z.infer<typeof MemberRole>;
 
 export const member = sqliteTable(
   "member",
@@ -30,14 +30,14 @@ export const member = sqliteTable(
 );
 
 export const Member = createSelectSchema(member, {
-  role: memberRole,
+  role: MemberRole,
 });
 export type Member = z.output<typeof Member>;
 export const MemberInsert = createInsertSchema(member, {
-  role: memberRole,
+  role: MemberRole,
 });
 export type MemberInsert = z.output<typeof MemberInsert>;
 export const MemberUpdate = createUpdateSchema(member, {
-  role: memberRole,
+  role: MemberRole,
 });
 export type MemberUpdate = z.output<typeof MemberUpdate>;

@@ -1,4 +1,4 @@
-import { zOrganizationCreateInvite } from "@asyncstatus/api/schema/organization";
+import { inviteMemberContract, listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -19,29 +19,20 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
-import { inviteMemberMutationOptions, listMembersQueryOptions } from "@/rpc/organization/member";
 import { listTeamsQueryOptions } from "@/rpc/organization/teams";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function InviteMemberForm(props: {
   organizationSlug: string;
-  onSuccess?: (data: {
-    id: string;
-    email: string;
-    status: "pending" | "accepted" | "rejected" | "canceled";
-    expiresAt: string;
-    organizationId: string;
-    role: string;
-    inviterId: string;
-    teamId?: string | undefined;
-  }) => void;
+  onSuccess?: (data: typeof inviteMemberContract.$infer.output) => void;
 }) {
   const queryClient = useQueryClient();
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const [teamPopoverOpen, setTeamPopoverOpen] = useState(false);
   const form = useForm({
-    resolver: zodResolver(zOrganizationCreateInvite),
+    resolver: zodResolver(inviteMemberContract.inputSchema),
     defaultValues: {
+      idOrSlug: props.organizationSlug,
       firstName: "",
       lastName: "",
       email: "",
@@ -59,34 +50,29 @@ export function InviteMemberForm(props: {
       form.setValue("teamId", teams.data[0].id);
     }
   }, [teams.data, form]);
-  const inviteMember = useMutation({
-    ...inviteMemberMutationOptions(),
-    onSuccess(data) {
-      queryClient.invalidateQueries({
-        queryKey: listMembersQueryOptions(props.organizationSlug).queryKey,
-      });
-      props.onSuccess?.({
-        ...data,
-        status: data.status as "pending" | "accepted" | "rejected" | "canceled",
-        role: data.role as "member" | "admin" | "owner",
-        teamId: data.teamId ?? undefined,
-      });
-    },
-  });
+
+  useEffect(() => {
+    form.setValue("idOrSlug", props.organizationSlug);
+  }, [props.organizationSlug, form]);
+
+  const inviteMember = useMutation(
+    typedMutationOptions(inviteMemberContract, {
+      onSuccess(data) {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listMembersContract, {
+            idOrSlug: props.organizationSlug,
+          }).queryKey,
+        });
+        props.onSuccess?.(data);
+      },
+    }),
+  );
   const isOwner = organization.data.member.role === "owner";
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) => {
-          inviteMember.mutate({
-            param: { idOrSlug: props.organizationSlug },
-            json: {
-              email: data.email,
-              role: data.role,
-              firstName: data.firstName,
-              lastName: data.lastName,
-            },
-          });
+          inviteMember.mutate(data);
         })}
         className="mx-auto w-full space-y-24"
       >

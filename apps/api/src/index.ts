@@ -17,14 +17,18 @@ import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
-import { memberRouter } from "./routers/organization/member";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { teamsRouter } from "./routers/organization/teams";
 import { waitlistRouter } from "./routers/waitlist";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
-import { getMemberHandler, updateMemberHandler } from "./typed-handlers/member-handlers";
+import {
+  getMemberHandler,
+  inviteMemberHandler,
+  listMembersHandler,
+  updateMemberHandler,
+} from "./typed-handlers/member-handlers";
 import {
   createOrganizationHandler,
   getOrganizationHandler,
@@ -74,7 +78,6 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
-  .route("/organization", memberRouter)
   .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
@@ -111,6 +114,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     getInvitationHandler,
     updateMemberHandler,
     getMemberHandler,
+    listMembersHandler,
+    inviteMemberHandler,
     getFileHandler,
     listMemberOrganizationsHandler,
     getOrganizationHandler,
@@ -132,6 +137,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       authKv: c.env.AS_PROD_AUTH_KV,
       organization: c.get("organization" as any),
       member: c.get("member" as any),
+      webAppUrl: c.env.WEB_APP_URL,
     }),
   },
 );
