@@ -1,10 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppSidebarSkeleton } from "@/components/app-sidebar";
-import {
-  ensureValidOrganization,
-  ensureValidSession,
-  getDefaultOrganization,
-} from "@/routes/-lib/common";
+import { ensureValidOrganization, ensureValidSession } from "@/routes/-lib/common";
 
 export const Route = createFileRoute("/_layout")({
   component: RouteComponent,
@@ -12,14 +8,7 @@ export const Route = createFileRoute("/_layout")({
   loader: async ({ context: { queryClient }, location }) => {
     const { session } = await ensureValidSession(queryClient, location);
     if (!session.activeOrganizationId) {
-      const defaultOrganization = await getDefaultOrganization(queryClient);
-      if (!defaultOrganization) {
-        throw redirect({ to: "/create-organization" });
-      }
-      throw redirect({
-        to: "/$organizationSlug",
-        params: { organizationSlug: defaultOrganization.slug },
-      });
+      throw redirect({ to: "/create-organization" });
     }
     const { organization } = await ensureValidOrganization(
       queryClient,

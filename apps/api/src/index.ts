@@ -29,7 +29,7 @@ import { getMemberHandler, updateMemberHandler } from "./typed-handlers/member-h
 import {
   createOrganizationHandler,
   getOrganizationHandler,
-  listOrganizationsHandler,
+  listMemberOrganizationsHandler,
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
@@ -115,7 +115,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     getMemberHandler,
     getFileHandler,
     getOrganizationHandler,
-    listOrganizationsHandler,
+    listMemberOrganizationsHandler,
     setActiveOrganizationHandler,
     createOrganizationHandler,
     updateOrganizationHandler,

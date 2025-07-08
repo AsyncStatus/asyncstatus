@@ -8,8 +8,8 @@ export const getOrganizationContract = typedContract(
   z.strictObject({ organization: Organization, member: Member }),
 );
 
-export const listOrganizationsContract = typedContract(
-  "get /organizations",
+export const listMemberOrganizationsContract = typedContract(
+  "get /organizations/member",
   z.undefined(),
   z.array(
     z.strictObject({

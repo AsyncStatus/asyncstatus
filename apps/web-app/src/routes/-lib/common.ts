@@ -1,7 +1,4 @@
-import {
-  getOrganizationContract,
-  listOrganizationsContract,
-} from "@asyncstatus/api/typed-handlers/organization";
+import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import type { QueryClient } from "@tanstack/react-query";
 import { type ParsedLocation, redirect } from "@tanstack/react-router";
 import { sessionBetterAuthQueryOptions, sessionQueryOptions } from "@/rpc/auth";
@@ -26,17 +23,6 @@ export async function ensureNotLoggedIn(queryClient: QueryClient, search: { redi
   }
 }
 
-export async function getDefaultOrganization(queryClient: QueryClient) {
-  const orgs = await queryClient
-    .fetchQuery(typedQueryOptions(listOrganizationsContract, undefined, { throwOnError: false }))
-    .catch(() => {});
-  if (!orgs || orgs.length === 0 || !orgs[0]) {
-    throw redirect({ to: "/create-organization" });
-  }
-
-  return orgs[0];
-}
-
 export async function ensureValidOrganization(
   queryClient: QueryClient,
   organizationIdOrSlug: string,
@@ -51,11 +37,17 @@ export async function ensureValidOrganization(
     )
     .catch(() => {});
   if (!org?.organization.slug) {
-    const org = await getDefaultOrganization(queryClient);
-    throw redirect({
-      to: "/$organizationSlug",
-      params: { organizationSlug: org.slug },
-    });
+    const session = await queryClient.fetchQuery(sessionBetterAuthQueryOptions()).catch(() => {});
+    if (
+      session?.session.activeOrganizationId &&
+      session.session.activeOrganizationId !== org?.organization.id
+    ) {
+      throw redirect({
+        to: "/$organizationSlug",
+        params: { organizationSlug: session.session.activeOrganizationId as string },
+      });
+    }
+    throw redirect({ to: "/create-organization" });
   }
 
   return org;

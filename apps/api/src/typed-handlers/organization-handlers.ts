@@ -1,6 +1,6 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { member, organization, team, teamMembership } from "../db";
 import type { Session } from "../lib/auth";
 import type {
@@ -11,7 +11,7 @@ import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createOrganizationContract,
   getOrganizationContract,
-  listOrganizationsContract,
+  listMemberOrganizationsContract,
   setActiveOrganizationContract,
   updateOrganizationContract,
 } from "./organization-contracts";
@@ -28,12 +28,13 @@ export const getOrganizationHandler = typedHandler<
   },
 );
 
-export const listOrganizationsHandler = typedHandler<
+export const listMemberOrganizationsHandler = typedHandler<
   TypedHandlersContextWithSession,
-  typeof listOrganizationsContract
->(listOrganizationsContract, requiredSession, async ({ db, session }) => {
+  typeof listMemberOrganizationsContract
+>(listMemberOrganizationsContract, requiredSession, async ({ db, session }) => {
   return await db.query.organization.findMany({
     with: { members: { where: eq(member.userId, session.user.id) } },
+    orderBy: [desc(organization.createdAt)],
   });
 });
 
