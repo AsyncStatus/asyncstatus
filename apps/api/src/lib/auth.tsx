@@ -141,7 +141,6 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         },
       },
       cookiePrefix: "as",
-      crossSubDomainCookies: { enabled: env.NODE_ENV === "production", domain: ".asyncstatus.com" },
       useSecureCookies: env.NODE_ENV === "production",
     },
   });
