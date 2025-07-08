@@ -13,7 +13,7 @@ export const authCookiesPlugin = () => {
           },
           handler: createAuthMiddleware(async (ctx) => {
             const returned = ctx.context.responseHeaders;
-            console.log(returned);
+            console.log(JSON.stringify(Object.fromEntries(returned?.entries() ?? [])));
             if ("_flag" in ctx && ctx._flag === "router") {
               return;
             }
