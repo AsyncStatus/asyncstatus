@@ -130,11 +130,15 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     advanced: {
       defaultCookieAttributes: {
-        domain: env.NODE_ENV === "production" ? ".asyncstatus.com" : undefined,
+        domain: env.NODE_ENV === "production" ? "app.asyncstatus.com" : undefined,
         secure: env.NODE_ENV === "production",
         httpOnly: true,
         sameSite: "Lax",
         path: "/",
+      },
+      crossSubDomainCookies: {
+        enabled: true,
+        domain: env.NODE_ENV === "production" ? "app.asyncstatus.com" : undefined,
       },
       cookiePrefix: "as",
       useSecureCookies: env.NODE_ENV === "production",
