@@ -78,14 +78,29 @@ export function UpdateMemberForm(props: {
     defaultValues: {
       idOrSlug: props.organizationSlugOrId,
       memberId: props.memberId,
-      firstName: member.data.user.name?.split(" ")[0] ?? "",
-      lastName: member.data.user.name?.split(" ").slice(1).join(" ") ?? "",
-      role: member.data.role,
-      image: member.data.user.image ?? null,
-      archivedAt: member.data.archivedAt ?? null,
-      timezone: member.data.user.timezone,
+      firstName: member.data?.user.name?.split(" ")[0] ?? "",
+      lastName: member.data?.user.name?.split(" ").slice(1).join(" ") ?? "",
+      role: member.data?.role,
+      image: member.data?.user.image ?? null,
+      archivedAt: member.data?.archivedAt ?? null,
+      timezone: member.data?.user.timezone,
     },
   });
+
+  useEffect(() => {
+    if (member.data) {
+      form.reset({
+        idOrSlug: props.organizationSlugOrId,
+        memberId: props.memberId,
+        firstName: member.data?.user.name?.split(" ")[0] ?? "",
+        lastName: member.data?.user.name?.split(" ").slice(1).join(" ") ?? "",
+        role: member.data?.role,
+        image: member.data?.user.image ?? null,
+        archivedAt: member.data?.archivedAt ?? null,
+        timezone: member.data?.user.timezone,
+      });
+    }
+  }, [member.data, props.organizationSlugOrId, props.memberId]);
 
   const updateMember = useMutation({
     ...typedMutationOptions(updateMemberContract),
