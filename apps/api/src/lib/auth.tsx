@@ -7,6 +7,7 @@ import { desc, eq } from "drizzle-orm";
 import type { Resend } from "resend";
 import * as schema from "../db";
 import type { Db } from "../db/db";
+import { authCookiesPlugin } from "./auth-cookies-plugin";
 import type { Bindings } from "./env";
 
 export function createAuth(env: Bindings, db: Db, resend: Resend) {
@@ -46,6 +47,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         }
         return { ...session, session: { ...session.session, activeOrganizationId } };
       }),
+      authCookiesPlugin(),
     ],
     trustedOrigins: [
       "http://localhost:3000",

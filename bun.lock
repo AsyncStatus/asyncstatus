@@ -239,9 +239,6 @@
       },
     },
   },
-  "patchedDependencies": {
-    "better-auth@1.2.12": "patches/better-auth@1.2.12.patch",
-  },
   "catalog": {
     "@cloudflare/workers-types": "4.20250701.0",
     "@hookform/resolvers": "5.1.1",

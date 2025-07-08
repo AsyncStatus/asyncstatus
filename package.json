@@ -29,8 +29,5 @@
   "devDependencies": {
     "@biomejs/biome": "2.0.6"
   },
-  "packageManager": "bun@1.2.18",
-  "patchedDependencies": {
-    "better-auth@1.2.12": "patches/better-auth@1.2.12.patch"
-  }
+  "packageManager": "bun@1.2.18"
 }
