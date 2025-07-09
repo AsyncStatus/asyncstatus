@@ -20,7 +20,7 @@ export const authCookiesPlugin = () => {
               parsed.forEach((value, key) => {
                 ctx.context.responseHeaders?.append(
                   "set-cookie",
-                  `${key}=${value.value}; Domain=.asyncstatus.com; Path=/; SameSite=Lax; Secure; HttpOnly`,
+                  `${key}=${value.value}; Domain=.asyncstatus.com; Path=/; SameSite=Lax; Secure; HttpOnly; Max-Age=${value["max-age"]}; Expires=${value.expires}`,
                 );
               });
             }
