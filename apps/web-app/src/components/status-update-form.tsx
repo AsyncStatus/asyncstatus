@@ -1,4 +1,12 @@
-import { zStatusUpdateCreate } from "@asyncstatus/api/schema/statusUpdate";
+import {
+  getStatusUpdateContract,
+  listStatusUpdatesByDateContract,
+  listStatusUpdatesByMemberContract,
+  listStatusUpdatesByTeamContract,
+  listStatusUpdatesContract,
+  upsertStatusUpdateContract,
+} from "@asyncstatus/api/typed-handlers/status-update";
+import { dayjs } from "@asyncstatus/dayjs";
 import { AsyncStatusEditor } from "@asyncstatus/editor";
 import {
   AlertDialog,
@@ -16,15 +24,14 @@ import { BookCheck, BookDashed } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
+import type { JSONContent } from "@tiptap/core";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import type { z } from "zod/v4";
-import { createStatusUpdateMutationOptions } from "@/rpc/organization/status-update";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 type StatusUpdateFormProps = {
-  initialDate?: string;
-  initialEditorJson?: any;
+  initialDate?: Date | string;
+  initialEditorJson?: JSONContent;
   initialIsDraft?: boolean;
   organizationSlug: string;
 };
@@ -39,8 +46,9 @@ export function StatusUpdateForm({
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const [isPublishConfirm, setIsPublishConfirm] = useState(false);
   const form = useForm({
-    resolver: zodResolver(zStatusUpdateCreate),
+    resolver: zodResolver(upsertStatusUpdateContract.inputSchema),
     defaultValues: {
+      idOrSlug: organizationSlug,
       emoji: "",
       items: [],
       mood: "",
@@ -58,6 +66,12 @@ export function StatusUpdateForm({
   });
 
   useEffect(() => {
+    if (organizationSlug) {
+      form.setValue("idOrSlug", organizationSlug);
+    }
+  }, [organizationSlug]);
+
+  useEffect(() => {
     if (initialDate) {
       form.setValue(
         "effectiveFrom",
@@ -65,40 +79,71 @@ export function StatusUpdateForm({
       );
       form.setValue("effectiveTo", dayjs(initialDate, "YYYY-MM-DD", true).endOf("day").toDate());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDate]);
 
   useEffect(() => {
     if (initialEditorJson) {
       form.setValue("editorJson", initialEditorJson);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialEditorJson]);
 
   useEffect(() => {
     if (initialIsDraft) {
       form.setValue("isDraft", initialIsDraft);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialIsDraft]);
 
   const effectiveFrom = form.watch("effectiveFrom");
-
   const queryClient = useQueryClient();
-  const { mutate: createStatusUpdate, isPending } = useMutation(
-    createStatusUpdateMutationOptions(queryClient),
+  const createStatusUpdate = useMutation(
+    typedMutationOptions(upsertStatusUpdateContract, {
+      onSuccess: (data) => {
+        navigate({
+          to: "/$organizationSlug/status-update/$statusUpdateId",
+          params: { organizationSlug, statusUpdateId: data.id },
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: organizationSlug,
+            date: dayjs(effectiveFrom as Date).format("YYYY-MM-DD"),
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesByMemberContract, {
+            idOrSlug: organizationSlug,
+            memberId: data.member.id,
+          }).queryKey,
+        });
+        if (data.teamId) {
+          queryClient.invalidateQueries({
+            queryKey: typedQueryOptions(listStatusUpdatesByTeamContract, {
+              idOrSlug: organizationSlug,
+              teamId: data.teamId,
+            }).queryKey,
+          });
+        }
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }).queryKey,
+        });
+      },
+    }),
   );
 
-  function onSubmit(values: z.infer<typeof zStatusUpdateCreate>) {
+  function onSubmit(values: typeof upsertStatusUpdateContract.$infer.input) {
     if (!values.isDraft && !isPublishConfirm) {
       setIsPublishConfirmModalOpen(true);
       return;
     }
 
-    createStatusUpdate({
-      param: { idOrSlug: organizationSlug },
-      json: values,
-    });
+    createStatusUpdate.mutate(values);
   }
 
   return (
@@ -163,7 +208,7 @@ export function StatusUpdateForm({
             form.setValue("effectiveFrom", nextEffectiveFrom);
             form.setValue("effectiveTo", dayjs(data.date).endOf("day").toDate());
 
-            if (form.getValues("isDraft") && !isPending) {
+            if (form.getValues("isDraft") && !createStatusUpdate.isPending) {
               form.handleSubmit(onSubmit)();
             }
           }}
@@ -173,7 +218,7 @@ export function StatusUpdateForm({
               size="sm"
               type="submit"
               variant="outline"
-              disabled={isPending}
+              disabled={createStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", true);
               }}
@@ -184,7 +229,7 @@ export function StatusUpdateForm({
             <Button
               size="sm"
               type="submit"
-              disabled={isPending}
+              disabled={createStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", false);
               }}

@@ -6,6 +6,7 @@ import {
   updateMemberContract,
 } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
+import { dayjs } from "@asyncstatus/dayjs";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
@@ -51,7 +52,6 @@ import {
 } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useState } from "react";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";

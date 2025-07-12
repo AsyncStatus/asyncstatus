@@ -1,7 +1,7 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import OrganizationInvitationEmail from "@asyncstatus/email/organization/organization-invitation-email";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import dayjs from "dayjs";
 import { and, eq, not } from "drizzle-orm";
 import { invitation, member, team, user } from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";

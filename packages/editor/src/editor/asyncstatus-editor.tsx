@@ -1,10 +1,10 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { UndoIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
-import dayjs from "dayjs";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { AddStatusUpdateButton } from "../components/add-status-update-button";

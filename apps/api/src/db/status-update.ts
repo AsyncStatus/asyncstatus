@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { z } from "zod/v4";
+import type { z } from "zod/v4";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { member } from "./member";
 import { organization } from "./organization";
@@ -38,21 +38,9 @@ export const statusUpdate = sqliteTable(
   ],
 );
 
-export const StatusUpdate = createSelectSchema(statusUpdate, {
-  mood: z.string().trim().min(1),
-  emoji: z.string().trim().min(1),
-  notes: z.string().trim().min(1),
-});
+export const StatusUpdate = createSelectSchema(statusUpdate);
 export type StatusUpdate = z.output<typeof StatusUpdate>;
-export const StatusUpdateInsert = createInsertSchema(statusUpdate, {
-  mood: z.string().trim().min(1),
-  emoji: z.string().trim().min(1),
-  notes: z.string().trim().min(1),
-});
+export const StatusUpdateInsert = createInsertSchema(statusUpdate);
 export type StatusUpdateInsert = z.output<typeof StatusUpdateInsert>;
-export const StatusUpdateUpdate = createUpdateSchema(statusUpdate, {
-  mood: z.string().trim().min(1),
-  emoji: z.string().trim().min(1),
-  notes: z.string().trim().min(1),
-});
+export const StatusUpdateUpdate = createUpdateSchema(statusUpdate);
 export type StatusUpdateUpdate = z.output<typeof StatusUpdateUpdate>;

@@ -1,4 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
+import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import {
@@ -16,7 +18,6 @@ import { CalendarIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import dayjs from "dayjs";
 import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import Markdown from "react-markdown";
@@ -24,8 +25,7 @@ import remarkGfm from "remark-gfm";
 import { z } from "zod/v4";
 import { EmptyState } from "@/components/empty-state";
 import { getInitials } from "@/lib/utils";
-import { getStatusUpdatesByDateQueryOptions } from "@/rpc/organization/status-update";
-import { typedUrl } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
     const [organization, statusUpdates] = await Promise.all([
       ensureValidOrganization(queryClient, organizationSlug),
       queryClient.ensureQueryData(
-        getStatusUpdatesByDateQueryOptions({
+        typedQueryOptions(listStatusUpdatesByDateContract, {
           idOrSlug: organizationSlug,
           date: date ?? dayjs().format("YYYY-MM-DD"),
         }),

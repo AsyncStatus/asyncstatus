@@ -1,3 +1,4 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import { Calendar } from "@asyncstatus/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
 import { cn } from "@asyncstatus/ui/lib/utils";
@@ -6,7 +7,6 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { NodeViewProps } from "@tiptap/react";
 import { mergeAttributes, Node, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { format } from "date-fns";
-import dayjs from "dayjs";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 

@@ -14,6 +14,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@asyncstatus/dayjs": "workspace:*",
     "@tiptap/core": "2.23.1",
     "@tiptap/extension-bullet-list": "2.23.1",
     "@tiptap/extension-character-count": "2.23.1",

@@ -1,4 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import { getStatusUpdateContract } from "@asyncstatus/api/typed-handlers/status-update";
+import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import {
   Breadcrumb,
@@ -15,14 +17,12 @@ import { ArrowLeftIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { StatusUpdateForm } from "@/components/status-update-form";
 import { getInitials } from "@/lib/utils";
-import { getStatusUpdateQueryOptions } from "@/rpc/organization/status-update";
-import { typedUrl } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/status-update/$statusUpdateId")({
   component: RouteComponent,
@@ -31,13 +31,13 @@ export const Route = createFileRoute("/$organizationSlug/_layout/status-update/$
 function RouteComponent() {
   const { statusUpdateId, organizationSlug } = Route.useParams();
   const isDate = dayjs(statusUpdateId, "YYYY-MM-DD", true).isValid();
-  const statusUpdate = useQuery({
-    ...getStatusUpdateQueryOptions({
-      idOrSlug: organizationSlug,
-      statusUpdateIdOrDate: statusUpdateId,
-    }),
-    throwOnError: false,
-  });
+  const statusUpdate = useQuery(
+    typedQueryOptions(
+      getStatusUpdateContract,
+      { idOrSlug: organizationSlug, statusUpdateIdOrDate: statusUpdateId },
+      { throwOnError: false },
+    ),
+  );
 
   if (statusUpdate.data?.isDraft || isDate) {
     return (
@@ -121,7 +121,7 @@ function ExistingStatusUpdateComponent() {
   const { statusUpdateId, organizationSlug } = Route.useParams();
   const [isEditing, setIsEditing] = useState(false);
   const { data: statusUpdate } = useQuery(
-    getStatusUpdateQueryOptions({
+    typedQueryOptions(getStatusUpdateContract, {
       idOrSlug: organizationSlug,
       statusUpdateIdOrDate: statusUpdateId,
     }),

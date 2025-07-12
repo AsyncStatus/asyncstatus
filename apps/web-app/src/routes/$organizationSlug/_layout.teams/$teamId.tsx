@@ -7,6 +7,7 @@ import {
   getTeamMembersContract,
   listTeamsContract,
 } from "@asyncstatus/api/typed-handlers/team";
+import { dayjs } from "@asyncstatus/dayjs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +52,6 @@ import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Calendar, Edit, Plus, Search, Trash, UserRound, Users } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useState } from "react";
 import { AddTeamMemberForm } from "@/components/add-team-member-form";
 import { UpdateTeamForm } from "@/components/update-team-form";

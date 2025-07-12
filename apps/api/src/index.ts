@@ -16,7 +16,6 @@ import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { githubRouter } from "./routers/organization/github";
-import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   acceptInvitationHandler,
@@ -38,6 +37,15 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import {
+  deleteStatusUpdateHandler,
+  getStatusUpdateHandler,
+  listStatusUpdatesByDateHandler,
+  listStatusUpdatesByMemberHandler,
+  listStatusUpdatesByTeamHandler,
+  listStatusUpdatesHandler,
+  upsertStatusUpdateHandler,
+} from "./typed-handlers/status-update-handlers";
 import {
   addTeamMemberHandler,
   createTeamHandler,
@@ -90,7 +98,6 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
-  .route("/organization", statusUpdateRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -142,6 +149,13 @@ const typedHandlersApp = typedHandlersHonoServer(
     deleteTeamHandler,
     addTeamMemberHandler,
     deleteTeamMemberHandler,
+    listStatusUpdatesHandler,
+    listStatusUpdatesByMemberHandler,
+    listStatusUpdatesByDateHandler,
+    listStatusUpdatesByTeamHandler,
+    getStatusUpdateHandler,
+    upsertStatusUpdateHandler,
+    deleteStatusUpdateHandler,
   ],
   {
     getContext: (c) => ({

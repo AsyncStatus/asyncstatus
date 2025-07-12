@@ -22,7 +22,7 @@
       "react-dom": "19.1.0",
       "react-hook-form": "7.60.0",
       "typescript": "5.8.3",
-      "wrangler": "4.23.0",
+      "wrangler": "4.24.3",
       "zod": "3.25.74"
     }
   },

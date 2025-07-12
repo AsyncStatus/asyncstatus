@@ -1,4 +1,6 @@
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
+import { listStatusUpdatesByMemberContract } from "@asyncstatus/api/typed-handlers/status-update";
+import { dayjs } from "@asyncstatus/dayjs";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,9 +12,7 @@ import {
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { StatusUpdateForm } from "@/components/status-update-form";
-import { getStatusUpdatesByMemberQueryOptions } from "@/rpc/organization/status-update";
 import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/status-update/")({
@@ -23,13 +23,14 @@ export const Route = createFileRoute("/$organizationSlug/_layout/status-update/"
     );
 
     const statusUpdates = await queryClient.ensureQueryData(
-      getStatusUpdatesByMemberQueryOptions(
-        { idOrSlug: organizationSlug, memberId: member.id },
-        { effectiveFrom: dayjs().startOf("day").toISOString() },
-      ),
+      typedQueryOptions(listStatusUpdatesByMemberContract, {
+        idOrSlug: organizationSlug,
+        memberId: member.id,
+        effectiveFrom: dayjs().startOf("day").toISOString(),
+      }),
     );
 
-    if ((statusUpdates as any).length === 0 || !(statusUpdates as any)[0].isDraft) {
+    if (statusUpdates.length === 0 || !statusUpdates[0]?.isDraft) {
       throw redirect({
         to: "/$organizationSlug/status-update/$statusUpdateId",
         params: {
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/status-update/"
       to: "/$organizationSlug/status-update/$statusUpdateId",
       params: {
         organizationSlug,
-        statusUpdateId: (statusUpdates[0] as any).id,
+        statusUpdateId: statusUpdates[0].id,
       },
     });
   },
