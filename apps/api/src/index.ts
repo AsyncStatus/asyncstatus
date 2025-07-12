@@ -3,6 +3,7 @@ import {
   TypedHandlersError,
 } from "@asyncstatus/typed-handlers";
 import { typedHandlersHonoServer } from "@asyncstatus/typed-handlers/hono";
+import { createWebMiddleware } from "@octokit/webhooks";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
@@ -13,8 +14,6 @@ import {
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { queue } from "./queue";
-import { authRouter } from "./routers/auth";
-import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { githubRouter } from "./routers/organization/github";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
@@ -57,6 +56,34 @@ import {
   updateTeamHandler,
 } from "./typed-handlers/team-handlers";
 import { joinWaitlistHandler } from "./typed-handlers/waitlist-handlers";
+
+const authRouter = new Hono<HonoEnv>()
+  .get("/session", (c) => {
+    const session = c.get("session");
+
+    if (!session) {
+      throw new TypedHandlersError({
+        code: "UNAUTHORIZED",
+        message: "Unauthorized",
+      });
+    }
+
+    return c.json(session);
+  })
+  .on(["POST", "GET"], "*", (c) => {
+    return c.get("auth").handler(c.req.raw);
+  });
+
+const githubWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", (c) => {
+  const githubWebhooks = c.get("githubWebhooks");
+
+  githubWebhooks.onAny(async (event) => {
+    const queue = c.env.GITHUB_WEBHOOK_EVENTS_QUEUE;
+    await queue.send(event, { contentType: "json" });
+  });
+
+  return createWebMiddleware(githubWebhooks, { path: "/github/webhooks" })(c.req.raw);
+});
 
 const app = new Hono<HonoEnv>()
   .use(
