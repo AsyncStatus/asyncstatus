@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Webhooks as GithubWebhooks } from "@octokit/webhooks";
 import type { InferSelectModel } from "drizzle-orm";
-import type { Context } from "hono";
+import type { Context, Next } from "hono";
 import { Resend } from "resend";
 import { VoyageAIClient } from "voyageai";
 import type * as schema from "../db";
@@ -50,7 +50,7 @@ export type Variables = {
   db: Db;
   resend: Resend;
   session: Auth["$Infer"]["Session"] | null;
-  waitlistRateLimiter: RateLimiter;
+  rateLimiter: { waitlist: RateLimiter };
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
   githubWebhooks: GithubWebhooks;
@@ -77,7 +77,7 @@ export async function createContext(c: Context<HonoEnv>) {
   const db = createDb(c.env);
   const resend = new Resend(c.env.RESEND_API_KEY);
   const auth = createAuth(c.env, db, resend);
-  const waitlistRateLimiter = createRateLimiter(c.env, {
+  const waitlistRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
     windowMs: 60 * 60 * 1000,
     limit: 10,
   });
@@ -94,13 +94,15 @@ export async function createContext(c: Context<HonoEnv>) {
     db,
     resend,
     auth,
-    waitlistRateLimiter,
     anthropicClient,
     voyageClient,
     githubWebhooks,
     session,
     webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
+    rateLimiter: {
+      waitlist: (next: Next) => waitlistRateLimiter(c, next),
+    },
     bucket: {
       private: c.env.PRIVATE_BUCKET,
     },

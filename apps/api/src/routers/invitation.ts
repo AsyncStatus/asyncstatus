@@ -188,7 +188,7 @@ export const invitationRouter = new Hono<HonoEnvWithSession>()
             id: generateId(),
             organizationId: invitation.organizationId,
             userId: c.var.session.user.id,
-            role: invitation.role || "member",
+            role: invitation.role as "owner" | "admin" | "member",
             createdAt: now,
           })
           .returning();

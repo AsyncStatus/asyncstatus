@@ -5,7 +5,10 @@ export type TypedMiddlewareCtx<Context> = Context & {
 };
 
 export function typedMiddleware<Context>(
-  middleware: (c: TypedMiddlewareCtx<Context>, next: () => Promise<void>) => Promise<void>,
+  middleware: (
+    c: TypedMiddlewareCtx<Context>,
+    next: () => Promise<void>,
+  ) => Promise<void | Response>,
 ) {
   return async (c: TypedMiddlewareCtx<Context>, next: () => Promise<void>) => {
     await middleware(c, next);

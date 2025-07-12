@@ -79,6 +79,13 @@ export const userRelations = relations(user, ({ many }) => ({
   timezoneHistory: many(userTimezoneHistory),
 }));
 
+export const userTimezoneHistoryRelations = relations(userTimezoneHistory, ({ one }) => ({
+  user: one(user, {
+    fields: [userTimezoneHistory.userId],
+    references: [user.id],
+  }),
+}));
+
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],

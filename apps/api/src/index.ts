@@ -18,7 +18,6 @@ import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
-import { waitlistRouter } from "./routers/waitlist";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
 import {
@@ -77,7 +76,7 @@ const app = new Hono<HonoEnv>()
     c.set("db", context.db);
     c.set("resend", context.resend);
     c.set("auth", context.auth);
-    c.set("waitlistRateLimiter", context.waitlistRateLimiter);
+    c.set("rateLimiter" as any, context.rateLimiter);
     c.set("anthropicClient", context.anthropicClient);
     c.set("voyageClient", context.voyageClient);
     c.set("githubWebhooks", context.githubWebhooks);
@@ -88,7 +87,6 @@ const app = new Hono<HonoEnv>()
   .route("/organization", githubRouter)
   .route("/organization", statusUpdateRouter)
   .route("/invitation", invitationRouter)
-  .route("/waitlist", waitlistRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -143,7 +141,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       session: c.get("session"),
       resend: c.get("resend"),
       auth: c.get("auth"),
-      waitlistRateLimiter: c.get("waitlistRateLimiter"),
+      rateLimiter: c.get("rateLimiter"),
       anthropicClient: c.get("anthropicClient"),
       voyageClient: c.get("voyageClient"),
       githubWebhooks: c.get("githubWebhooks"),
