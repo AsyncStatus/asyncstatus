@@ -17,7 +17,6 @@ import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
 import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
-import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { waitlistRouter } from "./routers/waitlist";
 import { getFileHandler } from "./typed-handlers/file-handlers";
@@ -88,7 +87,6 @@ const app = new Hono<HonoEnv>()
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
   .route("/organization", statusUpdateRouter)
-  .route("/organization", organizationPublicShareRouter)
   .route("/invitation", invitationRouter)
   .route("/waitlist", waitlistRouter)
   .route("/github/webhooks", githubWebhooksRouter)

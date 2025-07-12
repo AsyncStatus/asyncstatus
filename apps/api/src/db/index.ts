@@ -24,12 +24,6 @@ export { GithubUser, GithubUserInsert, GithubUserUpdate, githubUser } from "./gi
 export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./invitation";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
-export {
-  PublicStatusShare,
-  PublicStatusShareInsert,
-  PublicStatusShareUpdate,
-  publicStatusShare,
-} from "./public-status-share";
 export { statusGenerationJob } from "./status-generation-job";
 export {
   StatusUpdate,
@@ -69,7 +63,6 @@ import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
-import { publicStatusShare } from "./public-status-share";
 import { statusGenerationJob } from "./status-generation-job";
 import { statusUpdate } from "./status-update";
 import { statusUpdateItem } from "./status-update-item";
@@ -97,7 +90,6 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   members: many(member),
   teams: many(team),
   invitations: many(invitation),
-  publicStatusShares: many(publicStatusShare),
   githubIntegration: one(githubIntegration),
 }));
 
@@ -148,7 +140,6 @@ export const statusUpdateRelations = relations(statusUpdate, ({ one, many }) => 
     references: [team.id],
   }),
   items: many(statusUpdateItem),
-  publicShares: many(publicStatusShare),
 }));
 
 export const githubIntegrationRelations = relations(githubIntegration, ({ one, many }) => ({
@@ -205,17 +196,6 @@ export const teamMembershipRelations = relations(teamMembership, ({ one }) => ({
   member: one(member, {
     fields: [teamMembership.memberId],
     references: [member.id],
-  }),
-}));
-
-export const publicStatusShareRelations = relations(publicStatusShare, ({ one }) => ({
-  statusUpdate: one(statusUpdate, {
-    fields: [publicStatusShare.statusUpdateId],
-    references: [statusUpdate.id],
-  }),
-  organization: one(organization, {
-    fields: [publicStatusShare.organizationId],
-    references: [organization.id],
   }),
 }));
 

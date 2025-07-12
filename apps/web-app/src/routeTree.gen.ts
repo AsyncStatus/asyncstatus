@@ -25,7 +25,6 @@ import { Route as authLayoutResetPasswordRouteImport } from './routes/(auth)/_la
 import { Route as authLayoutLoginRouteImport } from './routes/(auth)/_layout.login'
 import { Route as authLayoutForgotPasswordRouteImport } from './routes/(auth)/_layout.forgot-password'
 import { Route as OrganizationSlugLayoutSettingsRouteImport } from './routes/$organizationSlug/_layout.settings'
-import { Route as OrganizationSlugLayoutOldRouteImport } from './routes/$organizationSlug/_layout.old'
 import { Route as OrganizationSlugLayoutUsersIndexRouteImport } from './routes/$organizationSlug/_layout.users/index'
 import { Route as OrganizationSlugLayoutTeamsIndexRouteImport } from './routes/$organizationSlug/_layout.teams/index'
 import { Route as OrganizationSlugLayoutStatusUpdateIndexRouteImport } from './routes/$organizationSlug/_layout.status-update/index'
@@ -127,12 +126,6 @@ const OrganizationSlugLayoutSettingsRoute =
     path: '/settings',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-const OrganizationSlugLayoutOldRoute =
-  OrganizationSlugLayoutOldRouteImport.update({
-    id: '/old',
-    path: '/old',
-    getParentRoute: () => OrganizationSlugLayoutRoute,
-  } as any)
 const OrganizationSlugLayoutUsersIndexRoute =
   OrganizationSlugLayoutUsersIndexRouteImport.update({
     id: '/users/',
@@ -175,7 +168,6 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
   '/invitation': typeof InvitationLayoutRouteWithChildren
-  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -196,7 +188,6 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
   '/invitation': typeof InvitationLayoutIndexRoute
-  '/$organizationSlug/old': typeof OrganizationSlugLayoutOldRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -221,7 +212,6 @@ export interface FileRoutesById {
   '/invitation': typeof InvitationRouteWithChildren
   '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
-  '/$organizationSlug/_layout/old': typeof OrganizationSlugLayoutOldRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
   '/(auth)/_layout/login': typeof authLayoutLoginRoute
@@ -244,7 +234,6 @@ export interface FileRouteTypes {
     | '/'
     | '/create-organization'
     | '/invitation'
-    | '/$organizationSlug/old'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -265,7 +254,6 @@ export interface FileRouteTypes {
     | '/'
     | '/create-organization'
     | '/invitation'
-    | '/$organizationSlug/old'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -289,7 +277,6 @@ export interface FileRouteTypes {
     | '/invitation'
     | '/invitation/_layout'
     | '/_layout/'
-    | '/$organizationSlug/_layout/old'
     | '/$organizationSlug/_layout/settings'
     | '/(auth)/_layout/forgot-password'
     | '/(auth)/_layout/login'
@@ -442,13 +429,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutSettingsRouteImport
       parentRoute: typeof OrganizationSlugLayoutRoute
     }
-    '/$organizationSlug/_layout/old': {
-      id: '/$organizationSlug/_layout/old'
-      path: '/old'
-      fullPath: '/$organizationSlug/old'
-      preLoaderRoute: typeof OrganizationSlugLayoutOldRouteImport
-      parentRoute: typeof OrganizationSlugLayoutRoute
-    }
     '/$organizationSlug/_layout/users/': {
       id: '/$organizationSlug/_layout/users/'
       path: '/users'
@@ -506,7 +486,6 @@ const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 interface OrganizationSlugLayoutRouteChildren {
-  OrganizationSlugLayoutOldRoute: typeof OrganizationSlugLayoutOldRoute
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
   OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute: typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
@@ -519,7 +498,6 @@ interface OrganizationSlugLayoutRouteChildren {
 
 const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
   {
-    OrganizationSlugLayoutOldRoute: OrganizationSlugLayoutOldRoute,
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,
     OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
     OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute:
