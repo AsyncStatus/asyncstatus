@@ -5,12 +5,7 @@ import { Member, Organization, OrganizationUpdate, Team, TeamMembership } from "
 export const listMemberOrganizationsContract = typedContract(
   "get /organizations/member",
   z.strictObject({}),
-  z.array(
-    z.strictObject({
-      ...Organization.shape,
-      members: z.array(Member),
-    }),
-  ),
+  z.array(z.strictObject({ organization: Organization, member: Member })),
 );
 
 export const getOrganizationContract = typedContract(

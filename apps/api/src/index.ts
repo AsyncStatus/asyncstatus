@@ -15,11 +15,16 @@ import { createContext, type HonoEnv } from "./lib/env";
 import { queue } from "./queue";
 import { authRouter } from "./routers/auth";
 import { githubWebhooksRouter } from "./routers/github-webhooks";
-import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
 import { getFileHandler } from "./typed-handlers/file-handlers";
-import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
+import {
+  acceptInvitationHandler,
+  cancelInvitationHandler,
+  getInvitationHandler,
+  listUserInvitationsHandler,
+  rejectInvitationHandler,
+} from "./typed-handlers/invitation-handlers";
 import {
   getMemberHandler,
   inviteMemberHandler,
@@ -86,7 +91,6 @@ const app = new Hono<HonoEnv>()
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
   .route("/organization", statusUpdateRouter)
-  .route("/invitation", invitationRouter)
   .route("/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -115,7 +119,11 @@ const typedHandlersApp = typedHandlersHonoServer(
   app.basePath("/th"),
   [
     joinWaitlistHandler,
+    listUserInvitationsHandler,
     getInvitationHandler,
+    cancelInvitationHandler,
+    acceptInvitationHandler,
+    rejectInvitationHandler,
     updateMemberHandler,
     getMemberHandler,
     listMembersHandler,

@@ -81,6 +81,10 @@ export async function createContext(c: Context<HonoEnv>) {
     windowMs: 60 * 60 * 1000,
     limit: 10,
   });
+  const invitationRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
+    windowMs: 60 * 60 * 1000,
+    limit: 100,
+  });
   const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
   const voyageClient = new VoyageAIClient({
     apiKey: c.env.VOYAGE_API_KEY,
@@ -102,6 +106,7 @@ export async function createContext(c: Context<HonoEnv>) {
     authKv: c.env.AS_PROD_AUTH_KV,
     rateLimiter: {
       waitlist: (next: Next) => waitlistRateLimiter(c, next),
+      invitation: (next: Next) => invitationRateLimiter(c, next),
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

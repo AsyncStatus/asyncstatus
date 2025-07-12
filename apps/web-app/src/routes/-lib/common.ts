@@ -8,7 +8,7 @@ export async function ensureValidSession(queryClient: QueryClient, location: Par
   const session = await queryClient.fetchQuery(sessionBetterAuthQueryOptions()).catch(() => {});
   if (!session?.session) {
     throw redirect({
-      to: location.href.includes("/invitation?invitationId=") ? "/sign-up" : "/login",
+      to: location.href.includes("/invitations?invitationId=") ? "/sign-up" : "/login",
       search: location.href === "/" ? undefined : { redirect: location.href },
     });
   }
@@ -39,12 +39,12 @@ export async function ensureValidOrganization(
   if (!org?.organization.slug) {
     const session = await queryClient.fetchQuery(sessionBetterAuthQueryOptions()).catch(() => {});
     if (
-      session?.session.activeOrganizationId &&
-      session.session.activeOrganizationId !== org?.organization.id
+      session?.session.activeOrganizationSlug &&
+      session.session.activeOrganizationSlug !== org?.organization.slug
     ) {
       throw redirect({
         to: "/$organizationSlug",
-        params: { organizationSlug: session.session.activeOrganizationId as string },
+        params: { organizationSlug: session.session.activeOrganizationSlug },
       });
     }
     throw redirect({ to: "/create-organization" });

@@ -34,22 +34,33 @@ export const getMemberHandler = typedHandler<
 export const listMembersHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof listMembersContract
->(listMembersContract, requiredSession, requiredOrganization, async ({ db, organization }) => {
-  const [membersWithUsers, invitations] = await Promise.all([
-    db.query.member.findMany({
-      where: eq(member.organizationId, organization.id),
-      with: { user: true },
-    }),
-    db.query.invitation.findMany({
-      where: and(
-        eq(invitation.organizationId, organization.id),
-        not(eq(invitation.status, "accepted")),
-        not(eq(invitation.status, "canceled")),
-      ),
-    }),
-  ]);
-  return { members: membersWithUsers, invitations };
-});
+>(
+  listMembersContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, webAppUrl }) => {
+    const [membersWithUsers, invitations] = await Promise.all([
+      db.query.member.findMany({
+        where: eq(member.organizationId, organization.id),
+        with: { user: true },
+      }),
+      db.query.invitation.findMany({
+        where: and(
+          eq(invitation.organizationId, organization.id),
+          not(eq(invitation.status, "accepted")),
+          not(eq(invitation.status, "canceled")),
+        ),
+      }),
+    ]);
+    return {
+      members: membersWithUsers,
+      invitations: invitations.map((invitation) => ({
+        ...invitation,
+        link: `${webAppUrl}/invitations?invitationId=${invitation.id}&invitationEmail=${invitation.email}`,
+      })),
+    };
+  },
+);
 
 export const updateMemberHandler = typedHandler<
   TypedHandlersContextWithOrganization,
@@ -256,7 +267,7 @@ export const inviteMemberHandler = typedHandler<
     const params = new URLSearchParams();
     params.set("invitationId", newInvitation.id);
     params.set("invitationEmail", email);
-    const inviteLink = `${webAppUrl}/invitation?${params.toString()}`;
+    const inviteLink = `${webAppUrl}/invitations?${params.toString()}`;
     const invitedByUsername =
       newInvitation.inviter.name?.split(" ")[0] ?? newInvitation.inviter.name;
 

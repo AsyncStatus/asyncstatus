@@ -57,12 +57,12 @@ export function OrganizationInvitationEmail(props: {
 }
 
 OrganizationInvitationEmail.PreviewProps = {
-  preview: "Join Michael on AsyncStatus https://app.asyncstatus.com/invitation",
+  preview: "Join Michael on AsyncStatus https://app.asyncstatus.com/invitations",
   invitedByUsername: "Michael",
   invitedByEmail: "michael@asyncstatus.com",
   inviteeFirstName: "John",
   teamName: "AsyncStatus",
-  inviteLink: "https://app.asyncstatus.com/invitation",
+  inviteLink: "https://app.asyncstatus.com/invitations",
   expiration: "7 days",
 };
 

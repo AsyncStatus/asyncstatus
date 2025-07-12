@@ -36,16 +36,18 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     plugins: [
       customSession(async (session) => {
-        let activeOrganizationId = (session.session as any).activeOrganizationId;
-        if (!activeOrganizationId) {
-          const orgs = await db.query.organization.findMany({
-            with: { members: { where: eq(schema.member.userId, session.user.id) } },
-            orderBy: [desc(schema.organization.createdAt)],
-            limit: 1,
-          });
-          activeOrganizationId = orgs[0]?.id;
+        let activeOrganizationSlug = (session.session as any).activeOrganizationSlug;
+        if (!activeOrganizationSlug) {
+          const orgs = await db
+            .select({ organization: schema.organization, member: schema.member })
+            .from(schema.organization)
+            .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+            .where(eq(schema.member.userId, session.user.id))
+            .orderBy(desc(schema.organization.createdAt))
+            .limit(100);
+          activeOrganizationSlug = orgs[0]?.organization.slug;
         }
-        return { ...session, session: { ...session.session, activeOrganizationId } };
+        return { ...session, session: { ...session.session, activeOrganizationSlug } };
       }),
       authCookiesPlugin(),
     ],
@@ -85,7 +87,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days
       additionalFields: {
-        activeOrganizationId: {
+        activeOrganizationSlug: {
           type: "string",
           required: false,
           input: false,
@@ -94,11 +96,6 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     user: {
       additionalFields: {
-        activeOrganizationId: {
-          type: "string",
-          required: false,
-          input: false,
-        },
         timezone: {
           type: "string",
           required: true,

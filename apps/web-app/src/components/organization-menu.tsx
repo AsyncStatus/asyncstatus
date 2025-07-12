@@ -44,11 +44,15 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
   const organizations = useQuery({
     ...typedQueryOptions(listMemberOrganizationsContract, {}),
     select(data) {
-      if (!session.data?.session.activeOrganizationId) {
+      if (!session.data?.session.activeOrganizationSlug) {
         return data;
       }
 
-      return data.sort((a) => (session.data?.session.activeOrganizationId === a.id ? -1 : 1));
+      return data.sort(
+        (a) =>
+          (session.data?.session.activeOrganizationSlug === a.organization.slug ? -1 : 1) ||
+          a.organization.createdAt.getTime(),
+      );
     },
   });
   const setActiveOrganization = useMutation(
@@ -68,7 +72,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
           }
           return {
             ...sessionData,
-            session: { ...sessionData.session, activeOrganizationId: data.id },
+            session: { ...sessionData.session, activeOrganizationSlug: data.slug },
           };
         });
       },
@@ -76,7 +80,7 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
   );
   const [createOrganizationDialogOpen, setCreateOrganizationDialogOpen] = useState(false);
   const activeOrganization = useMemo(
-    () => organizations.data?.find((o) => o.slug === props.organizationSlug),
+    () => organizations.data?.find((o) => o.organization.slug === props.organizationSlug),
     [organizations.data, props.organizationSlug],
   );
 
@@ -93,20 +97,22 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
                 <Avatar className="size-8">
                   <AvatarImage
                     src={
-                      activeOrganization?.logo
+                      activeOrganization?.organization.logo
                         ? typedUrl(getFileContract, {
                             idOrSlug: props.organizationSlug,
-                            fileKey: activeOrganization.logo,
+                            fileKey: activeOrganization.organization.logo,
                           })
                         : undefined
                     }
-                    alt={activeOrganization?.name}
+                    alt={activeOrganization?.organization.name}
                   />
-                  <AvatarFallback>{getInitials(activeOrganization?.name ?? "")}</AvatarFallback>
+                  <AvatarFallback>
+                    {getInitials(activeOrganization?.organization.name ?? "")}
+                  </AvatarFallback>
                 </Avatar>
 
                 <div className="grid flex-1 text-left text-sm">
-                  <span className="truncate">{activeOrganization?.name}</span>
+                  <span className="truncate">{activeOrganization?.organization.name}</span>
                 </div>
 
                 <ChevronsUpDown className="ml-auto size-4" />
@@ -120,42 +126,49 @@ export function OrganizationMenu(props: { organizationSlug: string }) {
               sideOffset={4}
             >
               <DropdownMenuLabel className="text-muted-foreground text-xs">
-                Organizations
+                Organizations{organizations.data?.length > 1 && ` (${organizations.data.length})`}
               </DropdownMenuLabel>
 
               <ScrollArea className="h-36 w-full">
                 {organizations.data?.map((organization) => {
-                  const isActive = session.data?.session.activeOrganizationId === organization.id;
+                  const isActive =
+                    session.data?.session.activeOrganizationSlug === organization.organization.slug;
 
                   return (
-                    <DropdownMenuItem asChild key={organization.id} className="gap-2 p-2">
+                    <DropdownMenuItem
+                      asChild
+                      key={organization.organization.id}
+                      className="gap-2 p-2"
+                    >
                       <Link
                         to="/$organizationSlug"
-                        params={{ organizationSlug: organization.slug }}
+                        params={{ organizationSlug: organization.organization.slug }}
                         onClick={() => {
                           setActiveOrganization.mutate({
-                            idOrSlug: organization.slug,
+                            idOrSlug: organization.organization.slug,
                           });
                         }}
                       >
                         <Avatar className="size-8">
                           <AvatarImage
                             src={
-                              organization.logo
+                              organization.organization.logo
                                 ? typedUrl(getFileContract, {
-                                    idOrSlug: organization.slug,
-                                    fileKey: organization.logo,
+                                    idOrSlug: organization.organization.slug,
+                                    fileKey: organization.organization.logo,
                                   })
                                 : undefined
                             }
-                            alt={organization.name}
+                            alt={organization.organization.name}
                           />
-                          <AvatarFallback>{getInitials(organization.name)}</AvatarFallback>
+                          <AvatarFallback>
+                            {getInitials(organization.organization.name)}
+                          </AvatarFallback>
                         </Avatar>
 
                         <div className="flex w-full items-center justify-between gap-2">
                           <p className="max-w-40 flex-1 truncate font-semibold">
-                            {organization.name}
+                            {organization.organization.name}
                           </p>
                           <div className="ml-auto flex h-auto items-center">
                             {isActive && <Check className="inline-block size-4" />}

@@ -18,7 +18,7 @@ export const listMembersContract = typedContract(
   z.strictObject({ idOrSlug: z.string().min(1) }),
   z.strictObject({
     members: z.array(z.strictObject({ ...Member.shape, user: User })),
-    invitations: z.array(Invitation),
+    invitations: z.array(z.strictObject({ ...Invitation.shape, link: z.url() })),
   }),
 );
 

@@ -1,7 +1,9 @@
+import { listUserInvitationsContract } from "@asyncstatus/api/typed-handlers/invitation";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -97,6 +99,34 @@ function AppSidebarBetaNotice() {
           </Button>
         </div>
       </CardFooter>
+    </Card>
+  );
+}
+
+function AppSidebarInvitations() {
+  const invitations = useSuspenseQuery(typedQueryOptions(listUserInvitationsContract, {}));
+
+  if (invitations.data.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card className="p-2">
+      <CardHeader className="px-0">
+        <CardTitle className="text-md text-pretty">Pending invitations</CardTitle>
+        <CardDescription className="text-xs text-pretty">
+          You have {invitations.data.length} pending invitation
+          {invitations.data.length === 1 ? "" : "s"}. You can accept or reject them from the
+          invitations page.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="px-0">
+        <div className="flex w-full flex-col items-center gap-2">
+          <Button size="sm" className="w-full text-xs" asChild>
+            <Link to="/invitations">See invitations</Link>
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -219,6 +249,10 @@ export function AppSidebar(props: { organizationSlug: string }) {
       <SidebarFooter className="p-0 max-sm:p-2">
         <Suspense fallback={null}>
           <AppSidebarUserEmailNotVerified />
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <AppSidebarInvitations />
         </Suspense>
 
         <AppSidebarBetaNotice />

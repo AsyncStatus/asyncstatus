@@ -20,10 +20,15 @@ export const listMemberOrganizationsHandler = typedHandler<
   TypedHandlersContextWithSession,
   typeof listMemberOrganizationsContract
 >(listMemberOrganizationsContract, requiredSession, async ({ db, session }) => {
-  return await db.query.organization.findMany({
-    with: { members: { where: eq(member.userId, session.user.id) } },
-    orderBy: [desc(organization.createdAt)],
-  });
+  const result = await db
+    .select({ organization: organization, member: member })
+    .from(organization)
+    .innerJoin(member, eq(organization.id, member.organizationId))
+    .where(eq(member.userId, session.user.id))
+    .orderBy(desc(organization.createdAt))
+    .limit(100);
+
+  return result;
 });
 
 export const getOrganizationHandler = typedHandler<
@@ -60,10 +65,7 @@ export const setActiveOrganizationHandler = typedHandler<
       session.session.token,
       JSON.stringify({
         ...data,
-        session: {
-          ...data.session,
-          activeOrganizationId: organization.id,
-        },
+        session: { ...data.session, activeOrganizationSlug: organization.slug },
       }),
     );
 

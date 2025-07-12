@@ -1,5 +1,10 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { listMembersContract, updateMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import { cancelInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
+import {
+  inviteMemberContract,
+  listMembersContract,
+  updateMemberContract,
+} from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -51,7 +56,6 @@ import { useState } from "react";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials, upperFirst } from "@/lib/utils";
-import { cancelInvitationMutationOptions } from "@/rpc/organization/organization";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/users/")({
@@ -79,22 +83,33 @@ function RouteComponent() {
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
   const members = useQuery(typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }));
-  const updateMember = useMutation({
-    ...typedMutationOptions(updateMemberContract),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
-      });
-    },
-  });
-  const cancelInvitation = useMutation({
-    ...cancelInvitationMutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
-      });
-    },
-  });
+  const updateMember = useMutation(
+    typedMutationOptions(updateMemberContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
+        });
+      },
+    }),
+  );
+  const cancelInvitation = useMutation(
+    typedMutationOptions(cancelInvitationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
+        });
+      },
+    }),
+  );
+  const inviteMember = useMutation(
+    typedMutationOptions(inviteMemberContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
+        });
+      },
+    }),
+  );
   const isAdmin =
     organization.data.member.role === "admin" || organization.data.member.role === "owner";
 
@@ -434,6 +449,62 @@ function RouteComponent() {
                 </div>
               ) : (
                 filteredInvitations?.map((invitation) => {
+                  if (invitation.status === "rejected") {
+                    return (
+                      <Card key={invitation.id} className="overflow-hidden pb-0">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-10 sm:size-12">
+                              <AvatarFallback className="text-sm sm:text-lg">
+                                {getInitials(invitation.email.split("@")[0] ?? "")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-sm sm:text-base font-medium truncate">
+                                {invitation.name}
+                              </CardTitle>
+                              <CardDescription className="text-xs sm:text-sm truncate">
+                                {invitation.email}
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="py-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="destructive" className="text-xs">
+                              Rejected
+                            </Badge>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="bg-muted/20 border-t pb-3">
+                          <div className="flex w-full gap-2">
+                            {isAdmin && (
+                              <Button
+                                size="sm"
+                                disabled={inviteMember.isPending}
+                                onClick={() => {
+                                  inviteMember.mutate({
+                                    idOrSlug: organizationSlug,
+                                    firstName: invitation.name?.split(" ")[0] ?? "",
+                                    lastName: invitation.name?.split(" ")[1] ?? "",
+                                    email: invitation.email,
+                                    role: invitation.role as "member" | "admin" | "owner",
+                                    teamId: invitation.teamId,
+                                  });
+                                }}
+                                title="Cancel invitation"
+                                className="flex-1"
+                              >
+                                <Trash className="size-4" />
+                                <span>Re-invite</span>
+                              </Button>
+                            )}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    );
+                  }
+
                   return (
                     <Card key={invitation.id} className="overflow-hidden pb-0">
                       <CardHeader className="pb-3">
@@ -456,13 +527,11 @@ function RouteComponent() {
                       <CardContent className="py-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {upperFirst((invitation as any).role ?? "")}
+                            {upperFirst(invitation.role ?? "")}
                           </Badge>
                           <div className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Calendar className="size-3" />
-                            <span>
-                              Invited {dayjs((invitation as any).createdAt).format("MMM D, YYYY")}
-                            </span>
+                            <span>Invited {dayjs(invitation.expiresAt).format("MMM D, YYYY")}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -472,19 +541,16 @@ function RouteComponent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              toast.promise(
-                                navigator.clipboard.writeText((invitation as any).invitationLink),
-                                {
-                                  loading: "Copying invitation link...",
-                                  success: "Invitation link copied!",
-                                  error: "Failed to copy link",
-                                },
-                              );
+                              toast.promise(navigator.clipboard.writeText(invitation.link), {
+                                loading: "Copying invitation link...",
+                                success: "Invitation link copied!",
+                                error: "Failed to copy link",
+                              });
                             }}
                             className="flex-1 text-xs sm:text-sm"
                           >
                             <Copy className="size-4" />
-                            <span className="hidden sm:inline">Copy Link</span>
+                            <span className="hidden sm:inline">Copy link</span>
                             <span className="sm:hidden">Copy</span>
                           </Button>
 
@@ -494,10 +560,7 @@ function RouteComponent() {
                               variant="destructive"
                               disabled={cancelInvitation.isPending}
                               onClick={() => {
-                                cancelInvitation.mutate({
-                                  idOrSlug: organizationSlug,
-                                  invitationId: invitation.id,
-                                } as any);
+                                cancelInvitation.mutate({ id: invitation.id });
                               }}
                               title="Cancel invitation"
                               className="flex-initial"

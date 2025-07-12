@@ -83,7 +83,7 @@ function RouteComponent() {
           }
           return {
             ...sessionData,
-            session: { ...sessionData.session, activeOrganizationId: data.id },
+            session: { ...sessionData.session, activeOrganizationSlug: data.slug },
           };
         });
         navigate({

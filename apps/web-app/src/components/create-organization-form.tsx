@@ -54,10 +54,7 @@ export function CreateOrganizationForm(props: {
         }
         return {
           ...sessionData,
-          session: {
-            ...sessionData.session,
-            activeOrganizationId: data.organization.id,
-          },
+          session: { ...sessionData.session, activeOrganizationSlug: data.organization.slug },
         };
       });
       props.onSuccess?.(data);

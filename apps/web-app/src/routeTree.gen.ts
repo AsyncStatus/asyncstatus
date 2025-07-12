@@ -13,11 +13,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
-import { Route as InvitationLayoutRouteImport } from './routes/invitation/_layout'
+import { Route as InvitationsLayoutRouteImport } from './routes/invitations/_layout'
 import { Route as CreateOrganizationLayoutRouteImport } from './routes/create-organization/_layout'
 import { Route as authLayoutRouteImport } from './routes/(auth)/_layout'
 import { Route as OrganizationSlugLayoutRouteImport } from './routes/$organizationSlug/_layout'
-import { Route as InvitationLayoutIndexRouteImport } from './routes/invitation/_layout.index'
+import { Route as InvitationsLayoutIndexRouteImport } from './routes/invitations/_layout.index'
 import { Route as CreateOrganizationLayoutIndexRouteImport } from './routes/create-organization/_layout.index'
 import { Route as OrganizationSlugLayoutIndexRouteImport } from './routes/$organizationSlug/_layout.index'
 import { Route as authLayoutSignUpRouteImport } from './routes/(auth)/_layout.sign-up'
@@ -32,14 +32,14 @@ import { Route as OrganizationSlugLayoutUsersUserIdRouteImport } from './routes/
 import { Route as OrganizationSlugLayoutTeamsTeamIdRouteImport } from './routes/$organizationSlug/_layout.teams/$teamId'
 import { Route as OrganizationSlugLayoutStatusUpdateStatusUpdateIdRouteImport } from './routes/$organizationSlug/_layout.status-update/$statusUpdateId'
 
-const InvitationRouteImport = createFileRoute('/invitation')()
+const InvitationsRouteImport = createFileRoute('/invitations')()
 const CreateOrganizationRouteImport = createFileRoute('/create-organization')()
 const authRouteImport = createFileRoute('/(auth)')()
 const OrganizationSlugRouteImport = createFileRoute('/$organizationSlug')()
 
-const InvitationRoute = InvitationRouteImport.update({
-  id: '/invitation',
-  path: '/invitation',
+const InvitationsRoute = InvitationsRouteImport.update({
+  id: '/invitations',
+  path: '/invitations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateOrganizationRoute = CreateOrganizationRouteImport.update({
@@ -65,9 +65,9 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const InvitationLayoutRoute = InvitationLayoutRouteImport.update({
+const InvitationsLayoutRoute = InvitationsLayoutRouteImport.update({
   id: '/_layout',
-  getParentRoute: () => InvitationRoute,
+  getParentRoute: () => InvitationsRoute,
 } as any)
 const CreateOrganizationLayoutRoute =
   CreateOrganizationLayoutRouteImport.update({
@@ -82,10 +82,10 @@ const OrganizationSlugLayoutRoute = OrganizationSlugLayoutRouteImport.update({
   id: '/_layout',
   getParentRoute: () => OrganizationSlugRoute,
 } as any)
-const InvitationLayoutIndexRoute = InvitationLayoutIndexRouteImport.update({
+const InvitationsLayoutIndexRoute = InvitationsLayoutIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => InvitationLayoutRoute,
+  getParentRoute: () => InvitationsLayoutRoute,
 } as any)
 const CreateOrganizationLayoutIndexRoute =
   CreateOrganizationLayoutIndexRouteImport.update({
@@ -167,7 +167,7 @@ export interface FileRoutesByFullPath {
   '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
-  '/invitation': typeof InvitationLayoutRouteWithChildren
+  '/invitations': typeof InvitationsLayoutRouteWithChildren
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -175,7 +175,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation/': typeof InvitationLayoutIndexRoute
+  '/invitations/': typeof InvitationsLayoutIndexRoute
   '/$organizationSlug/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
   '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -187,7 +187,7 @@ export interface FileRoutesByTo {
   '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
   '/': typeof LayoutIndexRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation': typeof InvitationLayoutIndexRoute
+  '/invitations': typeof InvitationsLayoutIndexRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
   '/login': typeof authLayoutLoginRoute
@@ -209,8 +209,8 @@ export interface FileRoutesById {
   '/(auth)/_layout': typeof authLayoutRouteWithChildren
   '/create-organization': typeof CreateOrganizationRouteWithChildren
   '/create-organization/_layout': typeof CreateOrganizationLayoutRouteWithChildren
-  '/invitation': typeof InvitationRouteWithChildren
-  '/invitation/_layout': typeof InvitationLayoutRouteWithChildren
+  '/invitations': typeof InvitationsRouteWithChildren
+  '/invitations/_layout': typeof InvitationsLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -219,7 +219,7 @@ export interface FileRoutesById {
   '/(auth)/_layout/sign-up': typeof authLayoutSignUpRoute
   '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
-  '/invitation/_layout/': typeof InvitationLayoutIndexRoute
+  '/invitations/_layout/': typeof InvitationsLayoutIndexRoute
   '/$organizationSlug/_layout/status-update/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdateStatusUpdateIdRoute
   '/$organizationSlug/_layout/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -233,7 +233,7 @@ export interface FileRouteTypes {
     | '/$organizationSlug'
     | '/'
     | '/create-organization'
-    | '/invitation'
+    | '/invitations'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -241,7 +241,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/$organizationSlug/'
     | '/create-organization/'
-    | '/invitation/'
+    | '/invitations/'
     | '/$organizationSlug/status-update/$statusUpdateId'
     | '/$organizationSlug/teams/$teamId'
     | '/$organizationSlug/users/$userId'
@@ -253,7 +253,7 @@ export interface FileRouteTypes {
     | '/$organizationSlug'
     | '/'
     | '/create-organization'
-    | '/invitation'
+    | '/invitations'
     | '/$organizationSlug/settings'
     | '/forgot-password'
     | '/login'
@@ -274,8 +274,8 @@ export interface FileRouteTypes {
     | '/(auth)/_layout'
     | '/create-organization'
     | '/create-organization/_layout'
-    | '/invitation'
-    | '/invitation/_layout'
+    | '/invitations'
+    | '/invitations/_layout'
     | '/_layout/'
     | '/$organizationSlug/_layout/settings'
     | '/(auth)/_layout/forgot-password'
@@ -284,7 +284,7 @@ export interface FileRouteTypes {
     | '/(auth)/_layout/sign-up'
     | '/$organizationSlug/_layout/'
     | '/create-organization/_layout/'
-    | '/invitation/_layout/'
+    | '/invitations/_layout/'
     | '/$organizationSlug/_layout/status-update/$statusUpdateId'
     | '/$organizationSlug/_layout/teams/$teamId'
     | '/$organizationSlug/_layout/users/$userId'
@@ -298,16 +298,16 @@ export interface RootRouteChildren {
   OrganizationSlugRoute: typeof OrganizationSlugRouteWithChildren
   authRoute: typeof authRouteWithChildren
   CreateOrganizationRoute: typeof CreateOrganizationRouteWithChildren
-  InvitationRoute: typeof InvitationRouteWithChildren
+  InvitationsRoute: typeof InvitationsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/invitation': {
-      id: '/invitation'
-      path: '/invitation'
-      fullPath: '/invitation'
-      preLoaderRoute: typeof InvitationRouteImport
+    '/invitations': {
+      id: '/invitations'
+      path: '/invitations'
+      fullPath: '/invitations'
+      preLoaderRoute: typeof InvitationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create-organization': {
@@ -345,12 +345,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/invitation/_layout': {
-      id: '/invitation/_layout'
-      path: '/invitation'
-      fullPath: '/invitation'
-      preLoaderRoute: typeof InvitationLayoutRouteImport
-      parentRoute: typeof InvitationRoute
+    '/invitations/_layout': {
+      id: '/invitations/_layout'
+      path: '/invitations'
+      fullPath: '/invitations'
+      preLoaderRoute: typeof InvitationsLayoutRouteImport
+      parentRoute: typeof InvitationsRoute
     }
     '/create-organization/_layout': {
       id: '/create-organization/_layout'
@@ -373,12 +373,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutRouteImport
       parentRoute: typeof OrganizationSlugRoute
     }
-    '/invitation/_layout/': {
-      id: '/invitation/_layout/'
+    '/invitations/_layout/': {
+      id: '/invitations/_layout/'
       path: '/'
-      fullPath: '/invitation/'
-      preLoaderRoute: typeof InvitationLayoutIndexRouteImport
-      parentRoute: typeof InvitationLayoutRoute
+      fullPath: '/invitations/'
+      preLoaderRoute: typeof InvitationsLayoutIndexRouteImport
+      parentRoute: typeof InvitationsLayoutRoute
     }
     '/create-organization/_layout/': {
       id: '/create-organization/_layout/'
@@ -583,27 +583,27 @@ const CreateOrganizationRouteChildren: CreateOrganizationRouteChildren = {
 const CreateOrganizationRouteWithChildren =
   CreateOrganizationRoute._addFileChildren(CreateOrganizationRouteChildren)
 
-interface InvitationLayoutRouteChildren {
-  InvitationLayoutIndexRoute: typeof InvitationLayoutIndexRoute
+interface InvitationsLayoutRouteChildren {
+  InvitationsLayoutIndexRoute: typeof InvitationsLayoutIndexRoute
 }
 
-const InvitationLayoutRouteChildren: InvitationLayoutRouteChildren = {
-  InvitationLayoutIndexRoute: InvitationLayoutIndexRoute,
+const InvitationsLayoutRouteChildren: InvitationsLayoutRouteChildren = {
+  InvitationsLayoutIndexRoute: InvitationsLayoutIndexRoute,
 }
 
-const InvitationLayoutRouteWithChildren =
-  InvitationLayoutRoute._addFileChildren(InvitationLayoutRouteChildren)
+const InvitationsLayoutRouteWithChildren =
+  InvitationsLayoutRoute._addFileChildren(InvitationsLayoutRouteChildren)
 
-interface InvitationRouteChildren {
-  InvitationLayoutRoute: typeof InvitationLayoutRouteWithChildren
+interface InvitationsRouteChildren {
+  InvitationsLayoutRoute: typeof InvitationsLayoutRouteWithChildren
 }
 
-const InvitationRouteChildren: InvitationRouteChildren = {
-  InvitationLayoutRoute: InvitationLayoutRouteWithChildren,
+const InvitationsRouteChildren: InvitationsRouteChildren = {
+  InvitationsLayoutRoute: InvitationsLayoutRouteWithChildren,
 }
 
-const InvitationRouteWithChildren = InvitationRoute._addFileChildren(
-  InvitationRouteChildren,
+const InvitationsRouteWithChildren = InvitationsRoute._addFileChildren(
+  InvitationsRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -611,7 +611,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrganizationSlugRoute: OrganizationSlugRouteWithChildren,
   authRoute: authRouteWithChildren,
   CreateOrganizationRoute: CreateOrganizationRouteWithChildren,
-  InvitationRoute: InvitationRouteWithChildren,
+  InvitationsRoute: InvitationsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
