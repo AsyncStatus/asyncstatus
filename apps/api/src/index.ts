@@ -19,7 +19,6 @@ import { invitationRouter } from "./routers/invitation";
 import { githubRouter } from "./routers/organization/github";
 import { publicShareRouter as organizationPublicShareRouter } from "./routers/organization/publicShare";
 import { statusUpdateRouter } from "./routers/organization/statusUpdate";
-import { teamsRouter } from "./routers/organization/teams";
 import { waitlistRouter } from "./routers/waitlist";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import { getInvitationHandler } from "./typed-handlers/invitation-handlers";
@@ -36,6 +35,16 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import {
+  addTeamMemberHandler,
+  createTeamHandler,
+  deleteTeamHandler,
+  deleteTeamMemberHandler,
+  getTeamHandler,
+  getTeamMembersHandler,
+  listTeamsHandler,
+  updateTeamHandler,
+} from "./typed-handlers/team-handlers";
 import { joinWaitlistHandler } from "./typed-handlers/waitlist-handlers";
 
 const app = new Hono<HonoEnv>()
@@ -78,7 +87,6 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/organization", githubRouter)
-  .route("/organization", teamsRouter)
   .route("/organization", statusUpdateRouter)
   .route("/organization", organizationPublicShareRouter)
   .route("/invitation", invitationRouter)
@@ -122,6 +130,14 @@ const typedHandlersApp = typedHandlersHonoServer(
     setActiveOrganizationHandler,
     createOrganizationHandler,
     updateOrganizationHandler,
+    listTeamsHandler,
+    getTeamHandler,
+    getTeamMembersHandler,
+    createTeamHandler,
+    updateTeamHandler,
+    deleteTeamHandler,
+    addTeamMemberHandler,
+    deleteTeamMemberHandler,
   ],
   {
     getContext: (c) => ({

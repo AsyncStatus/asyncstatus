@@ -1,6 +1,13 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
+  deleteTeamContract,
+  deleteTeamMemberContract,
+  getTeamContract,
+  getTeamMembersContract,
+  listTeamsContract,
+} from "@asyncstatus/api/typed-handlers/team";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -49,20 +56,18 @@ import { useState } from "react";
 import { AddTeamMemberForm } from "@/components/add-team-member-form";
 import { UpdateTeamForm } from "@/components/update-team-form";
 import { getInitials, upperFirst } from "@/lib/utils";
-import {
-  deleteTeamMutationOptions,
-  getTeamMembersQueryOptions,
-  getTeamQueryOptions,
-  removeTeamMemberMutationOptions,
-} from "@/rpc/organization/teams";
-import { typedQueryOptions, typedUrl } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/$teamId")({
   component: TeamDetailsPage,
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug, teamId } }) => {
-    queryClient.prefetchQuery(getTeamQueryOptions(organizationSlug, teamId));
-    queryClient.prefetchQuery(getTeamMembersQueryOptions(organizationSlug, teamId));
+    queryClient.prefetchQuery(
+      typedQueryOptions(getTeamContract, { idOrSlug: organizationSlug, teamId }),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(getTeamMembersContract, { idOrSlug: organizationSlug, teamId }),
+    );
     queryClient.prefetchQuery(
       typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
     );
@@ -78,37 +83,44 @@ function TeamDetailsPage() {
   const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const team = useQuery(getTeamQueryOptions(organizationSlug, teamId));
-  const teamMembers = useQuery(getTeamMembersQueryOptions(organizationSlug, teamId));
+  const team = useQuery(typedQueryOptions(getTeamContract, { idOrSlug: organizationSlug, teamId }));
+  const teamMembers = useQuery(
+    typedQueryOptions(getTeamMembersContract, { idOrSlug: organizationSlug, teamId }),
+  );
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
 
-  const removeTeamMember = useMutation({
-    ...removeTeamMemberMutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: getTeamMembersQueryOptions(organizationSlug, teamId).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: getTeamQueryOptions(organizationSlug, teamId).queryKey,
-      });
-    },
-  });
+  const deleteTeamMember = useMutation(
+    typedMutationOptions(deleteTeamMemberContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getTeamMembersContract, {
+            idOrSlug: organizationSlug,
+            teamId,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getTeamContract, { idOrSlug: organizationSlug, teamId })
+            .queryKey,
+        });
+      },
+    }),
+  );
 
-  const deleteTeam = useMutation({
-    ...deleteTeamMutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["teams", organizationSlug],
-      });
-      // Navigate back to teams list after deletion
-      navigate({
-        to: "/$organizationSlug/teams",
-        params: { organizationSlug },
-      });
-    },
-  });
+  const deleteTeam = useMutation(
+    typedMutationOptions(deleteTeamContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }).queryKey,
+        });
+        navigate({
+          to: "/$organizationSlug/teams",
+          params: { organizationSlug },
+        });
+      },
+    }),
+  );
 
   const isAdmin =
     organization.data.member.role === "admin" || organization.data.member.role === "owner";
@@ -327,9 +339,9 @@ function TeamDetailsPage() {
                       <Button
                         size="sm"
                         variant="destructive"
-                        disabled={removeTeamMember.isPending}
+                        disabled={deleteTeamMember.isPending}
                         onClick={() => {
-                          removeTeamMember.mutate({
+                          deleteTeamMember.mutate({
                             idOrSlug: organizationSlug,
                             teamId,
                             memberId: membership.member.id,

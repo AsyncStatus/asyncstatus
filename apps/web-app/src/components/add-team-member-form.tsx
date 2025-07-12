@@ -1,5 +1,9 @@
-import { zTeamMemberAdd } from "@asyncstatus/api/schema/organization";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
+import {
+  addTeamMemberContract,
+  getTeamContract,
+  getTeamMembersContract,
+} from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Command,
@@ -14,31 +18,32 @@ import { Check, ChevronsUpDown } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import {
-  addTeamMemberMutationOptions,
-  getTeamMembersQueryOptions,
-  getTeamQueryOptions,
-} from "@/rpc/organization/teams";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function AddTeamMemberForm(props: {
   organizationSlug: string;
   teamId: string;
-  onSuccess?: () => void;
+  onSuccess?: (data: typeof addTeamMemberContract.$infer.output) => void;
   onCancel?: () => void;
 }) {
   const queryClient = useQueryClient();
   const [memberPopoverOpen, setMemberPopoverOpen] = useState(false);
 
   const form = useForm({
-    resolver: zodResolver(zTeamMemberAdd),
+    resolver: zodResolver(addTeamMemberContract.inputSchema),
     defaultValues: {
+      idOrSlug: props.organizationSlug,
+      teamId: props.teamId,
       memberId: "",
     },
   });
+
+  useEffect(() => {
+    form.reset({ idOrSlug: props.organizationSlug, teamId: props.teamId });
+  }, [props.organizationSlug, props.teamId]);
 
   // Query to get all organization members to show in the dropdown
   const { data: membersData, isLoading: membersLoading } = useQuery(
@@ -47,26 +52,34 @@ export function AddTeamMemberForm(props: {
 
   // Query to get current team members to filter them out
   const { data: teamMembers, isLoading: teamMembersLoading } = useQuery(
-    getTeamMembersQueryOptions(props.organizationSlug, props.teamId),
+    typedQueryOptions(getTeamMembersContract, {
+      idOrSlug: props.organizationSlug,
+      teamId: props.teamId,
+    }),
   );
 
   // Add member mutation
-  const addMember = useMutation({
-    ...addTeamMemberMutationOptions(),
-    onSuccess: () => {
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({
-        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: getTeamMembersQueryOptions(props.organizationSlug, props.teamId).queryKey,
-      });
+  const addMember = useMutation(
+    typedMutationOptions(addTeamMemberContract, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getTeamContract, {
+            idOrSlug: props.organizationSlug,
+            teamId: props.teamId,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getTeamMembersContract, {
+            idOrSlug: props.organizationSlug,
+            teamId: props.teamId,
+          }).queryKey,
+        });
 
-      // Call success callback and reset form
-      props.onSuccess?.();
-      form.reset();
-    },
-  });
+        props.onSuccess?.(data);
+        form.reset();
+      },
+    }),
+  );
 
   // Filter out members who are already in the team
   const availableMembers =

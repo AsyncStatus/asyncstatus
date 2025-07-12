@@ -1,3 +1,4 @@
+import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -27,8 +28,7 @@ import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 import { Suspense } from "react";
 import { sendVerificationEmailMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
-import { listTeamsQueryOptions } from "@/rpc/organization/teams";
-
+import { typedQueryOptions } from "@/typed-handlers";
 import { OrganizationMenu, OrganizationMenuSkeleton } from "./organization-menu";
 import { UserMenu, UserMenuSkeleton } from "./user-menu";
 
@@ -102,7 +102,11 @@ function AppSidebarBetaNotice() {
 }
 
 function AppSidebarTeams(props: { organizationSlug: string }) {
-  const teams = useSuspenseQuery(listTeamsQueryOptions(props.organizationSlug));
+  const teams = useSuspenseQuery(
+    typedQueryOptions(listTeamsContract, {
+      idOrSlug: props.organizationSlug,
+    }),
+  );
   return teams.data.map((team) => (
     <SidebarMenuItem key={team.id}>
       <SidebarMenuButton asChild>

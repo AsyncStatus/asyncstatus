@@ -1,10 +1,10 @@
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import { listMemberOrganizationsContract } from "@asyncstatus/api/typed-handlers/organization";
+import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { SidebarInset, SidebarProvider } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar";
 import { ensureValidOrganization, ensureValidSession } from "@/routes/-lib/common";
-import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout")({
@@ -18,7 +18,9 @@ export const Route = createFileRoute("/$organizationSlug/_layout")({
       queryClient.ensureQueryData(
         typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }),
       ),
-      queryClient.ensureQueryData(listTeamsQueryOptions(organizationSlug)),
+      queryClient.ensureQueryData(
+        typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }),
+      ),
     ]);
     return { session, organization, organizations, members, teams };
   },

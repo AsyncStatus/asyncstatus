@@ -1,4 +1,5 @@
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
+import { deleteTeamContract, listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +42,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CreateTeamForm } from "@/components/create-team-form";
-import { deleteTeamMutationOptions, listTeamsQueryOptions } from "@/rpc/organization/teams";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/teams/")({
   component: TeamsListPage,
   pendingComponent: PendingComponent,
   loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
-    queryClient.prefetchQuery(listTeamsQueryOptions(organizationSlug));
+    queryClient.prefetchQuery(typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }));
     queryClient.prefetchQuery(
       typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
     );
@@ -61,20 +61,21 @@ function TeamsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [createTeamDialogOpen, setCreateTeamDialogOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
-  const teamList = useQuery(listTeamsQueryOptions(organizationSlug));
+  const teamList = useQuery(typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }));
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
 
-  const deleteTeam = useMutation({
-    ...deleteTeamMutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: listTeamsQueryOptions(organizationSlug).queryKey,
-      });
-      setTeamToDelete(null);
-    },
-  });
+  const deleteTeam = useMutation(
+    typedMutationOptions(deleteTeamContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }).queryKey,
+        });
+        setTeamToDelete(null);
+      },
+    }),
+  );
 
   const isAdmin =
     organization.data?.member.role === "admin" || organization.data?.member.role === "owner";

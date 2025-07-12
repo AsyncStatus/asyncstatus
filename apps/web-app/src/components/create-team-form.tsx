@@ -1,11 +1,12 @@
-import { zTeamCreate } from "@asyncstatus/api/schema/organization";
+import { createTeamContract, listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { createTeamMutationOptions, listTeamsQueryOptions } from "@/rpc/organization/teams";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function CreateTeamForm(props: {
   organizationSlug: string;
@@ -15,26 +16,28 @@ export function CreateTeamForm(props: {
   const queryClient = useQueryClient();
 
   const form = useForm({
-    resolver: zodResolver(zTeamCreate),
-    defaultValues: {
-      name: "",
-    },
+    resolver: zodResolver(createTeamContract.inputSchema),
+    defaultValues: { idOrSlug: props.organizationSlug, name: "" },
   });
 
-  // Create team mutation
-  const createTeam = useMutation({
-    ...createTeamMutationOptions(),
-    onSuccess: () => {
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({
-        queryKey: listTeamsQueryOptions(props.organizationSlug).queryKey,
-      });
+  useEffect(() => {
+    form.reset({ idOrSlug: props.organizationSlug });
+  }, [props.organizationSlug]);
 
-      // Call success callback
-      props.onSuccess?.();
-      form.reset();
-    },
-  });
+  const createTeam = useMutation(
+    typedMutationOptions(createTeamContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listTeamsContract, {
+            idOrSlug: props.organizationSlug,
+          }).queryKey,
+        });
+
+        props.onSuccess?.();
+        form.reset();
+      },
+    }),
+  );
 
   const isLoading = createTeam.isPending;
 
@@ -42,10 +45,7 @@ export function CreateTeamForm(props: {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) => {
-          createTeam.mutate({
-            idOrSlug: props.organizationSlug,
-            name: data.name,
-          });
+          createTeam.mutate({ idOrSlug: props.organizationSlug, name: data.name });
         })}
         className="space-y-4"
       >
@@ -68,7 +68,7 @@ export function CreateTeamForm(props: {
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading || !form.formState.isValid}>
-            {isLoading ? "Creating..." : "Create Team"}
+            Create team
           </Button>
         </div>
       </form>

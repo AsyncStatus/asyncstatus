@@ -1,4 +1,8 @@
-import { zTeamUpdate } from "@asyncstatus/api/schema/organization";
+import {
+  getTeamContract,
+  listTeamsContract,
+  updateTeamContract,
+} from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,58 +10,57 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import {
-  getTeamQueryOptions,
-  listTeamsQueryOptions,
-  updateTeamMutationOptions,
-} from "@/rpc/organization/teams";
+import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function UpdateTeamForm(props: {
   organizationSlug: string;
   teamId: string;
-  onSuccess?: () => void;
+  onSuccess?: (data: typeof updateTeamContract.$infer.output) => void;
   onCancel?: () => void;
 }) {
   const queryClient = useQueryClient();
-
-  // Get current team data
   const { data: teamData, isLoading: teamLoading } = useQuery(
-    getTeamQueryOptions(props.organizationSlug, props.teamId),
+    typedQueryOptions(getTeamContract, { idOrSlug: props.organizationSlug, teamId: props.teamId }),
   );
 
   const form = useForm({
-    resolver: zodResolver(zTeamUpdate),
+    resolver: zodResolver(updateTeamContract.inputSchema),
     defaultValues: {
+      idOrSlug: props.organizationSlug,
+      teamId: props.teamId,
       name: teamData?.name || "",
     },
   });
 
-  // Update form values when teamData loads
   useEffect(() => {
     if (teamData) {
       form.reset({
+        idOrSlug: props.organizationSlug,
+        teamId: props.teamId,
         name: teamData.name,
       });
     }
   }, [teamData, form]);
 
-  // Update team mutation
-  const updateTeam = useMutation({
-    ...updateTeamMutationOptions(),
-    onSuccess: () => {
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({
-        queryKey: getTeamQueryOptions(props.organizationSlug, props.teamId).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: listTeamsQueryOptions(props.organizationSlug).queryKey,
-      });
+  const updateTeam = useMutation(
+    typedMutationOptions(updateTeamContract, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getTeamContract, {
+            idOrSlug: props.organizationSlug,
+            teamId: props.teamId,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listTeamsContract, { idOrSlug: props.organizationSlug })
+            .queryKey,
+        });
 
-      // Call success callback
-      props.onSuccess?.();
-      form.reset();
-    },
-  });
+        props.onSuccess?.(data);
+        form.reset();
+      },
+    }),
+  );
 
   const isLoading = teamLoading || updateTeam.isPending;
 
@@ -92,7 +95,7 @@ export function UpdateTeamForm(props: {
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading || !form.formState.isValid}>
-            {isLoading ? "Updating..." : "Update Team"}
+            Update team
           </Button>
         </div>
       </form>

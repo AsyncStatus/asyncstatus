@@ -1,5 +1,6 @@
 import { inviteMemberContract, listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
+import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Command,
@@ -19,7 +20,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
-import { listTeamsQueryOptions } from "@/rpc/organization/teams";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function InviteMemberForm(props: {
@@ -43,7 +43,9 @@ export function InviteMemberForm(props: {
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: props.organizationSlug }),
   );
-  const teams = useQuery(listTeamsQueryOptions(props.organizationSlug));
+  const teams = useQuery(
+    typedQueryOptions(listTeamsContract, { idOrSlug: props.organizationSlug }),
+  );
 
   useEffect(() => {
     if (teams.data?.[0]) {
