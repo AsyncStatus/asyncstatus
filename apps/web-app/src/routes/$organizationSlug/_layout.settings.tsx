@@ -346,6 +346,7 @@ function RouteComponent() {
   const form = useForm({
     resolver: zodResolver(updateOrganizationContract.inputSchema),
     defaultValues: {
+      idOrSlug: params.organizationSlug,
       name: organizationQuery.data?.organization.name || "",
       slug: organizationQuery.data?.organization.slug || "",
       logo: organizationQuery.data?.organization.logo || null,
@@ -355,6 +356,7 @@ function RouteComponent() {
   useEffect(() => {
     if (organizationQuery.data) {
       form.reset({
+        idOrSlug: params.organizationSlug,
         name: organizationQuery.data.organization.name,
         slug: organizationQuery.data.organization.slug,
         logo: organizationQuery.data.organization.logo,
