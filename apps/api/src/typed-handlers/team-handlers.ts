@@ -63,8 +63,8 @@ export const getTeamHandler = typedHandler<
       });
       if (!foundTeam) {
         throw new TypedHandlersError({
-          code: "FORBIDDEN",
-          message: "You are not authorized to access this team",
+          code: "NOT_FOUND",
+          message: "Team not found",
         });
       }
       return foundTeam;

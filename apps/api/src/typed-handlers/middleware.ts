@@ -50,8 +50,8 @@ export const requiredOrganization = typedMiddleware<TypedHandlersContextWithOrga
     const { members, ...restOrg } = org;
     if (!members[0]) {
       throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You are not a member of this organization",
+        code: "NOT_FOUND",
+        message: "Organization not found",
       });
     }
 
