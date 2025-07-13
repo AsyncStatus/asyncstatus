@@ -133,15 +133,18 @@ export default async function Page(props: {
           <WaitlistDialog buttonSize="lg" />
         </div>
 
+        {/* aspect-[2.4/1] */}
         <video
-          src="https://cdn.asyncstatus.com/BigBoss_5%202.mp4"
-          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16 aspect-[12/5]"
+          className="mt-36 w-full rounded-lg max-sm:mt-16 aspect-[2.4/1]"
           autoPlay
           loop
           muted
           playsInline
           controls
-        />
+        >
+          <source src="https://cdn.asyncstatus.com/BigBoss_9.mov" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
         <p className="text-muted-foreground mt-6 text-center text-lg">Watch with sound on.</p>
         {/* <img
           src="/hero-light.webp"
