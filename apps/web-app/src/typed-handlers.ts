@@ -6,11 +6,11 @@ import {
 import { typedUrlFactory } from "@asyncstatus/typed-handlers/url";
 import { getIncomingHeaders } from "./get-incoming-headers";
 
-const typedContractFetch = typedContractFetchFactory(`${import.meta.env.VITE_API_URL}/th`, () => {
+const typedContractFetch = typedContractFetchFactory(import.meta.env.VITE_API_URL, () => {
   const headers = new Headers();
   headers.set("cookie", (getIncomingHeaders() as any)["cookie"] ?? "");
   return { credentials: "include", headers };
 });
 export const typedQueryOptions = typedQueryOptionsFactory(typedContractFetch);
 export const typedMutationOptions = typedMutationOptionsFactory(typedContractFetch);
-export const typedUrl = typedUrlFactory(`${import.meta.env.VITE_API_URL}/th`);
+export const typedUrl = typedUrlFactory(import.meta.env.VITE_API_URL);

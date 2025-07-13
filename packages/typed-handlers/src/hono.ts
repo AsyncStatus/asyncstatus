@@ -33,6 +33,7 @@ export function typedHandlersHonoServer<_Hono extends Hono<any, any, any>>(
       typedHandlerCtx.input = await getHandlerInput(c);
       typedHandlerCtx.req = c.req.raw;
       typedHandlerCtx.res = c.res;
+      typedHandlerCtx.redirect = c.redirect;
       const output = await handler.handle(typedHandlerCtx);
       if (output instanceof Response) {
         return output;

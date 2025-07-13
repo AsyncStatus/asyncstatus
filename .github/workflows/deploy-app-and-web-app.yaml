@@ -42,6 +42,7 @@ jobs:
           VITE_WEB_APP_URL: ${{ vars.WEB_APP_URL }}
           VITE_MARKETING_APP_URL: ${{ vars.MARKETING_APP_URL }}
           VITE_STRIPE_CUSTOMER_PORTAL: ${{ vars.VITE_STRIPE_CUSTOMER_PORTAL }}
+          VITE_GITHUB_INTEGRATION_APP_NAME: ${{ vars.VITE_GITHUB_INTEGRATION_APP_NAME }}
 
       - name: Deploy Web App
         uses: cloudflare/wrangler-action@v3

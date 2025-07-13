@@ -31,8 +31,8 @@ import { Check, ChevronsUpDown, Plus } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { getInitials } from "@/lib/utils";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { CreateOrganizationForm } from "./create-organization-form";
 

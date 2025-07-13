@@ -23,8 +23,8 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { Mail, User } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { getInitials } from "@/lib/utils";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/invitations/_layout/")({

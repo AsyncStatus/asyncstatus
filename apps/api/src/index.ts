@@ -14,8 +14,14 @@ import {
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { queue } from "./queue";
-import { githubRouter } from "./routers/organization/github";
 import { getFileHandler } from "./typed-handlers/file-handlers";
+import {
+  deleteGithubIntegrationHandler,
+  getGithubIntegrationHandler,
+  githubIntegrationCallbackHandler,
+  listGithubRepositoriesHandler,
+  listGithubUsersHandler,
+} from "./typed-handlers/github-integration-handlers";
 import {
   acceptInvitationHandler,
   cancelInvitationHandler,
@@ -121,11 +127,11 @@ const app = new Hono<HonoEnv>()
     c.set("voyageClient", context.voyageClient);
     c.set("githubWebhooks", context.githubWebhooks);
     c.set("session" as any, context.session);
+    c.set("workflow", context.workflow);
     return next();
   })
   .route("/auth", authRouter)
-  .route("/organization", githubRouter)
-  .route("/github/webhooks", githubWebhooksRouter)
+  .route("/integrations/github/webhooks", githubWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
     if (err instanceof TypedHandlersError) {
@@ -150,7 +156,7 @@ const app = new Hono<HonoEnv>()
   });
 
 const typedHandlersApp = typedHandlersHonoServer(
-  app.basePath("/th"),
+  app,
   [
     joinWaitlistHandler,
     listUserInvitationsHandler,
@@ -183,6 +189,11 @@ const typedHandlersApp = typedHandlersHonoServer(
     getStatusUpdateHandler,
     upsertStatusUpdateHandler,
     deleteStatusUpdateHandler,
+    getGithubIntegrationHandler,
+    githubIntegrationCallbackHandler,
+    listGithubRepositoriesHandler,
+    listGithubUsersHandler,
+    deleteGithubIntegrationHandler,
   ],
   {
     getContext: (c) => ({
@@ -199,6 +210,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       organization: c.get("organization" as any),
       member: c.get("member" as any),
       webAppUrl: c.env.WEB_APP_URL,
+      workflow: c.get("workflow"),
     }),
   },
 );

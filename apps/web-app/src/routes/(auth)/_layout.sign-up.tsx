@@ -8,8 +8,11 @@ import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tansta
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import {
+  sendVerificationEmailMutationOptions,
+  signUpEmailMutationOptions,
+} from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { sendVerificationEmailMutationOptions, signUpEmailMutationOptions } from "@/rpc/auth";
 import { typedQueryOptions } from "@/typed-handlers";
 
 export const Route = createFileRoute("/(auth)/_layout/sign-up")({

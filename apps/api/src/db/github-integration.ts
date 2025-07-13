@@ -17,20 +17,18 @@ export const githubIntegration = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 
     syncId: text("sync_id"),
-    syncStatusName: text("sync_status_name"),
-    syncStatusStep: text("sync_status_step"),
-    syncStatusUpdatedAt: integer("sync_updated_at", { mode: "timestamp" }),
+    syncUpdatedAt: integer("sync_updated_at", { mode: "timestamp" }),
     syncStartedAt: integer("sync_started_at", { mode: "timestamp" }),
     syncFinishedAt: integer("sync_finished_at", { mode: "timestamp" }),
     syncError: text("sync_error"),
     syncErrorAt: integer("sync_error_at", { mode: "timestamp" }),
 
     deleteId: text("delete_id"),
-    deleteStatus: text("delete_status"),
     deleteError: text("delete_error"),
   },
   (t) => [
     index("github_organization_id_index").on(t.organizationId),
+    index("github_sync_id_index").on(t.syncId),
     index("github_installation_id_index").on(t.installationId),
   ],
 );

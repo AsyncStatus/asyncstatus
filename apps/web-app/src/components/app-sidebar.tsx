@@ -29,7 +29,10 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
 import { Suspense } from "react";
-import { sendVerificationEmailMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
+import {
+  sendVerificationEmailMutationOptions,
+  sessionBetterAuthQueryOptions,
+} from "@/better-auth-tanstack-query";
 import { typedQueryOptions } from "@/typed-handlers";
 import { OrganizationMenu, OrganizationMenuSkeleton } from "./organization-menu";
 import { UserMenu, UserMenuSkeleton } from "./user-menu";

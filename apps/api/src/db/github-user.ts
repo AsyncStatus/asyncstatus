@@ -28,24 +28,15 @@ export const githubUser = sqliteTable(
 export const GithubUser = createSelectSchema(githubUser, {
   githubId: z.string().trim().min(1),
   login: z.string().trim().min(1),
-  avatarUrl: z.string().trim().min(1),
-  name: z.string().trim().min(1),
-  email: z.string().trim().min(1),
 });
 export type GithubUser = z.output<typeof GithubUser>;
 export const GithubUserInsert = createInsertSchema(githubUser, {
   githubId: z.string().trim().min(1),
   login: z.string().trim().min(1),
-  avatarUrl: z.string().trim().min(1),
-  name: z.string().trim().min(1),
-  email: z.string().trim().min(1),
 });
 export type GithubUserInsert = z.output<typeof GithubUserInsert>;
 export const GithubUserUpdate = createUpdateSchema(githubUser, {
   githubId: z.string().trim().min(1),
   login: z.string().trim().min(1),
-  avatarUrl: z.string().trim().min(1),
-  name: z.string().trim().min(1),
-  email: z.string().trim().min(1),
 });
 export type GithubUserUpdate = z.output<typeof GithubUserUpdate>;

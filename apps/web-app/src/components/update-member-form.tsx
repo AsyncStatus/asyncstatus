@@ -35,9 +35,9 @@ import { zodResolver } from "@asyncstatus/ui/lib/zod-resolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { Form } from "./form";
 

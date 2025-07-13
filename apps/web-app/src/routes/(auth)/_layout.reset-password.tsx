@@ -6,8 +6,8 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import { resetPasswordMutationOptions } from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { resetPasswordMutationOptions } from "@/rpc/auth";
 
 export const Route = createFileRoute("/(auth)/_layout/reset-password")({
   component: RouteComponent,

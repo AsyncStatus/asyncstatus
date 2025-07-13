@@ -1,4 +1,6 @@
 /// <reference types="vite/client" />
+
+import { Toaster } from "@asyncstatus/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect } from "react";
@@ -83,6 +85,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Suspense>
           <ReactQueryDevtools />
         </Suspense>
+        <Toaster />
         <Scripts />
       </body>
     </html>

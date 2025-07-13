@@ -19,8 +19,8 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { ChevronsUpDown, CreditCard, LogOut, Settings } from "@asyncstatus/ui/icons";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { logoutMutationOptions, sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { getInitials } from "@/lib/utils";
-import { logoutMutationOptions, sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedUrl } from "@/typed-handlers";
 import { ThemeToggle } from "./toggle-theme";
 

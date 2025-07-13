@@ -1,7 +1,7 @@
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import type { QueryClient } from "@tanstack/react-query";
 import { type ParsedLocation, redirect } from "@tanstack/react-router";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { typedQueryOptions } from "@/typed-handlers";
 
 export async function ensureValidSession(queryClient: QueryClient, location: ParsedLocation) {

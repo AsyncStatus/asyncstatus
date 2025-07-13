@@ -6,6 +6,10 @@ import type { TypedMiddleware } from "./typed-middleware";
 export type TypedHandlerCtx<Context, TC extends TypedContract<any, any, any>> = Context & {
   req: Request;
   res: Response;
+  redirect: (
+    location: string | URL,
+    status?: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
+  ) => Response;
   input: TC["$infer"]["input"];
 };
 

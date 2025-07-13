@@ -12,6 +12,7 @@ import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import {
   Form,
   FormControl,
@@ -22,7 +23,6 @@ import {
   FormMessage,
 } from "@/components/form";
 import useDebounce from "@/lib/use-debounce";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 export function CreateOrganizationForm(props: {

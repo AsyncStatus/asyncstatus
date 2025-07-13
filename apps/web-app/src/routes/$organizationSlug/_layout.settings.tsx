@@ -1,4 +1,5 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   getOrganizationContract,
@@ -7,37 +8,68 @@ import {
 } from "@asyncstatus/api/typed-handlers/organization";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import {
+  NotSiMicrosoftTeams,
+  SiAsana,
+  SiClickup,
+  SiFigma,
+  SiGithub,
+  SiGitlab,
+  SiGooglemeet,
+  SiJira,
+  SiLinear,
+  SiNotion,
+  SiSlack,
+  SiTrello,
+  SiZoom,
+} from "@asyncstatus/ui/brand-icons";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
-import { Card, CardContent } from "@asyncstatus/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@asyncstatus/ui/components/card";
 import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@asyncstatus/ui/components/select";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/components/tabs";
-import { CreditCard } from "@asyncstatus/ui/icons";
+import { CreditCard, Send } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { GitHubIntegrationCard } from "@/components/github-integration-card";
+import {
+  IntegrationSettingsItem,
+  IntegrationSuggestionItem,
+} from "@/components/integration-settings";
 import { UpdateMemberForm } from "@/components/update-member-form";
-import { sessionBetterAuthQueryOptions } from "@/rpc/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
   component: RouteComponent,
   validateSearch: z.object({
-    tab: z.enum(["workspace", "profile", "integrations"]).default("workspace"),
+    tab: z.enum(["workspace", "integrations", "profile"]).default("workspace"),
   }),
   loader: async ({ context: { queryClient }, location, params: { organizationSlug } }) => {
     const [organization] = await Promise.all([
@@ -45,17 +77,24 @@ export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
       ensureValidSession(queryClient, location),
     ]);
 
-    queryClient.prefetchQuery(
-      typedQueryOptions(getOrganizationContract, {
-        idOrSlug: organizationSlug,
-      }),
-    );
-    queryClient.prefetchQuery(
-      typedQueryOptions(getMemberContract, {
-        idOrSlug: organizationSlug,
-        memberId: organization.member.id,
-      }),
-    );
+    await Promise.all([
+      queryClient.ensureQueryData(
+        typedQueryOptions(getOrganizationContract, {
+          idOrSlug: organizationSlug,
+        }),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getMemberContract, {
+          idOrSlug: organizationSlug,
+          memberId: organization.member.id,
+        }),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getGithubIntegrationContract, {
+          idOrSlug: organizationSlug,
+        }),
+      ),
+    ]);
   },
 });
 
@@ -64,6 +103,186 @@ function RouteComponent() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "connected" | "disconnected" | "connecting"
+  >("all");
+  const githubIntegrationQuery = useQuery(
+    typedQueryOptions(getGithubIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
+
+  const integrations = useMemo(
+    () => [
+      {
+        name: "GitHub",
+        description: "Track commits, pull requests, code reviews, and issue management.",
+        icon: <SiGithub className="size-3.5" />,
+        status: githubIntegrationQuery.data?.syncFinishedAt
+          ? "connected"
+          : githubIntegrationQuery.data?.syncStartedAt
+            ? "connecting"
+            : "disconnected",
+        connectLink: `https://github.com/apps/${import.meta.env.VITE_GITHUB_INTEGRATION_APP_NAME}/installations/new?state=${params.organizationSlug}`,
+        children: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your GitHub activity in real-time.</li>
+                <li>Generates meaningful status updates from your code contributions.</li>
+                <li>Links AsyncStatus profiles to your GitHub accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Read-only access - we never modify your code.</li>
+                <li>Secure OAuth authentication with GitHub.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>
+                  Data is used only for status update generation. We don't store any of your code.
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Data we track</h4>
+              <p className="text-xs text-muted-foreground mb-2">
+                Read-only access to the following GitHub data:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  <strong>Code & Commits:</strong> Track code changes, contributions, and commit
+                  history.
+                </li>
+                <li>
+                  <strong>Pull Requests:</strong> Monitor code reviews, merges, and collaboration.
+                </li>
+                <li>
+                  <strong>Issues & Discussions:</strong> Follow bug reports, feature requests, and
+                  team discussions.
+                </li>
+                <li>
+                  <strong>Actions & Checks:</strong> Track CI/CD workflows, build statuses, and
+                  automated checks.
+                </li>
+                <li>
+                  <strong>Deployments:</strong> Monitor deployment activity and release management.
+                </li>
+                <li>
+                  <strong>Projects & Packages:</strong> Track project boards, package releases, and
+                  dependencies.
+                </li>
+                <li>
+                  <strong>Organization Data:</strong> Access team membership, events, and
+                  organizational insights.
+                </li>
+                <li>
+                  <strong>Repository Metadata:</strong> Read repository settings, properties, and
+                  administration data.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <strong>Status Example:</strong> "Reviewed 3 pull requests, merged feature/user-auth,
+              and resolved 2 critical issues in the dashboard repository."
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Slack",
+        description: "Monitor channel activity, direct messages, and team communication.",
+        icon: <SiSlack className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Linear",
+        description: "Sync issue updates, sprint progress, and project milestones.",
+        icon: <SiLinear className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "GitLab",
+        description: "Monitor merge requests, CI/CD pipelines, and repository activity.",
+        icon: <SiGitlab className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Asana",
+        description: "Track task completions, project updates, and team assignments.",
+        icon: <SiAsana className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Jira",
+        description: "Track ticket status, sprint progress, and bug resolution.",
+        icon: <SiJira className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Google Meet",
+        description: "Track meeting attendance, duration, and collaboration sessions.",
+        icon: <SiGooglemeet className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Microsoft Teams",
+        description: "Track meeting attendance, duration, and collaboration sessions.",
+        icon: <NotSiMicrosoftTeams className="size-3.5 dark:fill-white" />,
+        status: "disconnected",
+      },
+      {
+        name: "Zoom",
+        description: "Monitor meeting participation, recording activity, and team calls.",
+        icon: <SiZoom className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "ClickUp",
+        description: "Monitor task status, time tracking, and goal progress.",
+        icon: <SiClickup className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Trello",
+        description: "Monitor card movements, board updates, and task progress.",
+        icon: <SiTrello className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Notion",
+        description: "Track page edits, database updates, and workspace activity.",
+        icon: <SiNotion className="size-3.5" />,
+        status: "disconnected",
+      },
+      {
+        name: "Figma",
+        description: "Track design updates, prototype changes, and design reviews.",
+        icon: <SiFigma className="size-3.5" />,
+        status: "disconnected",
+      },
+    ],
+    [githubIntegrationQuery.data],
+  );
+
+  const filteredIntegrations = useMemo(() => {
+    return integrations.filter((integration) => {
+      const matchesSearch =
+        integration.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        integration.description.toLowerCase().includes(searchText.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "connected" && integration.status === "connected") ||
+        (statusFilter === "disconnected" && integration.status === "disconnected");
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [integrations, searchText, statusFilter]);
 
   const organizationQuery = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: params.organizationSlug }),
@@ -161,9 +380,90 @@ function RouteComponent() {
         >
           <TabsList className="mb-4">
             <TabsTrigger value="workspace">Workspace</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="integrations" className="space-y-4">
+            <Card>
+              <CardHeader className="gap-0.5">
+                <CardTitle className="text-xl">Integrations</CardTitle>
+                <CardDescription>Connect your favorite tools to your workspace.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="connected">Connected</SelectItem>
+                      <SelectItem value="disconnected">Disconnected</SelectItem>
+                      <SelectItem value="connecting">Connecting</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Input
+                    type="text"
+                    placeholder="Search for an integration"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 overflow-y-auto h-[calc(100vh-310px)] grid-auto-rows-min items-start">
+                  {filteredIntegrations.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <div className="space-y-2">
+                        <p>No integrations found matching your search criteria.</p>
+                        <div className="space-y-3">
+                          <p className="text-sm text-muted-foreground">
+                            Don't see the integration you're looking for?
+                          </p>
+                          <Button asChild size="sm">
+                            <a
+                              href="mailto:kacper@asyncstatus.com?subject=Integration Suggestion&body=I'd like to suggest adding support for: [Tool Name]%0A%0AUse case: [How you would use this integration]%0A%0AAdditional context: [Any other relevant information]"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <Send className="size-3" />
+                              Suggest an integration
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    filteredIntegrations.map((integration, index) => {
+                      return (
+                        <Fragment key={integration.name}>
+                          {index === 3 && <IntegrationSuggestionItem />}
+                          <IntegrationSettingsItem
+                            name={integration.name}
+                            description={integration.description}
+                            icon={integration.icon}
+                            status={
+                              integration.status as "connected" | "disconnected" | "connecting"
+                            }
+                            connectLink={integration.connectLink}
+                            onDisconnect={() => {}}
+                            onViewDetails={() => {}}
+                            onSettings={() => {}}
+                          >
+                            {integration.children}
+                          </IntegrationSettingsItem>
+                        </Fragment>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent
             value="workspace"
@@ -178,6 +478,10 @@ function RouteComponent() {
             className="space-y-4"
           >
             <Card>
+              <CardHeader className="pb-6! gap-0.5">
+                <CardTitle className="text-xl">Workspace</CardTitle>
+                <CardDescription>Manage your workspace settings.</CardDescription>
+              </CardHeader>
               <CardContent>
                 <Form {...form}>
                   <form
@@ -233,8 +537,12 @@ function RouteComponent() {
                       />
                     </div>
 
-                    <Button type="submit" disabled={updateOrganizationMutation.isPending}>
-                      Save changes
+                    <Button
+                      type="submit"
+                      disabled={updateOrganizationMutation.isPending}
+                      className="w-full"
+                    >
+                      Save
                     </Button>
                   </form>
                 </Form>
@@ -242,12 +550,12 @@ function RouteComponent() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="integrations" className="space-y-4">
-            <GitHubIntegrationCard organizationSlug={params.organizationSlug} />
-          </TabsContent>
-
           <TabsContent value="profile" className="space-y-4">
             <Card>
+              <CardHeader className="pb-6! gap-0.5">
+                <CardTitle className="text-xl">Profile</CardTitle>
+                <CardDescription>Manage your profile settings.</CardDescription>
+              </CardHeader>
               <CardContent>
                 <UpdateMemberForm
                   organizationSlugOrId={params.organizationSlug}

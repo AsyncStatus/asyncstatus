@@ -4,8 +4,6 @@ export const SyncGithubWorkflowStatusName = {
   start: "start",
   fetchAndSyncRepositories: "fetch_and_sync_repositories",
   fetchAndSyncUsers: "fetch_and_sync_users",
-  fetchAndSyncEvents: "fetch_and_sync_events",
-  processEvents: "process_events",
 } as const;
 
 export const SyncGithubWorkflowStatusStep = {

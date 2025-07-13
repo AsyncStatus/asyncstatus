@@ -55,6 +55,10 @@ export type Variables = {
   voyageClient: VoyageAIClient;
   githubWebhooks: GithubWebhooks;
   authKv: KVNamespace;
+  workflow: {
+    syncGithub: Workflow<SyncGithubWorkflowParams>;
+    deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
+  };
 };
 
 export type HonoEnv = {
@@ -107,6 +111,10 @@ export async function createContext(c: Context<HonoEnv>) {
     rateLimiter: {
       waitlist: (next: Next) => waitlistRateLimiter(c, next),
       invitation: (next: Next) => invitationRateLimiter(c, next),
+    },
+    workflow: {
+      syncGithub: c.env.SYNC_GITHUB_WORKFLOW,
+      deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

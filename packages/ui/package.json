@@ -9,7 +9,8 @@
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./icons": "./src/icons.tsx"
+    "./icons": "./src/icons.tsx",
+    "./brand-icons": "./src/brand-icons.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
+    "@icons-pack/react-simple-icons": "13.4.0",
     "@radix-ui/react-accordion": "1.2.4",
     "@radix-ui/react-alert-dialog": "1.1.7",
     "@radix-ui/react-aspect-ratio": "1.1.3",
