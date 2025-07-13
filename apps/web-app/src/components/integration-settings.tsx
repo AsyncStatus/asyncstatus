@@ -21,7 +21,7 @@ export type IntegrationSettingsItemProps = PropsWithChildren<{
   connectLink?: string;
   onViewDetails: () => void;
   onSettings: () => void;
-  onDisconnect: () => void;
+  onDisconnect?: () => void;
 }>;
 
 export function IntegrationSettingsItem(props: IntegrationSettingsItemProps) {
@@ -52,10 +52,17 @@ export function IntegrationSettingsItem(props: IntegrationSettingsItemProps) {
                   {props.status === "connected" ? "Connected" : "Connecting..."}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={props.onSettings}>
-                <Settings className="size-3" />
-                Settings
-              </Button>
+              <IntegrationSettingsDialog
+                isOpen={isOpen}
+                onOpenChange={setIsOpen}
+                name={props.name}
+                description={props.description}
+                icon={props.icon}
+                status={props.status}
+                connectLink={props.connectLink}
+                onDisconnect={props.onDisconnect}
+                onSettings={props.onSettings}
+              />
             </>
           ) : (
             <>
@@ -102,7 +109,7 @@ export type IntegrationSettingsDetailsDialogProps = PropsWithChildren<{
   status: "connected" | "connecting" | "disconnected";
   connectLink?: string;
   onDetailsClick?: () => void;
-  onDisconnect: () => void;
+  onDisconnect?: () => void;
   onSettings: () => void;
 }>;
 
@@ -148,6 +155,55 @@ export function IntegrationSettingsDetailsDialog(props: IntegrationSettingsDetai
             connectLink={props.connectLink}
             variant="default"
           />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export type IntegrationSettingsDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  status: "connected" | "connecting" | "disconnected";
+  connectLink?: string;
+  onDisconnect?: () => void;
+  onSettings: () => void;
+};
+
+export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps) {
+  return (
+    <Dialog open={props.isOpen} onOpenChange={props.onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Settings
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-sm:w-full max-sm:h-[calc(100vh-2rem)] max-sm:flex max-sm:flex-col">
+        <DialogHeader>
+          <DialogTitle>
+            <div className="flex items-center gap-2">
+              <div className="size-3.5">{props.icon}</div>
+              <div className="text-lg">{props.name}</div>
+            </div>
+          </DialogTitle>
+          <DialogDescription className="text-pretty text-left text-base">
+            {props.description}
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="flex flex-row w-full items-center justify-between">
+          {props.onDisconnect && (
+            <Button variant="destructive" onClick={props.onDisconnect}>
+              Disconnect
+            </Button>
+          )}
+
+          <Button variant="outline" onClick={() => props.onOpenChange(false)}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

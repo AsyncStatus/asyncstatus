@@ -1,5 +1,10 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  deleteGithubIntegrationContract,
+  getGithubIntegrationContract,
+  listGithubRepositoriesContract,
+  listGithubUsersContract,
+} from "@asyncstatus/api/typed-handlers/github-integration";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   getOrganizationContract,
@@ -111,6 +116,27 @@ function RouteComponent() {
   const githubIntegrationQuery = useQuery(
     typedQueryOptions(getGithubIntegrationContract, { idOrSlug: params.organizationSlug }),
   );
+  const deleteGithubIntegrationMutation = useMutation(
+    typedMutationOptions(deleteGithubIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getGithubIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listGithubRepositoriesContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listGithubUsersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
 
   const integrations = useMemo(
     () => [
@@ -124,6 +150,9 @@ function RouteComponent() {
             ? "connecting"
             : "disconnected",
         connectLink: `https://github.com/apps/${import.meta.env.VITE_GITHUB_INTEGRATION_APP_NAME}/installations/new?state=${params.organizationSlug}`,
+        onDisconnect: () => {
+          deleteGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+        },
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -450,7 +479,7 @@ function RouteComponent() {
                               integration.status as "connected" | "disconnected" | "connecting"
                             }
                             connectLink={integration.connectLink}
-                            onDisconnect={() => {}}
+                            onDisconnect={integration.onDisconnect}
                             onViewDetails={() => {}}
                             onSettings={() => {}}
                           >
