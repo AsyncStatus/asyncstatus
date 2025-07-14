@@ -1,0 +1,1 @@
+CREATE INDEX github_event_vector_embedding_idx ON github_event_vector(libsql_vector_idx(embedding));
