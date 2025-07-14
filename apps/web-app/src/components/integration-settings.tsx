@@ -133,7 +133,7 @@ export function IntegrationSettingsDetailsDialog(props: IntegrationSettingsDetai
           Details
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-sm:w-full max-sm:h-[calc(100vh-2rem)] max-sm:flex max-sm:flex-col">
+      <DialogContent className="max-sm:w-full max-sm:h-[calc(100vh-2rem)] max-sm:flex max-sm:flex-col sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps)
           Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-sm:w-full max-sm:h-[calc(100vh-2rem)] max-sm:flex max-sm:flex-col">
+      <DialogContent className="max-sm:w-full max-sm:h-[calc(100vh-2rem)] max-sm:flex max-sm:flex-col sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
             <div className="flex items-center gap-2">

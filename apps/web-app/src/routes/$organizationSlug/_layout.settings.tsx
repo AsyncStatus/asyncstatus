@@ -241,7 +241,7 @@ function RouteComponent() {
                           <SelectContent>
                             {organizationMembers.data?.members.map((member) => (
                               <SelectItem key={member.id} value={member.id}>
-                                {member.user.name}
+                                {member.user.name} ({member.user.email})
                               </SelectItem>
                             ))}
                           </SelectContent>
