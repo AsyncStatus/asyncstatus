@@ -123,3 +123,14 @@ export const deleteStatusUpdateContract = typedContract(
   z.strictObject({ idOrSlug: z.string(), statusUpdateId: z.string() }),
   z.strictObject({ success: z.boolean() }),
 );
+
+export const generateStatusUpdateContract = typedContract(
+  "post /organizations/:idOrSlug/status-updates/generate",
+  z.strictObject({ idOrSlug: z.string() }),
+  z.strictObject({
+    ...StatusUpdate.shape,
+    team: Team.nullable(),
+    items: z.array(StatusUpdateItem),
+    member: z.strictObject({ ...Member.shape, user: User }),
+  }),
+);

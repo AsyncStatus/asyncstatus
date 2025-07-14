@@ -1,5 +1,8 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
+import {
+  generateStatusUpdateContract,
+  listStatusUpdatesByDateContract,
+} from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
@@ -16,16 +19,17 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { CalendarIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { CircleHelpIcon, PlusIcon } from "lucide-react";
+import { CircleHelpIcon, PlusIcon, SparklesIcon } from "lucide-react";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { z } from "zod/v4";
 import { EmptyState } from "@/components/empty-state";
 import { getInitials } from "@/lib/utils";
-import { typedQueryOptions, typedUrl } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/")({
@@ -105,6 +109,19 @@ function RouteComponent() {
       setIsCalendarOpen(false);
     }
   };
+  const generateStatusUpdate = useMutation(
+    typedMutationOptions(generateStatusUpdateContract, {
+      onSuccess: (data) => {
+        navigate({
+          to: "/$organizationSlug/status-update/$statusUpdateId",
+          params: {
+            organizationSlug,
+            statusUpdateId: data.id,
+          },
+        });
+      },
+    }),
+  );
 
   const renderStatusUpdateItem = (item: StatusUpdateItem) => {
     const getItemStyle = () => {
@@ -198,16 +215,27 @@ function RouteComponent() {
             </PopoverContent>
           </Popover>
 
-          <Button asChild size="sm" className="w-full sm:w-auto">
-            <Link
-              to="/$organizationSlug/status-update"
-              params={{ organizationSlug }}
-              className="flex items-center justify-center gap-2"
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+              <Link
+                to="/$organizationSlug/status-update"
+                params={{ organizationSlug }}
+                className="flex items-center justify-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span>New status update</span>
+              </Link>
+            </Button>
+
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
             >
-              <PlusIcon className="h-4 w-4" />
-              <span>New status update</span>
-            </Link>
-          </Button>
+              <SparklesIcon className="h-4 w-4" />
+              <span>Generate status update</span>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -293,16 +321,27 @@ function RouteComponent() {
             title={`No status updates for ${format(date, "PPP")}`}
             description="Try selecting a different date or create a new status update."
             action={
-              <Button asChild>
-                <Link
-                  to="/$organizationSlug/status-update"
-                  params={{ organizationSlug }}
-                  className="flex items-center gap-2"
+              <div className="flex gap-2">
+                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+                  <Link
+                    to="/$organizationSlug/status-update"
+                    params={{ organizationSlug }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    <span>New status update</span>
+                  </Link>
+                </Button>
+
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
                 >
-                  <PlusIcon className="h-4 w-4" />
-                  New status update
-                </Link>
-              </Button>
+                  <SparklesIcon className="h-4 w-4" />
+                  <span>Generate status update</span>
+                </Button>
+              </div>
             }
           />
         )}

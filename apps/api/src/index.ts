@@ -44,6 +44,7 @@ import {
 } from "./typed-handlers/organization-handlers";
 import {
   deleteStatusUpdateHandler,
+  generateStatusUpdateHandler,
   getStatusUpdateHandler,
   listStatusUpdatesByDateHandler,
   listStatusUpdatesByMemberHandler,
@@ -190,6 +191,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     getStatusUpdateHandler,
     upsertStatusUpdateHandler,
     deleteStatusUpdateHandler,
+    generateStatusUpdateHandler,
     getGithubIntegrationHandler,
     githubIntegrationCallbackHandler,
     listGithubRepositoriesHandler,

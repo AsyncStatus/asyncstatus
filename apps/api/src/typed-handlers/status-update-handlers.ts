@@ -4,9 +4,11 @@ import { generateId } from "better-auth";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   deleteStatusUpdateContract,
+  generateStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
   listStatusUpdatesByMemberContract,
@@ -481,5 +483,140 @@ export const deleteStatusUpdateHandler = typedHandler<
     await db.delete(schema.statusUpdate).where(eq(schema.statusUpdate.id, statusUpdateId));
 
     return { success: true };
+  },
+);
+
+export const generateStatusUpdateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof generateStatusUpdateContract
+>(
+  generateStatusUpdateContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, openRouterProvider, organization, member }) => {
+    let generatedItems: string[] = [];
+    const now = dayjs();
+    const effectiveFrom = now.subtract(1, "day");
+    const effectiveTo = now;
+
+    try {
+      generatedItems = await generateStatusUpdateItems({
+        db,
+        openRouterProvider,
+        organizationId: organization.id,
+        memberId: member.id,
+        effectiveFrom: effectiveFrom.toISOString(),
+        effectiveTo: effectiveTo.toISOString(),
+      });
+    } catch {
+      generatedItems = [];
+    }
+
+    // No items generated, return early
+    if (generatedItems.length === 0) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "No GitHub events found to generate status update",
+      });
+    }
+
+    const effectiveFromStartOfDay = effectiveFrom.startOf("day").toDate();
+    const effectiveToEndOfDay = effectiveTo.endOf("day").toDate();
+    const nowDate = new Date();
+
+    const statusUpdate = await db.transaction(async (tx) => {
+      // Check if a status update already exists for this member on the effectiveFrom date
+      const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.memberId, member.id),
+          eq(schema.statusUpdate.organizationId, organization.id),
+          eq(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+        ),
+        with: {
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      const user = await tx.query.user.findFirst({ where: eq(schema.user.id, member.userId) });
+      const userTimezone = user?.timezone || "UTC";
+
+      let statusUpdateId: string;
+      let currentMaxOrder = 0;
+
+      if (existingStatusUpdate) {
+        // Update existing status update
+        statusUpdateId = existingStatusUpdate.id;
+
+        // Get the highest order from existing items
+        if (existingStatusUpdate.items.length > 0) {
+          currentMaxOrder = Math.max(...existingStatusUpdate.items.map((item) => item.order));
+        }
+
+        // Update the updatedAt timestamp
+        await tx
+          .update(schema.statusUpdate)
+          .set({ updatedAt: nowDate })
+          .where(eq(schema.statusUpdate.id, statusUpdateId));
+      } else {
+        // Create new status update
+        statusUpdateId = generateId();
+
+        await tx.insert(schema.statusUpdate).values({
+          id: statusUpdateId,
+          memberId: member.id,
+          organizationId: organization.id,
+          teamId: null,
+          editorJson: null,
+          effectiveFrom: effectiveFromStartOfDay,
+          effectiveTo: effectiveToEndOfDay,
+          mood: null,
+          emoji: null,
+          notes: null,
+          isDraft: false, // Generated updates are not drafts
+          timezone: userTimezone,
+          createdAt: nowDate,
+          updatedAt: nowDate,
+        });
+      }
+
+      // Insert the generated items
+      const newItems = generatedItems.map((content, index) => ({
+        id: generateId(),
+        statusUpdateId,
+        content: content.trim(),
+        isBlocker: false,
+        isInProgress: false,
+        order: currentMaxOrder + index + 1, // Start from currentMaxOrder + 1
+        createdAt: nowDate,
+        updatedAt: nowDate,
+      }));
+
+      await tx.insert(schema.statusUpdateItem).values(newItems);
+
+      // Return the complete status update
+      const result = await tx.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!result) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create or update status update",
+        });
+      }
+
+      return result;
+    });
+
+    return statusUpdate;
   },
 );
