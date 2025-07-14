@@ -230,10 +230,13 @@ function RouteComponent() {
             <Button
               size="sm"
               className="w-full sm:w-auto"
+              disabled={generateStatusUpdate.isPending}
               onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
             >
               <SparklesIcon className="h-4 w-4" />
-              <span>Generate status update</span>
+              <span>
+                {generateStatusUpdate.isPending ? "Generating..." : "Generate status update"}
+              </span>
             </Button>
           </div>
         </div>
@@ -336,10 +339,13 @@ function RouteComponent() {
                 <Button
                   size="sm"
                   className="w-full sm:w-auto"
+                  disabled={generateStatusUpdate.isPending}
                   onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
                 >
                   <SparklesIcon className="h-4 w-4" />
-                  <span>Generate status update</span>
+                  <span>
+                    {generateStatusUpdate.isPending ? "Generating..." : "Generate status update"}
+                  </span>
                 </Button>
               </div>
             }
