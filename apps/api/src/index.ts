@@ -88,7 +88,7 @@ const githubWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", (c) => {
     await queue.send(event, { contentType: "json" });
   });
 
-  return createWebMiddleware(githubWebhooks, { path: "/github/webhooks" })(c.req.raw);
+  return createWebMiddleware(githubWebhooks, { path: "/integrations/github/webhooks" })(c.req.raw);
 });
 
 const app = new Hono<HonoEnv>()

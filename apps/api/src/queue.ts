@@ -38,9 +38,6 @@ async function githubWebhookEventsQueue(
   const processedEventIds = new Set<string>();
   const batchUpserts = [];
 
-  console.log("Processing batch of", batch.messages.length, "events");
-  console.log("Batch:", batch.messages);
-
   for (const message of batch.messages) {
     console.log(`Processing ${message.body.name} event`);
     processedEventIds.add(message.body.id.toString());
