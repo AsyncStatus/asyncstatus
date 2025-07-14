@@ -1,19 +1,19 @@
-import type Anthropic from "@anthropic-ai/sdk";
+import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
+import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
+import type { GithubEvent } from "../../../db";
 
-import type * as schema from "../../../db";
-
-type GenerateEventSummary = {
-  anthropicClient: Anthropic;
+type GenerateEventSummaryOptions = {
+  openRouterProvider: OpenRouterProvider;
   voyageClient: VoyageAIClient;
-  event: typeof schema.githubEvent.$inferSelect;
+  event: GithubEvent;
 };
 
 export async function generateEventSummary({
-  anthropicClient,
+  openRouterProvider,
   voyageClient,
   event,
-}: GenerateEventSummary) {
+}: GenerateEventSummaryOptions) {
   const payload = event.payload;
   if (
     typeof payload === "object" &&
@@ -26,9 +26,9 @@ export async function generateEventSummary({
   }
 
   const data = JSON.stringify(payload, null, 2);
-  const response = await anthropicClient.messages.create({
-    model: "claude-3-5-haiku-20241022",
-    system: `You are an expert technical summarizer.
+  const { text } = await generateText({
+    model: openRouterProvider("anthropic/claude-3.7-sonnet"),
+    system: `You are an expert technical summarizer for GitHub events.
 Given GitHub event data payload, write a concise summary of the changes made in the event.
 The event might be a push event, a pull request event or any other GitHub event.
 
@@ -38,24 +38,14 @@ The summary must be self-contained, infer the purpose and outcome of the changes
 
 You MUST be helpful and concise. You MUST NOT hallucinate.`,
     messages: [{ role: "user", content: data }],
-    max_tokens: 8192,
   });
-  if (!response.content[0] || response.content[0].type !== "text") {
-    console.log(
-      `Push event summary response is not a text. Expected a text response, got ${response.content[0]?.type} (${response.content.length}).`,
-    );
-    return { embedding: null, summary: null };
-  }
-  const summary = response.content[0].text;
-  const embeddingResponse = await voyageClient.embed({
-    input: summary,
-    model: "voyage-3-large",
-  });
+
+  const embeddingResponse = await voyageClient.embed({ input: text, model: "voyage-3-large" });
   const embedding = embeddingResponse.data?.[0]?.embedding;
   if (!embedding) {
     console.log(`Failed to generate embedding. Skipping push event ${event.id}.`);
-    return { embedding: null, summary };
+    return { embedding: null, summary: text };
   }
 
-  return { embedding, summary };
+  return { embedding, summary: text };
 }

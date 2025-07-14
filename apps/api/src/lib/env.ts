@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Webhooks as GithubWebhooks } from "@octokit/webhooks";
+import { createOpenRouter, type OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import type { InferSelectModel } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { Resend } from "resend";
@@ -43,6 +44,7 @@ export type Bindings = {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
   GITHUB_PROCESS_EVENTS_QUEUE: Queue<string>;
+  OPENROUTER_API_KEY: string;
 };
 
 export type Variables = {
@@ -55,6 +57,7 @@ export type Variables = {
   voyageClient: VoyageAIClient;
   githubWebhooks: GithubWebhooks;
   authKv: KVNamespace;
+  openRouterProvider: OpenRouterProvider;
   workflow: {
     syncGithub: Workflow<SyncGithubWorkflowParams>;
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
@@ -97,6 +100,7 @@ export async function createContext(c: Context<HonoEnv>) {
     secret: c.env.GITHUB_WEBHOOK_SECRET,
   });
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const openRouterProvider = createOpenRouter({ apiKey: c.env.OPENROUTER_API_KEY });
 
   return {
     db,
@@ -108,6 +112,7 @@ export async function createContext(c: Context<HonoEnv>) {
     session,
     webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
+    openRouterProvider,
     rateLimiter: {
       waitlist: (next: Next) => waitlistRateLimiter(c, next),
       invitation: (next: Next) => invitationRateLimiter(c, next),

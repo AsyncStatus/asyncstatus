@@ -124,6 +124,7 @@ const app = new Hono<HonoEnv>()
     c.set("auth", context.auth);
     c.set("rateLimiter" as any, context.rateLimiter);
     c.set("anthropicClient", context.anthropicClient);
+    c.set("openRouterProvider", context.openRouterProvider);
     c.set("voyageClient", context.voyageClient);
     c.set("githubWebhooks", context.githubWebhooks);
     c.set("session" as any, context.session);
@@ -203,6 +204,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       auth: c.get("auth"),
       rateLimiter: c.get("rateLimiter"),
       anthropicClient: c.get("anthropicClient"),
+      openRouterProvider: c.get("openRouterProvider"),
       voyageClient: c.get("voyageClient"),
       githubWebhooks: c.get("githubWebhooks"),
       bucket: { private: c.env.PRIVATE_BUCKET },

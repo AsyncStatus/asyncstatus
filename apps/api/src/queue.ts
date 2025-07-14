@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { VoyageAIClient } from "voyageai";
@@ -111,9 +111,7 @@ async function githubProcessEventsQueue(
   ctx: ExecutionContext,
 ) {
   const db = createDb(env);
-  const anthropicClient = new Anthropic({
-    apiKey: env.ANTHROPIC_API_KEY,
-  });
+  const openRouterProvider = createOpenRouter({ apiKey: env.OPENROUTER_API_KEY });
   const voyageClient = new VoyageAIClient({
     apiKey: env.VOYAGE_API_KEY,
   });
@@ -131,7 +129,7 @@ async function githubProcessEventsQueue(
     }
 
     const { summary, embedding } = await generateEventSummary({
-      anthropicClient,
+      openRouterProvider,
       voyageClient,
       event,
     });
