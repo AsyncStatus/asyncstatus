@@ -19,6 +19,7 @@ export type IntegrationSettingsItemProps = PropsWithChildren<{
   icon: React.ReactNode;
   status: "connected" | "connecting" | "disconnected";
   connectLink?: string;
+  settingsChildren?: React.ReactNode;
   onViewDetails: () => void;
   onSettings: () => void;
   onDisconnect?: () => void;
@@ -62,7 +63,9 @@ export function IntegrationSettingsItem(props: IntegrationSettingsItemProps) {
                 connectLink={props.connectLink}
                 onDisconnect={props.onDisconnect}
                 onSettings={props.onSettings}
-              />
+              >
+                {props.settingsChildren}
+              </IntegrationSettingsDialog>
             </>
           ) : (
             <>
@@ -161,7 +164,7 @@ export function IntegrationSettingsDetailsDialog(props: IntegrationSettingsDetai
   );
 }
 
-export type IntegrationSettingsDialogProps = {
+export type IntegrationSettingsDialogProps = PropsWithChildren<{
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   name: string;
@@ -171,7 +174,7 @@ export type IntegrationSettingsDialogProps = {
   connectLink?: string;
   onDisconnect?: () => void;
   onSettings: () => void;
-};
+}>;
 
 export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps) {
   return (
@@ -193,6 +196,8 @@ export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps)
             {props.description}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="h-full overflow-y-auto mt-2">{props.children}</div>
 
         <DialogFooter className="flex flex-row w-full items-center justify-between">
           {props.onDisconnect && (

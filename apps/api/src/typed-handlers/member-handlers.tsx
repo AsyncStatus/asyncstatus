@@ -70,7 +70,16 @@ export const updateMemberHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ db, input, session, bucket, authKv, member: currentMember }) => {
-    const { idOrSlug: _idOrSlug, memberId, role, archivedAt, ...userUpdates } = input;
+    const {
+      idOrSlug: _idOrSlug,
+      memberId,
+      role,
+      archivedAt,
+      firstName,
+      lastName,
+      githubId,
+      ...userUpdates
+    } = input;
     const existingMember = await db.query.member.findFirst({
       where: eq(member.id, memberId),
       with: { user: true },
@@ -96,6 +105,11 @@ export const updateMemberHandler = typedHandler<
       if (role) {
         await tx.update(member).set({ role }).where(eq(member.id, memberId));
       }
+      if (githubId) {
+        await tx.update(member).set({ githubId }).where(eq(member.id, memberId));
+      } else if (githubId === null && existingMember.githubId) {
+        await tx.update(member).set({ githubId: null }).where(eq(member.id, memberId));
+      }
       if (archivedAt) {
         await tx
           .update(member)
@@ -118,15 +132,14 @@ export const updateMemberHandler = typedHandler<
         await bucket.private.delete(existingMember.user.image);
         (userUpdates.image as any) = null;
       }
-      if (Object.keys(userUpdates).length > 0) {
-        const name =
-          userUpdates.firstName || userUpdates.lastName
-            ? `${userUpdates.firstName} ${userUpdates.lastName}`
-            : undefined;
+      if (firstName || lastName) {
+        (userUpdates as any).name = `${firstName} ${lastName}`;
+      }
 
+      if (Object.keys(userUpdates).length > 0) {
         await tx
           .update(user)
-          .set({ name, ...(userUpdates as any) })
+          .set(userUpdates as any)
           .where(eq(user.id, existingMember.userId));
       }
       const updatedMember = await tx.query.member.findFirst({

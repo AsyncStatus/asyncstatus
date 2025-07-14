@@ -5,7 +5,11 @@ import {
   listGithubRepositoriesContract,
   listGithubUsersContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
-import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
+import {
+  getMemberContract,
+  listMembersContract,
+  updateMemberContract,
+} from "@asyncstatus/api/typed-handlers/member";
 import {
   getOrganizationContract,
   listMemberOrganizationsContract,
@@ -53,7 +57,7 @@ import {
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@asyncstatus/ui/components/tabs";
-import { CreditCard, Send } from "@asyncstatus/ui/icons";
+import { ArrowRight, CreditCard, Send, XIcon } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import slugify from "@sindresorhus/slugify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -99,6 +103,11 @@ export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
           idOrSlug: organizationSlug,
         }),
       ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(listGithubUsersContract, {
+          idOrSlug: organizationSlug,
+        }),
+      ),
     ]);
   },
 });
@@ -137,6 +146,40 @@ function RouteComponent() {
       },
     }),
   );
+  const updateMemberMutation = useMutation(
+    typedMutationOptions(updateMemberContract, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listMembersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getMemberContract, {
+            idOrSlug: params.organizationSlug,
+            memberId: data.id,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const githubRepositories = useQuery(
+    typedQueryOptions(
+      listGithubRepositoriesContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const githubUsers = useQuery(
+    typedQueryOptions(
+      listGithubUsersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const organizationMembers = useQuery(
+    typedQueryOptions(listMembersContract, { idOrSlug: params.organizationSlug }),
+  );
 
   const integrations = useMemo(
     () => [
@@ -153,6 +196,100 @@ function RouteComponent() {
         onDisconnect: () => {
           deleteGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
         },
+        settingsChildren: (
+          <div className="space-y-6">
+            {githubUsers.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No users found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Users</h4>
+              {githubUsers.data?.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-2">
+                  {githubUsers.data.map((user) => {
+                    const member = organizationMembers.data?.members.find(
+                      (member) => member.githubId === user.githubId,
+                    );
+
+                    return (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <Button variant="link" asChild className="p-0 text-left">
+                          <a href={user.htmlUrl} target="_blank" rel="noreferrer">
+                            {user.login}
+                          </a>
+                        </Button>
+                        <ArrowRight className="size-4" />
+                        <Select
+                          value={member?.id}
+                          onValueChange={(value) => {
+                            const member = organizationMembers.data?.members.find(
+                              (member) => member.id === value,
+                            );
+                            if (!member) {
+                              return;
+                            }
+                            updateMemberMutation.mutate({
+                              idOrSlug: params.organizationSlug,
+                              memberId: member.id,
+                              githubId: user.githubId,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AsyncStatus profile" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationMembers.data?.members.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {member && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              updateMemberMutation.mutate({
+                                idOrSlug: params.organizationSlug,
+                                memberId: member.id,
+                                githubId: null,
+                              });
+                            }}
+                          >
+                            <XIcon className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {githubRepositories.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No repositories found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Repositories</h4>
+              {githubRepositories.data?.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {githubRepositories.data.map((repository) => (
+                    <div key={repository.id} className="flex items-center gap-2">
+                      <Button variant="link" asChild className="p-0 text-left">
+                        <a href={repository.htmlUrl} target="_blank" rel="noreferrer">
+                          {repository.name}
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ),
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -295,7 +432,12 @@ function RouteComponent() {
         status: "disconnected",
       },
     ],
-    [githubIntegrationQuery.data],
+    [
+      githubIntegrationQuery.data,
+      githubRepositories.data,
+      githubUsers.data,
+      organizationMembers.data,
+    ],
   );
 
   const filteredIntegrations = useMemo(() => {
@@ -484,6 +626,7 @@ function RouteComponent() {
                             onDisconnect={integration.onDisconnect}
                             onViewDetails={() => {}}
                             onSettings={() => {}}
+                            settingsChildren={integration.settingsChildren}
                           >
                             {integration.children}
                           </IntegrationSettingsItem>

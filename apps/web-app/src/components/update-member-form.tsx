@@ -1,4 +1,5 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
+import { listGithubUsersContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
   getMemberContract,
   listMembersContract,
@@ -26,6 +27,13 @@ import {
 import { ImageUpload } from "@asyncstatus/ui/components/image-upload";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@asyncstatus/ui/components/select";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { Check, ChevronsUpDown, Edit } from "@asyncstatus/ui/icons";
@@ -67,6 +75,11 @@ export function UpdateMemberForm(props: {
       memberId: props.memberId,
     }),
   );
+  const githubUsers = useQuery(
+    typedQueryOptions(listGithubUsersContract, {
+      idOrSlug: props.organizationSlugOrId,
+    }),
+  );
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, {
       idOrSlug: props.organizationSlugOrId,
@@ -87,6 +100,7 @@ export function UpdateMemberForm(props: {
       image: member.data?.user.image ?? null,
       archivedAt: member.data?.archivedAt ?? null,
       timezone: member.data?.user.timezone,
+      githubId: member.data?.githubId,
     },
   });
 
@@ -101,6 +115,7 @@ export function UpdateMemberForm(props: {
         image: member.data?.user.image ?? null,
         archivedAt: member.data?.archivedAt ?? null,
         timezone: member.data?.user.timezone,
+        githubId: member.data?.githubId,
       });
     }
   }, [member.data, props.organizationSlugOrId, props.memberId]);
@@ -150,6 +165,7 @@ export function UpdateMemberForm(props: {
         image: data.user.image ?? null,
         archivedAt: data.archivedAt ?? null,
         timezone: data.user.timezone,
+        githubId: data.githubId,
       });
       props.onSuccess?.(data);
     },
@@ -321,6 +337,51 @@ export function UpdateMemberForm(props: {
             </FormItem>
           )}
         />
+
+        {githubUsers.data?.length > 0 && (
+          <FormField
+            control={form.control}
+            name="githubId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>GitHub</FormLabel>
+                <FormControl>
+                  <Select
+                    {...field}
+                    disabled={githubUsers.isLoading}
+                    value={field.value ?? undefined}
+                    onValueChange={(value) => {
+                      field.onChange(value === field.value ? "" : value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a GitHub user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {githubUsers.data.map((user) => (
+                        <SelectItem key={user.githubId} value={user.githubId}>
+                          {user.login}
+                        </SelectItem>
+                      ))}
+                      <Button
+                        className="w-full px-2"
+                        variant="secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          field.onChange(null);
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
