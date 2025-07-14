@@ -493,11 +493,15 @@ export const generateStatusUpdateHandler = typedHandler<
   generateStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, openRouterProvider, organization, member }) => {
+  async ({ db, openRouterProvider, input, organization, member }) => {
     let generatedItems: string[] = [];
     const now = dayjs();
-    const effectiveFrom = now.subtract(1, "day");
-    const effectiveTo = now;
+    const effectiveFrom = dayjs(
+      input.effectiveFrom instanceof Date ? input.effectiveFrom : now.startOf("day").toDate(),
+    );
+    const effectiveTo = dayjs(
+      input.effectiveTo instanceof Date ? input.effectiveTo : now.endOf("day").toDate(),
+    );
 
     try {
       generatedItems = await generateStatusUpdateItems({

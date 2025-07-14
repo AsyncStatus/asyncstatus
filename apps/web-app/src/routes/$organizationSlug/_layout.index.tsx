@@ -1,7 +1,10 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import {
   generateStatusUpdateContract,
+  getStatusUpdateContract,
   listStatusUpdatesByDateContract,
+  listStatusUpdatesByMemberContract,
+  listStatusUpdatesContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -19,7 +22,7 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { CalendarIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { CircleHelpIcon, PlusIcon, SparklesIcon } from "lucide-react";
@@ -93,6 +96,7 @@ type StatusUpdate = {
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
+  const queryClient = useQueryClient();
   const { date } = Route.useSearch({
     select: (search) => ({
       date: search.date
@@ -112,6 +116,35 @@ function RouteComponent() {
   const generateStatusUpdate = useMutation(
     typedMutationOptions(generateStatusUpdateContract, {
       onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: organizationSlug,
+            date: dayjs(date).format("YYYY-MM-DD"),
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listStatusUpdatesByMemberContract, {
+            idOrSlug: organizationSlug,
+            memberId: data.member.id,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: dayjs(date).format("YYYY-MM-DD"),
+          }).queryKey,
+        });
         navigate({
           to: "/$organizationSlug/status-update/$statusUpdateId",
           params: {
@@ -231,7 +264,13 @@ function RouteComponent() {
               size="sm"
               className="w-full sm:w-auto"
               disabled={generateStatusUpdate.isPending}
-              onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
+              onClick={() =>
+                generateStatusUpdate.mutate({
+                  idOrSlug: organizationSlug,
+                  effectiveFrom: dayjs(date).startOf("day").toDate(),
+                  effectiveTo: dayjs(date).endOf("day").toDate(),
+                })
+              }
             >
               <SparklesIcon className="h-4 w-4" />
               <span>
@@ -340,7 +379,13 @@ function RouteComponent() {
                   size="sm"
                   className="w-full sm:w-auto"
                   disabled={generateStatusUpdate.isPending}
-                  onClick={() => generateStatusUpdate.mutate({ idOrSlug: organizationSlug })}
+                  onClick={() =>
+                    generateStatusUpdate.mutate({
+                      idOrSlug: organizationSlug,
+                      effectiveFrom: dayjs(date).startOf("day").toDate(),
+                      effectiveTo: dayjs(date).endOf("day").toDate(),
+                    })
+                  }
                 >
                   <SparklesIcon className="h-4 w-4" />
                   <span>

@@ -126,7 +126,11 @@ export const deleteStatusUpdateContract = typedContract(
 
 export const generateStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates/generate",
-  z.strictObject({ idOrSlug: z.string() }),
+  z.strictObject({
+    idOrSlug: z.string(),
+    effectiveFrom: z.coerce.date(),
+    effectiveTo: z.coerce.date(),
+  }),
   z.strictObject({
     ...StatusUpdate.shape,
     team: Team.nullable(),
