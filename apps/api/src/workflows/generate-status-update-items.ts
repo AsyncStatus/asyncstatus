@@ -114,5 +114,5 @@ The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effecti
     },
   });
 
-  return text.split("\n").map((line) => line.trim().replace(/-/g, "").replace(/\.+$/, ""));
+  return text.split("\n").map((line) => line.replace(/-/g, "").replace(/\.+$/, "").trim());
 }
