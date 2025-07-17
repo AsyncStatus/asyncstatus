@@ -604,7 +604,7 @@ export const generateStatusUpdateHandler = typedHandler<
           mood: null,
           emoji: null,
           notes: null,
-          isDraft: false, // Generated updates are not drafts
+          isDraft: true,
           timezone: userTimezone,
           createdAt: nowDate,
           updatedAt: nowDate,
