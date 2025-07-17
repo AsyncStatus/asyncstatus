@@ -572,7 +572,33 @@ export const generateStatusUpdateHandler = typedHandler<
           memberId: member.id,
           organizationId: organization.id,
           teamId: null,
-          editorJson: null,
+          editorJson: {
+            type: "doc",
+            content: [
+              {
+                type: "statusUpdateHeading",
+                attrs: { date: effectiveFromStartOfDay.toISOString() },
+              },
+              {
+                type: "blockableTodoList",
+                content: generatedItems.map((item) => ({
+                  type: "blockableTodoListItem",
+                  attrs: { checked: false, blocked: false },
+                  content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
+                })),
+              },
+              { type: "notesHeading" },
+              {
+                type: "paragraph",
+                content: [],
+              },
+              { type: "moodHeading" },
+              {
+                type: "paragraph",
+                content: [],
+              },
+            ],
+          },
           effectiveFrom: effectiveFromStartOfDay,
           effectiveTo: effectiveToEndOfDay,
           mood: null,
