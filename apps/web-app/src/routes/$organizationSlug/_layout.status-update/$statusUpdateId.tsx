@@ -69,6 +69,7 @@ function RouteComponent() {
         <div className="py-4">
           <div className="mx-auto w-full max-w-3xl">
             <StatusUpdateForm
+              isLoading={statusUpdate.isPending}
               initialDate={statusUpdate.data?.effectiveFrom}
               organizationSlug={organizationSlug}
               initialEditorJson={statusUpdate.data?.editorJson}
@@ -107,7 +108,11 @@ function RouteComponent() {
 
         <div className="py-4">
           <div className="mx-auto w-full max-w-3xl">
-            <StatusUpdateForm initialDate={statusUpdateId} organizationSlug={organizationSlug} />
+            <StatusUpdateForm
+              isLoading={statusUpdate.isPending}
+              initialDate={statusUpdateId}
+              organizationSlug={organizationSlug}
+            />
           </div>
         </div>
       </>

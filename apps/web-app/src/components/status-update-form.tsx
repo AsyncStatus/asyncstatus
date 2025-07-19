@@ -30,6 +30,7 @@ import { useForm } from "react-hook-form";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
 type StatusUpdateFormProps = {
+  isLoading?: boolean;
   initialDate?: Date | string;
   initialEditorJson?: JSONContent;
   initialIsDraft?: boolean;
@@ -37,6 +38,7 @@ type StatusUpdateFormProps = {
 };
 
 export function StatusUpdateForm({
+  isLoading,
   initialDate,
   initialEditorJson,
   initialIsDraft,
@@ -44,7 +46,6 @@ export function StatusUpdateForm({
 }: StatusUpdateFormProps) {
   const navigate = useNavigate();
   const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
-  const [isPublishConfirm, setIsPublishConfirm] = useState(false);
   const form = useForm({
     resolver: zodResolver(upsertStatusUpdateContract.inputSchema),
     defaultValues: {
@@ -137,8 +138,8 @@ export function StatusUpdateForm({
     }),
   );
 
-  function onSubmit(values: typeof upsertStatusUpdateContract.$infer.input) {
-    if (!values.isDraft && !isPublishConfirm) {
+  function onSubmit(values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) {
+    if (!values.isDraft && !hasConfirmed) {
       setIsPublishConfirmModalOpen(true);
       return;
     }
@@ -148,7 +149,7 @@ export function StatusUpdateForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit((values) => onSubmit(values, false))} className="space-y-6">
         <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -162,8 +163,7 @@ export function StatusUpdateForm({
               <AlertDialogAction
                 onClick={() => {
                   setIsPublishConfirmModalOpen(false);
-                  setIsPublishConfirm(true);
-                  form.handleSubmit(onSubmit)();
+                  form.handleSubmit((values) => onSubmit(values, true))();
                 }}
               >
                 Publish
@@ -208,8 +208,8 @@ export function StatusUpdateForm({
             form.setValue("effectiveFrom", nextEffectiveFrom);
             form.setValue("effectiveTo", dayjs(data.date).endOf("day").toDate());
 
-            if (form.getValues("isDraft") && !createStatusUpdate.isPending) {
-              form.handleSubmit(onSubmit)();
+            if (form.getValues("isDraft") && !createStatusUpdate.isPending && !isLoading) {
+              form.handleSubmit((values) => onSubmit(values, false))();
             }
           }}
         >
