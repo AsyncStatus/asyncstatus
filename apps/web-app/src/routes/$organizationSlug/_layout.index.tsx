@@ -181,32 +181,44 @@ function RouteComponent() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
-                <Link
-                  to="/$organizationSlug/status-update"
-                  params={{ organizationSlug }}
-                  className="flex items-center justify-center gap-2"
-                >
-                  {statusUpdate.data?.id && statusUpdate.data?.isDraft && (
-                    <>
-                      <ArrowRightIcon className="h-4 w-4" />
-                      <span>Continue writing</span>
-                    </>
-                  )}
-                  {statusUpdate.data?.id && !statusUpdate.data?.isDraft && (
-                    <>
-                      <ArrowRightIcon className="h-4 w-4" />
-                      <span>Edit update</span>
-                    </>
-                  )}
-                  {!statusUpdate.data && (
-                    <>
-                      <PlusIcon className="h-4 w-4" />
-                      <span>Write update</span>
-                    </>
-                  )}
-                </Link>
-              </Button>
+              {statusUpdate.data?.id && statusUpdate.data?.isDraft && (
+                <Button>
+                  <Link
+                    to="/$organizationSlug/status-update/$statusUpdateId"
+                    params={{ organizationSlug, statusUpdateId: statusUpdate.data.id }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ArrowRightIcon className="h-4 w-4" />
+                    <span>Continue writing</span>
+                  </Link>
+                </Button>
+              )}
+
+              {!statusUpdate.data && (
+                <Button>
+                  <Link
+                    to="/$organizationSlug/status-update"
+                    params={{ organizationSlug }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ArrowRightIcon className="h-4 w-4" />
+                    <span>Write update</span>
+                  </Link>
+                </Button>
+              )}
+
+              {statusUpdate.data?.id && !statusUpdate.data?.isDraft && (
+                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+                  <Link
+                    to="/$organizationSlug/status-update/$statusUpdateId"
+                    params={{ organizationSlug, statusUpdateId: statusUpdate.data.id }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ArrowRightIcon className="h-4 w-4" />
+                    <span>Edit update</span>
+                  </Link>
+                </Button>
+              )}
 
               <Button
                 size="sm"
