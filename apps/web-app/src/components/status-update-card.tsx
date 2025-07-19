@@ -18,6 +18,7 @@ import { getInitials } from "@/lib/utils";
 import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export type StatusUpdateCardProps = {
+  organizationSlug: string;
   statusUpdate: (typeof listStatusUpdatesByDateContract.$infer.output)[number];
 };
 
@@ -30,7 +31,7 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
   const navigate = useNavigate();
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, {
-      idOrSlug: props.statusUpdate.organizationId,
+      idOrSlug: props.organizationSlug,
     }),
   );
   const isStatusUpdateOwner = useMemo(
@@ -39,22 +40,15 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
   );
   const navigateOnClick = useCallback(
     (_: unknown) => {
-      if (isStatusUpdateOwner) {
-        navigate({
-          to: "/$organizationSlug/status-update",
-          params: { organizationSlug: props.statusUpdate.organizationId },
-        });
-        return;
-      }
       navigate({
         to: "/$organizationSlug/status-update/$statusUpdateId",
         params: {
-          organizationSlug: props.statusUpdate.organizationId,
+          organizationSlug: props.organizationSlug,
           statusUpdateId: props.statusUpdate.id,
         },
       });
     },
-    [navigate, props.statusUpdate.organizationId, props.statusUpdate.id, isStatusUpdateOwner],
+    [navigate, props.organizationSlug, props.statusUpdate.id, isStatusUpdateOwner],
   );
   const name = useMemo(
     () => props.statusUpdate.member.user.name.split(" ")[0] ?? props.statusUpdate.member.user.name,
@@ -121,7 +115,7 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
         <Link
           to="/$organizationSlug/users/$userId"
           params={{
-            organizationSlug: props.statusUpdate.organizationId,
+            organizationSlug: props.organizationSlug,
             userId: props.statusUpdate.member.id,
           }}
           className="flex items-center gap-2"
@@ -129,7 +123,7 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
           <Avatar className="size-5">
             <AvatarImage
               src={typedUrl(getFileContract, {
-                idOrSlug: props.statusUpdate.organizationId,
+                idOrSlug: props.organizationSlug,
                 // biome-ignore lint/style/noNonNullAssertion: it doesn't matter if the image is null, avatar will fallback to initials
                 fileKey: props.statusUpdate.member.user.image!,
               })}

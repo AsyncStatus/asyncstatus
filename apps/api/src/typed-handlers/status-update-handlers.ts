@@ -9,6 +9,7 @@ import { requiredOrganization, requiredSession } from "./middleware";
 import {
   deleteStatusUpdateContract,
   generateStatusUpdateContract,
+  getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
   listStatusUpdatesByMemberContract,
@@ -253,6 +254,67 @@ export const getStatusUpdateHandler = typedHandler<
   },
 );
 
+export const getMemberStatusUpdateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof getMemberStatusUpdateContract
+>(
+  getMemberStatusUpdateContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, member }) => {
+    const { statusUpdateIdOrDate } = input;
+
+    const isDate = dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).isValid();
+    if (isDate) {
+      const statusUpdate = await db.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.organizationId, organization.id),
+          eq(
+            schema.statusUpdate.effectiveFrom,
+            dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).startOf("day").toDate(),
+          ),
+          eq(schema.statusUpdate.memberId, member.id),
+        ),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+      if (!statusUpdate) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Status update not found",
+        });
+      }
+
+      return statusUpdate;
+    }
+
+    const statusUpdate = await db.query.statusUpdate.findFirst({
+      where: and(
+        eq(schema.statusUpdate.id, statusUpdateIdOrDate),
+        eq(schema.statusUpdate.memberId, member.id),
+      ),
+      with: {
+        member: { with: { user: true } },
+        team: true,
+        items: { orderBy: (items) => [items.order] },
+      },
+      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
+    });
+    if (!statusUpdate) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Status update not found",
+      });
+    }
+
+    return statusUpdate;
+  },
+);
 export const upsertStatusUpdateHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof upsertStatusUpdateContract

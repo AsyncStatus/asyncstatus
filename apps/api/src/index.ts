@@ -45,6 +45,7 @@ import {
 import {
   deleteStatusUpdateHandler,
   generateStatusUpdateHandler,
+  getMemberStatusUpdateHandler,
   getStatusUpdateHandler,
   listStatusUpdatesByDateHandler,
   listStatusUpdatesByMemberHandler,
@@ -189,6 +190,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listStatusUpdatesByDateHandler,
     listStatusUpdatesByTeamHandler,
     getStatusUpdateHandler,
+    getMemberStatusUpdateHandler,
     upsertStatusUpdateHandler,
     deleteStatusUpdateHandler,
     generateStatusUpdateHandler,

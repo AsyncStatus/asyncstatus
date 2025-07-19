@@ -70,6 +70,17 @@ export const getStatusUpdateContract = typedContract(
   }),
 );
 
+export const getMemberStatusUpdateContract = typedContract(
+  "get /organizations/:idOrSlug/status-updates/:statusUpdateIdOrDate/current-member",
+  z.strictObject({ idOrSlug: z.string(), statusUpdateIdOrDate: z.string() }),
+  z.strictObject({
+    ...StatusUpdate.shape,
+    team: Team.nullable(),
+    items: z.array(StatusUpdateItem),
+    member: z.strictObject({ ...Member.shape, user: User }),
+  }),
+);
+
 export const upsertStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates",
   z.strictObject({

@@ -1,5 +1,6 @@
 import {
   generateStatusUpdateContract,
+  getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
@@ -68,6 +69,13 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
         { throwOnError: false },
       ),
     );
+    queryClient.prefetchQuery(
+      typedQueryOptions(
+        getMemberStatusUpdateContract,
+        { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
+        { throwOnError: false },
+      ),
+    );
   },
   loader: async ({ context: { queryClient }, params: { organizationSlug } }) => {
     const organization = await ensureValidOrganization(queryClient, organizationSlug);
@@ -101,7 +109,7 @@ function RouteComponent() {
 
   const statusUpdate = useQuery(
     typedQueryOptions(
-      getStatusUpdateContract,
+      getMemberStatusUpdateContract,
       { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
       { throwOnError: false },
     ),
@@ -272,7 +280,11 @@ function RouteComponent() {
         )}
 
         {statusUpdatesByDate.data?.map((statusUpdate) => (
-          <StatusUpdateCard key={statusUpdate.id} statusUpdate={statusUpdate} />
+          <StatusUpdateCard
+            key={statusUpdate.id}
+            statusUpdate={statusUpdate}
+            organizationSlug={organizationSlug}
+          />
         ))}
       </div>
     </>
