@@ -1,7 +1,7 @@
 import { isAsyncStatusApiJsonError } from "@asyncstatus/api/errors";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { QueryClient } from "@tanstack/react-query";
+import { isCancelledError, QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { DefaultErrorBoundary } from "./components/default-error-boundary";
@@ -13,7 +13,13 @@ export function createRouter() {
     defaultOptions: {
       queries: {
         staleTime: 5 * 60 * 1000,
-        throwOnError: true,
+        throwOnError: (error) => {
+          if (isCancelledError(error)) {
+            return false;
+          }
+
+          return true;
+        },
         retry: (failureCount, error) => {
           if (isAsyncStatusApiJsonError(error)) {
             if (error.type === "ASAPIUnexpectedError") {

@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/core";
+import dayjs from "dayjs";
 
 export interface StatusUpdateItem {
   content: string;
@@ -225,7 +226,9 @@ export function toApiFormat(data: ExtractedStatusUpdateData) {
     emoji: data.moodEmoji,
     mood: data.mood,
     notes: data.notes,
-    date: data.date ? new Date(data.date) : new Date(),
+    date: data.date
+      ? dayjs(data.date).startOf("day").toISOString()
+      : dayjs().startOf("day").toISOString(),
     items: data.statusUpdateItems,
   };
 }

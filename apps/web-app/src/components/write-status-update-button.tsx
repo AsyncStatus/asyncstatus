@@ -2,7 +2,7 @@ import {
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
-  upsertStatusUpdateContract,
+  upsertStatusUpdateContractV2,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -32,34 +32,38 @@ export function WriteStatusUpdateButton({
     ),
   );
   const createStatusUpdate = useMutation(
-    typedMutationOptions(upsertStatusUpdateContract, {
+    typedMutationOptions(upsertStatusUpdateContractV2, {
       onSuccess: (data) => {
-        navigate({
-          to: "/$organizationSlug/status-updates/$statusUpdateId",
-          params: { organizationSlug, statusUpdateId: data.id },
-        });
-        if (!data.isDraft) {
-          queryClient.invalidateQueries(
-            typedQueryOptions(listStatusUpdatesByDateContract, {
-              idOrSlug: organizationSlug,
-              date: dayjs(data.effectiveFrom).format("YYYY-MM-DD"),
-            }),
-          );
-        }
-        queryClient.setQueryData(
+        const date = dayjs(data.effectiveFrom).format("YYYY-MM-DD");
+        queryClient.invalidateQueries(
+          typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: organizationSlug,
+            date,
+          }),
+        );
+        queryClient.invalidateQueries(
           typedQueryOptions(getStatusUpdateContract, {
             idOrSlug: organizationSlug,
             statusUpdateIdOrDate: data.id,
-          }).queryKey,
-          data,
+          }),
         );
-        queryClient.setQueryData(
+        queryClient.invalidateQueries(
           typedQueryOptions(getMemberStatusUpdateContract, {
             idOrSlug: organizationSlug,
-            statusUpdateIdOrDate: dayjs(data.effectiveFrom).format("YYYY-MM-DD"),
-          }).queryKey,
-          data,
+            statusUpdateIdOrDate: data.id,
+          }),
         );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getMemberStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: date,
+          }),
+        );
+        navigate({
+          to: "/$organizationSlug/status-updates/$statusUpdateId",
+          params: { organizationSlug, statusUpdateId: data.id },
+          replace: true,
+        });
       },
     }),
   );
@@ -67,8 +71,8 @@ export function WriteStatusUpdateButton({
   function createEmptyStatusUpdate() {
     createStatusUpdate.mutate({
       idOrSlug: organizationSlug,
-      effectiveFrom: dayjs(date, "YYYY-MM-DD").toDate(),
-      effectiveTo: dayjs(date, "YYYY-MM-DD").toDate(),
+      effectiveFrom: dayjs.utc(date, "YYYY-MM-DD").startOf("day").toISOString(),
+      effectiveTo: dayjs.utc(date, "YYYY-MM-DD").endOf("day").toISOString(),
       isDraft: true,
     });
   }

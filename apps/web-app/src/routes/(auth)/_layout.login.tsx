@@ -69,8 +69,8 @@ function RouteComponent() {
   const loginEmail = useMutation({
     ...loginEmailMutationOptions(),
     async onSuccess() {
+      await queryClient.resetQueries();
       await router.invalidate();
-      queryClient.clear();
       await navigate({ to: search.redirect ?? "/" });
     },
   });

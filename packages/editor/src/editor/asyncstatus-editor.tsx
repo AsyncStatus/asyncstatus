@@ -3,7 +3,7 @@ import { Separator } from "@asyncstatus/ui/components/separator";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
-import { type PropsWithChildren, useEffect, useState } from "react";
+import { memo, type PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { AddStatusUpdateButton } from "../components/add-status-update-button";
 import EditorBubble from "../components/editor-bubble";
@@ -27,7 +27,7 @@ import { getSuggestionItems, slashCommand } from "./asyncstatus-editor-suggestio
 const extensions = [...asyncStatusEditorExtensions, slashCommand];
 
 // Helper function to get the status update date from the editor
-function getStatusUpdateDate(editor: Editor): Date | null {
+function getStatusUpdateDate(editor: Editor): dayjs.Dayjs | null {
   let dateString: string | null = null;
   editor.state.doc.descendants((node) => {
     if (node.type.name === "statusUpdateHeading" && node.attrs.date) {
@@ -35,10 +35,10 @@ function getStatusUpdateDate(editor: Editor): Date | null {
       return false; // Stop searching once found
     }
   });
-  return dateString ? new Date(dateString) : null;
+  return dateString ? dayjs.utc(dateString) : null;
 }
 
-export const AsyncStatusEditor = (
+const AsyncStatusEditorUnmemoized = (
   props: PropsWithChildren<{
     date?: string;
     onDateChange?: (date: string) => void;
@@ -58,35 +58,36 @@ export const AsyncStatusEditor = (
   const [wordCount, setWordCount] = useState(0);
   const [openLink, setOpenLink] = useState(false);
 
-  function onUpdate(editor: Editor) {
-    const json = editor.getJSON();
-    const stats = countJSONStats(json);
-    setInProgressTaskItemCount(stats.inProgressTaskItems);
-    setDoneTaskItemCount(stats.doneTaskItems);
-    setBlockedTaskItemCount(stats.blockedTaskItems);
-    setWordCount(stats.words);
+  const onUpdate = useCallback(
+    (editor: Editor) => {
+      const json = editor.getJSON();
+      const stats = countJSONStats(json);
+      setInProgressTaskItemCount(stats.inProgressTaskItems);
+      setDoneTaskItemCount(stats.doneTaskItems);
+      setBlockedTaskItemCount(stats.blockedTaskItems);
+      setWordCount(stats.words);
 
-    if (props.date) {
-      window.localStorage.setItem(
-        `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content-${props.date}`,
-        JSON.stringify(json),
-      );
-    } else {
-      // Fallback to regular keys if no date found
-      window.localStorage.setItem(
-        `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content`,
-        JSON.stringify(json),
-      );
-    }
+      if (props.date) {
+        window.localStorage.setItem(
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content-${props.date}`,
+          JSON.stringify(json),
+        );
+      } else {
+        // Fallback to regular keys if no date found
+        window.localStorage.setItem(
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content`,
+          JSON.stringify(json),
+        );
+      }
 
-    setSaveStatus("Saved");
-    props.onUpdate?.({
-      ...extractStatusUpdateData(json),
-      editorJson: json,
-    });
-  }
+      setSaveStatus("Saved");
+      const data = extractStatusUpdateData(json);
+      props.onUpdate?.({ ...data, editorJson: json, date: data.date });
+    },
+    [props.date, props.localStorageKeyPrefix, props.onUpdate],
+  );
 
-  const debouncedOnUpdate = useDebouncedCallback(onUpdate, 500);
+  const debouncedOnUpdate = useDebouncedCallback(onUpdate, 600);
 
   useEffect(() => {
     function setCounts(json: JSONContent) {
@@ -128,8 +129,8 @@ export const AsyncStatusEditor = (
     if ((content && content === `{"type":"doc","content":[{"type":"paragraph"}]}`) || !content) {
       const defaultContent = getAsyncStatusEditorDefaultContent(
         props.date
-          ? dayjs(props.date, "YYYY-MM-DD", true).toISOString()
-          : dayjs().startOf("day").toISOString(),
+          ? dayjs.utc(props.date).startOf("day").toISOString()
+          : dayjs.utc().startOf("day").toISOString(),
       );
       setInitialContent(defaultContent);
       setCounts(defaultContent);
@@ -162,7 +163,9 @@ export const AsyncStatusEditor = (
           }}
           onCreate={({ editor }) => {
             if (props.date) {
-              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
+              editor.commands.setStatusUpdateDate(
+                dayjs.utc(props.date).startOf("day").toISOString(),
+              );
             }
             onUpdate(editor);
             if (props.readonly) {
@@ -173,18 +176,14 @@ export const AsyncStatusEditor = (
           }}
           onUpdate={({ editor }) => {
             const editorDate = getStatusUpdateDate(editor);
-            if (
-              editorDate &&
-              props.date &&
-              dayjs(editorDate).startOf("day").format("YYYY-MM-DD") !== props.date
-            ) {
-              props.onDateChange?.(dayjs(editorDate).startOf("day").format("YYYY-MM-DD"));
-              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
+            if (editorDate && props.date && editorDate.toISOString() !== props.date) {
+              editor.commands.setStatusUpdateDate(editorDate.toISOString());
+              props.onDateChange?.(editorDate.toISOString());
               return;
             }
 
             if (props.date) {
-              editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
+              editor.commands.setStatusUpdateDate(props.date);
             }
             debouncedOnUpdate(editor);
             setSaveStatus("Unsaved");
@@ -234,6 +233,21 @@ export const AsyncStatusEditor = (
     </div>
   );
 };
+
+export type AsyncStatusEditorProps = Parameters<typeof AsyncStatusEditorUnmemoized>[0];
+export type AsyncStatusEditorOnUpdate = AsyncStatusEditorProps["onUpdate"];
+export type AsyncStatusEditorOnUpdateArgs = Parameters<NonNullable<AsyncStatusEditorOnUpdate>>[0];
+
+export const AsyncStatusEditor = memo(AsyncStatusEditorUnmemoized, (prevProps, nextProps) => {
+  return (
+    prevProps.date === nextProps.date &&
+    prevProps.readonly === nextProps.readonly &&
+    prevProps.localStorageKeyPrefix === nextProps.localStorageKeyPrefix &&
+    prevProps.initialContent === nextProps.initialContent &&
+    prevProps.onUpdate === nextProps.onUpdate &&
+    prevProps.onDateChange === nextProps.onDateChange
+  );
+});
 
 function ConnectedEditorCommandList() {
   const { editor } = useCurrentEditor();

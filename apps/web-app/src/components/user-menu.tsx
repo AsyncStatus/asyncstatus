@@ -35,7 +35,7 @@ export function UserMenu(props: { organizationSlug: string }) {
     onSuccess: async () => {
       await router.invalidate();
       queryClient.clear();
-      await navigate({ to: "/login" });
+      await navigate({ to: "/login", search: { redirect: undefined } });
     },
     onError: (error) => {
       toast.error(error.message);

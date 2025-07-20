@@ -6,7 +6,6 @@ import type { CommandProps } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { NodeViewProps } from "@tiptap/react";
 import { mergeAttributes, Node, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
-import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
@@ -21,7 +20,7 @@ declare module "@tiptap/core" {
       /**
        * Set the date for the status update heading
        */
-      setStatusUpdateDate: (date: Date) => ReturnType;
+      setStatusUpdateDate: (isoDate: string) => ReturnType;
     };
   }
 }
@@ -29,15 +28,11 @@ declare module "@tiptap/core" {
 const StatusUpdateHeadingComponent = ({ node, updateAttributes, editor }: NodeViewProps) => {
   const isEditable = editor.isEditable;
   const [open, setOpen] = useState(false);
-  const date = node.attrs.date
-    ? dayjs(node.attrs.date).startOf("day").toDate()
-    : dayjs().startOf("day").toDate();
+  const date = node.attrs.date;
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
-      updateAttributes({
-        date: dayjs(selectedDate).startOf("day").toISOString(),
-      });
+      updateAttributes({ date: dayjs.utc(selectedDate).startOf("day").toISOString() });
       setOpen(false);
     }
   };
@@ -56,7 +51,7 @@ const StatusUpdateHeadingComponent = ({ node, updateAttributes, editor }: NodeVi
                 open && "text-foreground",
               )}
             >
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {date ? dayjs.utc(date).format("MMMM D, YYYY") : <span>Pick a date</span>}
               {isEditable && (
                 <ChevronDown
                   className={cn("mx-1 size-6 transition-transform", open && "-rotate-180")}
@@ -65,7 +60,15 @@ const StatusUpdateHeadingComponent = ({ node, updateAttributes, editor }: NodeVi
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={date} onSelect={handleDateSelect} initialFocus />
+            <Calendar
+              autoFocus
+              className="rounded-md border shadow-sm"
+              captionLayout="dropdown"
+              timeZone="UTC"
+              mode="single"
+              selected={dayjs.utc(date).toDate()}
+              onSelect={handleDateSelect}
+            />
           </PopoverContent>
         </Popover>
       </h2>
@@ -95,11 +98,8 @@ export const StatusUpdateHeading = Node.create<StatusUpdateHeadingOptions>({
   addAttributes() {
     return {
       date: {
-        default: dayjs().startOf("day").toISOString(),
         parseHTML: (element) => element.getAttribute("data-date"),
-        renderHTML: (attributes) => ({
-          "data-date": attributes.date,
-        }),
+        renderHTML: (attributes) => ({ "data-date": attributes.date }),
       },
     };
   },
@@ -112,12 +112,13 @@ export const StatusUpdateHeading = Node.create<StatusUpdateHeadingOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes, node }) {
     return [
       "h2",
       mergeAttributes(HTMLAttributes, this.options.HTMLAttributes ?? {}, {
         "data-status-update": "",
         contenteditable: "false",
+        "data-date": node.attrs.date,
       }),
       ["span", "Status update"],
     ];
@@ -130,11 +131,9 @@ export const StatusUpdateHeading = Node.create<StatusUpdateHeadingOptions>({
   addCommands() {
     return {
       setStatusUpdateDate:
-        (date: Date) =>
+        (isoDate: string) =>
         ({ commands }: CommandProps) => {
-          return commands.updateAttributes("statusUpdateHeading", {
-            date: dayjs(date).startOf("day").toISOString(),
-          });
+          return commands.updateAttributes("statusUpdateHeading", { date: isoDate });
         },
     };
   },

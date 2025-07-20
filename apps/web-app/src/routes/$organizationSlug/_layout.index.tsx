@@ -39,7 +39,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional()
-      .default(dayjs().format("YYYY-MM-DD")),
+      .default(dayjs().startOf("day").format("YYYY-MM-DD")),
     memberId: z.string().optional(),
     teamId: z.string().optional(),
   }),
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
       ({ search, next }) => {
         if (!search.date) {
           return next({
-            date: dayjs().format("YYYY-MM-DD"),
+            date: dayjs().startOf("day").format("YYYY-MM-DD"),
             memberId: search.memberId,
             teamId: search.teamId,
           });
@@ -138,7 +138,7 @@ function RouteComponent() {
         queryClient.invalidateQueries({
           queryKey: typedQueryOptions(listStatusUpdatesByDateContract, {
             idOrSlug: organizationSlug,
-            date: dayjs(data.effectiveFrom).format("YYYY-MM-DD"),
+            date: dayjs.utc(data.effectiveFrom).format("YYYY-MM-DD"),
           }).queryKey,
         });
         navigate({
@@ -161,11 +161,7 @@ function RouteComponent() {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link
-                        to="/$organizationSlug"
-                        params={{ organizationSlug }}
-                        search={{ date: dayjs().format("YYYY-MM-DD") }}
-                      >
+                      <Link to="/$organizationSlug" params={{ organizationSlug }}>
                         Status updates
                       </Link>
                     </BreadcrumbLink>
@@ -191,16 +187,18 @@ function RouteComponent() {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    autoFocus
                     mode="single"
-                    selected={dayjs(date, "YYYY-MM-DD").toDate()}
+                    selected={dayjs.utc(date, "YYYY-MM-DD").toDate()}
                     onSelect={handleDateSelect}
-                    initialFocus
+                    className="rounded-md border shadow-sm"
+                    captionLayout="dropdown"
                   />
                 </PopoverContent>
               </Popover>
 
               <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
-                <PopoverTrigger>
+                <PopoverTrigger asChild>
                   <Button size="sm" variant="outline" className="relative">
                     {(memberId || teamId) && (
                       <div className="absolute -right-1 -top-1 size-3.5 rounded-full bg-primary text-[0.65rem] flex items-center justify-center text-primary-foreground">
@@ -265,8 +263,8 @@ function RouteComponent() {
                 onClick={() =>
                   generateStatusUpdate.mutate({
                     idOrSlug: organizationSlug,
-                    effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
-                    effectiveTo: dayjs(date).utc().endOf("day").toDate(),
+                    effectiveFrom: dayjs.utc(date).startOf("day").toISOString(),
+                    effectiveTo: dayjs.utc(date).endOf("day").toISOString(),
                   })
                 }
               >
@@ -292,8 +290,8 @@ function RouteComponent() {
           onClick={() =>
             generateStatusUpdate.mutate({
               idOrSlug: organizationSlug,
-              effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
-              effectiveTo: dayjs(date).utc().endOf("day").toDate(),
+              effectiveFrom: dayjs.utc(date).startOf("day").toISOString(),
+              effectiveTo: dayjs.utc(date).endOf("day").toISOString(),
             })
           }
         >
@@ -321,8 +319,8 @@ function RouteComponent() {
                 onClick={() =>
                   generateStatusUpdate.mutate({
                     idOrSlug: organizationSlug,
-                    effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
-                    effectiveTo: dayjs(date).utc().endOf("day").toDate(),
+                    effectiveFrom: dayjs.utc(date).startOf("day").toISOString(),
+                    effectiveTo: dayjs.utc(date).endOf("day").toISOString(),
                   })
                 }
               >

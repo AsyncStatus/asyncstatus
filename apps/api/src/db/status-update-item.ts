@@ -14,8 +14,8 @@ export const statusUpdateItem = sqliteTable(
     isBlocker: integer("is_blocker", { mode: "boolean" }).notNull().default(false),
     isInProgress: integer("is_in_progress", { mode: "boolean" }).notNull().default(false),
     order: integer("order").notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => [
     index("status_update_item_update_id_index").on(t.statusUpdateId),

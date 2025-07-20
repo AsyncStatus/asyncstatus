@@ -3,10 +3,10 @@ import {
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
-  upsertStatusUpdateContract,
+  updateStatusUpdateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
-import { AsyncStatusEditor } from "@asyncstatus/editor";
+import { AsyncStatusEditor, type AsyncStatusEditorOnUpdateArgs } from "@asyncstatus/editor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +22,9 @@ import { Form } from "@asyncstatus/ui/components/form";
 import { BookCheck, BookDashed } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { deepEqual, useNavigate } from "@tanstack/react-router";
+import { generateId } from "better-auth";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import useDebouncedCallback from "@/lib/use-debounced-callback";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
@@ -35,7 +36,7 @@ type StatusUpdateFormProps = {
   readonly?: boolean;
 };
 
-export function StatusUpdateForm({
+function StatusUpdateFormUnmemoized({
   organizationSlug,
   statusUpdateId,
   readonly = true,
@@ -52,17 +53,28 @@ export function StatusUpdateForm({
     }),
   );
   const form = useForm({
-    resolver: zodResolver(upsertStatusUpdateContract.inputSchema),
+    resolver: zodResolver(updateStatusUpdateContract.inputSchema),
     defaultValues: {
       idOrSlug: organizationSlug,
-      emoji: "",
-      items: [],
-      mood: "",
-      notes: "",
-      teamId: null,
+      statusUpdateId: statusUpdateId,
+      emoji: statusUpdate.data?.emoji ?? null,
+      items: statusUpdate.data?.items.map((item) => ({
+        id: item.id,
+        order: item.order,
+        content: item.content,
+        isBlocker: item.isBlocker ?? false,
+        isInProgress: item.isInProgress ?? false,
+      })),
+      mood: statusUpdate.data?.mood ?? null,
+      notes: statusUpdate.data?.notes ?? null,
+      teamId: statusUpdate.data?.teamId ?? null,
       editorJson: statusUpdate.data?.editorJson ?? null,
-      effectiveFrom: statusUpdate.data?.effectiveFrom ?? new Date(),
-      effectiveTo: statusUpdate.data?.effectiveTo ?? new Date(),
+      effectiveFrom: statusUpdate.data?.effectiveFrom
+        ? dayjs.utc(statusUpdate.data.effectiveFrom).toISOString()
+        : dayjs.utc().startOf("day").toISOString(),
+      effectiveTo: statusUpdate.data?.effectiveTo
+        ? dayjs.utc(statusUpdate.data.effectiveTo).toISOString()
+        : dayjs.utc().endOf("day").toISOString(),
       isDraft: statusUpdate.data?.isDraft ?? true,
     },
   });
@@ -79,6 +91,7 @@ export function StatusUpdateForm({
       form.setValue(
         "items",
         statusUpdate.data.items.map((item) => ({
+          id: item.id,
           order: item.order,
           content: item.content,
           isBlocker: item.isBlocker ?? false,
@@ -89,66 +102,231 @@ export function StatusUpdateForm({
       form.setValue("notes", statusUpdate.data.notes);
       form.setValue("teamId", statusUpdate.data.teamId);
       form.setValue("editorJson", statusUpdate.data.editorJson);
-      form.setValue("effectiveFrom", statusUpdate.data.effectiveFrom);
-      form.setValue("effectiveTo", statusUpdate.data.effectiveTo);
+      form.setValue("effectiveFrom", dayjs.utc(statusUpdate.data.effectiveFrom).toISOString());
+      form.setValue("effectiveTo", dayjs.utc(statusUpdate.data.effectiveTo).toISOString());
       form.setValue("isDraft", statusUpdate.data.isDraft ?? true);
     }
   }, [statusUpdate.data]);
 
-  const debouncedSave = useDebouncedCallback(
-    (values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) => {
+  const effectiveFrom = form.watch("effectiveFrom");
+  const queryClient = useQueryClient();
+  const updateStatusUpdate = useMutation(
+    typedMutationOptions(updateStatusUpdateContract, {
+      onSuccess: (data) => {
+        const date = dayjs(data.effectiveFrom).format("YYYY-MM-DD");
+        queryClient.invalidateQueries(
+          typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: organizationSlug,
+            date,
+          }),
+        );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }),
+        );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getMemberStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }),
+        );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getMemberStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: date,
+          }),
+        );
+        navigate({
+          to: "/$organizationSlug/status-updates/$statusUpdateId",
+          params: { organizationSlug, statusUpdateId: data.id },
+          replace: true,
+        });
+      },
+    }),
+  );
+
+  const save = useCallback(
+    (values: typeof updateStatusUpdateContract.$infer.input, hasConfirmed: boolean) => {
       if (!values.isDraft && !hasConfirmed) {
         setIsPublishConfirmModalOpen(true);
         return;
       }
-
-      createStatusUpdate.mutate(values);
+      if (updateStatusUpdate.isPending) {
+        return;
+      }
+      updateStatusUpdate.mutate(values);
     },
-    1000,
+    [updateStatusUpdate.isPending],
   );
 
-  function save(values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) {
-    if (!values.isDraft && !hasConfirmed) {
-      setIsPublishConfirmModalOpen(true);
-      return;
-    }
-    createStatusUpdate.mutate(values);
-  }
+  const debouncedSave = useDebouncedCallback(save, 600);
 
-  const effectiveFrom = form.watch("effectiveFrom");
-  const queryClient = useQueryClient();
-  const createStatusUpdate = useMutation(
-    typedMutationOptions(upsertStatusUpdateContract, {
-      onSuccess: (data) => {
-        navigate({
-          to: "/$organizationSlug/status-updates/$statusUpdateId",
-          params: { organizationSlug, statusUpdateId: data.id },
-        });
-        if (!data.isDraft) {
-          queryClient.invalidateQueries(
-            typedQueryOptions(listStatusUpdatesByDateContract, {
-              idOrSlug: organizationSlug,
-              date: dayjs(data.effectiveFrom).format("YYYY-MM-DD"),
-            }),
-          );
-        }
-        queryClient.setQueryData(
-          typedQueryOptions(getStatusUpdateContract, {
-            idOrSlug: organizationSlug,
-            statusUpdateIdOrDate: data.id,
-          }).queryKey,
-          data,
-        );
-        queryClient.setQueryData(
-          typedQueryOptions(getMemberStatusUpdateContract, {
-            idOrSlug: organizationSlug,
-            statusUpdateIdOrDate: dayjs(data.effectiveFrom).format("YYYY-MM-DD"),
-          }).queryKey,
-          data,
-        );
-      },
-    }),
+  const onDateChange = useCallback(
+    (date: string) => {
+      const nextEffectiveFrom = dayjs.utc(date).startOf("day").toISOString();
+      const nextEffectiveTo = dayjs.utc(date).endOf("day").toISOString();
+      form.setValue("effectiveFrom", nextEffectiveFrom);
+      form.setValue("effectiveTo", nextEffectiveTo);
+      const editorJson = form.getValues("editorJson") as any;
+      if (editorJson?.content[0]?.attrs?.date) {
+        editorJson.content[0].attrs.date = nextEffectiveFrom;
+        form.setValue("editorJson", editorJson);
+      }
+      const isSame = deepEqual(
+        {
+          date: statusUpdate.data?.effectiveFrom.toISOString(),
+          emoji: statusUpdate.data?.emoji,
+          mood: statusUpdate.data?.mood,
+          notes: statusUpdate.data?.notes,
+          items: statusUpdate.data?.items.map((item) => ({
+            id: item.id,
+            order: item.order,
+            content: item.content,
+            isBlocker: item.isBlocker ?? false,
+            isInProgress: item.isInProgress ?? false,
+          })),
+          editorJson: statusUpdate.data?.editorJson,
+        },
+        {
+          date: nextEffectiveFrom,
+          emoji: form.getValues("emoji"),
+          mood: form.getValues("mood"),
+          notes: form.getValues("notes"),
+          items: form.getValues("items")?.map((item, index) => ({
+            id: statusUpdate.data?.items[index]?.id ?? generateId(),
+            order: item.order,
+            content: item.content,
+            isBlocker: item.isBlocker ?? false,
+            isInProgress: item.isInProgress ?? false,
+          })),
+          editorJson: editorJson,
+        },
+      );
+      if (
+        !statusUpdate.isPending &&
+        !updateStatusUpdate.isPending &&
+        !organization.isPending &&
+        !readonly &&
+        !isSame
+      ) {
+        form.handleSubmit((values) => debouncedSave(values, true))();
+      }
+    },
+    [
+      form.getValues,
+      statusUpdate.isPending,
+      updateStatusUpdate.isPending,
+      organization.isPending,
+      readonly,
+      debouncedSave,
+    ],
   );
+
+  const onUpdate = useCallback(
+    (data: AsyncStatusEditorOnUpdateArgs) => {
+      form.setValue("emoji", data.moodEmoji);
+      form.setValue("mood", data.mood);
+      form.setValue("notes", data.notes);
+      form.setValue(
+        "items",
+        data.statusUpdateItems.map((item, index) => ({
+          id: statusUpdate.data?.items[index]?.id ?? generateId(),
+          order: item.order,
+          content: item.content,
+          isBlocker: item.isBlocker ?? false,
+          isInProgress: item.isInProgress ?? false,
+        })),
+      );
+      const nextEffectiveFrom = dayjs.utc(data.date).startOf("day").toISOString();
+      const nextEffectiveTo = dayjs.utc(data.date).endOf("day").toISOString();
+      if ((data.editorJson as any)?.content?.[0]?.attrs?.date) {
+        (data.editorJson as any).content[0].attrs.date = nextEffectiveFrom;
+      }
+      form.setValue("editorJson", data.editorJson);
+      form.setValue("effectiveFrom", nextEffectiveFrom);
+      form.setValue("effectiveTo", nextEffectiveTo);
+      const isSame = deepEqual(
+        {
+          date: statusUpdate.data?.effectiveFrom.toISOString(),
+          emoji: statusUpdate.data?.emoji,
+          mood: statusUpdate.data?.mood,
+          notes: statusUpdate.data?.notes,
+          items: statusUpdate.data?.items.map((item) => ({
+            id: item.id,
+            order: item.order,
+            content: item.content,
+            isBlocker: item.isBlocker ?? false,
+            isInProgress: item.isInProgress ?? false,
+          })),
+          editorJson: statusUpdate.data?.editorJson,
+        },
+        {
+          date: data.date,
+          emoji: data.moodEmoji,
+          mood: data.mood,
+          notes: data.notes,
+          items: data.statusUpdateItems.map((item, index) => ({
+            id: statusUpdate.data?.items[index]?.id ?? generateId(),
+            order: item.order,
+            content: item.content,
+            isBlocker: item.isBlocker ?? false,
+            isInProgress: item.isInProgress ?? false,
+          })),
+          editorJson: data.editorJson,
+        },
+      );
+      console.log({
+        isSame,
+        prev: {
+          date: statusUpdate.data?.effectiveFrom.toISOString(),
+          emoji: statusUpdate.data?.emoji,
+          mood: statusUpdate.data?.mood,
+          notes: statusUpdate.data?.notes,
+          items: statusUpdate.data?.items.map((item) => ({
+            order: item.order,
+            content: item.content,
+            isBlocker: item.isBlocker ?? false,
+            isInProgress: item.isInProgress ?? false,
+          })),
+          editorJson: statusUpdate.data?.editorJson,
+        },
+        next: {
+          date: data.date,
+          emoji: data.moodEmoji,
+          mood: data.mood,
+          notes: data.notes,
+          items: data.statusUpdateItems,
+          editorJson: data.editorJson,
+        },
+      });
+      if (
+        !statusUpdate.isPending &&
+        !updateStatusUpdate.isPending &&
+        !organization.isPending &&
+        !readonly &&
+        !isSame
+      ) {
+        form.handleSubmit((values) => debouncedSave(values, true))();
+      }
+    },
+    [
+      debouncedSave,
+      organization.isPending,
+      updateStatusUpdate.isPending,
+      statusUpdate.isPending,
+      readonly,
+    ],
+  );
+
+  const initialContent = useMemo(() => {
+    return statusUpdate.data?.editorJson ?? null;
+  }, [JSON.stringify(statusUpdate.data?.editorJson ?? {})]);
+
+  const date = useMemo(() => {
+    return dayjs.utc(effectiveFrom).startOf("day").toISOString();
+  }, [effectiveFrom]);
 
   return (
     <Form {...form}>
@@ -175,40 +353,12 @@ export function StatusUpdateForm({
       </AlertDialog>
 
       <AsyncStatusEditor
-        localStorageKeyPrefix={`${organization.data?.member.id}-${statusUpdateId}`}
-        key={dayjs(effectiveFrom as Date)
-          .startOf("day")
-          .format("YYYY-MM-DD")}
-        date={dayjs(effectiveFrom as Date)
-          .startOf("day")
-          .format("YYYY-MM-DD")}
+        date={date}
         readonly={readonly}
-        initialContent={statusUpdate.data?.editorJson ?? null}
-        onDateChange={(date) => {
-          const nextEffectiveFrom = dayjs(date, "YYYY-MM-DD", true).startOf("day").toDate();
-          const nextEffectiveTo = dayjs(date, "YYYY-MM-DD", true).endOf("day").toDate();
-          form.setValue("effectiveFrom", nextEffectiveFrom);
-          form.setValue("effectiveTo", nextEffectiveTo);
-        }}
-        onUpdate={(data) => {
-          form.setValue("emoji", data.moodEmoji);
-          form.setValue("mood", data.mood);
-          form.setValue("notes", data.notes);
-          form.setValue("items", data.statusUpdateItems);
-          form.setValue("editorJson", data.editorJson);
-
-          const nextEffectiveFrom = dayjs(data.date).startOf("day").toDate();
-          form.setValue("effectiveFrom", nextEffectiveFrom);
-          form.setValue("effectiveTo", dayjs(data.date).endOf("day").toDate());
-          if (
-            !statusUpdate.isPending &&
-            !createStatusUpdate.isPending &&
-            !organization.isPending &&
-            !readonly
-          ) {
-            form.handleSubmit((values) => debouncedSave(values, true))();
-          }
-        }}
+        localStorageKeyPrefix={`${organization.data?.member.id}-${statusUpdateId}`}
+        initialContent={initialContent}
+        onDateChange={onDateChange}
+        onUpdate={onUpdate}
       >
         {!readonly && (
           <>
@@ -224,7 +374,7 @@ export function StatusUpdateForm({
             <Button
               size="sm"
               variant="outline"
-              disabled={createStatusUpdate.isPending}
+              disabled={updateStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", true);
                 form.handleSubmit((values) => save(values, true))();
@@ -235,7 +385,7 @@ export function StatusUpdateForm({
             </Button>
             <Button
               size="sm"
-              disabled={createStatusUpdate.isPending}
+              disabled={updateStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", false);
                 form.handleSubmit((values) => save(values, statusUpdate.data?.isDraft ?? false))();
@@ -250,3 +400,11 @@ export function StatusUpdateForm({
     </Form>
   );
 }
+
+export const StatusUpdateForm = memo(StatusUpdateFormUnmemoized, (prev, next) => {
+  return (
+    prev.organizationSlug === next.organizationSlug &&
+    prev.statusUpdateId === next.statusUpdateId &&
+    prev.readonly === next.readonly
+  );
+});

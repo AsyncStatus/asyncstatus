@@ -51,7 +51,9 @@ import {
   listStatusUpdatesByMemberHandler,
   listStatusUpdatesByTeamHandler,
   listStatusUpdatesHandler,
+  updateStatusUpdateHandler,
   upsertStatusUpdateHandler,
+  upsertStatusUpdateHandlerV2,
 } from "./typed-handlers/status-update-handlers";
 import {
   addTeamMemberHandler,
@@ -191,6 +193,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     listStatusUpdatesByTeamHandler,
     getStatusUpdateHandler,
     getMemberStatusUpdateHandler,
+    updateStatusUpdateHandler,
+    upsertStatusUpdateHandlerV2,
     upsertStatusUpdateHandler,
     deleteStatusUpdateHandler,
     generateStatusUpdateHandler,

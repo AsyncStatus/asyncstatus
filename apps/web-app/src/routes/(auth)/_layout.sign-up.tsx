@@ -109,8 +109,8 @@ function RouteComponent() {
             name: `${data.firstName} ${data.lastName}`,
             callbackURL: import.meta.env.VITE_WEB_APP_URL,
           });
+          await queryClient.resetQueries();
           await router.invalidate();
-          queryClient.clear();
           navigate({ to: search.redirect ?? "/" });
           if (!invitation.data) {
             await sendVerificationEmail.mutateAsync({

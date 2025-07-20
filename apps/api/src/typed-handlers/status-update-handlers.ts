@@ -1,9 +1,10 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { isTuple } from "../lib/is-tuple";
 import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
@@ -15,7 +16,9 @@ import {
   listStatusUpdatesByMemberContract,
   listStatusUpdatesByTeamContract,
   listStatusUpdatesContract,
+  updateStatusUpdateContract,
   upsertStatusUpdateContract,
+  upsertStatusUpdateContractV2,
 } from "./status-update-contracts";
 
 export const listStatusUpdatesHandler = typedHandler<
@@ -52,7 +55,7 @@ export const listStatusUpdatesByDateHandler = typedHandler<
   async ({ db, organization, input }) => {
     const { date, memberId, teamId } = input;
 
-    const targetDate = dayjs(date, "YYYY-MM-DD", true);
+    const targetDate = dayjs.utc(date, "YYYY-MM-DD");
     if (!targetDate.isValid()) {
       throw new TypedHandlersError({
         code: "BAD_REQUEST",
@@ -62,6 +65,8 @@ export const listStatusUpdatesByDateHandler = typedHandler<
 
     const startOfDay = targetDate.startOf("day").toDate();
     const endOfDay = targetDate.endOf("day").toDate();
+
+    console.log({ startOfDay, endOfDay });
 
     if (memberId) {
       const member = await db.query.member.findFirst({
@@ -118,6 +123,8 @@ export const listStatusUpdatesByDateHandler = typedHandler<
       },
       orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
     });
+
+    console.log({ statusUpdates });
 
     return statusUpdates;
   },
@@ -229,17 +236,14 @@ export const getStatusUpdateHandler = typedHandler<
   async ({ db, organization, input, session, member }) => {
     const { statusUpdateIdOrDate } = input;
 
-    const isDate = dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).isValid();
+    const isDate = dayjs.utc(statusUpdateIdOrDate, "YYYY-MM-DD").isValid();
     if (isDate) {
       const statusUpdate = await db.query.statusUpdate.findFirst({
         where: and(
           eq(schema.statusUpdate.organizationId, organization.id),
           eq(
             schema.statusUpdate.effectiveFrom,
-            dayjs
-              .tz(statusUpdateIdOrDate, "YYYY-MM-DD", session.user.timezone)
-              .startOf("day")
-              .toDate(),
+            dayjs.utc(statusUpdateIdOrDate, "YYYY-MM-DD").startOf("day").toDate(),
           ),
         ),
         with: {
@@ -331,14 +335,18 @@ export const getMemberStatusUpdateHandler = typedHandler<
       return statusUpdate;
     }
 
-    const isDate = dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).isValid();
+    const isDate = dayjs.utc(statusUpdateIdOrDate, "YYYY-MM-DD").isValid();
     if (isDate) {
       const statusUpdate = await db.query.statusUpdate.findFirst({
         where: and(
           eq(schema.statusUpdate.organizationId, organization.id),
-          eq(
+          gte(
             schema.statusUpdate.effectiveFrom,
-            dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).startOf("day").toDate(),
+            dayjs.utc(statusUpdateIdOrDate, "YYYY-MM-DD").startOf("day").toDate(),
+          ),
+          lte(
+            schema.statusUpdate.effectiveTo,
+            dayjs.utc(statusUpdateIdOrDate, "YYYY-MM-DD").endOf("day").toDate(),
           ),
           eq(schema.statusUpdate.memberId, member.id),
         ),
@@ -379,6 +387,8 @@ export const getMemberStatusUpdateHandler = typedHandler<
       });
     }
 
+    console.log({ statusUpdate });
+
     return statusUpdate;
   },
 );
@@ -393,21 +403,6 @@ export const upsertStatusUpdateHandler = typedHandler<
   async ({ db, organization, input, session, member }) => {
     const { teamId, effectiveFrom, effectiveTo, mood, emoji, isDraft, notes, items, editorJson } =
       input;
-
-    if (!(effectiveFrom instanceof Date)) {
-      throw new TypedHandlersError({
-        code: "BAD_REQUEST",
-        message: "Effective from must be a date",
-      });
-    }
-
-    if (!(effectiveTo instanceof Date)) {
-      throw new TypedHandlersError({
-        code: "BAD_REQUEST",
-        message: "Effective to must be a date",
-      });
-    }
-
     // If teamId is provided, verify it belongs to this organization
     if (teamId) {
       const team = await db.query.team.findFirst({
@@ -422,22 +417,30 @@ export const upsertStatusUpdateHandler = typedHandler<
       }
     }
 
-    const now = dayjs.tz(new Date(), session.user.timezone).toDate();
+    const now = dayjs.utc().toDate();
 
     // Check if a status update already exists for this member on the effectiveFrom date
-    const effectiveFromStartOfDay = dayjs
-      .tz(effectiveFrom, session.user.timezone)
-      .startOf("day")
-      .toDate();
+    const effectiveFromStartOfDay = dayjs.utc(effectiveFrom as string).startOf("day");
+    const effectiveToEndOfDay = dayjs.utc(effectiveTo as string).endOf("day");
+    const effectiveFromStartOfDayDate = effectiveFromStartOfDay.toDate();
+    const effectiveToEndOfDayDate = effectiveToEndOfDay.toDate();
+
+    console.log({
+      effectiveFromStartOfDay: effectiveFromStartOfDay.toISOString(),
+      effectiveToEndOfDay: effectiveToEndOfDay.toISOString(),
+    });
 
     const statusUpdate = await db.transaction(async (tx) => {
       const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
         where: and(
           eq(schema.statusUpdate.memberId, member.id),
           eq(schema.statusUpdate.organizationId, organization.id),
-          eq(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+          gte(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDayDate),
+          lte(schema.statusUpdate.effectiveTo, effectiveToEndOfDayDate),
         ),
       });
+
+      console.log({ existingStatusUpdate });
 
       const userTimezone = session.user.timezone;
 
@@ -451,7 +454,8 @@ export const upsertStatusUpdateHandler = typedHandler<
           .set({
             teamId: teamId === null ? null : (teamId ?? existingStatusUpdate.teamId),
             editorJson,
-            effectiveTo: dayjs.tz(effectiveTo, session.user.timezone).toDate(),
+            effectiveFrom: effectiveFromStartOfDayDate,
+            effectiveTo: effectiveToEndOfDayDate,
             mood,
             emoji,
             notes,
@@ -472,8 +476,8 @@ export const upsertStatusUpdateHandler = typedHandler<
             organizationId: organization.id,
             teamId: teamId === null ? null : (teamId ?? null),
             editorJson,
-            effectiveFrom: effectiveFromStartOfDay,
-            effectiveTo: dayjs.tz(effectiveTo, session.user.timezone).toDate(),
+            effectiveFrom: effectiveFromStartOfDayDate,
+            effectiveTo: effectiveToEndOfDayDate,
             mood,
             emoji,
             notes,
@@ -576,6 +580,250 @@ export const upsertStatusUpdateHandler = typedHandler<
   },
 );
 
+export const upsertStatusUpdateHandlerV2 = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof upsertStatusUpdateContractV2
+>(
+  upsertStatusUpdateContractV2,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, session, member }) => {
+    const { teamId, effectiveFrom, effectiveTo, mood, emoji, isDraft, notes, items, editorJson } =
+      input;
+
+    const existingStatusUpdate = await db.query.statusUpdate.findFirst({
+      where: and(
+        eq(schema.statusUpdate.memberId, member.id),
+        eq(schema.statusUpdate.organizationId, organization.id),
+        eq(schema.statusUpdate.id, input.statusUpdateId ?? ""),
+      ),
+    });
+
+    const now = dayjs.utc().toDate();
+
+    if (existingStatusUpdate && items && items.length > 0) {
+      const batchUpdates = items
+        .filter((item) => item.id)
+        .map((item) => {
+          return (
+            db
+              .update(schema.statusUpdateItem)
+              .set({
+                statusUpdateId: existingStatusUpdate.id,
+                order: item.order,
+                content: item.content,
+                isBlocker: item.isBlocker,
+                isInProgress: item.isInProgress,
+                updatedAt: now,
+              })
+              // biome-ignore lint/style/noNonNullAssertion: we did filter out the items that don't have an id
+              .where(eq(schema.statusUpdateItem.id, item.id!))
+          );
+        });
+      if (isTuple(batchUpdates)) {
+        await db.batch(batchUpdates);
+      }
+    }
+
+    const statusUpdate = await db.transaction(async (tx) => {
+      const statusUpdateId = generateId();
+
+      await tx
+        .insert(schema.statusUpdate)
+        .values({
+          id: statusUpdateId,
+          memberId: member.id,
+          organizationId: organization.id,
+          teamId: teamId,
+          editorJson,
+          effectiveFrom: dayjs(effectiveFrom).toDate(),
+          effectiveTo: dayjs(effectiveTo).toDate(),
+          mood,
+          emoji,
+          notes,
+          isDraft,
+          timezone: session.user.timezone,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: schema.statusUpdate.id,
+          set: {
+            memberId: member.id,
+            organizationId: organization.id,
+            teamId: teamId,
+            editorJson,
+            effectiveFrom: dayjs(effectiveFrom).toDate(),
+            effectiveTo: dayjs(effectiveTo).toDate(),
+            mood,
+            emoji,
+            notes,
+            isDraft,
+            timezone: session.user.timezone,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+
+      if (!existingStatusUpdate && items && items.length > 0) {
+        await tx.insert(schema.statusUpdateItem).values(
+          items.map((item) => ({
+            id: generateId(),
+            statusUpdateId,
+            content: item.content,
+            isBlocker: item.isBlocker,
+            isInProgress: item.isInProgress,
+            order: item.order,
+            createdAt: now,
+            updatedAt: now,
+          })),
+        );
+      }
+
+      const result = await tx.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!result) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create status update",
+        });
+      }
+
+      return result;
+    });
+
+    return statusUpdate;
+  },
+);
+
+export const updateStatusUpdateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof updateStatusUpdateContract
+>(
+  updateStatusUpdateContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, session }) => {
+    const {
+      statusUpdateId,
+      teamId,
+      effectiveFrom,
+      effectiveTo,
+      mood,
+      emoji,
+      isDraft,
+      notes,
+      items,
+      editorJson,
+    } = input;
+
+    const now = dayjs.utc().toDate();
+
+    console.log({ items });
+
+    // if (items && items.length > 0) {
+    //   const batchUpdates = items.map((item) => {
+    //     return db
+    //       .update(schema.statusUpdateItem)
+    //       .set({
+    //         statusUpdateId,
+    //         order: item.order,
+    //         content: item.content,
+    //         isBlocker: item.isBlocker,
+    //         isInProgress: item.isInProgress,
+    //         updatedAt: now,
+    //       })
+    //       .where(eq(schema.statusUpdateItem.id, item.id));
+    //   });
+    //   if (isTuple(batchUpdates)) {
+    //     await db.batch(batchUpdates);
+    //   }
+    // }
+
+    const statusUpdate = await db.transaction(async (tx) => {
+      const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.id, statusUpdateId),
+          eq(schema.statusUpdate.organizationId, organization.id),
+        ),
+      });
+
+      if (!existingStatusUpdate) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Status update not found",
+        });
+      }
+
+      await tx
+        .update(schema.statusUpdate)
+        .set({
+          teamId: teamId === null ? null : existingStatusUpdate.teamId,
+          editorJson,
+          effectiveFrom: dayjs(effectiveFrom).toDate(),
+          effectiveTo: dayjs(effectiveTo).toDate(),
+          mood,
+          emoji,
+          notes,
+          isDraft,
+          timezone: session.user.timezone,
+          updatedAt: now,
+        })
+        .where(eq(schema.statusUpdate.id, statusUpdateId));
+
+      await tx
+        .delete(schema.statusUpdateItem)
+        .where(eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId));
+
+      if (items && items.length > 0) {
+        await tx.insert(schema.statusUpdateItem).values(
+          items.map((item) => ({
+            id: generateId(),
+            statusUpdateId,
+            content: item.content,
+            isBlocker: item.isBlocker,
+            isInProgress: item.isInProgress,
+            order: item.order,
+            createdAt: now,
+            updatedAt: now,
+          })),
+        );
+      }
+
+      const result = await tx.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!result) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update status update",
+        });
+      }
+
+      return result;
+    });
+
+    return statusUpdate;
+  },
+);
+
 export const deleteStatusUpdateHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof deleteStatusUpdateContract
@@ -627,15 +875,8 @@ export const generateStatusUpdateHandler = typedHandler<
   requiredOrganization,
   async ({ db, openRouterProvider, input, organization, session, member }) => {
     let generatedItems: string[] = [];
-    const now = dayjs.tz(new Date(), session.user.timezone);
-    const effectiveFrom = dayjs.tz(
-      input.effectiveFrom instanceof Date ? input.effectiveFrom : now.startOf("day").toDate(),
-      session.user.timezone,
-    );
-    const effectiveTo = dayjs.tz(
-      input.effectiveTo instanceof Date ? input.effectiveTo : now.endOf("day").toDate(),
-      session.user.timezone,
-    );
+    const effectiveFrom = dayjs.tz(input.effectiveFrom, session.user.timezone);
+    const effectiveTo = dayjs.tz(input.effectiveTo, session.user.timezone);
 
     try {
       generatedItems = await generateStatusUpdateItems({

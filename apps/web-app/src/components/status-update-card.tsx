@@ -3,6 +3,7 @@ import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import type { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
+import { Separator } from "@asyncstatus/ui/components/separator";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@asyncstatus/ui/components/tooltip";
 import { AlertTriangle } from "@asyncstatus/ui/icons";
@@ -151,35 +152,68 @@ function StatusUpdateDate(props: {
     () => props.statusUpdate.member.user.name.split(" ")[0] ?? props.statusUpdate.member.user.name,
     [props.statusUpdate.member.user.name],
   );
+  const lessThanTenMinutesDifference = useMemo(
+    () =>
+      props.statusUpdate.updatedAt
+        ? dayjs(props.statusUpdate.updatedAt).diff(props.statusUpdate.createdAt, "minute") < 10
+        : false,
+    [props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
+  );
+  const edited = useMemo(
+    () =>
+      lessThanTenMinutesDifference
+        ? false
+        : props.statusUpdate.updatedAt
+          ? props.statusUpdate.updatedAt.toISOString() !==
+            props.statusUpdate.createdAt.toISOString()
+          : false,
+    [lessThanTenMinutesDifference, props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
+  );
 
   return (
     <Tooltip>
       <TooltipTrigger>
-        <p className="text-xs text-muted-foreground">
-          {dayjs.tz(props.statusUpdate.createdAt, session.data?.user.timezone).format("HH:mm")}
+        <p className={cn("text-xs text-muted-foreground", edited && "italic")}>
+          {dayjs
+            .tz(
+              edited ? props.statusUpdate.updatedAt : props.statusUpdate.createdAt,
+              session.data?.user.timezone,
+            )
+            .format("HH:mm")}
+          {edited ? " edited" : ""}
         </p>
       </TooltipTrigger>
 
       <TooltipContent className="p-2 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground">
-          Status update:{" "}
+          <span className="font-medium text-foreground">Created:</span>{" "}
           {dayjs
             .tz(props.statusUpdate.createdAt, props.statusUpdate.timezone)
-            .format("MMM D, YYYY HH:mm")}{" "}
+            .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({props.statusUpdate.timezone})
         </p>
+        {props.statusUpdate.updatedAt && (
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Edited:</span>{" "}
+            {dayjs
+              .tz(props.statusUpdate.updatedAt, props.statusUpdate.timezone)
+              .format("MMM D, YYYY HH:mm:ss")}{" "}
+            ({props.statusUpdate.timezone})
+          </p>
+        )}
+        <Separator className="my-1.5" />
         <p className="text-xs text-muted-foreground">
-          {name}:{" "}
+          <span className="font-medium text-foreground">{name}:</span>{" "}
           {dayjs
             .tz(props.statusUpdate.createdAt, props.statusUpdate.member.user.timezone)
-            .format("MMM D, YYYY HH:mm")}{" "}
+            .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({props.statusUpdate.member.user.timezone})
         </p>
         <p className="text-xs text-muted-foreground">
-          You:{" "}
+          <span className="font-medium text-foreground">You:</span>{" "}
           {dayjs
             .tz(props.statusUpdate.createdAt, session.data?.user.timezone)
-            .format("MMM D, YYYY HH:mm")}{" "}
+            .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({session.data?.user.timezone})
         </p>
       </TooltipContent>

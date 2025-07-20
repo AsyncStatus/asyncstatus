@@ -1,5 +1,6 @@
 import type { DefaultError, SkipToken } from "@tanstack/query-core";
 import {
+  isCancelledError,
   queryOptions,
   skipToken,
   type UseMutationOptions,
@@ -33,7 +34,17 @@ export function typedQueryOptionsFactory(fetch: TypedContractFetch) {
       UseQueryOptions<TC["$infer"]["input"], TypedHandlersError, TC["$infer"]["output"], never>
     >,
   ) => {
-    const throwOnError = options?.throwOnError ?? true;
+    const throwOnError =
+      options?.throwOnError ??
+      ((error) => {
+        console.log("throwOnError");
+        console.log(error);
+        if (isCancelledError(error)) {
+          return false;
+        }
+
+        return true;
+      });
 
     return queryOptions<
       TC["$infer"]["output"],
@@ -86,7 +97,15 @@ export function typedMutationOptionsFactory(fetch: TypedContractFetch) {
       unknown
     >,
   ) => {
-    const throwOnError = options?.throwOnError ?? true;
+    const throwOnError =
+      options?.throwOnError ??
+      ((error) => {
+        if (isCancelledError(error)) {
+          return false;
+        }
+
+        return true;
+      });
 
     return mutationOptions<
       TC["$infer"]["output"],

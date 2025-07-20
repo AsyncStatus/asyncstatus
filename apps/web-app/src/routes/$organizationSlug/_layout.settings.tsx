@@ -36,7 +36,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -736,6 +735,37 @@ function RouteComponent() {
                   organizationSlugOrId={params.organizationSlug}
                   memberId={organizationQuery.data.member.id}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-6! gap-0.5">
+                <CardTitle className="text-xl">Advanced</CardTitle>
+                <CardDescription>
+                  Do not use this unless you know what you are doing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col border border-border rounded-lg p-4 gap-2 w-fit">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      const items = Object.keys(localStorage);
+                      items.forEach((item) => {
+                        if (item.includes("-json-content-")) {
+                          localStorage.removeItem(item);
+                        }
+                      });
+                    }}
+                  >
+                    Clear local data
+                  </Button>
+                  <p className="text-xs text-muted-foreground max-w-3xs text-pretty">
+                    Clears local data. This will not affect other users. Only use this if you are
+                    experiencing issues with the app, specifically with status updates.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
