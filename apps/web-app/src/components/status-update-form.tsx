@@ -19,13 +19,13 @@ import {
 } from "@asyncstatus/ui/components/alert-dialog";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Form } from "@asyncstatus/ui/components/form";
-import { Separator } from "@asyncstatus/ui/components/separator";
 import { BookCheck, BookDashed } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import useDebouncedCallback from "@/lib/use-debounced-callback";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 import { TeamSelect } from "./team-select";
 
@@ -95,6 +95,26 @@ export function StatusUpdateForm({
     }
   }, [statusUpdate.data]);
 
+  const debouncedSave = useDebouncedCallback(
+    (values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) => {
+      if (!values.isDraft && !hasConfirmed) {
+        setIsPublishConfirmModalOpen(true);
+        return;
+      }
+
+      createStatusUpdate.mutate(values);
+    },
+    1000,
+  );
+
+  function save(values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) {
+    if (!values.isDraft && !hasConfirmed) {
+      setIsPublishConfirmModalOpen(true);
+      return;
+    }
+    createStatusUpdate.mutate(values);
+  }
+
   const effectiveFrom = form.watch("effectiveFrom");
   const queryClient = useQueryClient();
   const createStatusUpdate = useMutation(
@@ -130,15 +150,6 @@ export function StatusUpdateForm({
     }),
   );
 
-  function onSubmit(values: typeof upsertStatusUpdateContract.$infer.input, hasConfirmed: boolean) {
-    if (!values.isDraft && !hasConfirmed) {
-      setIsPublishConfirmModalOpen(true);
-      return;
-    }
-
-    createStatusUpdate.mutate(values);
-  }
-
   return (
     <Form {...form}>
       <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
@@ -154,7 +165,7 @@ export function StatusUpdateForm({
             <AlertDialogAction
               onClick={() => {
                 setIsPublishConfirmModalOpen(false);
-                form.handleSubmit((values) => onSubmit(values, true))();
+                form.handleSubmit((values) => debouncedSave(values, true))();
               }}
             >
               Publish
@@ -195,7 +206,7 @@ export function StatusUpdateForm({
             !organization.isPending &&
             !readonly
           ) {
-            form.handleSubmit((values) => onSubmit(values, true))();
+            form.handleSubmit((values) => debouncedSave(values, true))();
           }
         }}
       >
@@ -207,7 +218,7 @@ export function StatusUpdateForm({
               value={form.watch("teamId") ?? undefined}
               onSelect={(teamId) => {
                 form.setValue("teamId", teamId ?? null);
-                form.handleSubmit((values) => onSubmit(values, true))();
+                form.handleSubmit((values) => save(values, true))();
               }}
             />
             <Button
@@ -216,7 +227,7 @@ export function StatusUpdateForm({
               disabled={createStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", true);
-                form.handleSubmit((values) => onSubmit(values, true))();
+                form.handleSubmit((values) => save(values, true))();
               }}
             >
               <BookDashed className="size-4" />
@@ -227,9 +238,7 @@ export function StatusUpdateForm({
               disabled={createStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", false);
-                form.handleSubmit((values) =>
-                  onSubmit(values, statusUpdate.data?.isDraft ?? false),
-                )();
+                form.handleSubmit((values) => save(values, statusUpdate.data?.isDraft ?? false))();
               }}
             >
               <BookCheck className="size-4" />

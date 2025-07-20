@@ -1,7 +1,7 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
@@ -49,7 +49,7 @@ export const listStatusUpdatesByDateHandler = typedHandler<
   listStatusUpdatesByDateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, input }) => {
+  async ({ db, organization, input, session }) => {
     const { date, memberId, teamId } = input;
 
     const targetDate = dayjs(date, "YYYY-MM-DD", true);
@@ -60,8 +60,8 @@ export const listStatusUpdatesByDateHandler = typedHandler<
       });
     }
 
-    const startOfDay = targetDate.startOf("day").toDate();
-    const endOfDay = targetDate.endOf("day").toDate();
+    const startOfDay = dayjs.tz(targetDate, session.user.timezone).startOf("day").toDate();
+    const endOfDay = dayjs.tz(targetDate, session.user.timezone).endOf("day").toDate();
 
     if (memberId) {
       const member = await db.query.member.findFirst({
@@ -95,8 +95,8 @@ export const listStatusUpdatesByDateHandler = typedHandler<
     const where = [
       eq(schema.statusUpdate.organizationId, organization.id),
       eq(schema.statusUpdate.isDraft, false),
-      lte(schema.statusUpdate.effectiveFrom, endOfDay),
-      gte(schema.statusUpdate.effectiveTo, startOfDay),
+      gte(schema.statusUpdate.effectiveFrom, startOfDay),
+      lt(schema.statusUpdate.effectiveTo, endOfDay),
     ];
 
     if (memberId) {
@@ -226,7 +226,7 @@ export const getStatusUpdateHandler = typedHandler<
   getStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, input, member }) => {
+  async ({ db, organization, input, session, member }) => {
     const { statusUpdateIdOrDate } = input;
 
     const isDate = dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).isValid();
@@ -236,7 +236,10 @@ export const getStatusUpdateHandler = typedHandler<
           eq(schema.statusUpdate.organizationId, organization.id),
           eq(
             schema.statusUpdate.effectiveFrom,
-            dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).startOf("day").toDate(),
+            dayjs
+              .tz(statusUpdateIdOrDate, "YYYY-MM-DD", session.user.timezone)
+              .startOf("day")
+              .toDate(),
           ),
         ),
         with: {
@@ -379,6 +382,7 @@ export const getMemberStatusUpdateHandler = typedHandler<
     return statusUpdate;
   },
 );
+
 export const upsertStatusUpdateHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof upsertStatusUpdateContract
@@ -386,7 +390,7 @@ export const upsertStatusUpdateHandler = typedHandler<
   upsertStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, input, member }) => {
+  async ({ db, organization, input, session, member }) => {
     const { teamId, effectiveFrom, effectiveTo, mood, emoji, isDraft, notes, items, editorJson } =
       input;
 
@@ -418,10 +422,13 @@ export const upsertStatusUpdateHandler = typedHandler<
       }
     }
 
-    const now = new Date();
+    const now = dayjs.tz(new Date(), session.user.timezone).toDate();
 
     // Check if a status update already exists for this member on the effectiveFrom date
-    const effectiveFromStartOfDay = dayjs(effectiveFrom).startOf("day").toDate();
+    const effectiveFromStartOfDay = dayjs
+      .tz(effectiveFrom, session.user.timezone)
+      .startOf("day")
+      .toDate();
 
     const statusUpdate = await db.transaction(async (tx) => {
       const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
@@ -432,8 +439,7 @@ export const upsertStatusUpdateHandler = typedHandler<
         ),
       });
 
-      const user = await tx.query.user.findFirst({ where: eq(schema.user.id, member.userId) });
-      const userTimezone = user?.timezone || "UTC";
+      const userTimezone = session.user.timezone;
 
       let statusUpdateId: string;
       if (existingStatusUpdate) {
@@ -445,7 +451,7 @@ export const upsertStatusUpdateHandler = typedHandler<
           .set({
             teamId: teamId === null ? null : (teamId ?? existingStatusUpdate.teamId),
             editorJson,
-            effectiveTo,
+            effectiveTo: dayjs.tz(effectiveTo, session.user.timezone).toDate(),
             mood,
             emoji,
             notes,
@@ -467,7 +473,7 @@ export const upsertStatusUpdateHandler = typedHandler<
             teamId: teamId === null ? null : (teamId ?? null),
             editorJson,
             effectiveFrom: effectiveFromStartOfDay,
-            effectiveTo,
+            effectiveTo: dayjs.tz(effectiveTo, session.user.timezone).toDate(),
             mood,
             emoji,
             notes,
@@ -619,14 +625,16 @@ export const generateStatusUpdateHandler = typedHandler<
   generateStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, openRouterProvider, input, organization, member }) => {
+  async ({ db, openRouterProvider, input, organization, session, member }) => {
     let generatedItems: string[] = [];
-    const now = dayjs();
-    const effectiveFrom = dayjs(
+    const now = dayjs.tz(new Date(), session.user.timezone);
+    const effectiveFrom = dayjs.tz(
       input.effectiveFrom instanceof Date ? input.effectiveFrom : now.startOf("day").toDate(),
+      session.user.timezone,
     );
-    const effectiveTo = dayjs(
+    const effectiveTo = dayjs.tz(
       input.effectiveTo instanceof Date ? input.effectiveTo : now.endOf("day").toDate(),
+      session.user.timezone,
     );
 
     try {
@@ -652,7 +660,7 @@ export const generateStatusUpdateHandler = typedHandler<
 
     const effectiveFromStartOfDay = effectiveFrom.startOf("day").toDate();
     const effectiveToEndOfDay = effectiveTo.endOf("day").toDate();
-    const nowDate = new Date();
+    const nowDate = dayjs.tz(new Date(), session.user.timezone).toDate();
 
     const statusUpdate = await db.transaction(async (tx) => {
       // Check if a status update already exists for this member on the effectiveFrom date
