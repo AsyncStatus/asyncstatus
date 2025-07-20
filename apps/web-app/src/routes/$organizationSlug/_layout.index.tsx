@@ -144,7 +144,7 @@ function RouteComponent() {
           }).queryKey,
         });
         navigate({
-          to: "/$organizationSlug/status-update/$statusUpdateId",
+          to: "/$organizationSlug/status-updates/$statusUpdateId",
           params: { organizationSlug, statusUpdateId: data.id },
         });
       },
@@ -265,8 +265,8 @@ function RouteComponent() {
                 onClick={() =>
                   generateStatusUpdate.mutate({
                     idOrSlug: organizationSlug,
-                    effectiveFrom: dayjs(date).startOf("day").toDate(),
-                    effectiveTo: dayjs(date).endOf("day").toDate(),
+                    effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
+                    effectiveTo: dayjs(date).utc().endOf("day").toDate(),
                   })
                 }
               >
@@ -297,8 +297,8 @@ function RouteComponent() {
                 onClick={() =>
                   generateStatusUpdate.mutate({
                     idOrSlug: organizationSlug,
-                    effectiveFrom: dayjs(date).startOf("day").toDate(),
-                    effectiveTo: dayjs(date).endOf("day").toDate(),
+                    effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
+                    effectiveTo: dayjs(date).utc().endOf("day").toDate(),
                   })
                 }
               >
