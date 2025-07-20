@@ -13,7 +13,7 @@ export function EmptyState({ icon, title, description, className, children }: Em
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-dashed p-4 sm:py-16 sm:px-4 text-center",
+        "flex flex-col items-center justify-center rounded-lg border border-dashed py-12 px-4 sm:py-16 sm:px-4 text-center",
         className,
       )}
     >

@@ -14,9 +14,14 @@ import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 export type WriteStatusUpdateButtonProps = {
   organizationSlug: string;
   date: string;
+  className?: string;
 };
 
-export function WriteStatusUpdateButton({ organizationSlug, date }: WriteStatusUpdateButtonProps) {
+export function WriteStatusUpdateButton({
+  organizationSlug,
+  date,
+  className,
+}: WriteStatusUpdateButtonProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const statusUpdate = useQuery(
@@ -70,7 +75,7 @@ export function WriteStatusUpdateButton({ organizationSlug, date }: WriteStatusU
 
   if (!statusUpdate.data) {
     return (
-      <Button size="sm" variant="outline" onClick={createEmptyStatusUpdate}>
+      <Button size="sm" variant="outline" onClick={createEmptyStatusUpdate} className={className}>
         <Plus className="size-4" />
         <span>Write update</span>
       </Button>
@@ -78,7 +83,7 @@ export function WriteStatusUpdateButton({ organizationSlug, date }: WriteStatusU
   }
 
   return (
-    <Button size="sm" variant="outline" asChild>
+    <Button size="sm" variant="outline" asChild className={className}>
       <Link
         to="/$organizationSlug/status-updates/$statusUpdateId"
         params={{ organizationSlug, statusUpdateId: statusUpdate.data.id }}

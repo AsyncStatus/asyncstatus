@@ -153,24 +153,26 @@ function RouteComponent() {
     <>
       <header className="flex flex-col gap-4 pb-4">
         <div className="flex items-center justify-between gap-0">
-          <div className="flex items-center gap-0">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link
-                      to="/$organizationSlug"
-                      params={{ organizationSlug }}
-                      search={{ date: dayjs().format("YYYY-MM-DD") }}
-                    >
-                      Status updates
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+          <div className="flex items-center w-full">
+            <div className="flex items-center max-sm:flex-1 max-sm:w-full">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link
+                        to="/$organizationSlug"
+                        params={{ organizationSlug }}
+                        search={{ date: dayjs().format("YYYY-MM-DD") }}
+                      >
+                        Status updates
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
 
             <div className="flex items-center gap-2">
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -208,7 +210,7 @@ function RouteComponent() {
                     <FilterIcon className="size-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-4 bg-background">
+                <PopoverContent sideOffset={14} className="p-4 bg-background max-sm:w-screen">
                   <p className="text-base font-medium mb-4">Filters</p>
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
@@ -253,7 +255,7 @@ function RouteComponent() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 max-sm:hidden">
             <div className="flex gap-2">
               <WriteStatusUpdateButton organizationSlug={organizationSlug} date={date} />
 
@@ -276,6 +278,30 @@ function RouteComponent() {
         </div>
       </header>
 
+      <div className="flex gap-2 pb-4 sm:hidden">
+        <WriteStatusUpdateButton
+          organizationSlug={organizationSlug}
+          date={date}
+          className="flex-1"
+        />
+
+        <Button
+          size="sm"
+          className="flex-1"
+          disabled={generateStatusUpdate.isPending}
+          onClick={() =>
+            generateStatusUpdate.mutate({
+              idOrSlug: organizationSlug,
+              effectiveFrom: dayjs(date).utc().startOf("day").toDate(),
+              effectiveTo: dayjs(date).utc().endOf("day").toDate(),
+            })
+          }
+        >
+          <SparklesIcon className="h-4 w-4" />
+          <span>{generateStatusUpdate.isPending ? "Generating..." : "Generate update"}</span>
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {statusUpdatesByDate.isPending && <StatusUpdateCardSkeleton count={5} />}
 
@@ -286,7 +312,7 @@ function RouteComponent() {
             title={`No updates for ${isSevenDaysAgo ? formatRelativeTime(date) : formatRelativeTime(date).toLowerCase()}`}
             description="Try selecting a different date, team or user, writing a new update manually or generating one from your activity."
           >
-            <div className="flex gap-2">
+            <div className="flex items-center justify-center gap-2">
               <WriteStatusUpdateButton organizationSlug={organizationSlug} date={date} />
 
               <Button
