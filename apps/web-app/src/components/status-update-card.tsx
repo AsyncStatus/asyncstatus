@@ -1,6 +1,5 @@
 import type { StatusUpdateItem } from "@asyncstatus/api/db/status-update-item";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import type { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
@@ -9,13 +8,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@asyncstatus/ui/compone
 import { AlertTriangle } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { getInitials } from "@/lib/utils";
-import { typedQueryOptions, typedUrl } from "@/typed-handlers";
+import { typedUrl } from "@/typed-handlers";
 
 export type StatusUpdateCardProps = {
   organizationSlug: string;
@@ -28,28 +27,6 @@ const formatter = new Intl.ListFormat("en", {
 });
 
 export function StatusUpdateCard(props: StatusUpdateCardProps) {
-  const navigate = useNavigate();
-  const organization = useQuery(
-    typedQueryOptions(getOrganizationContract, {
-      idOrSlug: props.organizationSlug,
-    }),
-  );
-  const isStatusUpdateOwner = useMemo(
-    () => props.statusUpdate.member.id === organization.data?.member.id,
-    [props.statusUpdate.member.id, organization.data?.member.id],
-  );
-  const navigateOnClick = useCallback(
-    (_: unknown) => {
-      navigate({
-        to: "/$organizationSlug/status-update/$statusUpdateId",
-        params: {
-          organizationSlug: props.organizationSlug,
-          statusUpdateId: props.statusUpdate.id,
-        },
-      });
-    },
-    [navigate, props.organizationSlug, props.statusUpdate.id, isStatusUpdateOwner],
-  );
   const name = useMemo(
     () => props.statusUpdate.member.user.name.split(" ")[0] ?? props.statusUpdate.member.user.name,
     [props.statusUpdate.member.user.name],
@@ -64,77 +41,99 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
   );
 
   return (
-    <div className="border border-border rounded-lg">
+    <div className="flex flex-col border border-border rounded-lg">
       <header className="p-3.5">
         {hasAnyBlockers && (
-          <button
-            type="button"
-            className="flex items-center gap-2 mb-1 bg-destructive/10 hover:bg-destructive/20 p-1 rounded-sm w-full cursor-pointer"
-            onClick={navigateOnClick}
+          <Link
+            to="/$organizationSlug/status-updates/$statusUpdateId"
+            params={{
+              organizationSlug: props.organizationSlug,
+              statusUpdateId: props.statusUpdate.id,
+            }}
           >
-            <AlertTriangle className="size-3 text-destructive" />
-            <p className="text-xs text-destructive">This update has blockers.</p>
-          </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 mb-1 bg-destructive/10 hover:bg-destructive/20 p-1 rounded-sm w-full cursor-pointer"
+            >
+              <AlertTriangle className="size-3 text-destructive" />
+              <p className="text-xs text-destructive">This update has blockers</p>
+            </button>
+          </Link>
         )}
 
         <div>
-          <p className="text-xs text-muted-foreground">{updateStatusItemsText}.</p>
+          <p className="text-xs text-muted-foreground">{updateStatusItemsText}</p>
         </div>
       </header>
 
-      <ol
-        className="px-3.5 py-1 text-sm leading-tight [&>li+li]:mt-1 cursor-pointer hover:bg-muted rounded-sm"
-        onClick={navigateOnClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            navigateOnClick(e);
-          }
+      <Link
+        to="/$organizationSlug/status-updates/$statusUpdateId"
+        params={{
+          organizationSlug: props.organizationSlug,
+          statusUpdateId: props.statusUpdate.id,
         }}
+        className="flex-1"
       >
-        {props.statusUpdate.items.map((statusUpdateItem) => (
-          <li
-            key={`${statusUpdateItem.id}${statusUpdateItem.order}${statusUpdateItem.isBlocker}${statusUpdateItem.isInProgress}`}
-            className="relative pl-4"
-          >
-            <div
-              className={cn(
-                "absolute left-0 top-1.5 size-2 rounded-full bg-muted-foreground/60",
-                !statusUpdateItem.isInProgress && !statusUpdateItem.isBlocker && "bg-green-500",
-                statusUpdateItem.isBlocker && "bg-destructive",
-              )}
-            />
+        <ol className="px-3.5 py-1 h-full text-sm leading-tight [&>li+li]:mt-1 cursor-pointer hover:bg-muted rounded-sm">
+          {props.statusUpdate.items.map((statusUpdateItem) => (
+            <li
+              key={`${statusUpdateItem.id}${statusUpdateItem.order}${statusUpdateItem.isBlocker}${statusUpdateItem.isInProgress}`}
+              className="relative pl-4"
+            >
+              <div
+                className={cn(
+                  "absolute left-0 top-1.5 size-2 rounded-full bg-muted-foreground/60",
+                  !statusUpdateItem.isInProgress && !statusUpdateItem.isBlocker && "bg-green-500",
+                  statusUpdateItem.isBlocker && "bg-destructive",
+                )}
+              />
 
-            <Markdown remarkPlugins={remarkPlugins} components={markdownComponents}>
-              {statusUpdateItem.content}
-            </Markdown>
-          </li>
-        ))}
-      </ol>
+              <Markdown remarkPlugins={remarkPlugins} components={markdownComponents}>
+                {statusUpdateItem.content}
+              </Markdown>
+            </li>
+          ))}
+        </ol>
+      </Link>
 
       <footer className="flex items-center justify-between gap-2 mt-1.5 p-3.5">
-        <Link
-          to="/$organizationSlug/users/$userId"
-          params={{
-            organizationSlug: props.organizationSlug,
-            userId: props.statusUpdate.member.id,
-          }}
-          className="flex items-center gap-2"
-        >
-          <Avatar className="size-5">
-            <AvatarImage
-              src={typedUrl(getFileContract, {
-                idOrSlug: props.organizationSlug,
-                // biome-ignore lint/style/noNonNullAssertion: it doesn't matter if the image is null, avatar will fallback to initials
-                fileKey: props.statusUpdate.member.user.image!,
-              })}
-            />
-            <AvatarFallback>{getInitials(props.statusUpdate.member.user.name)}</AvatarFallback>
-          </Avatar>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/$organizationSlug/users/$userId"
+            params={{
+              organizationSlug: props.organizationSlug,
+              userId: props.statusUpdate.member.id,
+            }}
+            className="flex items-center gap-2"
+          >
+            <Avatar className="size-5">
+              <AvatarImage
+                src={typedUrl(getFileContract, {
+                  idOrSlug: props.organizationSlug,
+                  // biome-ignore lint/style/noNonNullAssertion: it doesn't matter if the image is null, avatar will fallback to initials
+                  fileKey: props.statusUpdate.member.user.image!,
+                })}
+              />
+              <AvatarFallback className="text-[0.6rem]">
+                {getInitials(props.statusUpdate.member.user.name)}
+              </AvatarFallback>
+            </Avatar>
 
-          <p className="text-sm">
-            {name} {props.statusUpdate.emoji && <span>{props.statusUpdate.emoji}</span>}
-          </p>
-        </Link>
+            <p className="text-sm">
+              {name} {props.statusUpdate.emoji && <span>{props.statusUpdate.emoji}</span>}
+            </p>
+          </Link>
+
+          <Link
+            to="/$organizationSlug/teams/$teamId"
+            params={{
+              organizationSlug: props.organizationSlug,
+              teamId: props.statusUpdate.team?.id ?? "",
+            }}
+          >
+            <p className="text-[0.65rem] text-muted-foreground">{props.statusUpdate.team?.name}</p>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <StatusUpdateDate statusUpdate={props.statusUpdate} />

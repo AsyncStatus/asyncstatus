@@ -77,8 +77,7 @@ ul[data-type="taskList"] li > label input[type="checkbox"] {
 
 ul[data-type="taskList"] li[data-checked="true"] > div > p {
   color: var(--muted-foreground);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
+  text-decoration: none;
 }
 
 /* Blockable Todo List Styles */

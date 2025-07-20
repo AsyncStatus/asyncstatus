@@ -1,7 +1,9 @@
 import type { JSONContent } from "@tiptap/core";
 
 export interface JSONDocStats {
-  taskItems: number;
+  inProgressTaskItems: number;
+  doneTaskItems: number;
+  blockedTaskItems: number;
   words: number;
 }
 
@@ -10,7 +12,12 @@ export interface JSONDocStats {
  * This is more efficient than running the two independent counters.
  */
 export const countJSONStats = (doc: JSONContent | null | undefined): JSONDocStats => {
-  const result: JSONDocStats = { taskItems: 0, words: 0 };
+  const result: JSONDocStats = {
+    inProgressTaskItems: 0,
+    doneTaskItems: 0,
+    blockedTaskItems: 0,
+    words: 0,
+  };
 
   if (!doc) {
     return result;
@@ -20,7 +27,15 @@ export const countJSONStats = (doc: JSONContent | null | undefined): JSONDocStat
     if (!node) return;
 
     if (node.type === "blockableTodoListItem") {
-      result.taskItems += 1;
+      if (!node.attrs?.checked) {
+        result.inProgressTaskItems += 1;
+      }
+      if (node.attrs?.checked) {
+        result.doneTaskItems += 1;
+      }
+      if (node.attrs?.blocked) {
+        result.blockedTaskItems += 1;
+      }
     }
 
     if (typeof (node as any).text === "string") {

@@ -24,8 +24,9 @@ export interface BlockableTodoListItemOptions {
   HTMLAttributes?: Record<string, any>;
 }
 
-const BlockableTodoItemComponent = ({ node, updateAttributes, view }: NodeViewProps) => {
+const BlockableTodoItemComponent = ({ node, updateAttributes, view, editor }: NodeViewProps) => {
   const { checked, blocked } = node.attrs;
+  const readonly = !editor.isEditable;
 
   const toggleChecked = () => {
     updateAttributes({ checked: !checked });
@@ -44,30 +45,48 @@ const BlockableTodoItemComponent = ({ node, updateAttributes, view }: NodeViewPr
       <NodeViewContent
         className={cn(
           "not-prose p-3 outline-none",
-          checked && "text-muted-foreground line-through",
+          checked && "text-muted-foreground",
           blocked && "text-destructive",
         )}
       />
 
       <div className="flex w-full items-center">
         <Button
+          disabled={readonly}
           size="sm"
           variant="ghost"
           className="w-22 justify-start opacity-30 transition-opacity select-none group-hover:opacity-100"
-          onClick={toggleBlocked}
+          onClick={() => {
+            if (checked) {
+              toggleChecked();
+            } else {
+              toggleBlocked();
+            }
+          }}
           title={blocked ? "Unblock item" : "Block item"}
         >
-          {blocked ? <Ban className="size-4" /> : <Play className="size-4" />}
+          {blocked ? <Ban className="size-4 text-destructive" /> : <Play className="size-4" />}
           {blocked ? "Blocker" : "Clear"}
         </Button>
         <Button
+          disabled={readonly}
           size="sm"
           variant="ghost"
           className="opacity-30 transition-opacity select-none group-hover:opacity-100"
-          onClick={toggleChecked}
+          onClick={() => {
+            if (blocked) {
+              toggleBlocked();
+            } else {
+              toggleChecked();
+            }
+          }}
           title={checked ? "Uncheck item" : "Check item"}
         >
-          {checked ? <Check className="size-4" /> : <CircleDashed className="size-4" />}
+          {checked ? (
+            <Check className="size-4 text-green-500" />
+          ) : (
+            <CircleDashed className="size-4" />
+          )}
           {checked ? "Done" : "In progress"}
         </Button>
       </div>

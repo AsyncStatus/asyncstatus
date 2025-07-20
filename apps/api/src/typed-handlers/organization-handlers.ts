@@ -1,7 +1,7 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { desc, eq } from "drizzle-orm";
-import { member, organization, team, teamMembership } from "../db";
+import { member, organization, team, teamMembership, user } from "../db";
 import type { Session } from "../lib/auth";
 import type {
   TypedHandlersContextWithOrganization,
@@ -50,7 +50,12 @@ export const setActiveOrganizationHandler = typedHandler<
   setActiveOrganizationContract,
   requiredSession,
   requiredOrganization,
-  async ({ session, authKv, organization }) => {
+  async ({ db, session, authKv, organization }) => {
+    await db
+      .update(user)
+      .set({ activeOrganizationSlug: organization.slug })
+      .where(eq(user.id, session.user.id));
+
     const data = await authKv.get<Session>(session.session.token, {
       type: "json",
     });
@@ -145,47 +150,9 @@ export const createOrganizationHandler = typedHandler<
       });
     }
 
-    // Create a default team for the organization
-    const teamId = generateId();
-    const newTeam = await tx
-      .insert(team)
-      .values({
-        id: teamId,
-        name: `${name}'s Team`,
-        organizationId,
-        createdAt: now,
-      })
-      .returning();
-
-    if (!newTeam || !newTeam[0]) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create default team",
-      });
-    }
-
-    // Add the member to the team
-    const newTeamMembership = await tx
-      .insert(teamMembership)
-      .values({
-        id: generateId(),
-        teamId,
-        memberId: newMember[0].id,
-      })
-      .returning();
-
-    if (!newTeamMembership || !newTeamMembership[0]) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create team membership",
-      });
-    }
-
     return {
       organization: newOrganization[0],
       member: newMember[0],
-      team: newTeam[0],
-      teamMembership: newTeamMembership[0],
     };
   });
 

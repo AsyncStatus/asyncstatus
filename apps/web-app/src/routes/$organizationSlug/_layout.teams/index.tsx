@@ -13,6 +13,7 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
@@ -94,7 +95,11 @@ function TeamsListPage() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Teams</BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link to="/$organizationSlug/teams" params={{ organizationSlug }}>
+                    Teams
+                  </Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -118,13 +123,13 @@ function TeamsListPage() {
               <DialogTrigger asChild>
                 <Button size="sm" className="w-full sm:w-auto">
                   <Plus className="size-4" />
-                  <span className="sm:inline">Create Team</span>
+                  <span className="sm:inline">Create team</span>
                 </Button>
               </DialogTrigger>
 
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Team</DialogTitle>
+                  <DialogTitle>Create team</DialogTitle>
                   <DialogDescription>Create a new team for your organization.</DialogDescription>
                 </DialogHeader>
 
@@ -164,7 +169,7 @@ function TeamsListPage() {
                   }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Delete Team
+                  Delete team
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -225,7 +230,7 @@ function TeamsListPage() {
                       variant="destructive"
                       disabled={deleteTeam.isPending}
                       onClick={() => setTeamToDelete(team.id)}
-                      title="Delete Team"
+                      title="Delete team"
                       className="flex-initial"
                     >
                       <Trash className="size-4" />

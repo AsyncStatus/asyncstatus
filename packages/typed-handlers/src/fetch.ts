@@ -21,7 +21,7 @@ export function typedContractFetchFactory(
     };
     let url = `${baseUrl}${contract.url(input)}`;
     if (contract.method === "get") {
-      url = `${url}?${requestData}`;
+      url = requestData ? `${url}?${requestData}` : url;
     } else {
       init.body = requestData;
       if (!(requestData instanceof FormData)) {
@@ -85,6 +85,9 @@ function getRequestData<TC extends TypedContract<any, any, any>>(
       // skip path params since they are already in the url
       // (no need to include them in the query params)
       if (contract.pathParamKeys.includes(key)) {
+        continue;
+      }
+      if (value === undefined || value === null) {
         continue;
       }
       if (Array.isArray(value)) {

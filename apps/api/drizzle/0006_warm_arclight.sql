@@ -1,0 +1,1 @@
+ALTER TABLE `team` ADD `created_by_member_id` text NOT NULL REFERENCES member(id);

@@ -99,7 +99,11 @@ function RouteComponent() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{user.name}</BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link to="/$organizationSlug/users/$userId" params={{ organizationSlug, userId }}>
+                    {user.name}
+                  </Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

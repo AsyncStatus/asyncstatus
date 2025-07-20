@@ -34,23 +34,6 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         });
       },
     },
-    plugins: [
-      customSession(async (session) => {
-        let activeOrganizationSlug = (session.session as any).activeOrganizationSlug;
-        if (!activeOrganizationSlug) {
-          const orgs = await db
-            .select({ organization: schema.organization, member: schema.member })
-            .from(schema.organization)
-            .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
-            .where(eq(schema.member.userId, session.user.id))
-            .orderBy(desc(schema.organization.createdAt))
-            .limit(100);
-          activeOrganizationSlug = orgs[0]?.organization.slug;
-        }
-        return { ...session, session: { ...session.session, activeOrganizationSlug } };
-      }),
-      authCookiesPlugin(),
-    ],
     trustedOrigins: [
       "http://localhost:3000",
       "http://localhost:3001",
@@ -96,6 +79,11 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     },
     user: {
       additionalFields: {
+        activeOrganizationSlug: {
+          type: "string",
+          required: false,
+          input: false,
+        },
         timezone: {
           type: "string",
           required: true,
@@ -142,6 +130,25 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       cookiePrefix: "as",
       useSecureCookies: env.NODE_ENV === "production",
     },
+    plugins: [
+      customSession(async (session) => {
+        let activeOrganizationSlug =
+          (session.user as any).activeOrganizationSlug ||
+          (session.session as any).activeOrganizationSlug;
+        if (!activeOrganizationSlug) {
+          const orgs = await db
+            .select({ organization: schema.organization, member: schema.member })
+            .from(schema.organization)
+            .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+            .where(eq(schema.member.userId, session.user.id))
+            .orderBy(desc(schema.organization.createdAt))
+            .limit(100);
+          activeOrganizationSlug = orgs[0]?.organization.slug;
+        }
+        return { ...session, session: { ...session.session, activeOrganizationSlug } };
+      }),
+      authCookiesPlugin(),
+    ],
   });
 }
 

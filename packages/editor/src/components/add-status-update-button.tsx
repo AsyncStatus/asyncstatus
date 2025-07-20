@@ -4,8 +4,8 @@ import { Plus } from "lucide-react";
 
 export const AddStatusUpdateButton = () => {
   const { editor } = useCurrentEditor();
-
-  if (!editor) return null;
+  const isEditable = editor?.isEditable;
+  if (!editor || !isEditable) return null;
 
   const addBlockableTodoItem = () => {
     // Use the existing command to add a blockable todo item
@@ -13,7 +13,13 @@ export const AddStatusUpdateButton = () => {
   };
 
   return (
-    <Button onClick={addBlockableTodoItem} size="sm" variant="outline" className="gap-2">
+    <Button
+      onClick={addBlockableTodoItem}
+      size="sm"
+      variant="outline"
+      className="gap-2"
+      disabled={!isEditable}
+    >
       <Plus className="h-4 w-4" />
       Add update item
     </Button>

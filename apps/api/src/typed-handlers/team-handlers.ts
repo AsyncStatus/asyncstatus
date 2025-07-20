@@ -1,6 +1,6 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, exists, isNull, or } from "drizzle-orm";
 import { member, team, teamMembership, user } from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "./middleware";
@@ -25,12 +25,24 @@ export const listTeamsHandler = typedHandler<
   async ({ db, member: currentMember, organization }) => {
     if (currentMember.role !== "admin" && currentMember.role !== "owner") {
       const teams = await db.query.team.findMany({
-        where: eq(team.organizationId, organization.id),
-        with: {
-          teamMemberships: {
-            where: eq(teamMembership.memberId, currentMember.id),
-          },
-        },
+        where: and(
+          eq(team.organizationId, organization.id),
+          or(
+            eq(team.createdByMemberId, currentMember.id),
+            exists(
+              db
+                .select()
+                .from(teamMembership)
+                .where(
+                  and(
+                    eq(teamMembership.teamId, team.id),
+                    eq(teamMembership.memberId, currentMember.id),
+                  ),
+                ),
+            ),
+          ),
+        ),
+        with: { teamMemberships: true },
       });
       return teams;
     }
@@ -53,21 +65,49 @@ export const getTeamHandler = typedHandler<
   async ({ input, db, member: currentMember, organization }) => {
     const { teamId } = input;
     if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      const foundTeam = await db.query.team.findFirst({
-        where: and(eq(team.id, teamId), eq(team.organizationId, organization.id)),
-        with: {
-          teamMemberships: {
-            where: eq(teamMembership.memberId, currentMember.id),
-          },
-        },
-      });
+      // Use db.select to check if user has access to team
+      const teamWithAccess = await db
+        .select({
+          team: team,
+          membership: teamMembership,
+        })
+        .from(team)
+        .leftJoin(
+          teamMembership,
+          and(eq(teamMembership.teamId, team.id), eq(teamMembership.memberId, currentMember.id)),
+        )
+        .where(and(eq(team.id, teamId), eq(team.organizationId, organization.id)));
+
+      const foundTeam = teamWithAccess[0]?.team;
+      const hasMembership = teamWithAccess[0]?.membership;
+
       if (!foundTeam) {
         throw new TypedHandlersError({
           code: "NOT_FOUND",
           message: "Team not found",
         });
       }
-      return foundTeam;
+
+      // Check if user has access (is member or creator)
+      const hasAccess = foundTeam.createdByMemberId === currentMember.id || hasMembership;
+
+      if (!hasAccess) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Team not found",
+        });
+      }
+
+      // Get all team memberships using db.select
+      const memberships = await db
+        .select()
+        .from(teamMembership)
+        .where(eq(teamMembership.teamId, teamId));
+
+      return {
+        ...foundTeam,
+        teamMemberships: memberships,
+      };
     }
 
     const foundTeam = await db.query.team.findFirst({
@@ -91,7 +131,7 @@ export const getTeamMembersHandler = typedHandler<
   getTeamMembersContract,
   requiredSession,
   requiredOrganization,
-  async ({ input, db, organization }) => {
+  async ({ input, db, member: currentMember, organization }) => {
     const { teamId } = input;
 
     const existingTeam = await db.query.team.findFirst({
@@ -105,7 +145,6 @@ export const getTeamMembersHandler = typedHandler<
       });
     }
 
-    // Get team memberships with active members using explicit join
     const teamMemberships = await db
       .select({
         teamMembership: teamMembership,
@@ -141,14 +180,6 @@ export const createTeamHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ input, db, member: currentMember, organization }) => {
-    // Only admins and owners can create teams
-    if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to create teams",
-      });
-    }
-
     const { name } = input;
     const now = new Date();
 
@@ -162,6 +193,7 @@ export const createTeamHandler = typedHandler<
         id: teamId,
         name,
         organizationId: organization.id,
+        createdByMemberId: currentMember.id,
         createdAt: now,
         updatedAt: now,
       });
@@ -197,14 +229,6 @@ export const updateTeamHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ input, db, member: currentMember, organization }) => {
-    // Only admins and owners can update teams
-    if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to update teams",
-      });
-    }
-
     const { idOrSlug: _, teamId, ...updateData } = input;
 
     // Check if the team exists and belongs to the organization
@@ -219,13 +243,21 @@ export const updateTeamHandler = typedHandler<
       });
     }
 
+    if (
+      currentMember.role !== "admin" &&
+      currentMember.role !== "owner" &&
+      currentMember.id !== existingTeam?.createdByMemberId
+    ) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You don't have permission to update teams",
+      });
+    }
+
     // Update the team
     await db
       .update(team)
-      .set({
-        ...updateData,
-        updatedAt: new Date(),
-      })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(team.id, teamId));
 
     // Fetch the updated team
@@ -252,14 +284,6 @@ export const deleteTeamHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ input, db, member: currentMember, organization }) => {
-    // Only admins and owners can delete teams
-    if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to delete teams",
-      });
-    }
-
     const { idOrSlug: _, teamId } = input;
 
     // Check if the team exists and belongs to the organization
@@ -271,6 +295,17 @@ export const deleteTeamHandler = typedHandler<
       throw new TypedHandlersError({
         code: "NOT_FOUND",
         message: "Team not found",
+      });
+    }
+
+    if (
+      currentMember.role !== "admin" &&
+      currentMember.role !== "owner" &&
+      currentMember.id !== existingTeam?.createdByMemberId
+    ) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You don't have permission to delete teams",
       });
     }
 
@@ -289,14 +324,6 @@ export const addTeamMemberHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ input, db, member: currentMember, organization }) => {
-    // Only admins and owners can add members to teams
-    if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to add members to teams",
-      });
-    }
-
     const { idOrSlug: _, teamId, memberId } = input;
 
     // Check if the team exists and belongs to the organization
@@ -308,6 +335,17 @@ export const addTeamMemberHandler = typedHandler<
       throw new TypedHandlersError({
         code: "NOT_FOUND",
         message: "Team not found",
+      });
+    }
+
+    if (
+      currentMember.role !== "admin" &&
+      currentMember.role !== "owner" &&
+      currentMember.id !== existingTeam?.createdByMemberId
+    ) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You don't have permission to add members to teams",
       });
     }
 
@@ -366,14 +404,6 @@ export const deleteTeamMemberHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ input, db, member: currentMember, organization }) => {
-    // Only admins and owners can remove members from teams
-    if (currentMember.role !== "admin" && currentMember.role !== "owner") {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to remove members from teams",
-      });
-    }
-
     const { idOrSlug: _, teamId, memberId } = input;
 
     // Check if the team exists and belongs to the organization
@@ -385,6 +415,17 @@ export const deleteTeamMemberHandler = typedHandler<
       throw new TypedHandlersError({
         code: "NOT_FOUND",
         message: "Team not found",
+      });
+    }
+
+    if (
+      currentMember.role !== "admin" &&
+      currentMember.role !== "owner" &&
+      currentMember.id !== existingTeam?.createdByMemberId
+    ) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You don't have permission to remove members from teams",
       });
     }
 

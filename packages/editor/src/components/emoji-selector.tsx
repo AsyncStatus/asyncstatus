@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 export const EmojiSelector = () => {
   const [open, setOpen] = useState(false);
   const { editor } = useCurrentEditor();
+  const isEditable = editor?.isEditable;
 
   // Listen for slash command emoji picker trigger
   useEffect(() => {
@@ -31,7 +32,7 @@ export const EmojiSelector = () => {
     };
   }, [editor]);
 
-  if (!editor) return null;
+  if (!editor || !isEditable) return null;
 
   return (
     <Popover modal={true} open={open} onOpenChange={setOpen}>

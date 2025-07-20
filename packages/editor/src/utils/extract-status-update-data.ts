@@ -56,14 +56,14 @@ function extractTextFromNode(node: JSONContent): string {
     // Handle different node types
     if (node.type === "listItem") {
       // Add bullet point for list items
-      return "• " + texts.join("") + "\n";
+      return `• ${texts.join("")}\n`;
     } else if (node.type === "paragraph") {
-      return texts.join("") + "\n";
+      return `${texts.join("")}\n`;
     } else if (node.type === "heading") {
       const level = node.attrs?.level || 1;
-      return "#".repeat(level) + " " + texts.join("") + "\n";
+      return `${"#".repeat(level)} ${texts.join("")}\n`;
     } else if (node.type === "codeBlock") {
-      return "```\n" + texts.join("") + "\n```\n";
+      return `\`\`\`\n${texts.join("")}\n\`\`\`\n`;
     } else if (node.type === "bulletList" || node.type === "orderedList") {
       return texts.join("");
     }
@@ -92,14 +92,13 @@ function extractEmojiFromText(text: string): {
   // - Emojis with skin tone modifiers
   // - Flag emojis
   // - Keycap emojis
-  const emojiRegex =
-    /^((?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F?)(?:\u200D(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F?))*)\s*/u;
+  const emojiRegex = /(\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
   const match = text.match(emojiRegex);
 
-  if (match && match[1]) {
+  if (match?.[0]) {
     return {
-      emoji: match[1],
-      remainingText: text.slice(match[0].length).trim(),
+      emoji: match[0],
+      remainingText: text.replace(match[0], "").trim(),
     };
   }
 

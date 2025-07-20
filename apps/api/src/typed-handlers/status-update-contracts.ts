@@ -17,7 +17,12 @@ export const listStatusUpdatesContract = typedContract(
 
 export const listStatusUpdatesByDateContract = typedContract(
   "get /organizations/:idOrSlug/status-updates/date/:date",
-  z.strictObject({ idOrSlug: z.string(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }),
+  z.strictObject({
+    idOrSlug: z.string(),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    memberId: z.string().optional(),
+    teamId: z.string().optional(),
+  }),
   z.array(
     z.strictObject({
       ...StatusUpdate.shape,
@@ -72,7 +77,13 @@ export const getStatusUpdateContract = typedContract(
 
 export const getMemberStatusUpdateContract = typedContract(
   "get /organizations/:idOrSlug/status-updates/:statusUpdateIdOrDate/current-member",
-  z.strictObject({ idOrSlug: z.string(), statusUpdateIdOrDate: z.string() }),
+  z.strictObject({
+    idOrSlug: z.string(),
+    statusUpdateIdOrDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+  }),
   z.strictObject({
     ...StatusUpdate.shape,
     team: Team.nullable(),
@@ -85,7 +96,7 @@ export const upsertStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates",
   z.strictObject({
     idOrSlug: z.string(),
-    teamId: z.string().optional(),
+    teamId: z.string().nullish(),
     effectiveFrom: z.coerce.date(),
     effectiveTo: z.coerce.date(),
     mood: z.string().nullish(),

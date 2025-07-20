@@ -10,6 +10,14 @@ import {
   CardTitle,
 } from "@asyncstatus/ui/components/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@asyncstatus/ui/components/dialog";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -27,13 +35,14 @@ import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
-import { LifeBuoy, Send, Settings, Sun, Users } from "lucide-react";
-import { Suspense } from "react";
+import { LifeBuoy, Plus, Send, Settings, Sun, Users } from "lucide-react";
+import { Suspense, useState } from "react";
 import {
   sendVerificationEmailMutationOptions,
   sessionBetterAuthQueryOptions,
 } from "@/better-auth-tanstack-query";
 import { typedQueryOptions } from "@/typed-handlers";
+import { CreateTeamForm } from "./create-team-form";
 import { OrganizationMenu, OrganizationMenuSkeleton } from "./organization-menu";
 import { UserMenu, UserMenuSkeleton } from "./user-menu";
 
@@ -135,11 +144,42 @@ function AppSidebarInvitations() {
 }
 
 function AppSidebarTeams(props: { organizationSlug: string }) {
+  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const teams = useSuspenseQuery(
     typedQueryOptions(listTeamsContract, {
       idOrSlug: props.organizationSlug,
     }),
   );
+  if (teams.data.length === 0) {
+    return (
+      <Dialog open={isCreateTeamModalOpen} onOpenChange={setIsCreateTeamModalOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-left text-muted-foreground justify-start"
+          >
+            <Plus className="size-3" />
+            <span>Create team</span>
+          </Button>
+        </DialogTrigger>
+
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create team</DialogTitle>
+            <DialogDescription>Create a new team for your organization.</DialogDescription>
+          </DialogHeader>
+
+          <CreateTeamForm
+            organizationSlug={props.organizationSlug}
+            onSuccess={() => setIsCreateTeamModalOpen(false)}
+            onCancel={() => setIsCreateTeamModalOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return teams.data.map((team) => (
     <SidebarMenuItem key={team.id}>
       <SidebarMenuButton asChild>
@@ -236,7 +276,7 @@ export function AppSidebar(props: { organizationSlug: string }) {
               to="/$organizationSlug/teams"
               params={{ organizationSlug: props.organizationSlug }}
             >
-              Your teams
+              Teams
             </Link>
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -294,7 +334,7 @@ export function AppSidebarSkeleton() {
           </SidebarGroup>
 
           <SidebarGroup>
-            <SidebarGroupLabel>Your teams</SidebarGroupLabel>
+            <SidebarGroupLabel>Teams</SidebarGroupLabel>
             <SidebarGroupContent>
               <AppSidebarTeamsSkeleton />
             </SidebarGroupContent>

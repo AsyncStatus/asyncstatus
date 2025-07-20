@@ -149,7 +149,11 @@ function TeamDetailsPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{team.data?.name}</BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link to="/$organizationSlug/teams/$teamId" params={{ organizationSlug, teamId }}>
+                    {team.data?.name}
+                  </Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -174,13 +178,13 @@ function TeamDetailsPage() {
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Edit className="size-4" />
-                    <span className="sm:inline">Edit Team</span>
+                    <span className="sm:inline">Edit</span>
                   </Button>
                 </DialogTrigger>
 
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Edit Team</DialogTitle>
+                    <DialogTitle>Edit team</DialogTitle>
                     <DialogDescription>Update team name or other details.</DialogDescription>
                   </DialogHeader>
 
@@ -203,7 +207,7 @@ function TeamDetailsPage() {
                   onClick={() => setDeleteDialogOpen(true)}
                 >
                   <Trash className="size-4" />
-                  <span className="sm:inline">Delete Team</span>
+                  <span className="sm:inline">Delete</span>
                 </Button>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -224,7 +228,7 @@ function TeamDetailsPage() {
                       }}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Delete Team
+                      Delete team
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -236,13 +240,13 @@ function TeamDetailsPage() {
                 <DialogTrigger asChild>
                   <Button size="sm" className="w-full sm:w-auto">
                     <Plus className="size-4" />
-                    <span className="sm:inline">Add Member</span>
+                    <span className="sm:inline">Add member</span>
                   </Button>
                 </DialogTrigger>
 
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Team Member</DialogTitle>
+                    <DialogTitle>Add team member</DialogTitle>
                     <DialogDescription>
                       Add an existing organization member to this team.
                     </DialogDescription>

@@ -34,6 +34,7 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
@@ -515,14 +516,14 @@ function RouteComponent() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>
+                <BreadcrumbLink asChild>
                   <Link
                     to="/$organizationSlug/settings"
                     params={{ organizationSlug: params.organizationSlug }}
                   >
                     Settings
                   </Link>
-                </BreadcrumbPage>
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

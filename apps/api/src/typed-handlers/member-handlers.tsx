@@ -4,6 +4,7 @@ import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, eq, not } from "drizzle-orm";
 import { invitation, member, team, user } from "../db";
+import type { Session } from "../lib/auth";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import {
   getMemberContract,
@@ -154,7 +155,7 @@ export const updateMemberHandler = typedHandler<
       }
 
       if (updatedMember.user.id === session.user.id) {
-        const data = await authKv.get<any>(session.session.token, {
+        const data = await authKv.get<Session>(session.session.token, {
           type: "json",
         });
         if (!data) {
@@ -165,10 +166,7 @@ export const updateMemberHandler = typedHandler<
         }
         await authKv.put(
           session.session.token,
-          JSON.stringify({
-            ...data,
-            user: { ...data.user, ...updatedMember.user },
-          }),
+          JSON.stringify({ ...data, user: { ...data.user, ...updatedMember.user } }),
         );
       }
 

@@ -11,6 +11,7 @@ export const user = sqliteTable(
     emailVerified: integer("email_verified", { mode: "boolean" }).notNull(),
     image: text("image"),
     timezone: text("timezone").notNull().default("UTC"),
+    activeOrganizationSlug: text("active_organization_slug"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },

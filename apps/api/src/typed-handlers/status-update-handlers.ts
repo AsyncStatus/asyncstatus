@@ -50,7 +50,7 @@ export const listStatusUpdatesByDateHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ db, organization, input }) => {
-    const { date } = input;
+    const { date, memberId, teamId } = input;
 
     const targetDate = dayjs(date, "YYYY-MM-DD", true);
     if (!targetDate.isValid()) {
@@ -63,13 +63,52 @@ export const listStatusUpdatesByDateHandler = typedHandler<
     const startOfDay = targetDate.startOf("day").toDate();
     const endOfDay = targetDate.endOf("day").toDate();
 
+    if (memberId) {
+      const member = await db.query.member.findFirst({
+        where: and(
+          eq(schema.member.organizationId, organization.id),
+          eq(schema.member.id, memberId),
+        ),
+      });
+
+      if (!member) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Member not found",
+        });
+      }
+    }
+
+    if (teamId) {
+      const team = await db.query.team.findFirst({
+        where: and(eq(schema.team.id, teamId), eq(schema.team.organizationId, organization.id)),
+      });
+
+      if (!team) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Team not found",
+        });
+      }
+    }
+
+    const where = [
+      eq(schema.statusUpdate.organizationId, organization.id),
+      eq(schema.statusUpdate.isDraft, false),
+      lte(schema.statusUpdate.effectiveFrom, endOfDay),
+      gte(schema.statusUpdate.effectiveTo, startOfDay),
+    ];
+
+    if (memberId) {
+      where.push(eq(schema.statusUpdate.memberId, memberId));
+    }
+
+    if (teamId) {
+      where.push(eq(schema.statusUpdate.teamId, teamId));
+    }
+
     const statusUpdates = await db.query.statusUpdate.findMany({
-      where: and(
-        eq(schema.statusUpdate.organizationId, organization.id),
-        eq(schema.statusUpdate.isDraft, false),
-        lte(schema.statusUpdate.effectiveFrom, endOfDay),
-        gte(schema.statusUpdate.effectiveTo, startOfDay),
-      ),
+      where: and(...where),
       with: {
         member: { with: { user: true } },
         team: true,
@@ -216,7 +255,7 @@ export const getStatusUpdateHandler = typedHandler<
       }
 
       const isAdminOrOwner = member.role === "admin" || member.role === "owner";
-      if (statusUpdate?.isDraft && (statusUpdate.member.id !== member.id || !isAdminOrOwner)) {
+      if (statusUpdate.isDraft && statusUpdate.member.id !== member.id && !isAdminOrOwner) {
         throw new TypedHandlersError({
           code: "FORBIDDEN",
           message: "You don't have access to this status update",
@@ -243,7 +282,7 @@ export const getStatusUpdateHandler = typedHandler<
     }
 
     const isAdminOrOwner = member.role === "admin" || member.role === "owner";
-    if (statusUpdate.isDraft && (statusUpdate.member.id !== member.id || !isAdminOrOwner)) {
+    if (statusUpdate.isDraft && statusUpdate.member.id !== member.id && !isAdminOrOwner) {
       throw new TypedHandlersError({
         code: "FORBIDDEN",
         message: "You don't have access to this status update",
@@ -263,6 +302,31 @@ export const getMemberStatusUpdateHandler = typedHandler<
   requiredOrganization,
   async ({ db, organization, input, member }) => {
     const { statusUpdateIdOrDate } = input;
+
+    if (!statusUpdateIdOrDate) {
+      const statusUpdate = await db.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.organizationId, organization.id),
+          eq(schema.statusUpdate.memberId, member.id),
+        ),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!statusUpdate) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Status update not found",
+        });
+      }
+
+      return statusUpdate;
+    }
 
     const isDate = dayjs(statusUpdateIdOrDate, "YYYY-MM-DD", true).isValid();
     if (isDate) {
@@ -379,7 +443,7 @@ export const upsertStatusUpdateHandler = typedHandler<
         await tx
           .update(schema.statusUpdate)
           .set({
-            teamId: teamId || null,
+            teamId: teamId === null ? null : (teamId ?? existingStatusUpdate.teamId),
             editorJson,
             effectiveTo,
             mood,
@@ -400,7 +464,7 @@ export const upsertStatusUpdateHandler = typedHandler<
             id: statusUpdateId,
             memberId: member.id,
             organizationId: organization.id,
-            teamId: teamId || null,
+            teamId: teamId === null ? null : (teamId ?? null),
             editorJson,
             effectiveFrom: effectiveFromStartOfDay,
             effectiveTo,

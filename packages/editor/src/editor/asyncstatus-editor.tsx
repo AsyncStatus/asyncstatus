@@ -1,7 +1,5 @@
 import { dayjs } from "@asyncstatus/dayjs";
-import { Button } from "@asyncstatus/ui/components/button";
 import { Separator } from "@asyncstatus/ui/components/separator";
-import { UndoIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
@@ -45,6 +43,8 @@ export const AsyncStatusEditor = (
     date?: string;
     onDateChange?: (date: string) => void;
     initialContent?: JSONContent;
+    readonly?: boolean;
+    localStorageKeyPrefix?: string;
     onUpdate?: (statusUpdateData: ExtractedStatusUpdateData & { editorJson: JSONContent }) => void;
   }>,
 ) => {
@@ -52,23 +52,31 @@ export const AsyncStatusEditor = (
     props.initialContent ?? null,
   );
   const [saveStatus, setSaveStatus] = useState("Saved");
-  const [taskItemCount, setTaskItemCount] = useState(0);
+  const [inProgressTaskItemCount, setInProgressTaskItemCount] = useState(0);
+  const [doneTaskItemCount, setDoneTaskItemCount] = useState(0);
+  const [blockedTaskItemCount, setBlockedTaskItemCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
   const [openLink, setOpenLink] = useState(false);
 
   function onUpdate(editor: Editor) {
     const json = editor.getJSON();
     const stats = countJSONStats(json);
-    setTaskItemCount(stats.taskItems);
+    setInProgressTaskItemCount(stats.inProgressTaskItems);
+    setDoneTaskItemCount(stats.doneTaskItems);
+    setBlockedTaskItemCount(stats.blockedTaskItems);
     setWordCount(stats.words);
 
     if (props.date) {
-      window.localStorage.setItem(`html-content-${props.date}`, editor.getHTML());
-      window.localStorage.setItem(`json-content-${props.date}`, JSON.stringify(json));
+      window.localStorage.setItem(
+        `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content-${props.date}`,
+        JSON.stringify(json),
+      );
     } else {
       // Fallback to regular keys if no date found
-      window.localStorage.setItem("html-content", editor.getHTML());
-      window.localStorage.setItem("json-content", JSON.stringify(json));
+      window.localStorage.setItem(
+        `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content`,
+        JSON.stringify(json),
+      );
     }
 
     setSaveStatus("Saved");
@@ -83,7 +91,9 @@ export const AsyncStatusEditor = (
   useEffect(() => {
     function setCounts(json: JSONContent) {
       const stats = countJSONStats(json);
-      setTaskItemCount(stats.taskItems);
+      setInProgressTaskItemCount(stats.inProgressTaskItems);
+      setDoneTaskItemCount(stats.doneTaskItems);
+      setBlockedTaskItemCount(stats.blockedTaskItems);
       setWordCount(stats.words);
     }
 
@@ -91,22 +101,29 @@ export const AsyncStatusEditor = (
       setInitialContent(props.initialContent);
       setCounts(props.initialContent);
 
-      // Save the initial content to local storage (JSON only, HTML will be saved by the editor)
+      // Save the initial content to local storage (JSON only)
       if (props.date) {
         window.localStorage.setItem(
-          `json-content-${props.date}`,
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content-${props.date}`,
           JSON.stringify(props.initialContent),
         );
       } else {
-        window.localStorage.setItem("json-content", JSON.stringify(props.initialContent));
+        window.localStorage.setItem(
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content`,
+          JSON.stringify(props.initialContent),
+        );
       }
 
       return;
     }
 
     const content = props.date
-      ? window.localStorage.getItem(`json-content-${props.date}`)
-      : window.localStorage.getItem("json-content");
+      ? window.localStorage.getItem(
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content-${props.date}`,
+        )
+      : window.localStorage.getItem(
+          `${props.localStorageKeyPrefix ? `${props.localStorageKeyPrefix}-` : ""}json-content`,
+        );
 
     if ((content && content === `{"type":"doc","content":[{"type":"paragraph"}]}`) || !content) {
       const defaultContent = getAsyncStatusEditorDefaultContent(
@@ -122,7 +139,7 @@ export const AsyncStatusEditor = (
     const json = JSON.parse(content);
     setInitialContent(json);
     setCounts(json);
-  }, [props.date, props.initialContent]);
+  }, [props.date, props.initialContent, props.localStorageKeyPrefix]);
 
   if (!initialContent) return null;
 
@@ -130,6 +147,7 @@ export const AsyncStatusEditor = (
     <div className="prose prose-neutral dark:prose-invert prose-sm relative w-full max-w-none">
       <EditorRoot>
         <EditorContent
+          immediatelyRender={false}
           initialContent={initialContent}
           extensions={extensions}
           className="bg-background relative w-full p-4 sm:mb-[calc(20vh)] sm:rounded-lg"
@@ -147,6 +165,11 @@ export const AsyncStatusEditor = (
               editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
             }
             onUpdate(editor);
+            if (props.readonly) {
+              editor.setEditable(false);
+            } else {
+              editor.setEditable(true);
+            }
           }}
           onUpdate={({ editor }) => {
             const editorDate = getStatusUpdateDate(editor);
@@ -163,7 +186,6 @@ export const AsyncStatusEditor = (
             if (props.date) {
               editor.commands.setStatusUpdateDate(dayjs(props.date, "YYYY-MM-DD", true).toDate());
             }
-
             debouncedOnUpdate(editor);
             setSaveStatus("Unsaved");
           }}
@@ -174,17 +196,25 @@ export const AsyncStatusEditor = (
               )}
             >
               <EditorStatus
+                readonly={props.readonly ?? false}
                 date={props.date ?? ""}
                 saveStatus={saveStatus}
-                taskItemCount={taskItemCount}
+                inProgressTaskItemCount={inProgressTaskItemCount}
+                doneTaskItemCount={doneTaskItemCount}
+                blockedTaskItemCount={blockedTaskItemCount}
                 wordCount={wordCount}
               />
             </div>
           }
         >
-          <div className="flex items-center gap-2">
-            <EmojiSelector />
-            <AddStatusUpdateButton />
+          <div className="flex items-start gap-2 flex-wrap">
+            {!props.readonly && (
+              <>
+                <Separator className="my-6" />
+                <EmojiSelector />
+                <AddStatusUpdateButton />
+              </>
+            )}
             {props.children}
           </div>
           <EditorCommand className="border-muted bg-background z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all">
@@ -233,35 +263,49 @@ function ConnectedEditorCommandList() {
 function EditorStatus({
   date,
   saveStatus,
-  taskItemCount,
+  inProgressTaskItemCount,
+  doneTaskItemCount,
+  blockedTaskItemCount,
   wordCount,
+  readonly,
 }: {
   date: string;
   saveStatus: string;
-  taskItemCount: number;
+  inProgressTaskItemCount: number;
+  doneTaskItemCount: number;
+  blockedTaskItemCount: number;
   wordCount: number;
+  readonly: boolean;
 }) {
-  const { editor } = useCurrentEditor();
-
   return (
     <>
-      <div
-        className={cn(
-          "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm opacity-100 transition-opacity duration-75",
-          !wordCount && "opacity-0",
-        )}
-      >
-        {taskItemCount} update item{taskItemCount === 1 ? "" : "s"}, {wordCount} word
-        {wordCount === 1 ? "" : "s"}
+      <div className="flex items-center gap-2">
+        <div
+          className={cn(
+            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-xs opacity-100 transition-opacity duration-75",
+            !wordCount && "opacity-0",
+          )}
+        >
+          {blockedTaskItemCount} blocker{blockedTaskItemCount === 1 ? "" : "s"},{" "}
+          {inProgressTaskItemCount} in progress and {doneTaskItemCount} done items
+        </div>
+
+        <div
+          className={cn(
+            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-xs opacity-100 transition-opacity duration-75",
+            !wordCount && "opacity-0",
+          )}
+        >
+          {wordCount} word{wordCount === 1 ? "" : "s"}
+        </div>
       </div>
 
       <div className="flex h-auto items-center gap-2 p-0">
-        <Button
+        {/* <Button
           className={cn("opacity-100 transition-opacity duration-75", !wordCount && "opacity-0")}
           variant="ghost"
           size="sm"
           onClick={() => {
-            window.localStorage.removeItem(`html-content-${date}`);
             window.localStorage.removeItem(`json-content-${date}`);
             editor?.commands.setContent(
               getAsyncStatusEditorDefaultContent(dayjs().startOf("day").toISOString()),
@@ -271,16 +315,18 @@ function EditorStatus({
         >
           <UndoIcon className="size-4" />
           Reset
-        </Button>
+        </Button> */}
 
-        <div
-          className={cn(
-            "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm opacity-100 transition-opacity duration-75",
-            !wordCount && "opacity-0",
-          )}
-        >
-          {saveStatus}
-        </div>
+        {!readonly && (
+          <div
+            className={cn(
+              "bg-accent text-muted-foreground rounded-lg px-2 py-1 text-sm opacity-100 transition-opacity duration-75",
+              !wordCount && "opacity-0",
+            )}
+          >
+            {saveStatus}
+          </div>
+        )}
       </div>
     </>
   );

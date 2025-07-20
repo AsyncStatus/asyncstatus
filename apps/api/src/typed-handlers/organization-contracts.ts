@@ -30,12 +30,7 @@ export const createOrganizationContract = typedContract(
       .max(1024 * 1024 * 10)
       .optional(),
   }),
-  z.strictObject({
-    organization: Organization,
-    member: Member,
-    team: Team,
-    teamMembership: TeamMembership,
-  }),
+  z.strictObject({ organization: Organization, member: Member }),
 );
 
 export const updateOrganizationContract = typedContract(

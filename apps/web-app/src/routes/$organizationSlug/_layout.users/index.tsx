@@ -13,6 +13,7 @@ import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
 } from "@asyncstatus/ui/components/breadcrumb";
@@ -146,7 +147,11 @@ function RouteComponent() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Users</BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link to="/$organizationSlug/users" params={{ organizationSlug }}>
+                    Users
+                  </Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

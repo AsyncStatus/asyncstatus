@@ -26,7 +26,8 @@ declare module "@tiptap/core" {
   }
 }
 
-const StatusUpdateHeadingComponent = ({ node, updateAttributes }: NodeViewProps) => {
+const StatusUpdateHeadingComponent = ({ node, updateAttributes, editor }: NodeViewProps) => {
+  const isEditable = editor.isEditable;
   const [open, setOpen] = useState(false);
   const date = node.attrs.date
     ? dayjs(node.attrs.date).startOf("day").toDate()
@@ -43,11 +44,12 @@ const StatusUpdateHeadingComponent = ({ node, updateAttributes }: NodeViewProps)
 
   return (
     <NodeViewWrapper className="status-update-heading">
-      <h2 className="flex items-center gap-1.5 text-2xl font-bold">
+      <h2 className="flex text-2xl font-bold items-start gap-1.5 flex-col sm:flex-row">
         Status update
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
+              disabled={!isEditable}
               type="button"
               className={cn(
                 "text-muted-foreground flex items-center justify-start rounded-lg text-left",
@@ -55,9 +57,11 @@ const StatusUpdateHeadingComponent = ({ node, updateAttributes }: NodeViewProps)
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
-              <ChevronDown
-                className={cn("mx-1 size-6 transition-transform", open && "-rotate-180")}
-              />
+              {isEditable && (
+                <ChevronDown
+                  className={cn("mx-1 size-6 transition-transform", open && "-rotate-180")}
+                />
+              )}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
