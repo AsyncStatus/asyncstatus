@@ -37,8 +37,6 @@ export function typedQueryOptionsFactory(fetch: TypedContractFetch) {
     const throwOnError =
       options?.throwOnError ??
       ((error) => {
-        console.log("throwOnError");
-        console.log(error);
         if (isCancelledError(error)) {
           return false;
         }

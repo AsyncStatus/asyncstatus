@@ -277,30 +277,6 @@ function StatusUpdateFormUnmemoized({
           editorJson: data.editorJson,
         },
       );
-      console.log({
-        isSame,
-        prev: {
-          date: statusUpdate.data?.effectiveFrom.toISOString(),
-          emoji: statusUpdate.data?.emoji,
-          mood: statusUpdate.data?.mood,
-          notes: statusUpdate.data?.notes,
-          items: statusUpdate.data?.items.map((item) => ({
-            order: item.order,
-            content: item.content,
-            isBlocker: item.isBlocker ?? false,
-            isInProgress: item.isInProgress ?? false,
-          })),
-          editorJson: statusUpdate.data?.editorJson,
-        },
-        next: {
-          date: data.date,
-          emoji: data.moodEmoji,
-          mood: data.mood,
-          notes: data.notes,
-          items: data.statusUpdateItems,
-          editorJson: data.editorJson,
-        },
-      });
       if (
         !statusUpdate.isPending &&
         !updateStatusUpdate.isPending &&
