@@ -150,6 +150,11 @@ export const createOrganizationHandler = typedHandler<
       });
     }
 
+    await tx
+      .update(user)
+      .set({ activeOrganizationSlug: newOrganization[0].slug })
+      .where(eq(user.id, session.user.id));
+
     return {
       organization: newOrganization[0],
       member: newMember[0],
