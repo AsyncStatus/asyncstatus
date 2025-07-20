@@ -247,6 +247,11 @@ export const acceptInvitationHandler = typedHandler<
       });
     }
 
+    await tx
+      .update(schema.user)
+      .set({ activeOrganizationSlug: organization.slug })
+      .where(eq(schema.user.id, session.user.id));
+
     return { organization, member: member[0] };
   });
 
