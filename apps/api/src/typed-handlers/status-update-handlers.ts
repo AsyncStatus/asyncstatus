@@ -1,7 +1,7 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
@@ -60,8 +60,8 @@ export const listStatusUpdatesByDateHandler = typedHandler<
       });
     }
 
-    const startOfDay = dayjs.tz(targetDate, session.user.timezone).startOf("day").toDate();
-    const endOfDay = dayjs.tz(targetDate, session.user.timezone).endOf("day").toDate();
+    const startOfDay = targetDate.startOf("day").toDate();
+    const endOfDay = targetDate.endOf("day").toDate();
 
     if (memberId) {
       const member = await db.query.member.findFirst({
@@ -96,7 +96,7 @@ export const listStatusUpdatesByDateHandler = typedHandler<
       eq(schema.statusUpdate.organizationId, organization.id),
       eq(schema.statusUpdate.isDraft, false),
       gte(schema.statusUpdate.effectiveFrom, startOfDay),
-      lt(schema.statusUpdate.effectiveTo, endOfDay),
+      lte(schema.statusUpdate.effectiveTo, endOfDay),
     ];
 
     if (memberId) {
