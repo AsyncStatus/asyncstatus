@@ -49,7 +49,7 @@ export const listStatusUpdatesByDateHandler = typedHandler<
   listStatusUpdatesByDateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, input, session }) => {
+  async ({ db, organization, input }) => {
     const { date, memberId, teamId } = input;
 
     const targetDate = dayjs(date, "YYYY-MM-DD", true);
