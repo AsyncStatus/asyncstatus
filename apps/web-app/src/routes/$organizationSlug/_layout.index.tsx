@@ -57,35 +57,33 @@ export const Route = createFileRoute("/$organizationSlug/_layout/")({
       },
     ],
   },
-  beforeLoad: async ({
+  beforeLoad: ({
     context: { queryClient },
     params: { organizationSlug },
     search: { date, memberId, teamId },
   }) => {
-    await Promise.all([
-      queryClient.ensureQueryData(
-        typedQueryOptions(listStatusUpdatesByDateContract, {
-          idOrSlug: organizationSlug,
-          date: date,
-          memberId: memberId,
-          teamId: teamId,
-        }),
+    queryClient.prefetchQuery(
+      typedQueryOptions(listStatusUpdatesByDateContract, {
+        idOrSlug: organizationSlug,
+        date: date,
+        memberId: memberId,
+        teamId: teamId,
+      }),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(
+        getStatusUpdateContract,
+        { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
+        { throwOnError: false },
       ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          getStatusUpdateContract,
-          { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
-          { throwOnError: false },
-        ),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(
+        getMemberStatusUpdateContract,
+        { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
+        { throwOnError: false },
       ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          getMemberStatusUpdateContract,
-          { idOrSlug: organizationSlug, statusUpdateIdOrDate: date },
-          { throwOnError: false },
-        ),
-      ),
-    ]);
+    );
     queryClient.prefetchQuery(
       typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }),
     );
