@@ -19,6 +19,7 @@ export const member = sqliteTable(
       .references(() => user.id, { onDelete: "cascade" }),
     role: text("role").notNull().$type<MemberRole>(),
     githubId: text("github_id"),
+    slackId: text("slack_id"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     archivedAt: integer("archived_at", { mode: "timestamp" }),
   },
@@ -26,6 +27,7 @@ export const member = sqliteTable(
     index("organization_member_id_index").on(t.organizationId),
     index("user_member_id_index").on(t.userId),
     index("member_github_id_index").on(t.githubId),
+    index("member_slack_id_index").on(t.slackId),
   ],
 );
 

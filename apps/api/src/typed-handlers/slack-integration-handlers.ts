@@ -1,0 +1,183 @@
+import { typedHandler } from "@asyncstatus/typed-handlers";
+import { WebClient } from "@slack/web-api";
+import { generateId } from "better-auth";
+import { eq } from "drizzle-orm";
+import * as schema from "../db";
+import type { TypedHandlersContext } from "../lib/env";
+import { slackIntegrationCallbackContract } from "./slack-integration-contracts";
+
+export const slackIntegrationCallbackHandler = typedHandler<
+  TypedHandlersContext,
+  typeof slackIntegrationCallbackContract
+>(slackIntegrationCallbackContract, async ({ redirect, webAppUrl, db, input, slack, workflow }) => {
+  const { code, state: organizationSlug } = input;
+
+  if (!code || !organizationSlug) {
+    return redirect(`${webAppUrl}/error?message=Missing required parameters`);
+  }
+
+  try {
+    const organization = await db.query.organization.findFirst({
+      where: eq(schema.organization.slug, organizationSlug),
+    });
+
+    if (!organization) {
+      return redirect(`${webAppUrl}/error?message=Organization not found`);
+    }
+
+    // Create Slack WebClient to exchange code for tokens
+    const slackClient = new WebClient();
+
+    // Exchange authorization code for access token
+    const response = await slackClient.oauth.v2.access({
+      client_id: slack.clientId,
+      client_secret: slack.clientSecret,
+      code,
+    });
+
+    if (!response.ok || !response.access_token || !response.team?.id) {
+      return redirect(
+        `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Failed to exchange code for access token")}`,
+      );
+    }
+
+    if (response.is_enterprise_install) {
+      return redirect(
+        `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Enterprise installations are not supported")}`,
+      );
+    }
+
+    // Wrap all database operations in a transaction
+    const result = await db.transaction(async (tx) => {
+      const now = new Date();
+
+      // We already verified response.team exists above
+      const team = response.team!;
+
+      // Check if existing integration exists
+      const existingIntegration = await tx
+        .select()
+        .from(schema.slackIntegration)
+        .where(eq(schema.slackIntegration.organizationId, organization.id))
+        .limit(1);
+
+      let integrationId: string | undefined;
+
+      if (existingIntegration[0]) {
+        // Update existing integration
+        await tx
+          .update(schema.slackIntegration)
+          .set({
+            teamId: team.id,
+            teamName: team.name,
+            enterpriseId: response.enterprise?.id,
+            enterpriseName: response.enterprise?.name,
+            botAccessToken: response.access_token,
+            botScopes: response.scope,
+            botUserId: response.bot_user_id,
+            appId: response.app_id,
+            tokenExpiresAt: response.expires_in
+              ? new Date(Date.now() + response.expires_in * 1000)
+              : null,
+            refreshToken: response.refresh_token,
+            updatedAt: now,
+          })
+          .where(eq(schema.slackIntegration.id, existingIntegration[0].id));
+
+        integrationId = existingIntegration[0].id;
+      } else {
+        // Create new integration
+        const newIntegration = await tx
+          .insert(schema.slackIntegration)
+          .values({
+            id: generateId(),
+            organizationId: organization.id,
+            teamId: team.id,
+            teamName: team.name,
+            enterpriseId: response.enterprise?.id,
+            enterpriseName: response.enterprise?.name,
+            botAccessToken: response.access_token,
+            botScopes: response.scope,
+            botUserId: response.bot_user_id,
+            appId: response.app_id,
+            tokenExpiresAt: response.expires_in
+              ? new Date(Date.now() + response.expires_in * 1000)
+              : null,
+            refreshToken: response.refresh_token,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+
+        integrationId = newIntegration[0]?.id;
+      }
+
+      if (!integrationId) {
+        throw new Error("Failed to create Slack integration");
+      }
+
+      // Store user token if user granted additional scopes
+      if (response.authed_user?.access_token && response.authed_user?.id) {
+        // Check if user already exists
+        const existingUser = await tx
+          .select()
+          .from(schema.slackUser)
+          .where(eq(schema.slackUser.slackUserId, response.authed_user.id))
+          .limit(1);
+
+        if (existingUser[0]) {
+          // Update existing user
+          await tx
+            .update(schema.slackUser)
+            .set({
+              integrationId: integrationId,
+              accessToken: response.authed_user.access_token,
+              scopes: response.authed_user.scope || null,
+              tokenExpiresAt: response.authed_user.expires_in
+                ? new Date(Date.now() + response.authed_user.expires_in * 1000)
+                : null,
+              refreshToken: response.authed_user.refresh_token || null,
+              updatedAt: now,
+            })
+            .where(eq(schema.slackUser.id, existingUser[0].id));
+        } else {
+          // Create new user
+          await tx.insert(schema.slackUser).values({
+            id: generateId(),
+            integrationId: integrationId,
+            slackUserId: response.authed_user.id,
+            accessToken: response.authed_user.access_token,
+            scopes: response.authed_user.scope || null,
+            tokenExpiresAt: response.authed_user.expires_in
+              ? new Date(Date.now() + response.authed_user.expires_in * 1000)
+              : null,
+            refreshToken: response.authed_user.refresh_token || null,
+            isInstaller: true,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      }
+
+      return { integrationId };
+    });
+
+    // Create sync workflow instance (outside transaction since it's external service)
+    const workflowInstance = await workflow.syncSlack.create({
+      params: { integrationId: result.integrationId },
+    });
+
+    // Update integration with sync ID
+    await db
+      .update(schema.slackIntegration)
+      .set({ syncId: workflowInstance.id })
+      .where(eq(schema.slackIntegration.id, result.integrationId));
+
+    return redirect(`${webAppUrl}/${organization.slug}/settings?tab=integrations`);
+  } catch (error) {
+    console.error(error);
+    return redirect(
+      `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Failed to complete Slack integration")}`,
+    );
+  }
+});
