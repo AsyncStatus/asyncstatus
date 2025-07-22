@@ -31,6 +31,7 @@ export const updateMemberContract = typedContract(
     lastName: UserUpdate.shape.name.optional(),
     role: MemberUpdate.shape.role.optional(),
     archivedAt: MemberUpdate.shape.archivedAt,
+    slackId: MemberUpdate.shape.slackId,
     githubId: MemberUpdate.shape.githubId,
     timezone: UserUpdate.shape.timezone,
     image: UserUpdate.shape.image.or(z.file().max(1024 * 1024 * 10)),

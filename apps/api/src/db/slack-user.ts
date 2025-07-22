@@ -17,6 +17,7 @@ export const slackUser = sqliteTable(
     avatarUrl: text("avatar_url"),
     accessToken: text("access_token"), // User token (xoxp-) if user scopes granted
     scopes: text("scopes"), // Comma-separated user scopes
+    isBot: integer("is_bot", { mode: "boolean" }).default(false),
     tokenExpiresAt: integer("token_expires_at", { mode: "timestamp" }),
     refreshToken: text("refresh_token"),
     isInstaller: integer("is_installer", { mode: "boolean" }).default(false), // True for the user who installed the app

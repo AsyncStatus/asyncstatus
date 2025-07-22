@@ -11,6 +11,7 @@ import { createDb } from "../db/db";
 import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { DeleteSlackIntegrationWorkflowParams } from "../workflows/slack/delete-slack-integration";
 import type { SyncSlackWorkflowParams } from "../workflows/slack/sync-slack";
 import type { Auth, Session } from "./auth";
 import { createAuth } from "./auth";
@@ -52,6 +53,7 @@ export type Bindings = {
   SLACK_SIGNING_SECRET: string;
   SLACK_STATE_SECRET: string;
   SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
+  DELETE_SLACK_INTEGRATION_WORKFLOW: Workflow<DeleteSlackIntegrationWorkflowParams>;
 };
 
 export type Variables = {
@@ -69,6 +71,7 @@ export type Variables = {
     syncGithub: Workflow<SyncGithubWorkflowParams>;
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
     syncSlack: Workflow<SyncSlackWorkflowParams>;
+    deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
   };
   slack: {
     appId: string;
@@ -99,14 +102,14 @@ export async function createContext(c: Context<HonoEnv>) {
   const db = createDb(c.env);
   const resend = new Resend(c.env.RESEND_API_KEY);
   const auth = createAuth(c.env, db, resend);
-  // const waitlistRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
-  //   windowMs: 60 * 60 * 1000,
-  //   limit: 10,
-  // });
-  // const invitationRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
-  //   windowMs: 60 * 60 * 1000,
-  //   limit: 100,
-  // });
+  const waitlistRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+  });
+  const invitationRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
+    windowMs: 60 * 60 * 1000,
+    limit: 100,
+  });
   const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
   const voyageClient = new VoyageAIClient({
     apiKey: c.env.VOYAGE_API_KEY,
@@ -116,10 +119,6 @@ export async function createContext(c: Context<HonoEnv>) {
   });
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   const openRouterProvider = createOpenRouter({ apiKey: c.env.OPENROUTER_API_KEY });
-
-  function placeholder(next: Next) {
-    return next();
-  }
 
   return {
     db,
@@ -140,13 +139,14 @@ export async function createContext(c: Context<HonoEnv>) {
     },
     openRouterProvider,
     rateLimiter: {
-      waitlist: placeholder,
-      invitation: placeholder,
+      waitlist: (next: Next) => waitlistRateLimiter(c, next),
+      invitation: (next: Next) => invitationRateLimiter(c, next),
     },
     workflow: {
       syncGithub: c.env.SYNC_GITHUB_WORKFLOW,
       deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
       syncSlack: c.env.SYNC_SLACK_WORKFLOW,
+      deleteSlackIntegration: c.env.DELETE_SLACK_INTEGRATION_WORKFLOW,
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

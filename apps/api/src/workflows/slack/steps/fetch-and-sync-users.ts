@@ -47,6 +47,7 @@ export async function fetchAndSyncUsers({
         displayName: user.profile?.display_name,
         email: user.profile?.email,
         avatarUrl: user.profile?.image_original,
+        isBot: user.is_bot,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -64,6 +65,7 @@ export async function fetchAndSyncUsers({
             displayName: user.displayName,
             email: user.email,
             avatarUrl: user.avatarUrl,
+            isBot: user.isBot,
             createdAt: new Date(),
             updatedAt: new Date(),
           },

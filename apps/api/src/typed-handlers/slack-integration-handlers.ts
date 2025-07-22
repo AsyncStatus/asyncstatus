@@ -1,10 +1,17 @@
-import { typedHandler } from "@asyncstatus/typed-handlers";
+import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { WebClient } from "@slack/web-api";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
 import * as schema from "../db";
-import type { TypedHandlersContext } from "../lib/env";
-import { slackIntegrationCallbackContract } from "./slack-integration-contracts";
+import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
+import { requiredOrganization, requiredSession } from "./middleware";
+import {
+  deleteSlackIntegrationContract,
+  getSlackIntegrationContract,
+  listSlackChannelsContract,
+  listSlackUsersContract,
+  slackIntegrationCallbackContract,
+} from "./slack-integration-contracts";
 
 export const slackIntegrationCallbackHandler = typedHandler<
   TypedHandlersContext,
@@ -106,7 +113,7 @@ export const slackIntegrationCallbackHandler = typedHandler<
             refreshToken: response.refresh_token,
             createdAt: now,
             updatedAt: now,
-          })
+          } as any)
           .returning();
 
         integrationId = newIntegration[0]?.id;
@@ -181,3 +188,107 @@ export const slackIntegrationCallbackHandler = typedHandler<
     );
   }
 });
+
+export const getSlackIntegrationHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof getSlackIntegrationContract
+>(
+  getSlackIntegrationContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization }) => {
+    const integration = await db.query.slackIntegration.findFirst({
+      where: eq(schema.slackIntegration.organizationId, organization.id),
+    });
+    if (!integration) {
+      return null;
+    }
+
+    return integration;
+  },
+);
+
+export const listSlackChannelsHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof listSlackChannelsContract
+>(
+  listSlackChannelsContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization }) => {
+    const integration = await db.query.slackIntegration.findFirst({
+      where: eq(schema.slackIntegration.organizationId, organization.id),
+    });
+    if (!integration) {
+      return [];
+    }
+
+    const channels = await db.query.slackChannel.findMany({
+      where: eq(schema.slackChannel.integrationId, integration.id),
+    });
+
+    return channels;
+  },
+);
+
+export const listSlackUsersHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof listSlackUsersContract
+>(listSlackUsersContract, requiredSession, requiredOrganization, async ({ db, organization }) => {
+  const integration = await db.query.slackIntegration.findFirst({
+    where: eq(schema.slackIntegration.organizationId, organization.id),
+  });
+  if (!integration) {
+    return [];
+  }
+
+  const users = await db.query.slackUser.findMany({
+    where: eq(schema.slackUser.integrationId, integration.id),
+  });
+
+  return users;
+});
+
+export const deleteSlackIntegrationHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof deleteSlackIntegrationContract
+>(
+  deleteSlackIntegrationContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, workflow, member }) => {
+    if (member.role !== "admin" && member.role !== "owner") {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You do not have permission to disconnect GitHub",
+      });
+    }
+
+    const integration = await db.query.slackIntegration.findFirst({
+      where: eq(schema.slackIntegration.organizationId, organization.id),
+    });
+    if (!integration) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Slack integration not found",
+      });
+    }
+
+    if (integration.deleteId) {
+      throw new TypedHandlersError({
+        code: "CONFLICT",
+        message: "Slack integration is already being deleted",
+      });
+    }
+
+    const workflowInstance = await workflow.deleteSlackIntegration.create({
+      params: { integrationId: integration.id },
+    });
+    await db
+      .update(schema.slackIntegration)
+      .set({ deleteId: workflowInstance.id })
+      .where(eq(schema.slackIntegration.id, integration.id));
+
+    return { success: true };
+  },
+);
