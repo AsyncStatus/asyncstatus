@@ -53,7 +53,7 @@ export function WaitlistDialog({ buttonSize = "default", className }: WaitlistDi
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/th/waitlist`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/waitlist`, {
       method: "POST",
       body: JSON.stringify(data),
       headers: { "Content-Type": "application/json" },
