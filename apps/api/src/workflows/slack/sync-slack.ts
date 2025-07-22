@@ -6,6 +6,7 @@ import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 import { createReportStatusFn } from "./steps/common";
 import { fetchAndSyncChannels } from "./steps/fetch-and-sync-channels";
+import { fetchAndSyncUsers } from "./steps/fetch-and-sync-users";
 
 export type SyncSlackWorkflowParams = { integrationId: string };
 
@@ -38,6 +39,33 @@ export class SyncSlackWorkflow extends WorkflowEntrypoint<
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
       return await reportStatusFn(() => fetchAndSyncChannels({ slackClient, db, integrationId }));
+    });
+
+    await step.do("fetch-and-sync-users", async () => {
+      const db = createDb(this.env);
+      const integration = await db.query.slackIntegration.findFirst({
+        where: eq(schema.slackIntegration.id, integrationId),
+        with: { organization: true },
+      });
+      if (!integration) {
+        throw new Error("Integration not found");
+      }
+      const slackClient = new WebClient(integration.botAccessToken);
+
+      const reportStatusFn = createReportStatusFn({ db, integrationId });
+
+      await reportStatusFn(() => fetchAndSyncUsers({ slackClient, db, integrationId }));
+
+      await db
+        .update(schema.slackIntegration)
+        .set({
+          syncFinishedAt: new Date(),
+          syncId: null,
+          syncError: null,
+          syncErrorAt: null,
+          syncStartedAt: null,
+        })
+        .where(eq(schema.slackIntegration.id, integrationId));
     });
   }
 }

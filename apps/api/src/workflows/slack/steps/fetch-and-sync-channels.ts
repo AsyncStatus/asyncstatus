@@ -2,12 +2,9 @@ import type { WebClient } from "@slack/web-api";
 import type { Channel } from "@slack/web-api/dist/types/response/ConversationsListResponse";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import type * as schema from "../../../db";
+import * as schema from "../../../db";
 import type { Db } from "../../../db/db";
-import type { AnyGithubWebhookEventDefinition } from "../../../lib/github-event-definition";
 import { isTuple } from "../../../lib/is-tuple";
-import { standardizeGithubEventName } from "../../../lib/standardize-github-event-name";
 
 type FetchAndSyncChannelsParams = {
   slackClient: WebClient;
@@ -49,6 +46,10 @@ export async function fetchAndSyncChannels({
         isArchived: channel.is_archived ?? false,
         channelId: channel.id,
         isGeneral: channel.is_general ?? false,
+        isIm: channel.is_im ?? false,
+        isMpim: channel.is_mpim ?? false,
+        isGroup: channel.is_group ?? false,
+        isShared: channel.is_shared ?? false,
         purpose: channel.purpose?.value,
         topic: channel.topic?.value,
         createdAt: new Date(),
@@ -56,34 +57,31 @@ export async function fetchAndSyncChannels({
       });
     }
 
-    //   const batchUpserts = events.map((event) => {
-    //     return db
-    //       .insert(schema.githubEvent)
-    //       .values({
-    //         id: nanoid(),
-    //         githubId: event.id.toString(),
-    //         githubActorId: event.actor.id.toString(),
-    //         insertedAt: new Date(),
-    //         createdAt: event.created_at ? new Date(event.created_at) : new Date(),
-    //         repositoryId: repo.id,
-    //         type: standardizeGithubEventName(event.type ?? "UnknownEvent"),
-    //         payload: event.payload as AnyGithubWebhookEventDefinition,
-    //       })
-    //       .onConflictDoUpdate({
-    //         target: schema.githubEvent.githubId,
-    //         setWhere: eq(schema.githubEvent.githubId, event.id.toString()),
-    //         set: {
-    //           insertedAt: new Date(),
-    //           createdAt: event.created_at ? new Date(event.created_at) : new Date(),
-    //           repositoryId: repo.id,
-    //           type: standardizeGithubEventName(event.type ?? "UnknownEvent"),
-    //           githubActorId: event.actor.id.toString(),
-    //           payload: event.payload as AnyGithubWebhookEventDefinition,
-    //         },
-    //       });
-    //   });
-    //   if (isTuple(batchUpserts)) {
-    //     await db.batch(batchUpserts);
-    //   }
+    const batchUpserts = channelsToInsert.map((channel) => {
+      return db
+        .insert(schema.slackChannel)
+        .values(channel)
+        .onConflictDoUpdate({
+          target: schema.slackChannel.channelId,
+          setWhere: eq(schema.slackChannel.channelId, channel.channelId),
+          set: {
+            name: channel.name,
+            isPrivate: channel.isPrivate,
+            isArchived: channel.isArchived,
+            isGeneral: channel.isGeneral,
+            isIm: channel.isIm,
+            isMpim: channel.isMpim,
+            isGroup: channel.isGroup,
+            isShared: channel.isShared,
+            purpose: channel.purpose,
+            topic: channel.topic,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+    });
+    if (isTuple(batchUpserts)) {
+      await db.batch(batchUpserts);
+    }
   }
 }
