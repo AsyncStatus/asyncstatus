@@ -728,27 +728,6 @@ export const updateStatusUpdateHandler = typedHandler<
 
     const now = dayjs.utc().toDate();
 
-    console.log({ items });
-
-    // if (items && items.length > 0) {
-    //   const batchUpdates = items.map((item) => {
-    //     return db
-    //       .update(schema.statusUpdateItem)
-    //       .set({
-    //         statusUpdateId,
-    //         order: item.order,
-    //         content: item.content,
-    //         isBlocker: item.isBlocker,
-    //         isInProgress: item.isInProgress,
-    //         updatedAt: now,
-    //       })
-    //       .where(eq(schema.statusUpdateItem.id, item.id));
-    //   });
-    //   if (isTuple(batchUpdates)) {
-    //     await db.batch(batchUpdates);
-    //   }
-    // }
-
     const statusUpdate = await db.transaction(async (tx) => {
       const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
         where: and(
@@ -767,7 +746,7 @@ export const updateStatusUpdateHandler = typedHandler<
       await tx
         .update(schema.statusUpdate)
         .set({
-          teamId: teamId === null ? null : existingStatusUpdate.teamId,
+          teamId,
           editorJson,
           effectiveFrom: dayjs(effectiveFrom).toDate(),
           effectiveTo: dayjs(effectiveTo).toDate(),
