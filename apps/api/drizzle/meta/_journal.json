@@ -57,6 +57,13 @@
       "when": 1753001684535,
       "tag": "0007_boring_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1753214585726,
+      "tag": "0008_daily_slyde",
+      "breakpoints": true
     }
   ]
 }

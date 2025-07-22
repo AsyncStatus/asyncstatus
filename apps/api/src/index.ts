@@ -42,6 +42,7 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import { slackIntegrationCallbackHandler } from "./typed-handlers/slack-integration-handlers";
 import {
   deleteStatusUpdateHandler,
   generateStatusUpdateHandler,
@@ -133,6 +134,7 @@ const app = new Hono<HonoEnv>()
     c.set("githubWebhooks", context.githubWebhooks);
     c.set("session" as any, context.session);
     c.set("workflow", context.workflow);
+    c.set("slack", context.slack);
     return next();
   })
   .route("/auth", authRouter)
@@ -203,6 +205,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listGithubRepositoriesHandler,
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
+    slackIntegrationCallbackHandler,
   ],
   {
     getContext: (c) => ({
@@ -219,6 +222,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       authKv: c.env.AS_PROD_AUTH_KV,
       organization: c.get("organization" as any),
       member: c.get("member" as any),
+      slack: c.get("slack"),
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
     }),
@@ -233,3 +237,4 @@ export type App = typeof app;
 export { GenerateStatusWorkflow } from "./workflows/generate-status";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { SyncSlackWorkflow } from "./workflows/slack/sync-slack";

@@ -11,6 +11,7 @@ import { createDb } from "../db/db";
 import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { SyncSlackWorkflowParams } from "../workflows/slack/sync-slack";
 import type { Auth, Session } from "./auth";
 import { createAuth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
@@ -45,6 +46,12 @@ export type Bindings = {
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
   GITHUB_PROCESS_EVENTS_QUEUE: Queue<string>;
   OPENROUTER_API_KEY: string;
+  SLACK_APP_ID: string;
+  SLACK_CLIENT_ID: string;
+  SLACK_CLIENT_SECRET: string;
+  SLACK_SIGNING_SECRET: string;
+  SLACK_STATE_SECRET: string;
+  SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
 };
 
 export type Variables = {
@@ -61,6 +68,14 @@ export type Variables = {
   workflow: {
     syncGithub: Workflow<SyncGithubWorkflowParams>;
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
+    syncSlack: Workflow<SyncSlackWorkflowParams>;
+  };
+  slack: {
+    appId: string;
+    clientId: string;
+    clientSecret: string;
+    signingSecret: string;
+    stateSecret: string;
   };
 };
 
@@ -84,14 +99,14 @@ export async function createContext(c: Context<HonoEnv>) {
   const db = createDb(c.env);
   const resend = new Resend(c.env.RESEND_API_KEY);
   const auth = createAuth(c.env, db, resend);
-  const waitlistRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
-    windowMs: 60 * 60 * 1000,
-    limit: 10,
-  });
-  const invitationRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
-    windowMs: 60 * 60 * 1000,
-    limit: 100,
-  });
+  // const waitlistRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
+  //   windowMs: 60 * 60 * 1000,
+  //   limit: 10,
+  // });
+  // const invitationRateLimiter = createRateLimiter(c.env.RATE_LIMITER, {
+  //   windowMs: 60 * 60 * 1000,
+  //   limit: 100,
+  // });
   const anthropicClient = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
   const voyageClient = new VoyageAIClient({
     apiKey: c.env.VOYAGE_API_KEY,
@@ -101,6 +116,10 @@ export async function createContext(c: Context<HonoEnv>) {
   });
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   const openRouterProvider = createOpenRouter({ apiKey: c.env.OPENROUTER_API_KEY });
+
+  function placeholder(next: Next) {
+    return next();
+  }
 
   return {
     db,
@@ -112,14 +131,22 @@ export async function createContext(c: Context<HonoEnv>) {
     session,
     webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
+    slack: {
+      appId: c.env.SLACK_APP_ID,
+      clientId: c.env.SLACK_CLIENT_ID,
+      clientSecret: c.env.SLACK_CLIENT_SECRET,
+      signingSecret: c.env.SLACK_SIGNING_SECRET,
+      stateSecret: c.env.SLACK_STATE_SECRET,
+    },
     openRouterProvider,
     rateLimiter: {
-      waitlist: (next: Next) => waitlistRateLimiter(c, next),
-      invitation: (next: Next) => invitationRateLimiter(c, next),
+      waitlist: placeholder,
+      invitation: placeholder,
     },
     workflow: {
       syncGithub: c.env.SYNC_GITHUB_WORKFLOW,
       deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
+      syncSlack: c.env.SYNC_SLACK_WORKFLOW,
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

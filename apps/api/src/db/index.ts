@@ -24,6 +24,26 @@ export { GithubUser, GithubUserInsert, GithubUserUpdate, githubUser } from "./gi
 export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./invitation";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
+export {
+  SlackChannel,
+  SlackChannelInsert,
+  SlackChannelUpdate,
+  slackChannel,
+} from "./slack-channel";
+export { SlackEvent, SlackEventInsert, SlackEventUpdate, slackEvent } from "./slack-event";
+export {
+  SlackEventVector,
+  SlackEventVectorInsert,
+  SlackEventVectorUpdate,
+  slackEventVector,
+} from "./slack-event-vector";
+export {
+  SlackIntegration,
+  SlackIntegrationInsert,
+  SlackIntegrationUpdate,
+  slackIntegration,
+} from "./slack-integration";
+export { SlackUser, SlackUserInsert, SlackUserUpdate, slackUser } from "./slack-user";
 export { statusGenerationJob } from "./status-generation-job";
 export {
   StatusUpdate,
@@ -63,6 +83,11 @@ import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
+import { slackChannel } from "./slack-channel";
+import { slackEvent } from "./slack-event";
+import { slackEventVector } from "./slack-event-vector";
+import { slackIntegration } from "./slack-integration";
+import { slackUser } from "./slack-user";
 import { statusGenerationJob } from "./status-generation-job";
 import { statusUpdate } from "./status-update";
 import { statusUpdateItem } from "./status-update-item";
@@ -98,6 +123,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   teams: many(team),
   invitations: many(invitation),
   githubIntegration: one(githubIntegration),
+  slackIntegration: one(slackIntegration),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -178,6 +204,45 @@ export const githubUserRelations = relations(githubUser, ({ one }) => ({
   integration: one(githubIntegration, {
     fields: [githubUser.integrationId],
     references: [githubIntegration.id],
+  }),
+}));
+
+export const slackIntegrationRelations = relations(slackIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [slackIntegration.organizationId],
+    references: [organization.id],
+  }),
+  users: many(slackUser),
+  channels: many(slackChannel),
+}));
+
+export const slackUserRelations = relations(slackUser, ({ one }) => ({
+  integration: one(slackIntegration, {
+    fields: [slackUser.integrationId],
+    references: [slackIntegration.id],
+  }),
+}));
+
+export const slackChannelRelations = relations(slackChannel, ({ one, many }) => ({
+  integration: one(slackIntegration, {
+    fields: [slackChannel.integrationId],
+    references: [slackIntegration.id],
+  }),
+  events: many(slackEvent),
+}));
+
+export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
+  channel: one(slackChannel, {
+    fields: [slackEvent.channelId],
+    references: [slackChannel.id],
+  }),
+  vectors: many(slackEventVector),
+}));
+
+export const slackEventVectorRelations = relations(slackEventVector, ({ one }) => ({
+  event: one(slackEvent, {
+    fields: [slackEventVector.eventId],
+    references: [slackEvent.id],
   }),
 }));
 
