@@ -42,7 +42,13 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
-import { slackIntegrationCallbackHandler } from "./typed-handlers/slack-integration-handlers";
+import {
+  deleteSlackIntegrationHandler,
+  getSlackIntegrationHandler,
+  listSlackChannelsHandler,
+  listSlackUsersHandler,
+  slackIntegrationCallbackHandler,
+} from "./typed-handlers/slack-integration-handlers";
 import {
   deleteStatusUpdateHandler,
   generateStatusUpdateHandler,
@@ -206,6 +212,10 @@ const typedHandlersApp = typedHandlersHonoServer(
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
     slackIntegrationCallbackHandler,
+    getSlackIntegrationHandler,
+    listSlackChannelsHandler,
+    listSlackUsersHandler,
+    deleteSlackIntegrationHandler,
   ],
   {
     getContext: (c) => ({
@@ -237,4 +247,5 @@ export type App = typeof app;
 export { GenerateStatusWorkflow } from "./workflows/generate-status";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { DeleteSlackIntegrationWorkflow } from "./workflows/slack/delete-slack-integration";
 export { SyncSlackWorkflow } from "./workflows/slack/sync-slack";

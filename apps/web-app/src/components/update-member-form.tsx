@@ -6,6 +6,7 @@ import {
   updateMemberContract,
 } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
+import { listSlackUsersContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -80,6 +81,14 @@ export function UpdateMemberForm(props: {
       idOrSlug: props.organizationSlugOrId,
     }),
   );
+  const slackUsers = useQuery({
+    ...typedQueryOptions(listSlackUsersContract, {
+      idOrSlug: props.organizationSlugOrId,
+    }),
+    select(data) {
+      return data.filter((user) => !user.isBot && user.username !== "slackbot");
+    },
+  });
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, {
       idOrSlug: props.organizationSlugOrId,
@@ -101,6 +110,7 @@ export function UpdateMemberForm(props: {
       archivedAt: member.data?.archivedAt ?? null,
       timezone: member.data?.user.timezone,
       githubId: member.data?.githubId,
+      slackId: member.data?.slackId,
     },
   });
 
@@ -116,6 +126,7 @@ export function UpdateMemberForm(props: {
         archivedAt: member.data?.archivedAt ?? null,
         timezone: member.data?.user.timezone,
         githubId: member.data?.githubId,
+        slackId: member.data?.slackId,
       });
     }
   }, [member.data, props.organizationSlugOrId, props.memberId]);
@@ -166,6 +177,7 @@ export function UpdateMemberForm(props: {
         archivedAt: data.archivedAt ?? null,
         timezone: data.user.timezone,
         githubId: data.githubId,
+        slackId: data.slackId,
       });
       props.onSuccess?.(data);
     },
@@ -361,6 +373,51 @@ export function UpdateMemberForm(props: {
                       {githubUsers.data.map((user) => (
                         <SelectItem key={user.githubId} value={user.githubId}>
                           {user.login}
+                        </SelectItem>
+                      ))}
+                      <Button
+                        className="w-full px-2"
+                        variant="secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          field.onChange(null);
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {slackUsers.data?.length > 0 && (
+          <FormField
+            control={form.control}
+            name="slackId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slack</FormLabel>
+                <FormControl>
+                  <Select
+                    {...field}
+                    disabled={slackUsers.isLoading}
+                    value={field.value ?? undefined}
+                    onValueChange={(value) => {
+                      field.onChange(value === field.value ? "" : value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a Slack user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {slackUsers.data.map((user) => (
+                        <SelectItem key={user.slackUserId} value={user.slackUserId}>
+                          {user.displayName || user.username || user.slackUserId}
                         </SelectItem>
                       ))}
                       <Button

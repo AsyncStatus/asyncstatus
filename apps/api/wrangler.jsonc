@@ -62,6 +62,11 @@
       "name": "sync-slack",
       "binding": "SYNC_SLACK_WORKFLOW",
       "class_name": "SyncSlackWorkflow"
+    },
+    {
+      "name": "delete-slack-integration",
+      "binding": "DELETE_SLACK_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteSlackIntegrationWorkflow"
     }
   ],
   "kv_namespaces": [

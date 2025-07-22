@@ -64,6 +64,13 @@
       "when": 1753214585726,
       "tag": "0008_daily_slyde",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1753221780143,
+      "tag": "0009_regular_killer_shrike",
+      "breakpoints": true
     }
   ]
 }

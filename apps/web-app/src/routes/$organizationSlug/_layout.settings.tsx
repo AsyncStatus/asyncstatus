@@ -15,6 +15,12 @@ import {
   listMemberOrganizationsContract,
   updateOrganizationContract,
 } from "@asyncstatus/api/typed-handlers/organization";
+import {
+  deleteSlackIntegrationContract,
+  getSlackIntegrationContract,
+  listSlackChannelsContract,
+  listSlackUsersContract,
+} from "@asyncstatus/api/typed-handlers/slack-integration";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import {
   NotSiMicrosoftTeams,
@@ -99,14 +105,38 @@ export const Route = createFileRoute("/$organizationSlug/_layout/settings")({
         }),
       ),
       queryClient.ensureQueryData(
-        typedQueryOptions(getGithubIntegrationContract, {
-          idOrSlug: organizationSlug,
-        }),
+        typedQueryOptions(getGithubIntegrationContract, { idOrSlug: organizationSlug }),
       ),
       queryClient.ensureQueryData(
-        typedQueryOptions(listGithubUsersContract, {
-          idOrSlug: organizationSlug,
-        }),
+        typedQueryOptions(
+          listGithubRepositoriesContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listGithubUsersContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getSlackIntegrationContract, { idOrSlug: organizationSlug }),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listSlackChannelsContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listSlackUsersContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
       ),
     ]);
   },
@@ -125,6 +155,9 @@ function RouteComponent() {
   const githubIntegrationQuery = useQuery(
     typedQueryOptions(getGithubIntegrationContract, { idOrSlug: params.organizationSlug }),
   );
+  const slackIntegrationQuery = useQuery(
+    typedQueryOptions(getSlackIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
   const deleteGithubIntegrationMutation = useMutation(
     typedMutationOptions(deleteGithubIntegrationContract, {
       onSuccess: () => {
@@ -140,6 +173,27 @@ function RouteComponent() {
         });
         queryClient.invalidateQueries({
           queryKey: typedQueryOptions(listGithubUsersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const deleteSlackIntegrationMutation = useMutation(
+    typedMutationOptions(deleteSlackIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getSlackIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listSlackChannelsContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listSlackUsersContract, {
             idOrSlug: params.organizationSlug,
           }).queryKey,
         });
@@ -177,6 +231,23 @@ function RouteComponent() {
       { throwOnError: false },
     ),
   );
+  const slackChannels = useQuery(
+    typedQueryOptions(
+      listSlackChannelsContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const slackUsers = useQuery({
+    ...typedQueryOptions(
+      listSlackUsersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+    select(data) {
+      return data.filter((user) => !user.isBot && user.username !== "slackbot");
+    },
+  });
   const organizationMembers = useQuery(
     typedQueryOptions(listMembersContract, { idOrSlug: params.organizationSlug }),
   );
@@ -215,7 +286,7 @@ function RouteComponent() {
                       <div key={user.id} className="flex items-center gap-2">
                         <Button variant="link" asChild className="p-0 text-left">
                           <a href={user.htmlUrl} target="_blank" rel="noreferrer">
-                            {user.login}
+                            {user.name || user.login}
                           </a>
                         </Button>
                         <ArrowRight className="size-4" />
@@ -241,7 +312,7 @@ function RouteComponent() {
                           <SelectContent>
                             {organizationMembers.data?.members.map((member) => (
                               <SelectItem key={member.id} value={member.id}>
-                                {member.user.name} ({member.user.email})
+                                {member.user.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -363,8 +434,200 @@ function RouteComponent() {
         name: "Slack",
         description: "Monitor channel activity, direct messages, and team communication.",
         icon: <SiSlack className="size-3.5" />,
-        status: "disconnected",
+        status: slackIntegrationQuery.data?.syncFinishedAt
+          ? "connected"
+          : slackIntegrationQuery.data?.syncStartedAt
+            ? "connecting"
+            : "disconnected",
         connectLink: `https://slack.com/oauth/v2/authorize?state=${params.organizationSlug}&client_id=${import.meta.env.VITE_SLACK_INTEGRATION_APP_CLIENT_ID}&scope=app_mentions:read,channels:history,channels:join,channels:read,chat:write,chat:write.public,commands,emoji:read,files:read,groups:history,groups:read,im:history,im:read,incoming-webhook,mpim:history,mpim:read,pins:read,reactions:read,team:read,users:read,users.profile:read,users:read.email,calls:read,reminders:read,reminders:write,channels:manage,chat:write.customize,im:write,links:read,metadata.message:read,mpim:write,pins:write,reactions:write,dnd:read,usergroups:read,usergroups:write,users:write,remote_files:read,remote_files:write,files:write,groups:write&user_scope=channels:history,channels:read,dnd:read,emoji:read,files:read,groups:history,groups:read,im:history,im:read,mpim:history,mpim:read,pins:read,reactions:read,team:read,users:read,users.profile:read,users:read.email,calls:read,reminders:read,reminders:write,stars:read`,
+        onDisconnect: () => {
+          deleteSlackIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+        },
+        settingsChildren: (
+          <div className="space-y-6">
+            {slackUsers.data.length === 0 && (
+              <div className="text-sm text-muted-foreground">No users found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Users</h4>
+              {slackUsers.data.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-2">
+                  {slackUsers.data.map((user) => {
+                    const member = organizationMembers.data?.members.find(
+                      (member) => member.slackId === user.slackUserId,
+                    );
+
+                    return (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <Button variant="link" asChild className="p-0 text-left">
+                          <a
+                            href={`https://${slackIntegrationQuery.data?.teamName}.slack.com/team/${user.slackUserId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {user.displayName || user.username || user.slackUserId}
+                          </a>
+                        </Button>
+                        <ArrowRight className="size-4" />
+                        <Select
+                          value={member?.id}
+                          onValueChange={(value) => {
+                            const member = organizationMembers.data?.members.find(
+                              (member) => member.id === value,
+                            );
+                            if (!member) {
+                              return;
+                            }
+                            updateMemberMutation.mutate({
+                              idOrSlug: params.organizationSlug,
+                              memberId: member.id,
+                              slackId: user.slackUserId,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AsyncStatus profile" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationMembers.data?.members.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {member && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              updateMemberMutation.mutate({
+                                idOrSlug: params.organizationSlug,
+                                memberId: member.id,
+                                slackId: null,
+                              });
+                            }}
+                          >
+                            <XIcon className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {slackChannels.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No channels found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Channels</h4>
+              {slackChannels.data?.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {slackChannels.data.map((channel) => (
+                    <div key={channel.id} className="flex items-center gap-2">
+                      <Button variant="link" asChild className="p-0 text-left">
+                        <a
+                          href={`https://${slackIntegrationQuery.data?.teamName}.slack.com/channels/${channel.channelId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          #{channel.name}
+                          <span className="text-xs text-muted-foreground">
+                            {channel.isPrivate && " (private)"}
+                            {channel.isArchived && " (archived)"}
+                            {channel.isShared && " (shared)"}
+                            {channel.isIm && " (direct message)"}
+                            {channel.isMpim && " (group direct message)"}
+                            {channel.isGeneral && " (general channel)"}
+                            {channel.isGroup && " (group channel)"}
+                          </span>
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ),
+        children: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your Slack communication and activity.</li>
+                <li>Generates meaningful status updates from your team conversations.</li>
+                <li>Links AsyncStatus profiles to your Slack accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  Limited, scoped permissions to track communication and collaboration activity.
+                </li>
+                <li>Can interact with channels and conversations AsyncStatus is added to.</li>
+                <li>Cannot access admin settings, billing, or workspace-wide configuration.</li>
+                <li>Secure OAuth authentication with Slack.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>
+                  Data is used only for status update generation. We don't store message content.
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Data we track & actions we can perform</h4>
+              <p className="text-xs text-muted-foreground mb-2">
+                Access to view and interact with the following Slack data:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  <strong>Messages & Conversations:</strong> Track activity in public channels,
+                  private channels, and direct messages. Can send messages and start conversations.
+                </li>
+                <li>
+                  <strong>Channel Management:</strong> View channel information, join public
+                  channels, and manage channels AsyncStatus is added to.
+                </li>
+                <li>
+                  <strong>User Profiles:</strong> Access profile details, workspace member
+                  information, and email addresses.
+                </li>
+                <li>
+                  <strong>Reactions & Pins:</strong> View and add emoji reactions, manage pinned
+                  content in conversations.
+                </li>
+                <li>
+                  <strong>Files & Attachments:</strong> View, upload, edit, and delete files in
+                  conversations.
+                </li>
+                <li>
+                  <strong>Meeting & Call Data:</strong> Track participation in Slack calls and
+                  huddles.
+                </li>
+                <li>
+                  <strong>Workspace Management:</strong> Access workspace settings, manage user
+                  groups, create slash commands, and set bot presence.
+                </li>
+                <li>
+                  <strong>Reminders:</strong> Create, edit, and manage reminders for team members.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <strong>Status Example:</strong> "Led 4 discussions in #engineering, shared project
+              updates in 3 channels, and coordinated with the design team on the new feature
+              rollout."
+            </div>
+          </div>
+        ),
       },
       {
         name: "Linear",
@@ -437,6 +700,9 @@ function RouteComponent() {
       githubIntegrationQuery.data,
       githubRepositories.data,
       githubUsers.data,
+      slackIntegrationQuery.data,
+      slackChannels.data,
+      slackUsers.data,
       organizationMembers.data,
     ],
   );
