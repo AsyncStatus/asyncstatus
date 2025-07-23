@@ -4,7 +4,6 @@ import { App } from "octokit";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
-import { SyncGithubWorkflowStatusName } from "../../schema/github-integration";
 import { createReportStatusFn } from "./steps/common";
 import { fetchAndSyncRepositories } from "./steps/fetch-and-sync-repositories";
 import { fetchAndSyncUsers } from "./steps/fetch-and-sync-users";
@@ -26,7 +25,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
       throw new Error("Integration not found");
     }
 
-    await step.do(SyncGithubWorkflowStatusName.fetchAndSyncRepositories, async () => {
+    await step.do("fetch-and-sync-repositories", async () => {
       const db = createDb(this.env);
       const integration = await db.query.githubIntegration.findFirst({
         where: eq(schema.githubIntegration.id, integrationId),
@@ -46,7 +45,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
       return await reportStatusFn(() => fetchAndSyncRepositories({ octokit, db, integrationId }));
     });
 
-    await step.do(SyncGithubWorkflowStatusName.fetchAndSyncUsers, async () => {
+    await step.do("fetch-and-sync-users", async () => {
       const db = createDb(this.env);
       const integration = await db.query.githubIntegration.findFirst({
         where: eq(schema.githubIntegration.id, integrationId),

@@ -3,18 +3,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/rpc.ts"
-    },
     "./auth": {
       "types": "./src/lib/auth.tsx"
     },
-    "./db/*": {
-      "types": "./src/db/*.ts"
-    },
-    "./schema/*": "./src/schema/*.ts",
-    "./errors": "./src/errors/index.ts",
-    "./typed-handlers/*": "./src/typed-handlers/*-contracts.ts"
+    "./typed-handlers/file": "./src/typed-handlers/file-contracts.ts",
+    "./typed-handlers/github-integration": "./src/typed-handlers/github-integration-contracts.ts",
+    "./typed-handlers/invitation": "./src/typed-handlers/invitation-contracts.ts",
+    "./typed-handlers/member": "./src/typed-handlers/member-contracts.ts",
+    "./typed-handlers/organization": "./src/typed-handlers/organization-contracts.ts",
+    "./typed-handlers/slack-integration": "./src/typed-handlers/slack-integration-contracts.ts",
+    "./typed-handlers/status-update": "./src/typed-handlers/status-update-contracts.ts",
+    "./typed-handlers/team": "./src/typed-handlers/team-contracts.ts",
+    "./typed-handlers/waitlist": "./src/typed-handlers/waitlist-contracts.ts"
   },
   "scripts": {
     "dev": "wrangler dev",

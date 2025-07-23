@@ -1,6 +1,4 @@
-import { isAsyncStatusApiJsonError } from "@asyncstatus/api/errors";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
-import { toast } from "@asyncstatus/ui/components/sonner";
 import { isCancelledError, QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routerWithQueryClient } from "@tanstack/react-router-with-query";
@@ -19,28 +17,6 @@ export function createRouter() {
           }
 
           return true;
-        },
-        retry: (failureCount, error) => {
-          if (isAsyncStatusApiJsonError(error)) {
-            if (error.type === "ASAPIUnexpectedError") {
-              return failureCount <= 5;
-            }
-
-            return false;
-          }
-
-          return failureCount <= 5;
-        },
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      },
-      mutations: {
-        onError(error) {
-          if (isAsyncStatusApiJsonError(error)) {
-            console.error(error);
-            toast.error(error.message);
-          } else {
-            toast.error("An unexpected error occurred. Please try again later.");
-          }
         },
       },
     },

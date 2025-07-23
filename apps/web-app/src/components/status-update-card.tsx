@@ -1,4 +1,3 @@
-import type { StatusUpdateItem } from "@asyncstatus/api/db/status-update-item";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import type { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
@@ -251,7 +250,9 @@ export function StatusUpdateCardSkeleton(props: { count: number }) {
   ));
 }
 
-function getUpdateStatusItemsText(items: StatusUpdateItem[]) {
+function getUpdateStatusItemsText(
+  items: (typeof listStatusUpdatesByDateContract.$infer.output)[number]["items"],
+) {
   const blockersCount = items.filter((item) => item.isBlocker).length;
   const doneCount = items.filter((item) => !item.isInProgress && !item.isBlocker).length;
   const inProgressCount = items.filter((item) => item.isInProgress).length;
