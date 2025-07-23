@@ -2,15 +2,21 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { slackChannel } from "./slack-channel";
+import { slackIntegration } from "./slack-integration";
 import { slackUser } from "./slack-user";
 
 export const slackEvent = sqliteTable(
   "slack_event",
   {
     id: text("id").primaryKey(),
+    slackTeamId: text("slack_team_id")
+      .notNull()
+      .references(() => slackIntegration.teamId, { onDelete: "cascade" }),
     slackEventId: text("slack_event_id").notNull().unique(),
-    slackUserId: text("slack_user_id").references(() => slackUser.id, { onDelete: "cascade" }),
-    channelId: text("channel_id").references(() => slackChannel.id, { onDelete: "cascade" }),
+    slackUserId: text("slack_user_id").references(() => slackUser.slackUserId, {
+      onDelete: "cascade",
+    }),
+    channelId: text("channel_id").references(() => slackChannel.channelId, { onDelete: "cascade" }),
     type: text("type").notNull(),
     payload: text("payload", { mode: "json" }),
     messageTs: text("message_ts"), // Slack message timestamp (for message events)
@@ -25,24 +31,25 @@ export const slackEvent = sqliteTable(
     index("slack_event_slack_user_id_idx").on(t.slackUserId),
     index("slack_event_type_idx").on(t.type),
     index("slack_event_message_ts_idx").on(t.messageTs),
+    index("slack_event_slack_team_id_idx").on(t.slackTeamId),
   ],
 );
 
 export const SlackEvent = createSelectSchema(slackEvent, {
   slackEventId: z.string().trim().min(1),
-  slackUserId: z.string().trim().min(1),
+  slackTeamId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
 export type SlackEvent = z.output<typeof SlackEvent>;
 export const SlackEventInsert = createInsertSchema(slackEvent, {
   slackEventId: z.string().trim().min(1),
-  slackUserId: z.string().trim().min(1),
+  slackTeamId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
 export type SlackEventInsert = z.output<typeof SlackEventInsert>;
 export const SlackEventUpdate = createUpdateSchema(slackEvent, {
   slackEventId: z.string().trim().min(1),
-  slackUserId: z.string().trim().min(1),
+  slackTeamId: z.string().trim().min(1),
   type: z.string().trim().min(1),
 });
 export type SlackEventUpdate = z.output<typeof SlackEventUpdate>;

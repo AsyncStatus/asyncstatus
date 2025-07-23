@@ -23,6 +23,7 @@ CREATE INDEX `slack_channel_channel_id_index` ON `slack_channel` (`channel_id`);
 CREATE INDEX `slack_channel_name_index` ON `slack_channel` (`name`);--> statement-breakpoint
 CREATE TABLE `slack_event` (
 	`id` text PRIMARY KEY NOT NULL,
+	`slack_team_id` text NOT NULL,
 	`slack_event_id` text NOT NULL,
 	`slack_user_id` text,
 	`channel_id` text,
@@ -32,8 +33,9 @@ CREATE TABLE `slack_event` (
 	`thread_ts` text,
 	`created_at` integer NOT NULL,
 	`inserted_at` integer NOT NULL,
-	FOREIGN KEY (`slack_user_id`) REFERENCES `slack_user`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`channel_id`) REFERENCES `slack_channel`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`slack_team_id`) REFERENCES `slack_integration`(`team_id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`slack_user_id`) REFERENCES `slack_user`(`slack_user_id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`channel_id`) REFERENCES `slack_channel`(`channel_id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `slack_event_slack_event_id_unique` ON `slack_event` (`slack_event_id`);--> statement-breakpoint
@@ -43,6 +45,7 @@ CREATE INDEX `slack_event_slack_event_id_idx` ON `slack_event` (`slack_event_id`
 CREATE INDEX `slack_event_slack_user_id_idx` ON `slack_event` (`slack_user_id`);--> statement-breakpoint
 CREATE INDEX `slack_event_type_idx` ON `slack_event` (`type`);--> statement-breakpoint
 CREATE INDEX `slack_event_message_ts_idx` ON `slack_event` (`message_ts`);--> statement-breakpoint
+CREATE INDEX `slack_event_slack_team_id_idx` ON `slack_event` (`slack_team_id`);--> statement-breakpoint
 CREATE TABLE `slack_event_vector` (
 	`id` text PRIMARY KEY NOT NULL,
 	`event_id` text NOT NULL,
@@ -79,9 +82,10 @@ CREATE TABLE `slack_integration` (
 	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `slack_integration_team_id_unique` ON `slack_integration` (`team_id`);--> statement-breakpoint
 CREATE INDEX `slack_organization_id_index` ON `slack_integration` (`organization_id`);--> statement-breakpoint
-CREATE INDEX `slack_team_id_index` ON `slack_integration` (`team_id`);--> statement-breakpoint
 CREATE INDEX `slack_sync_id_index` ON `slack_integration` (`sync_id`);--> statement-breakpoint
+CREATE INDEX `slack_delete_id_index` ON `slack_integration` (`delete_id`);--> statement-breakpoint
 CREATE TABLE `slack_user` (
 	`id` text PRIMARY KEY NOT NULL,
 	`integration_id` text NOT NULL,
@@ -92,6 +96,7 @@ CREATE TABLE `slack_user` (
 	`avatar_url` text,
 	`access_token` text,
 	`scopes` text,
+	`is_bot` integer DEFAULT false,
 	`token_expires_at` integer,
 	`refresh_token` text,
 	`is_installer` integer DEFAULT false,

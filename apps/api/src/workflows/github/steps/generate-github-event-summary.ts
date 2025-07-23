@@ -3,17 +3,17 @@ import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
 import type { GithubEvent } from "../../../db";
 
-type GenerateEventSummaryOptions = {
+type GenerateGithubEventSummaryOptions = {
   openRouterProvider: OpenRouterProvider;
   voyageClient: VoyageAIClient;
   event: GithubEvent;
 };
 
-export async function generateEventSummary({
+export async function generateGithubEventSummary({
   openRouterProvider,
   voyageClient,
   event,
-}: GenerateEventSummaryOptions) {
+}: GenerateGithubEventSummaryOptions) {
   const payload = event.payload;
   if (
     typeof payload === "object" &&
