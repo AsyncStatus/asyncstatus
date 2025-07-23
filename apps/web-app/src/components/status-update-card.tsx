@@ -163,8 +163,8 @@ function StatusUpdateDate(props: {
       lessThanTenMinutesDifference
         ? false
         : props.statusUpdate.updatedAt
-          ? props.statusUpdate.updatedAt.toISOString() !==
-            props.statusUpdate.createdAt.toISOString()
+          ? new Date(props.statusUpdate.updatedAt).toISOString() !==
+            new Date(props.statusUpdate.createdAt).toISOString()
           : false,
     [lessThanTenMinutesDifference, props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
   );
