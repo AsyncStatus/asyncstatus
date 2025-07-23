@@ -1,1 +1,0 @@
-ALTER TABLE `slack_user` ADD `is_bot` integer DEFAULT false;

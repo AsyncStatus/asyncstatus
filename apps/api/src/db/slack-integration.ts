@@ -10,7 +10,7 @@ export const slackIntegration = sqliteTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    teamId: text("team_id").notNull(),
+    teamId: text("team_id").notNull().unique(),
     teamName: text("team_name"),
     enterpriseId: text("enterprise_id"), // From enterprise.id (if Enterprise Grid)
     enterpriseName: text("enterprise_name"), // From enterprise.name
@@ -33,8 +33,8 @@ export const slackIntegration = sqliteTable(
   },
   (t) => [
     index("slack_organization_id_index").on(t.organizationId),
-    index("slack_team_id_index").on(t.teamId),
     index("slack_sync_id_index").on(t.syncId),
+    index("slack_delete_id_index").on(t.deleteId),
   ],
 );
 

@@ -3,7 +3,8 @@ import {
   TypedHandlersError,
 } from "@asyncstatus/typed-handlers";
 import { typedHandlersHonoServer } from "@asyncstatus/typed-handlers/hono";
-import { createWebMiddleware } from "@octokit/webhooks";
+import { createWebMiddleware as createGithubWebhooksMiddleware } from "@octokit/webhooks";
+import type { SlackEvent } from "@slack/web-api";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
@@ -13,6 +14,7 @@ import {
   AsyncStatusUnexpectedApiError,
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
+import { verifySlackRequest } from "./lib/slack";
 import { queue } from "./queue";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
@@ -99,7 +101,27 @@ const githubWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", (c) => {
     await queue.send(event, { contentType: "json" });
   });
 
-  return createWebMiddleware(githubWebhooks, { path: "/integrations/github/webhooks" })(c.req.raw);
+  return createGithubWebhooksMiddleware(githubWebhooks, { path: "/integrations/github/webhooks" })(
+    c.req.raw,
+  );
+});
+
+const slackWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const body = (await c.req.raw.json()) as SlackEvent;
+  const isValid = await verifySlackRequest(
+    c.env.SLACK_SIGNING_SECRET,
+    c.req.raw.headers,
+    JSON.stringify(body),
+  );
+  if (!isValid) {
+    return c.json({ error: "Invalid request" }, 400);
+  }
+  if ("challenge" in body) {
+    return c.json(body, 200);
+  }
+  const queue = c.env.SLACK_WEBHOOK_EVENTS_QUEUE;
+  await queue.send(body, { contentType: "json" });
+  return c.json({ ok: true }, 200);
 });
 
 const app = new Hono<HonoEnv>()
@@ -145,6 +167,7 @@ const app = new Hono<HonoEnv>()
   })
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
+  .route("/integrations/slack/webhooks", slackWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
     if (err instanceof TypedHandlersError) {

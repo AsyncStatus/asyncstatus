@@ -214,6 +214,7 @@ export const slackIntegrationRelations = relations(slackIntegration, ({ one, man
   }),
   users: many(slackUser),
   channels: many(slackChannel),
+  events: many(slackEvent),
 }));
 
 export const slackUserRelations = relations(slackUser, ({ one }) => ({
@@ -232,9 +233,17 @@ export const slackChannelRelations = relations(slackChannel, ({ one, many }) => 
 }));
 
 export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
+  integration: one(slackIntegration, {
+    fields: [slackEvent.slackTeamId],
+    references: [slackIntegration.id],
+  }),
+  user: one(slackUser, {
+    fields: [slackEvent.slackUserId],
+    references: [slackUser.slackUserId],
+  }),
   channel: one(slackChannel, {
     fields: [slackEvent.channelId],
-    references: [slackChannel.id],
+    references: [slackChannel.channelId],
   }),
   vectors: many(slackEventVector),
 }));

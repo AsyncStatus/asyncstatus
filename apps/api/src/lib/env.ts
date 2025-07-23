@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Webhooks as GithubWebhooks } from "@octokit/webhooks";
 import { createOpenRouter, type OpenRouterProvider } from "@openrouter/ai-sdk-provider";
+import type { SlackEvent } from "@slack/web-api";
 import type { InferSelectModel } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { Resend } from "resend";
@@ -52,6 +53,8 @@ export type Bindings = {
   SLACK_CLIENT_SECRET: string;
   SLACK_SIGNING_SECRET: string;
   SLACK_STATE_SECRET: string;
+  SLACK_WEBHOOK_EVENTS_QUEUE: Queue<SlackEvent>;
+  SLACK_PROCESS_EVENTS_QUEUE: Queue<string>;
   SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
   DELETE_SLACK_INTEGRATION_WORKFLOW: Workflow<DeleteSlackIntegrationWorkflowParams>;
 };

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "9dec33f4-70d0-425a-8fe5-a380a2286c43",
+  "id": "7016411e-32c5-4167-8d8b-b98e13ec10a8",
   "prevId": "52774ba5-92db-4eac-8d13-2f2b46e5d47e",
   "tables": {
     "account": {
@@ -1198,6 +1198,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "slack_team_id": {
+          "name": "slack_team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "slack_event_id": {
           "name": "slack_event_id",
           "type": "text",
@@ -1311,31 +1318,51 @@
             "message_ts"
           ],
           "isUnique": false
+        },
+        "slack_event_slack_team_id_idx": {
+          "name": "slack_event_slack_team_id_idx",
+          "columns": [
+            "slack_team_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
-        "slack_event_slack_user_id_slack_user_id_fk": {
-          "name": "slack_event_slack_user_id_slack_user_id_fk",
+        "slack_event_slack_team_id_slack_integration_team_id_fk": {
+          "name": "slack_event_slack_team_id_slack_integration_team_id_fk",
+          "tableFrom": "slack_event",
+          "tableTo": "slack_integration",
+          "columnsFrom": [
+            "slack_team_id"
+          ],
+          "columnsTo": [
+            "team_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "slack_event_slack_user_id_slack_user_slack_user_id_fk": {
+          "name": "slack_event_slack_user_id_slack_user_slack_user_id_fk",
           "tableFrom": "slack_event",
           "tableTo": "slack_user",
           "columnsFrom": [
             "slack_user_id"
           ],
           "columnsTo": [
-            "id"
+            "slack_user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "slack_event_channel_id_slack_channel_id_fk": {
-          "name": "slack_event_channel_id_slack_channel_id_fk",
+        "slack_event_channel_id_slack_channel_channel_id_fk": {
+          "name": "slack_event_channel_id_slack_channel_channel_id_fk",
           "tableFrom": "slack_event",
           "tableTo": "slack_channel",
           "columnsFrom": [
             "channel_id"
           ],
           "columnsTo": [
-            "id"
+            "channel_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -1571,6 +1598,13 @@
         }
       },
       "indexes": {
+        "slack_integration_team_id_unique": {
+          "name": "slack_integration_team_id_unique",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": true
+        },
         "slack_organization_id_index": {
           "name": "slack_organization_id_index",
           "columns": [
@@ -1578,17 +1612,17 @@
           ],
           "isUnique": false
         },
-        "slack_team_id_index": {
-          "name": "slack_team_id_index",
-          "columns": [
-            "team_id"
-          ],
-          "isUnique": false
-        },
         "slack_sync_id_index": {
           "name": "slack_sync_id_index",
           "columns": [
             "sync_id"
+          ],
+          "isUnique": false
+        },
+        "slack_delete_id_index": {
+          "name": "slack_delete_id_index",
+          "columns": [
+            "delete_id"
           ],
           "isUnique": false
         }
@@ -1677,6 +1711,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "is_bot": {
+          "name": "is_bot",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
         },
         "token_expires_at": {
           "name": "token_expires_at",
