@@ -32,7 +32,6 @@
         "octokit": "4.1.3",
         "random-words": "2.0.1",
         "resend": "4.6.0",
-        "slack-cloudflare-workers": "1.3.6",
         "voyageai": "0.0.4",
         "zod": "catalog:",
       },
@@ -2805,12 +2804,6 @@
 
     "simple-wcswidth": ["simple-wcswidth@1.1.2", "", {}, "sha512-j7piyCjAeTDSjzTSQ7DokZtMNwNlEAyxqSZeCS+CXH7fJ4jx3FuJ/mTW3mE+6JLs4VJBbcll0Kjn+KXI5t21Iw=="],
 
-    "slack-cloudflare-workers": ["slack-cloudflare-workers@1.3.6", "", { "dependencies": { "@cloudflare/workers-types": "^4.20250712.0", "slack-edge": "^1.3.11" } }, "sha512-goxwtWiLZeCvIiEdObIPGW777R/Asgr6m3tqVV7I2Ubeg9nnkKUTnOPzo9/s5dZE4TiYGwjXrzJaxjoSyF0nfg=="],
-
-    "slack-edge": ["slack-edge@1.3.11", "", { "dependencies": { "slack-web-api-client": "^1.1.7" } }, "sha512-BBJSR1C4SvACDT35UfrTdnX8x+DuKIuoCPl7zRzdlxeM3kr778WO1bkzWE3B3HlrZXlEJh0k1/HR6K8c0NWrMw=="],
-
-    "slack-web-api-client": ["slack-web-api-client@1.1.7", "", {}, "sha512-R36tRp8JcBTHXHMs60sNJTHbUrfj/+5X3ezSNbdoNXTdcRGPM8NZ6ANG3MeZEROxYEOm665Ya7QNfp/xmskQbw=="],
-
     "slash": ["slash@5.1.0", "", {}, "sha512-ZA6oR3T/pEyuqwMgAKT0/hAv8oAXckzbkmR0UkUosQ+Mc4RxGoJkRmwHgHufaenlyAgE1Mxgpdcrf75y6XcnDg=="],
 
     "smob": ["smob@1.5.0", "", {}, "sha512-g6T+p7QO8npa+/hNx9ohv1E5pVCmWrVCUzUXJyLdMmftX6ER0oiWY/w9knEonLpnOp6b6FenKnMfR8gqwWdwig=="],
@@ -4030,8 +4023,6 @@
     "send/statuses": ["statuses@2.0.2", "", {}, "sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw=="],
 
     "sharp/detect-libc": ["detect-libc@2.0.4", "", {}, "sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA=="],
-
-    "slack-cloudflare-workers/@cloudflare/workers-types": ["@cloudflare/workers-types@4.20250722.0", "", {}, "sha512-pTY+A07DTSacgUBYcVEEb78/KG7THdcRpPqXLeH/A/LHHobAddgN4zyXBldsoZuzy7bD9tZYJW+wkcyR4k7fDA=="],
 
     "socket.io/debug": ["debug@4.3.7", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ=="],
 
