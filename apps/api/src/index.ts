@@ -107,14 +107,16 @@ const githubWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", (c) => {
 });
 
 const slackWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
-  const body = (await c.req.raw.json()) as SlackEvent;
-  const isValid = await verifySlackRequest(
-    c.env.SLACK_SIGNING_SECRET,
-    c.req.raw.headers,
-    JSON.stringify(body),
-  );
+  const rawBody = await c.req.raw.text();
+  const isValid = await verifySlackRequest(c.env.SLACK_SIGNING_SECRET, c.req.raw.headers, rawBody);
   if (!isValid) {
     return c.json({ error: "Invalid request" }, 400);
+  }
+  let body: SlackEvent;
+  try {
+    body = JSON.parse(rawBody) as SlackEvent;
+  } catch {
+    return c.json({ error: "Invalid JSON payload" }, 400);
   }
   if ("challenge" in body) {
     return c.json(body, 200);
