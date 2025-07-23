@@ -158,16 +158,19 @@ function StatusUpdateDate(props: {
         : false,
     [props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
   );
-  const edited = useMemo(
-    () =>
-      lessThanTenMinutesDifference
-        ? false
-        : props.statusUpdate.updatedAt
-          ? new Date(props.statusUpdate.updatedAt).toISOString() !==
-            new Date(props.statusUpdate.createdAt).toISOString()
-          : false,
-    [lessThanTenMinutesDifference, props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
-  );
+  const edited = useMemo(() => {
+    if (lessThanTenMinutesDifference) {
+      return false;
+    }
+
+    if (props.statusUpdate.updatedAt && props.statusUpdate.updatedAt instanceof Date) {
+      return (
+        props.statusUpdate.updatedAt.toISOString() !== props.statusUpdate.createdAt.toISOString()
+      );
+    }
+
+    return false;
+  }, [lessThanTenMinutesDifference, props.statusUpdate.updatedAt, props.statusUpdate.createdAt]);
 
   return (
     <Tooltip>
