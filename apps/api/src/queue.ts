@@ -193,7 +193,8 @@ async function slackWebhookEventsQueue(
     const channelId = "channel" in message.body.event ? message.body.event.channel : null;
     const messageTs = "event_ts" in message.body.event ? message.body.event.event_ts : null;
     const threadTs = "thread_ts" in message.body.event ? message.body.event.thread_ts : null;
-    const createdAt = "event_time" in message.body ? new Date() : new Date();
+    const createdAt =
+      "event_time" in message.body ? new Date(message.body.event_time * 1000) : new Date();
 
     const slackIntegration = await db.query.slackIntegration.findFirst({
       where: eq(schema.slackIntegration.teamId, slackTeamId),
