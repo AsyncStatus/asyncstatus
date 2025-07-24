@@ -599,7 +599,7 @@ export const upsertStatusUpdateHandlerV2 = typedHandler<
       ),
     });
 
-    const now = dayjs().toDate();
+    const now = dayjs.tz(dayjs.utc().toDate(), session.user.timezone).toDate();
 
     if (existingStatusUpdate && items && items.length > 0) {
       const batchUpdates = items
@@ -726,7 +726,7 @@ export const updateStatusUpdateHandler = typedHandler<
       editorJson,
     } = input;
 
-    const now = dayjs().toDate();
+    const now = dayjs.tz(dayjs.utc().toDate(), session.user.timezone).toDate();
 
     const statusUpdate = await db.transaction(async (tx) => {
       const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
