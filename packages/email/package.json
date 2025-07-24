@@ -11,13 +11,13 @@
     "dev": "email dev --dir src --port 3010"
   },
   "dependencies": {
-    "@react-email/components": "0.0.36",
+    "@react-email/components": "0.3.2",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "react-email": "4.0.7",
+    "react-email": "4.2.4",
     "typescript": "catalog:"
   }
 }
