@@ -51,7 +51,7 @@ export function typedQueryOptionsFactory(fetch: TypedContractFetch) {
       [typeof contract.method, ReturnType<typeof contract.url>, typeof input]
     >({
       throwOnError,
-      queryKey: [contract.method, contract.url(), input],
+      queryKey: [contract.method, contract.url(), input === skipToken ? undefined : input],
       queryFn:
         input === skipToken
           ? skipToken
