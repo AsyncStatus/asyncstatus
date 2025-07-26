@@ -4,7 +4,7 @@ import { generateId } from "better-auth";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
-import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
+import { generateStatusUpdate } from "../workflows/generate-status-update/generate-status-update";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createStatusUpdateContract,
@@ -64,8 +64,6 @@ export const listStatusUpdatesByDateHandler = typedHandler<
     const startOfDay = targetDate.startOf("day").toDate();
     const endOfDay = targetDate.endOf("day").toDate();
 
-    console.log({ startOfDay, endOfDay });
-
     if (memberId) {
       const member = await db.query.member.findFirst({
         where: and(
@@ -121,8 +119,6 @@ export const listStatusUpdatesByDateHandler = typedHandler<
       },
       orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
     });
-
-    console.log({ statusUpdates });
 
     return statusUpdates;
   },
@@ -385,8 +381,6 @@ export const getMemberStatusUpdateHandler = typedHandler<
       });
     }
 
-    console.log({ statusUpdate });
-
     return statusUpdate;
   },
 );
@@ -627,14 +621,14 @@ export const generateStatusUpdateHandler = typedHandler<
   generateStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, openRouterProvider, input, organization, session, member }) => {
-    let generatedItems: string[] = [];
+  async ({ db, openRouterProvider, input, organization, member }) => {
+    let generatedItems: { content: string; isBlocker: boolean; isInProgress: boolean }[] = [];
     // The frontend sends dates in UTC ISO format, so we should parse them as UTC
     const effectiveFrom = dayjs.utc(input.effectiveFrom);
     const effectiveTo = dayjs.utc(input.effectiveTo);
 
     try {
-      generatedItems = await generateStatusUpdateItems({
+      generatedItems = await generateStatusUpdate({
         db,
         openRouterProvider,
         organizationId: organization.id,
@@ -713,8 +707,8 @@ export const generateStatusUpdateHandler = typedHandler<
                 type: "blockableTodoList",
                 content: generatedItems.map((item) => ({
                   type: "blockableTodoListItem",
-                  attrs: { checked: false, blocked: false },
-                  content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
+                  attrs: { checked: !item.isInProgress, blocked: item.isBlocker },
+                  content: [{ type: "paragraph", content: [{ type: "text", text: item.content }] }],
                 })),
               },
               { type: "notesHeading" },
@@ -745,9 +739,9 @@ export const generateStatusUpdateHandler = typedHandler<
       const newItems = generatedItems.map((content, index) => ({
         id: generateId(),
         statusUpdateId,
-        content: content.trim(),
-        isBlocker: false,
-        isInProgress: false,
+        content: content.content,
+        isBlocker: content.isBlocker,
+        isInProgress: content.isInProgress,
         order: currentMaxOrder + index + 1, // Start from currentMaxOrder + 1
         createdAt: nowDate,
         updatedAt: nowDate,
