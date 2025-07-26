@@ -158,6 +158,7 @@ function RouteComponent() {
   const slackIntegrationQuery = useQuery(
     typedQueryOptions(getSlackIntegrationContract, { idOrSlug: params.organizationSlug }),
   );
+  const session = useQuery(sessionBetterAuthQueryOptions());
   const deleteGithubIntegrationMutation = useMutation(
     typedMutationOptions(deleteGithubIntegrationContract, {
       onSuccess: () => {
@@ -214,6 +215,23 @@ function RouteComponent() {
             memberId: data.id,
           }).queryKey,
         });
+        if (data.userId === session.data?.user.id) {
+          queryClient.invalidateQueries({
+            queryKey: typedQueryOptions(getOrganizationContract, {
+              idOrSlug: params.organizationSlug,
+            }).queryKey,
+          });
+
+          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+            if (!sessionData) {
+              return sessionData;
+            }
+            return {
+              ...sessionData,
+              user: { ...sessionData.user, ...data.user },
+            };
+          });
+        }
       },
     }),
   );

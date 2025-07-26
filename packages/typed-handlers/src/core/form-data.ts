@@ -11,6 +11,16 @@ export function serializeFormData(data: Record<string, unknown>): FormData {
       continue;
     }
 
+    if (value === true) {
+      formData.append(key, "true");
+      continue;
+    }
+
+    if (value === false) {
+      formData.append(key, "false");
+      continue;
+    }
+
     formData.append(key, value as any);
   }
 
@@ -30,6 +40,16 @@ export function deserializeFormData(formData: FormData): Record<string, unknown>
       continue;
     }
 
+    if (value === "true") {
+      data[key] = true;
+      continue;
+    }
+
+    if (value === "false") {
+      data[key] = false;
+      continue;
+    }
+
     data[key] = value;
   }
   return data;
@@ -44,6 +64,16 @@ export function deserializeFormDataObject(data: Record<string, unknown>): Record
 
     if (value === "undefined") {
       data[key] = undefined;
+      continue;
+    }
+
+    if (value === "true") {
+      data[key] = true;
+      continue;
+    }
+
+    if (value === "false") {
+      data[key] = false;
       continue;
     }
 

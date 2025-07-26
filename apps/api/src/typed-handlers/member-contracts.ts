@@ -34,6 +34,7 @@ export const updateMemberContract = typedContract(
     slackId: MemberUpdate.shape.slackId,
     githubId: MemberUpdate.shape.githubId,
     timezone: UserUpdate.shape.timezone,
+    autoDetectTimezone: UserUpdate.shape.autoDetectTimezone,
     image: UserUpdate.shape.image.or(z.file().max(1024 * 1024 * 10)),
   }),
   z.strictObject({ ...Member.shape, user: User }),

@@ -10,6 +10,9 @@ export const user = sqliteTable(
     email: text("email").notNull().unique(),
     emailVerified: integer("email_verified", { mode: "boolean" }).notNull(),
     image: text("image"),
+    autoDetectTimezone: integer("auto_detect_timezone", { mode: "boolean" })
+      .notNull()
+      .default(true),
     timezone: text("timezone").notNull().default("UTC"),
     activeOrganizationSlug: text("active_organization_slug"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

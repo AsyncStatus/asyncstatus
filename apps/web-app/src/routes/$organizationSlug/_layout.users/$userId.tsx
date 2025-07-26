@@ -13,7 +13,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -26,6 +25,7 @@ import { Archive, Calendar, Copy, Mail, Trash, Users } from "@asyncstatus/ui/ico
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { UpdateMemberFormDialog } from "@/components/update-member-form";
 import { getInitials } from "@/lib/utils";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
@@ -54,12 +54,29 @@ function RouteComponent() {
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
+  const session = useQuery(sessionBetterAuthQueryOptions());
   const updateMember = useMutation({
     ...typedMutationOptions(updateMemberContract),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }).queryKey,
       });
+
+      if (data.userId === session.data?.user.id) {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug })
+            .queryKey,
+        });
+        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+          if (!sessionData) {
+            return sessionData;
+          }
+          return {
+            ...sessionData,
+            user: { ...sessionData.user, ...data.user },
+          };
+        });
+      }
     },
   });
   const isAdmin =

@@ -7,8 +7,10 @@ import {
 } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import { listSlackUsersContract } from "@asyncstatus/api/typed-handlers/slack-integration";
+import { dayjs } from "@asyncstatus/dayjs";
 import { serializeFormData } from "@asyncstatus/typed-handlers";
 import { Button } from "@asyncstatus/ui/components/button";
+import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -42,24 +44,13 @@ import { getIsFormDataChanged } from "@asyncstatus/ui/lib/get-is-form-data-chang
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { zodResolver } from "@asyncstatus/ui/lib/zod-resolver";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { roleOptions } from "@/lib/auth";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { Form } from "./form";
-
-const timezones = [
-  {
-    value: "UTC",
-    label: "UTC",
-  },
-  ...Intl.supportedValuesOf("timeZone").map((tz) => ({
-    value: tz,
-    label: tz.replace(/_/g, " "),
-  })),
-];
 
 export function UpdateMemberForm(props: {
   organizationSlugOrId: string;
@@ -109,10 +100,29 @@ export function UpdateMemberForm(props: {
       image: member.data?.user.image ?? null,
       archivedAt: member.data?.archivedAt ?? null,
       timezone: member.data?.user.timezone,
+      autoDetectTimezone: member.data?.user.autoDetectTimezone,
       githubId: member.data?.githubId,
       slackId: member.data?.slackId,
     },
   });
+
+  const timezones = useMemo(
+    () => [
+      {
+        value: "auto",
+        label: `Auto (${dayjs.tz.guess()})`,
+      },
+      {
+        value: "UTC",
+        label: "UTC",
+      },
+      ...Intl.supportedValuesOf("timeZone").map((tz) => ({
+        value: tz,
+        label: tz.replace(/_/g, " "),
+      })),
+    ],
+    [session.data?.user.timezone],
+  );
 
   useEffect(() => {
     if (member.data) {
@@ -125,6 +135,7 @@ export function UpdateMemberForm(props: {
         image: member.data?.user.image ?? null,
         archivedAt: member.data?.archivedAt ?? null,
         timezone: member.data?.user.timezone,
+        autoDetectTimezone: member.data?.user.autoDetectTimezone,
         githubId: member.data?.githubId,
         slackId: member.data?.slackId,
       });
@@ -158,12 +169,7 @@ export function UpdateMemberForm(props: {
           }
           return {
             ...sessionData,
-            user: {
-              ...sessionData.user,
-              timezone: data.user.timezone,
-              image: data.user.image,
-              name: data.user.name,
-            },
+            user: { ...sessionData.user, ...data.user },
           };
         });
       }
@@ -176,12 +182,15 @@ export function UpdateMemberForm(props: {
         image: data.user.image ?? null,
         archivedAt: data.archivedAt ?? null,
         timezone: data.user.timezone,
+        autoDetectTimezone: data.user.autoDetectTimezone,
         githubId: data.githubId,
         slackId: data.slackId,
       });
       props.onSuccess?.(data);
     },
   });
+
+  const autoDetectTimezone = form.watch("autoDetectTimezone");
 
   useEffect(() => {
     form.setValue("idOrSlug", props.organizationSlugOrId);
@@ -206,7 +215,7 @@ export function UpdateMemberForm(props: {
           name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel>First name</FormLabel>
               <FormControl>
                 <Input placeholder="John" {...field} />
               </FormControl>
@@ -220,7 +229,7 @@ export function UpdateMemberForm(props: {
           name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel>Last name</FormLabel>
               <FormControl>
                 <Input placeholder="Doe" {...field} />
               </FormControl>
@@ -296,58 +305,68 @@ export function UpdateMemberForm(props: {
         <FormField
           control={form.control}
           name="timezone"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Timezone</FormLabel>
-              <Popover open={timezonePopoverOpen} onOpenChange={setTimezonePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a combobox */}
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={timezonePopoverOpen}
-                      className="w-full justify-between"
-                    >
-                      {field.value
-                        ? timezones.find((timezone) => timezone.value === field.value)?.label
-                        : "Select a timezone..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search timezone..." className="h-9" />
-                    <CommandList>
-                      <CommandEmpty>No timezone found.</CommandEmpty>
-                      <CommandGroup>
-                        {timezones.map((timezone) => (
-                          <CommandItem
-                            key={timezone.value}
-                            value={timezone.value}
-                            onSelect={(currentValue) => {
-                              field.onChange(currentValue === field.value ? "" : currentValue);
-                              setTimezonePopoverOpen(false);
-                            }}
-                          >
-                            {timezone.label}
-                            <Check
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                field.value === timezone.value ? "opacity-100" : "opacity-0",
-                              )}
-                            />
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            return (
+              <FormItem className="flex flex-col">
+                <FormLabel>Timezone</FormLabel>
+                <Popover open={timezonePopoverOpen} onOpenChange={setTimezonePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      {/** biome-ignore lint/a11y/useSemanticElements: we're using a button as a combobox */}
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={timezonePopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        {autoDetectTimezone
+                          ? `Auto (${dayjs.tz.guess()})`
+                          : field.value
+                            ? timezones.find((timezone) => timezone.value === field.value)?.label
+                            : "Select a timezone..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search timezone..." className="h-9" />
+                      <CommandList>
+                        <CommandEmpty>No timezone found.</CommandEmpty>
+                        <CommandGroup>
+                          {timezones.map((timezone) => (
+                            <CommandItem
+                              key={timezone.value}
+                              value={timezone.value}
+                              onSelect={(currentValue) => {
+                                if (currentValue === "auto") {
+                                  form.setValue("autoDetectTimezone", true);
+                                  setTimezonePopoverOpen(false);
+                                  return;
+                                }
+                                form.setValue("autoDetectTimezone", false);
+                                field.onChange(currentValue === field.value ? "" : currentValue);
+                                setTimezonePopoverOpen(false);
+                              }}
+                            >
+                              {timezone.label}
+                              <Check
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  field.value === timezone.value ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         {githubUsers.data?.length > 0 && (

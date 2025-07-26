@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `auto_detect_timezone` integer DEFAULT true NOT NULL;

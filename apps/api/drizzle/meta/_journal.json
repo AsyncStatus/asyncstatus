@@ -64,6 +64,13 @@
       "when": 1753228807062,
       "tag": "0008_wise_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1753531364198,
+      "tag": "0009_magical_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }

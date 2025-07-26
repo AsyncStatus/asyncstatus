@@ -90,6 +90,12 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           input: false,
           defaultValue: "UTC",
         },
+        autoDetectTimezone: {
+          type: "boolean",
+          required: true,
+          input: false,
+          defaultValue: true,
+        },
       },
     },
     secondaryStorage: {

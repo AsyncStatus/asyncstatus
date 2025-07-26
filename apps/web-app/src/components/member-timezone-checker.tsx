@@ -37,12 +37,7 @@ export function MemberTimezoneChecker() {
           }
           return {
             ...sessionData,
-            user: {
-              ...sessionData.user,
-              timezone: data.user.timezone,
-              image: data.user.image,
-              name: data.user.name,
-            },
+            user: { ...sessionData.user, ...data.user },
           };
         });
       },
@@ -50,7 +45,7 @@ export function MemberTimezoneChecker() {
   );
 
   const checkAndUpdateTimezone = useCallback(() => {
-    if (updateMember.isPending) {
+    if (updateMember.isPending || !session.data?.user.autoDetectTimezone) {
       return;
     }
 
@@ -67,6 +62,7 @@ export function MemberTimezoneChecker() {
     organizationSlug,
     organization.data?.member.id,
     updateMember.isPending,
+    session.data?.user.autoDetectTimezone,
   ]);
 
   useEffect(() => {
