@@ -4,6 +4,7 @@ import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { SidebarInset, SidebarProvider } from "@asyncstatus/ui/components/sidebar";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar, AppSidebarSkeleton } from "@/components/app-sidebar";
+import { MemberTimezoneChecker } from "@/components/member-timezone-checker";
 import { ensureValidOrganization, ensureValidSession } from "@/routes/-lib/common";
 import { typedQueryOptions } from "@/typed-handlers";
 
@@ -42,6 +43,7 @@ function RouteComponent() {
     <SidebarProvider>
       <AppSidebar organizationSlug={organizationSlug} />
       <SidebarInset className="px-3 py-2 sm:px-4 sm:py-2.5">
+        <MemberTimezoneChecker />
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
