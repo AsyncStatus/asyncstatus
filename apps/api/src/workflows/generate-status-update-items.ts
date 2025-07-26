@@ -24,7 +24,7 @@ export async function generateStatusUpdateItems({
   effectiveTo,
 }: GenerateStatusUpdateItemsOptions) {
   const { text } = await generateText({
-    model: openRouterProvider("openai/gpt-4.1-nano"),
+    model: openRouterProvider("openai/gpt-4.1-mini"),
     maxSteps: 20,
     system: `You are an engineering assistant that writes concise status update bullet points.
 Summarise the developer's activity with a keen focus on OUTCOMES and user-facing impact.
