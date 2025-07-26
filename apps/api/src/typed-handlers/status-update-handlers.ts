@@ -1,13 +1,13 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
-import { isTuple } from "../lib/is-tuple";
 import { generateStatusUpdateItems } from "../workflows/generate-status-update-items";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
+  createStatusUpdateContract,
   deleteStatusUpdateContract,
   generateStatusUpdateContract,
   getMemberStatusUpdateContract,
@@ -17,8 +17,6 @@ import {
   listStatusUpdatesByTeamContract,
   listStatusUpdatesContract,
   updateStatusUpdateContract,
-  upsertStatusUpdateContract,
-  upsertStatusUpdateContractV2,
 } from "./status-update-contracts";
 
 export const listStatusUpdatesHandler = typedHandler<
@@ -393,198 +391,11 @@ export const getMemberStatusUpdateHandler = typedHandler<
   },
 );
 
-export const upsertStatusUpdateHandler = typedHandler<
+export const createStatusUpdateHandler = typedHandler<
   TypedHandlersContextWithOrganization,
-  typeof upsertStatusUpdateContract
+  typeof createStatusUpdateContract
 >(
-  upsertStatusUpdateContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, input, session, member }) => {
-    const { teamId, effectiveFrom, effectiveTo, mood, emoji, isDraft, notes, items, editorJson } =
-      input;
-    // If teamId is provided, verify it belongs to this organization
-    if (teamId) {
-      const team = await db.query.team.findFirst({
-        where: and(eq(schema.team.id, teamId), eq(schema.team.organizationId, organization.id)),
-      });
-
-      if (!team) {
-        throw new TypedHandlersError({
-          code: "NOT_FOUND",
-          message: "Team not found",
-        });
-      }
-    }
-
-    const now = dayjs.utc().toDate();
-
-    // Check if a status update already exists for this member on the effectiveFrom date
-    const effectiveFromStartOfDay = dayjs.utc(effectiveFrom as string).startOf("day");
-    const effectiveToEndOfDay = dayjs.utc(effectiveTo as string).endOf("day");
-    const effectiveFromStartOfDayDate = effectiveFromStartOfDay.toDate();
-    const effectiveToEndOfDayDate = effectiveToEndOfDay.toDate();
-
-    console.log({
-      effectiveFromStartOfDay: effectiveFromStartOfDay.toISOString(),
-      effectiveToEndOfDay: effectiveToEndOfDay.toISOString(),
-    });
-
-    const statusUpdate = await db.transaction(async (tx) => {
-      const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
-        where: and(
-          eq(schema.statusUpdate.memberId, member.id),
-          eq(schema.statusUpdate.organizationId, organization.id),
-          gte(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDayDate),
-          lte(schema.statusUpdate.effectiveTo, effectiveToEndOfDayDate),
-        ),
-      });
-
-      console.log({ existingStatusUpdate });
-
-      const userTimezone = session.user.timezone;
-
-      let statusUpdateId: string;
-      if (existingStatusUpdate) {
-        // Update existing status update
-        statusUpdateId = existingStatusUpdate.id;
-
-        await tx
-          .update(schema.statusUpdate)
-          .set({
-            teamId: teamId === null ? null : (teamId ?? existingStatusUpdate.teamId),
-            editorJson,
-            effectiveFrom: effectiveFromStartOfDayDate,
-            effectiveTo: effectiveToEndOfDayDate,
-            mood,
-            emoji,
-            notes,
-            isDraft,
-            timezone: userTimezone,
-            updatedAt: now,
-          })
-          .where(eq(schema.statusUpdate.id, statusUpdateId));
-      } else {
-        // Create new status update
-        statusUpdateId = generateId();
-
-        await tx
-          .insert(schema.statusUpdate)
-          .values({
-            id: statusUpdateId,
-            memberId: member.id,
-            organizationId: organization.id,
-            teamId: teamId === null ? null : (teamId ?? null),
-            editorJson,
-            effectiveFrom: effectiveFromStartOfDayDate,
-            effectiveTo: effectiveToEndOfDayDate,
-            mood,
-            emoji,
-            notes,
-            isDraft,
-            timezone: userTimezone,
-            createdAt: now,
-            updatedAt: now,
-          })
-          .returning();
-      }
-
-      // Handle items - only insert new unique items
-      if (items && items.length > 0) {
-        // Get existing items for comparison
-        const existingItems = existingStatusUpdate
-          ? await tx.query.statusUpdateItem.findMany({
-              where: eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId),
-            })
-          : [];
-
-        // Create a set of existing item signatures for quick lookup
-        const existingItemSignatures = new Set(
-          existingItems.map(
-            (item) => `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
-          ),
-        );
-
-        // Filter out duplicate items
-        const newItems = items.filter((item) => {
-          const signature = `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`;
-          return !existingItemSignatures.has(signature);
-        });
-
-        // Only insert truly new items
-        if (newItems.length > 0) {
-          await tx.insert(schema.statusUpdateItem).values(
-            newItems.map((item) => ({
-              id: generateId(),
-              statusUpdateId,
-              content: item.content,
-              isBlocker: item.isBlocker,
-              isInProgress: item.isInProgress,
-              order: item.order,
-              createdAt: now,
-              updatedAt: now,
-            })),
-          );
-        }
-
-        // Delete items that are no longer present
-        if (existingStatusUpdate && existingItems.length > 0) {
-          const newItemSignatures = new Set(
-            items.map(
-              (item) => `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`,
-            ),
-          );
-
-          const itemsToDelete = existingItems.filter((item) => {
-            const signature = `${item.content}|${item.isBlocker}|${item.isInProgress}|${item.order}`;
-            return !newItemSignatures.has(signature);
-          });
-
-          if (itemsToDelete.length > 0) {
-            await tx.delete(schema.statusUpdateItem).where(
-              and(
-                eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId),
-                inArray(
-                  schema.statusUpdateItem.id,
-                  itemsToDelete.map((item) => item.id),
-                ),
-              ),
-            );
-          }
-        }
-      }
-
-      // Return the complete status update
-      const result = await tx.query.statusUpdate.findFirst({
-        where: eq(schema.statusUpdate.id, statusUpdateId),
-        with: {
-          member: { with: { user: true } },
-          team: true,
-          items: {
-            orderBy: (items) => [items.order],
-          },
-        },
-      });
-
-      if (!result) {
-        throw new TypedHandlersError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create or update status update",
-        });
-      }
-
-      return result;
-    });
-
-    return statusUpdate;
-  },
-);
-
-export const upsertStatusUpdateHandlerV2 = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof upsertStatusUpdateContractV2
->(
-  upsertStatusUpdateContractV2,
+  createStatusUpdateContract,
   requiredSession,
   requiredOrganization,
   async ({ db, organization, input, session, member }) => {
@@ -595,77 +406,41 @@ export const upsertStatusUpdateHandlerV2 = typedHandler<
       where: and(
         eq(schema.statusUpdate.memberId, member.id),
         eq(schema.statusUpdate.organizationId, organization.id),
-        eq(schema.statusUpdate.id, input.statusUpdateId ?? ""),
+        gte(schema.statusUpdate.effectiveFrom, dayjs.utc(effectiveFrom).toDate()),
+        lte(schema.statusUpdate.effectiveTo, dayjs.utc(effectiveTo).toDate()),
       ),
     });
 
-    const now = dayjs().utc().toDate();
-
-    if (existingStatusUpdate && items && items.length > 0) {
-      const batchUpdates = items
-        .filter((item) => item.id)
-        .map((item) => {
-          return (
-            db
-              .update(schema.statusUpdateItem)
-              .set({
-                statusUpdateId: existingStatusUpdate.id,
-                order: item.order,
-                content: item.content,
-                isBlocker: item.isBlocker,
-                isInProgress: item.isInProgress,
-                updatedAt: now,
-              })
-              // biome-ignore lint/style/noNonNullAssertion: we did filter out the items that don't have an id
-              .where(eq(schema.statusUpdateItem.id, item.id!))
-          );
-        });
-      if (isTuple(batchUpdates)) {
-        await db.batch(batchUpdates);
-      }
+    if (existingStatusUpdate) {
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: "Status update already exists",
+      });
     }
+
+    const now = dayjs().utc().toDate();
 
     const statusUpdate = await db.transaction(async (tx) => {
       const statusUpdateId = generateId();
 
-      await tx
-        .insert(schema.statusUpdate)
-        .values({
-          id: statusUpdateId,
-          memberId: member.id,
-          organizationId: organization.id,
-          teamId: teamId,
-          editorJson,
-          effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
-          effectiveTo: dayjs.utc(effectiveTo).toDate(),
-          mood,
-          emoji,
-          notes,
-          isDraft,
-          timezone: session.user.timezone,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: schema.statusUpdate.id,
-          set: {
-            memberId: member.id,
-            organizationId: organization.id,
-            teamId: teamId,
-            editorJson,
-            effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
-            effectiveTo: dayjs.utc(effectiveTo).toDate(),
-            mood,
-            emoji,
-            notes,
-            isDraft,
-            timezone: session.user.timezone,
-            createdAt: now,
-            updatedAt: now,
-          },
-        });
+      await tx.insert(schema.statusUpdate).values({
+        id: statusUpdateId,
+        memberId: member.id,
+        organizationId: organization.id,
+        teamId: teamId,
+        editorJson,
+        effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
+        effectiveTo: dayjs.utc(effectiveTo).toDate(),
+        mood,
+        emoji,
+        notes,
+        isDraft,
+        timezone: session.user.timezone,
+        createdAt: now,
+        updatedAt: now,
+      });
 
-      if (!existingStatusUpdate && items && items.length > 0) {
+      if (items && items.length > 0) {
         await tx.insert(schema.statusUpdateItem).values(
           items.map((item) => ({
             id: generateId(),

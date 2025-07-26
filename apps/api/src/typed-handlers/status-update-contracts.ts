@@ -92,59 +92,10 @@ export const getMemberStatusUpdateContract = typedContract(
   }),
 );
 
-export const upsertStatusUpdateContract = typedContract(
+export const createStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates",
   z.strictObject({
     idOrSlug: z.string(),
-    teamId: z.string().nullish(),
-    effectiveFrom: z.string(),
-    effectiveTo: z.string(),
-    mood: z.string().nullish(),
-    emoji: z.string().nullish(),
-    editorJson: z
-      .unknown()
-      .refine((val): val is object => {
-        if (!val) {
-          return true;
-        }
-
-        if (typeof val !== "object") {
-          return false;
-        }
-
-        if (Array.isArray(val)) {
-          return false;
-        }
-
-        return true;
-      }, "Editor JSON must be an object or nullish value")
-      .nullish(),
-    notes: z.string().nullish(),
-    items: z
-      .array(
-        z.strictObject({
-          content: z.string().min(1),
-          isBlocker: z.boolean().default(false),
-          isInProgress: z.boolean().default(false),
-          order: z.number().int().nonnegative(),
-        }),
-      )
-      .optional(),
-    isDraft: z.boolean().default(true),
-  }),
-  z.strictObject({
-    ...StatusUpdate.shape,
-    team: Team.nullable(),
-    items: z.array(StatusUpdateItem),
-    member: z.strictObject({ ...Member.shape, user: User }),
-  }),
-);
-
-export const upsertStatusUpdateContractV2 = typedContract(
-  "post /organizations/:idOrSlug/status-updates-v2",
-  z.strictObject({
-    idOrSlug: z.string(),
-    statusUpdateId: z.string().optional(),
     teamId: z.string().nullish(),
     effectiveFrom: z.string(),
     effectiveTo: z.string(),

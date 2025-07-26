@@ -1,8 +1,8 @@
 import {
+  createStatusUpdateContract,
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
-  upsertStatusUpdateContractV2,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -32,7 +32,7 @@ export function WriteStatusUpdateButton({
     ),
   );
   const createStatusUpdate = useMutation(
-    typedMutationOptions(upsertStatusUpdateContractV2, {
+    typedMutationOptions(createStatusUpdateContract, {
       onSuccess: (data) => {
         const date = dayjs(data.effectiveFrom).format("YYYY-MM-DD");
         queryClient.invalidateQueries(

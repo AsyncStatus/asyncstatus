@@ -52,6 +52,7 @@ import {
   slackIntegrationCallbackHandler,
 } from "./typed-handlers/slack-integration-handlers";
 import {
+  createStatusUpdateHandler,
   deleteStatusUpdateHandler,
   generateStatusUpdateHandler,
   getMemberStatusUpdateHandler,
@@ -61,8 +62,6 @@ import {
   listStatusUpdatesByTeamHandler,
   listStatusUpdatesHandler,
   updateStatusUpdateHandler,
-  upsertStatusUpdateHandler,
-  upsertStatusUpdateHandlerV2,
 } from "./typed-handlers/status-update-handlers";
 import {
   addTeamMemberHandler,
@@ -227,8 +226,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     getStatusUpdateHandler,
     getMemberStatusUpdateHandler,
     updateStatusUpdateHandler,
-    upsertStatusUpdateHandlerV2,
-    upsertStatusUpdateHandler,
+    createStatusUpdateHandler,
     deleteStatusUpdateHandler,
     generateStatusUpdateHandler,
     getGithubIntegrationHandler,
