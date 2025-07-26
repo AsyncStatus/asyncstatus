@@ -154,22 +154,25 @@ function StatusUpdateDate(props: {
   const lessThanTenMinutesDifference = useMemo(
     () =>
       props.statusUpdate.updatedAt
-        ? dayjs(props.statusUpdate.updatedAt).diff(props.statusUpdate.createdAt, "minute") < 10
+        ? dayjs(props.statusUpdate.updatedAt).diff(dayjs(props.statusUpdate.createdAt), "minute") <
+          10
         : false,
     [props.statusUpdate.updatedAt, props.statusUpdate.createdAt],
   );
   const edited = useMemo(() => {
+    if (!props.statusUpdate.updatedAt) {
+      return false;
+    }
+
     if (lessThanTenMinutesDifference) {
       return false;
     }
 
-    if (props.statusUpdate.updatedAt && props.statusUpdate.updatedAt instanceof Date) {
-      return (
-        props.statusUpdate.updatedAt.toISOString() !== props.statusUpdate.createdAt.toISOString()
-      );
-    }
+    // Compare timestamps to determine if edited
+    const createdTime = dayjs(props.statusUpdate.createdAt).valueOf();
+    const updatedTime = dayjs(props.statusUpdate.updatedAt).valueOf();
 
-    return false;
+    return updatedTime !== createdTime;
   }, [lessThanTenMinutesDifference, props.statusUpdate.updatedAt, props.statusUpdate.createdAt]);
 
   return (
