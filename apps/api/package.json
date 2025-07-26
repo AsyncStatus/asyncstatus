@@ -17,10 +17,10 @@
     "./typed-handlers/waitlist": "./src/typed-handlers/waitlist-contracts.ts"
   },
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "TZ=UTC wrangler dev",
     "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
-    "dev:turso": "turso dev --db-file ./src/db/local-db",
+    "dev:turso": "TZ=UTC turso dev --db-file ./src/db/local-db",
     "migrate": "drizzle-kit migrate",
     "migrate:push": "drizzle-kit push",
     "migrate:generate": "drizzle-kit generate",

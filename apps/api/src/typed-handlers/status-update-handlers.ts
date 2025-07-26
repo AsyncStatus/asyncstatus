@@ -636,8 +636,8 @@ export const upsertStatusUpdateHandlerV2 = typedHandler<
           organizationId: organization.id,
           teamId: teamId,
           editorJson,
-          effectiveFrom: dayjs(effectiveFrom).toDate(),
-          effectiveTo: dayjs(effectiveTo).toDate(),
+          effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
+          effectiveTo: dayjs.utc(effectiveTo).toDate(),
           mood,
           emoji,
           notes,
@@ -653,8 +653,8 @@ export const upsertStatusUpdateHandlerV2 = typedHandler<
             organizationId: organization.id,
             teamId: teamId,
             editorJson,
-            effectiveFrom: dayjs(effectiveFrom).toDate(),
-            effectiveTo: dayjs(effectiveTo).toDate(),
+            effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
+            effectiveTo: dayjs.utc(effectiveTo).toDate(),
             mood,
             emoji,
             notes,
@@ -748,8 +748,8 @@ export const updateStatusUpdateHandler = typedHandler<
         .set({
           teamId,
           editorJson,
-          effectiveFrom: dayjs(effectiveFrom).toDate(),
-          effectiveTo: dayjs(effectiveTo).toDate(),
+          effectiveFrom: dayjs.utc(effectiveFrom).toDate(),
+          effectiveTo: dayjs.utc(effectiveTo).toDate(),
           mood,
           emoji,
           notes,
@@ -854,8 +854,9 @@ export const generateStatusUpdateHandler = typedHandler<
   requiredOrganization,
   async ({ db, openRouterProvider, input, organization, session, member }) => {
     let generatedItems: string[] = [];
-    const effectiveFrom = dayjs.tz(input.effectiveFrom, session.user.timezone);
-    const effectiveTo = dayjs.tz(input.effectiveTo, session.user.timezone);
+    // The frontend sends dates in UTC ISO format, so we should parse them as UTC
+    const effectiveFrom = dayjs.utc(input.effectiveFrom);
+    const effectiveTo = dayjs.utc(input.effectiveTo);
 
     try {
       generatedItems = await generateStatusUpdateItems({
@@ -880,7 +881,7 @@ export const generateStatusUpdateHandler = typedHandler<
 
     const effectiveFromStartOfDay = effectiveFrom.startOf("day").toDate();
     const effectiveToEndOfDay = effectiveTo.endOf("day").toDate();
-    const nowDate = dayjs.tz(new Date(), session.user.timezone).toDate();
+    const nowDate = dayjs.utc().toDate();
 
     const statusUpdate = await db.transaction(async (tx) => {
       // Check if a status update already exists for this member on the effectiveFrom date

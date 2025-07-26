@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "TZ=UTC vite",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
     "serve": "vite preview",

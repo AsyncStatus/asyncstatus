@@ -177,10 +177,8 @@ function StatusUpdateDate(props: {
       <TooltipTrigger>
         <p className={cn("text-xs text-muted-foreground", edited && "italic")}>
           {dayjs
-            .tz(
-              edited ? props.statusUpdate.updatedAt : props.statusUpdate.createdAt,
-              session.data?.user.timezone,
-            )
+            .utc(edited ? props.statusUpdate.updatedAt : props.statusUpdate.createdAt)
+            .tz(session.data?.user.timezone)
             .format("HH:mm")}
           {edited ? " edited" : ""}
         </p>
@@ -190,7 +188,8 @@ function StatusUpdateDate(props: {
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">Created:</span>{" "}
           {dayjs
-            .tz(props.statusUpdate.createdAt, props.statusUpdate.timezone)
+            .utc(props.statusUpdate.createdAt)
+            .tz(props.statusUpdate.timezone)
             .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({props.statusUpdate.timezone})
         </p>
@@ -198,7 +197,8 @@ function StatusUpdateDate(props: {
           <p className="text-xs text-muted-foreground">
             <span className="font-medium text-foreground">Edited:</span>{" "}
             {dayjs
-              .tz(props.statusUpdate.updatedAt, props.statusUpdate.timezone)
+              .utc(props.statusUpdate.updatedAt)
+              .tz(props.statusUpdate.timezone)
               .format("MMM D, YYYY HH:mm:ss")}{" "}
             ({props.statusUpdate.timezone})
           </p>
@@ -207,14 +207,16 @@ function StatusUpdateDate(props: {
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{name}:</span>{" "}
           {dayjs
-            .tz(props.statusUpdate.createdAt, props.statusUpdate.member.user.timezone)
+            .utc(props.statusUpdate.createdAt)
+            .tz(props.statusUpdate.member.user.timezone)
             .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({props.statusUpdate.member.user.timezone})
         </p>
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">You:</span>{" "}
           {dayjs
-            .tz(props.statusUpdate.createdAt, session.data?.user.timezone)
+            .utc(props.statusUpdate.createdAt)
+            .tz(session.data?.user.timezone)
             .format("MMM D, YYYY HH:mm:ss")}{" "}
           ({session.data?.user.timezone})
         </p>
