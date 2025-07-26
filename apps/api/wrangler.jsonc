@@ -76,11 +76,6 @@
       "class_name": "DeleteGithubIntegrationWorkflow"
     },
     {
-      "name": "generate-status",
-      "binding": "GENERATE_STATUS_WORKFLOW",
-      "class_name": "GenerateStatusWorkflow"
-    },
-    {
       "name": "sync-slack",
       "binding": "SYNC_SLACK_WORKFLOW",
       "class_name": "SyncSlackWorkflow"

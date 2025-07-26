@@ -658,7 +658,8 @@ export const generateStatusUpdateHandler = typedHandler<
         where: and(
           eq(schema.statusUpdate.memberId, member.id),
           eq(schema.statusUpdate.organizationId, organization.id),
-          eq(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+          gte(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+          lte(schema.statusUpdate.effectiveTo, effectiveToEndOfDay),
         ),
         with: {
           items: {
@@ -671,21 +672,43 @@ export const generateStatusUpdateHandler = typedHandler<
       const userTimezone = user?.timezone || "UTC";
 
       let statusUpdateId: string;
-      let currentMaxOrder = 0;
+
+      const nextEditorJson = {
+        type: "doc",
+        content: [
+          {
+            type: "statusUpdateHeading",
+            attrs: { date: effectiveFromStartOfDay.toISOString() },
+          },
+          {
+            type: "blockableTodoList",
+            content: generatedItems.map((item) => ({
+              type: "blockableTodoListItem",
+              attrs: { checked: !item.isInProgress, blocked: item.isBlocker },
+              content: [{ type: "paragraph", content: [{ type: "text", text: item.content }] }],
+            })),
+          },
+          { type: "notesHeading" },
+          {
+            type: "paragraph",
+            content: (existingStatusUpdate?.editorJson as any)?.content?.[3]?.content ?? [],
+          },
+          { type: "moodHeading" },
+          {
+            type: "paragraph",
+            content: (existingStatusUpdate?.editorJson as any)?.content?.[5]?.content ?? [],
+          },
+        ],
+      };
 
       if (existingStatusUpdate) {
         // Update existing status update
         statusUpdateId = existingStatusUpdate.id;
 
-        // Get the highest order from existing items
-        if (existingStatusUpdate.items.length > 0) {
-          currentMaxOrder = Math.max(...existingStatusUpdate.items.map((item) => item.order));
-        }
-
         // Update the updatedAt timestamp
         await tx
           .update(schema.statusUpdate)
-          .set({ updatedAt: nowDate })
+          .set({ editorJson: nextEditorJson, updatedAt: nowDate })
           .where(eq(schema.statusUpdate.id, statusUpdateId));
       } else {
         // Create new status update
@@ -696,33 +719,7 @@ export const generateStatusUpdateHandler = typedHandler<
           memberId: member.id,
           organizationId: organization.id,
           teamId: null,
-          editorJson: {
-            type: "doc",
-            content: [
-              {
-                type: "statusUpdateHeading",
-                attrs: { date: effectiveFromStartOfDay.toISOString() },
-              },
-              {
-                type: "blockableTodoList",
-                content: generatedItems.map((item) => ({
-                  type: "blockableTodoListItem",
-                  attrs: { checked: !item.isInProgress, blocked: item.isBlocker },
-                  content: [{ type: "paragraph", content: [{ type: "text", text: item.content }] }],
-                })),
-              },
-              { type: "notesHeading" },
-              {
-                type: "paragraph",
-                content: [],
-              },
-              { type: "moodHeading" },
-              {
-                type: "paragraph",
-                content: [],
-              },
-            ],
-          },
+          editorJson: nextEditorJson,
           effectiveFrom: effectiveFromStartOfDay,
           effectiveTo: effectiveToEndOfDay,
           mood: null,
@@ -735,19 +732,22 @@ export const generateStatusUpdateHandler = typedHandler<
         });
       }
 
-      // Insert the generated items
-      const newItems = generatedItems.map((content, index) => ({
-        id: generateId(),
-        statusUpdateId,
-        content: content.content,
-        isBlocker: content.isBlocker,
-        isInProgress: content.isInProgress,
-        order: currentMaxOrder + index + 1, // Start from currentMaxOrder + 1
-        createdAt: nowDate,
-        updatedAt: nowDate,
-      }));
+      await tx
+        .delete(schema.statusUpdateItem)
+        .where(eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId));
 
-      await tx.insert(schema.statusUpdateItem).values(newItems);
+      await tx.insert(schema.statusUpdateItem).values(
+        generatedItems.map((content, index) => ({
+          id: generateId(),
+          statusUpdateId,
+          content: content.content,
+          isBlocker: content.isBlocker,
+          isInProgress: content.isInProgress,
+          order: index + 1,
+          createdAt: nowDate,
+          updatedAt: nowDate,
+        })),
+      );
 
       // Return the complete status update
       const result = await tx.query.statusUpdate.findFirst({

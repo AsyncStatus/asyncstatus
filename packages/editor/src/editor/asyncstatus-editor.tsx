@@ -5,7 +5,6 @@ import type { Editor, JSONContent } from "@tiptap/core";
 import { useCurrentEditor } from "@tiptap/react";
 import { memo, type PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { AddStatusUpdateButton } from "../components/add-status-update-button";
 import EditorBubble from "../components/editor-bubble";
 import { EditorCommand, EditorCommandList } from "../components/editor-command";
 import EditorCommandItem, { EditorCommandEmpty } from "../components/editor-command-item";
@@ -211,7 +210,6 @@ const AsyncStatusEditorUnmemoized = (
               <>
                 <Separator className="my-6" />
                 <EmojiSelector />
-                <AddStatusUpdateButton />
               </>
             )}
             {props.children}

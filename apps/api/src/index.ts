@@ -267,7 +267,6 @@ export default {
   queue: queue,
 };
 export type App = typeof app;
-export { GenerateStatusWorkflow } from "./workflows/generate-status";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
 export { DeleteSlackIntegrationWorkflow } from "./workflows/slack/delete-slack-integration";

@@ -4,6 +4,7 @@ import type * as schema from "../../db";
 import type { Db } from "../../db/db";
 import { postProcess } from "./post-process";
 import { systemPrompt } from "./system-prompt";
+import { getExistingStatusUpdateItemsTool } from "./tools/get-existing-status-update-items-tool";
 import { getGithubEventDetailTool } from "./tools/get-github-event-detail-tool";
 import { getGithubRepositoryTool } from "./tools/get-github-repository-tool";
 import { getGithubUserTool } from "./tools/get-github-user-tool";
@@ -32,7 +33,7 @@ export async function generateStatusUpdate({
   effectiveTo,
 }: GenerateStatusUpdateOptions) {
   const { text } = await generateText({
-    model: openRouterProvider("openai/gpt-4.1-mini"),
+    model: openRouterProvider("google/gemini-2.5-flash"),
     seed: 123,
     maxSteps: 30,
     system: systemPrompt,
@@ -46,6 +47,8 @@ The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effecti
     ],
     toolChoice: "auto",
     tools: {
+      getExistingStatusUpdateItems: getExistingStatusUpdateItemsTool(db),
+
       getMemberGitHubEvents: getMemberGithubEventsTool(db),
       getGitHubEventDetail: getGithubEventDetailTool(db),
       getGitHubUser: getGithubUserTool(db),

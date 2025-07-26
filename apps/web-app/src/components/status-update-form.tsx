@@ -1,5 +1,6 @@
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
+  generateStatusUpdateContract,
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
@@ -7,19 +8,9 @@ import {
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { AsyncStatusEditor, type AsyncStatusEditorOnUpdateArgs } from "@asyncstatus/editor";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@asyncstatus/ui/components/alert-dialog";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Form } from "@asyncstatus/ui/components/form";
-import { BookCheck, BookDashed } from "@asyncstatus/ui/icons";
+import { BookCheck, BookDashed, Sparkles } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deepEqual, useNavigate } from "@tanstack/react-router";
@@ -42,7 +33,6 @@ function StatusUpdateFormUnmemoized({
   readonly = true,
 }: StatusUpdateFormProps) {
   const navigate = useNavigate();
-  const [isPublishConfirmModalOpen, setIsPublishConfirmModalOpen] = useState(false);
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
   );
@@ -120,11 +110,12 @@ function StatusUpdateFormUnmemoized({
             date,
           }),
         );
-        queryClient.invalidateQueries(
+        queryClient.setQueryData(
           typedQueryOptions(getStatusUpdateContract, {
             idOrSlug: organizationSlug,
             statusUpdateIdOrDate: data.id,
-          }),
+          }).queryKey,
+          data,
         );
         queryClient.invalidateQueries(
           typedQueryOptions(getMemberStatusUpdateContract, {
@@ -147,18 +138,53 @@ function StatusUpdateFormUnmemoized({
     }),
   );
 
+  const generateStatusUpdate = useMutation(
+    typedMutationOptions(generateStatusUpdateContract, {
+      onSuccess: (data) => {
+        const date = dayjs(data.effectiveFrom).format("YYYY-MM-DD");
+        queryClient.invalidateQueries(
+          typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: organizationSlug,
+            date,
+          }),
+        );
+        queryClient.setQueryData(
+          typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }).queryKey,
+          data,
+        );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getMemberStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: data.id,
+          }),
+        );
+        queryClient.invalidateQueries(
+          typedQueryOptions(getMemberStatusUpdateContract, {
+            idOrSlug: organizationSlug,
+            statusUpdateIdOrDate: date,
+          }),
+        );
+        form.reset();
+        navigate({
+          to: "/$organizationSlug/status-updates/$statusUpdateId",
+          params: { organizationSlug, statusUpdateId: data.id },
+          replace: true,
+        });
+      },
+    }),
+  );
+
   const save = useCallback(
-    (values: typeof updateStatusUpdateContract.$infer.input, hasConfirmed: boolean) => {
-      if (!values.isDraft && !hasConfirmed) {
-        setIsPublishConfirmModalOpen(true);
-        return;
-      }
-      if (updateStatusUpdate.isPending) {
+    (values: typeof updateStatusUpdateContract.$infer.input) => {
+      if (updateStatusUpdate.isPending || generateStatusUpdate.isPending) {
         return;
       }
       updateStatusUpdate.mutate(values);
     },
-    [updateStatusUpdate.isPending],
+    [updateStatusUpdate.isPending, generateStatusUpdate.isPending],
   );
 
   const debouncedSave = useDebouncedCallback(save, 600);
@@ -207,17 +233,19 @@ function StatusUpdateFormUnmemoized({
       if (
         !statusUpdate.isPending &&
         !updateStatusUpdate.isPending &&
+        !generateStatusUpdate.isPending &&
         !organization.isPending &&
         !readonly &&
         !isSame
       ) {
-        form.handleSubmit((values) => debouncedSave(values, true))();
+        form.handleSubmit((values) => debouncedSave(values))();
       }
     },
     [
       form.getValues,
       statusUpdate.isPending,
       updateStatusUpdate.isPending,
+      generateStatusUpdate.isPending,
       organization.isPending,
       readonly,
       debouncedSave,
@@ -280,11 +308,12 @@ function StatusUpdateFormUnmemoized({
       if (
         !statusUpdate.isPending &&
         !updateStatusUpdate.isPending &&
+        !generateStatusUpdate.isPending &&
         !organization.isPending &&
         !readonly &&
         !isSame
       ) {
-        form.handleSubmit((values) => debouncedSave(values, true))();
+        form.handleSubmit((values) => debouncedSave(values))();
       }
     },
     [
@@ -292,6 +321,7 @@ function StatusUpdateFormUnmemoized({
       organization.isPending,
       updateStatusUpdate.isPending,
       statusUpdate.isPending,
+      generateStatusUpdate.isPending,
       readonly,
     ],
   );
@@ -306,31 +336,10 @@ function StatusUpdateFormUnmemoized({
 
   return (
     <Form {...form}>
-      <AlertDialog open={isPublishConfirmModalOpen} onOpenChange={setIsPublishConfirmModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will publish the status update to the organization.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setIsPublishConfirmModalOpen(false);
-                form.handleSubmit((values) => debouncedSave(values, true))();
-              }}
-            >
-              Publish
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AsyncStatusEditor
+        key={generateStatusUpdate.isPending ? "generating" : "ready"}
         date={date}
-        readonly={readonly}
+        readonly={readonly || generateStatusUpdate.isPending}
         localStorageKeyPrefix={`${organization.data?.member.id}-${statusUpdateId}`}
         initialContent={initialContent}
         onDateChange={onDateChange}
@@ -344,16 +353,16 @@ function StatusUpdateFormUnmemoized({
               value={form.watch("teamId") ?? undefined}
               onSelect={(teamId) => {
                 form.setValue("teamId", teamId ?? null);
-                form.handleSubmit((values) => save(values, true))();
+                form.handleSubmit((values) => save(values))();
               }}
             />
             <Button
               size="sm"
               variant="outline"
-              disabled={updateStatusUpdate.isPending}
+              disabled={generateStatusUpdate.isPending || updateStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", true);
-                form.handleSubmit((values) => save(values, true))();
+                form.handleSubmit((values) => save(values))();
               }}
             >
               <BookDashed className="size-4" />
@@ -361,10 +370,32 @@ function StatusUpdateFormUnmemoized({
             </Button>
             <Button
               size="sm"
-              disabled={updateStatusUpdate.isPending}
+              variant="secondary"
+              disabled={generateStatusUpdate.isPending || updateStatusUpdate.isPending}
+              onClick={() => {
+                const effectiveFrom = dayjs.utc(date).startOf("day").toISOString();
+                const effectiveTo = dayjs.utc(date).endOf("day").toISOString();
+                generateStatusUpdate.mutate({
+                  idOrSlug: organizationSlug,
+                  effectiveFrom: effectiveFrom,
+                  effectiveTo: effectiveTo,
+                });
+              }}
+            >
+              <Sparkles className="size-4" />
+              {generateStatusUpdate.isPending ? "Generating..." : "Generate items"}
+              {generateStatusUpdate.isPending && (
+                <span className="text-xs text-muted-foreground">
+                  It usually takes 10-20 seconds
+                </span>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              disabled={generateStatusUpdate.isPending || updateStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", false);
-                form.handleSubmit((values) => save(values, statusUpdate.data?.isDraft ?? false))();
+                form.handleSubmit((values) => save(values))();
               }}
             >
               <BookCheck className="size-4" />
