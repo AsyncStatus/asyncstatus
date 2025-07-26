@@ -19,7 +19,9 @@ export const githubIntegrationCallbackHandler = typedHandler<
   const { installation_id: installationId, state: organizationSlug } = input;
 
   if (!installationId || !organizationSlug) {
-    return redirect(`${webAppUrl}/error?message=Missing required parameters`);
+    return redirect(
+      `${webAppUrl}/error?error-title=${encodeURIComponent("Missing required parameters")}&error-description=${encodeURIComponent("Missing required parameters.")}`,
+    );
   }
 
   try {
@@ -27,7 +29,9 @@ export const githubIntegrationCallbackHandler = typedHandler<
       where: eq(schema.organization.slug, organizationSlug),
     });
     if (!organization) {
-      return redirect(`${webAppUrl}/error?message=Organization not found`);
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Organization not found")}&error-description=${encodeURIComponent("Organization not found.")}`,
+      );
     }
 
     const existingIntegration = await db
@@ -61,7 +65,9 @@ export const githubIntegrationCallbackHandler = typedHandler<
       integrationId = newIntegration[0]?.id;
     }
     if (!integrationId) {
-      return redirect(`${webAppUrl}/error?message=Failed to create GitHub integration`);
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration.")}`,
+      );
     }
 
     const workflowInstance = await workflow.syncGithub.create({
@@ -72,10 +78,12 @@ export const githubIntegrationCallbackHandler = typedHandler<
       .set({ syncId: workflowInstance.id })
       .where(eq(schema.githubIntegration.id, integrationId));
 
-    return redirect(`${webAppUrl}/${organization.slug}/settings?tab=integrations`);
-  } catch (error) {
+    return redirect(`${webAppUrl}/${organization.slug}/integrations`);
+  } catch {
     return redirect(
-      `${webAppUrl}/error?message=Failed to connect GitHub: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("GitHub integration error")}&error-description=${encodeURIComponent(
+        `Failed to complete GitHub integration. Please try again.`,
+      )}`,
     );
   }
 });

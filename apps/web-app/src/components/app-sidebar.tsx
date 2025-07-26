@@ -35,7 +35,7 @@ import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
-import { LifeBuoy, Plus, Send, Settings, Sun, Users } from "lucide-react";
+import { LifeBuoy, Plug, Plus, Send, Settings, Sun, Users } from "lucide-react";
 import { Suspense, useState } from "react";
 import {
   sendVerificationEmailMutationOptions,
@@ -66,6 +66,18 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
           >
             <Users />
             <span>Users</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to={"/$organizationSlug/integrations"}
+            params={{ organizationSlug: props.organizationSlug }}
+          >
+            <Plug />
+            <span>Integrations</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

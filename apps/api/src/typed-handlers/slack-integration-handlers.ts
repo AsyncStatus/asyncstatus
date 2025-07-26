@@ -20,7 +20,9 @@ export const slackIntegrationCallbackHandler = typedHandler<
   const { code, state: organizationSlug } = input;
 
   if (!code || !organizationSlug) {
-    return redirect(`${webAppUrl}/error?message=Missing required parameters`);
+    return redirect(
+      `${webAppUrl}/error?error-title=${encodeURIComponent("Missing required parameters")}&error-description=${encodeURIComponent("Missing required parameters.")}`,
+    );
   }
 
   try {
@@ -29,13 +31,12 @@ export const slackIntegrationCallbackHandler = typedHandler<
     });
 
     if (!organization) {
-      return redirect(`${webAppUrl}/error?message=Organization not found`);
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Organization not found")}&error-description=${encodeURIComponent("Organization not found.")}`,
+      );
     }
 
-    // Create Slack WebClient to exchange code for tokens
     const slackClient = new WebClient();
-
-    // Exchange authorization code for access token
     const response = await slackClient.oauth.v2.access({
       client_id: slack.clientId,
       client_secret: slack.clientSecret,
@@ -44,24 +45,21 @@ export const slackIntegrationCallbackHandler = typedHandler<
 
     if (!response.ok || !response.access_token || !response.team?.id) {
       return redirect(
-        `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Failed to exchange code for access token")}`,
+        `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Slack integration error")}&error-description=${encodeURIComponent("Failed to exchange code for access token.")}`,
       );
     }
 
     if (response.is_enterprise_install) {
       return redirect(
-        `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Enterprise installations are not supported")}`,
+        `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Slack integration error")}&error-description=${encodeURIComponent("Enterprise installations are not supported.")}`,
       );
     }
 
-    // Wrap all database operations in a transaction
     const result = await db.transaction(async (tx) => {
       const now = new Date();
 
-      // We already verified response.team exists above
       const team = response.team!;
 
-      // Check if existing integration exists
       const existingIntegration = await tx
         .select()
         .from(schema.slackIntegration)
@@ -71,7 +69,6 @@ export const slackIntegrationCallbackHandler = typedHandler<
       let integrationId: string | undefined;
 
       if (existingIntegration[0]) {
-        // Update existing integration
         await tx
           .update(schema.slackIntegration)
           .set({
@@ -93,7 +90,6 @@ export const slackIntegrationCallbackHandler = typedHandler<
 
         integrationId = existingIntegration[0].id;
       } else {
-        // Create new integration
         const newIntegration = await tx
           .insert(schema.slackIntegration)
           .values({
@@ -169,22 +165,20 @@ export const slackIntegrationCallbackHandler = typedHandler<
       return { integrationId };
     });
 
-    // Create sync workflow instance (outside transaction since it's external service)
     const workflowInstance = await workflow.syncSlack.create({
       params: { integrationId: result.integrationId },
     });
 
-    // Update integration with sync ID
     await db
       .update(schema.slackIntegration)
       .set({ syncId: workflowInstance.id })
       .where(eq(schema.slackIntegration.id, result.integrationId));
 
-    return redirect(`${webAppUrl}/${organization.slug}/settings?tab=integrations`);
+    return redirect(`${webAppUrl}/${organization.slug}/integrations`);
   } catch (error) {
     console.error(error);
     return redirect(
-      `${webAppUrl}/${organizationSlug}/settings?tab=integrations&slack-integration-error=${encodeURIComponent("Failed to complete Slack integration")}`,
+      `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Slack integration error")}&error-description=${encodeURIComponent("Failed to complete Slack integration. Please try again.")}`,
     );
   }
 });

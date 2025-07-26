@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@asyncstatus/ui/components/dialog";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { ExternalLink, Info, PlusCircle, Send, Settings } from "@asyncstatus/ui/icons";
+import { ExternalLink, Info, PlusCircle, Send } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { type PropsWithChildren, useState } from "react";
 
@@ -17,7 +17,7 @@ export type IntegrationSettingsItemProps = PropsWithChildren<{
   name: string;
   description: string;
   icon: React.ReactNode;
-  status: "connected" | "connecting" | "disconnected";
+  status: "connected" | "connecting" | "disconnected" | "error";
   connectLink?: string;
   settingsChildren?: React.ReactNode;
   onViewDetails: () => void;
@@ -40,32 +40,49 @@ export function IntegrationSettingsItem(props: IntegrationSettingsItemProps) {
 
       <div className="flex items-end mt-auto">
         <div className="flex justify-between w-full items-center gap-2">
-          {props.status === "connected" || props.status === "connecting" ? (
+          {props.status === "connected" ||
+          props.status === "connecting" ||
+          props.status === "error" ? (
             <>
               <div className="flex items-center gap-2">
                 <div
                   className={cn(
                     "size-2 rounded-full",
-                    props.status === "connected" ? "bg-green-500" : "bg-yellow-500",
+                    props.status === "connected"
+                      ? "bg-green-500"
+                      : props.status === "connecting"
+                        ? "bg-yellow-500"
+                        : "bg-red-500",
                   )}
                 ></div>
                 <div className="text-sm text-muted-foreground">
-                  {props.status === "connected" ? "Connected" : "Connecting..."}
+                  {props.status === "connected"
+                    ? "Connected"
+                    : props.status === "connecting"
+                      ? "Connecting..."
+                      : "Error"}
                 </div>
               </div>
-              <IntegrationSettingsDialog
-                isOpen={isOpen}
-                onOpenChange={setIsOpen}
-                name={props.name}
-                description={props.description}
-                icon={props.icon}
-                status={props.status}
-                connectLink={props.connectLink}
-                onDisconnect={props.onDisconnect}
-                onSettings={props.onSettings}
-              >
-                {props.settingsChildren}
-              </IntegrationSettingsDialog>
+              {props.status === "error" && (
+                <IntegrationConnectButton name={props.name} connectLink={props.connectLink}>
+                  Reconnect
+                </IntegrationConnectButton>
+              )}
+              {props.status !== "error" && (
+                <IntegrationSettingsDialog
+                  isOpen={isOpen}
+                  onOpenChange={setIsOpen}
+                  name={props.name}
+                  description={props.description}
+                  icon={props.icon}
+                  status={props.status}
+                  connectLink={props.connectLink}
+                  onDisconnect={props.onDisconnect}
+                  onSettings={props.onSettings}
+                >
+                  {props.settingsChildren}
+                </IntegrationSettingsDialog>
+              )}
             </>
           ) : (
             <>
@@ -109,7 +126,7 @@ export type IntegrationSettingsDetailsDialogProps = PropsWithChildren<{
   name: string;
   description: string;
   icon: React.ReactNode;
-  status: "connected" | "connecting" | "disconnected";
+  status: "connected" | "connecting" | "disconnected" | "error";
   connectLink?: string;
   onDetailsClick?: () => void;
   onDisconnect?: () => void;
@@ -170,7 +187,7 @@ export type IntegrationSettingsDialogProps = PropsWithChildren<{
   name: string;
   description: string;
   icon: React.ReactNode;
-  status: "connected" | "connecting" | "disconnected";
+  status: "connected" | "connecting" | "disconnected" | "error";
   connectLink?: string;
   onDisconnect?: () => void;
   onSettings: () => void;
@@ -311,7 +328,7 @@ function IntegrationConnectButton(
     <Button variant={props.variant ?? "outline"} size="sm" asChild>
       <a href={props.connectLink} target="_blank" rel="noreferrer">
         <ExternalLink className="size-3" />
-        Connect
+        {props.children ?? "Connect"}
       </a>
     </Button>
   );
