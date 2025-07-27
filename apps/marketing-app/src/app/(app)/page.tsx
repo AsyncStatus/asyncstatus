@@ -142,7 +142,7 @@ export default async function Page(props: {
           playsInline
           controls
         >
-          <source src="https://cdn.asyncstatus.com/BigBoss_9.mov" type="video/mp4" />
+          <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         <p className="text-muted-foreground mt-6 text-center text-lg">Watch with sound on.</p>
