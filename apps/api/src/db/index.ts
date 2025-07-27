@@ -25,8 +25,6 @@ export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./in
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
-  DELIVERY_METHODS,
-  DeliveryMethod,
   Schedule,
   ScheduleActionType,
   ScheduleInsert,
@@ -34,6 +32,20 @@ export {
   ScheduleUpdate,
   schedule,
 } from "./schedule";
+export {
+  ScheduleDelivery,
+  ScheduleDeliveryInsert,
+  ScheduleDeliveryMethod,
+  ScheduleDeliveryUpdate,
+  scheduleDelivery,
+} from "./schedule-delivery";
+export {
+  ScheduleDeliveryTarget,
+  ScheduleDeliveryTargetInsert,
+  ScheduleDeliveryTargetType,
+  ScheduleDeliveryTargetUpdate,
+  scheduleDeliveryTarget,
+} from "./schedule-delivery-target";
 export {
   ScheduleExecutionStatus,
   ScheduleRun,
@@ -109,6 +121,8 @@ import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";
+import { scheduleDelivery } from "./schedule-delivery";
+import { scheduleDeliveryTarget } from "./schedule-delivery-target";
 import { scheduleRun } from "./schedule-run";
 import { scheduleTarget } from "./schedule-target";
 import { slackChannel } from "./slack-channel";
@@ -168,6 +182,7 @@ export const memberRelations = relations(member, ({ one, many }) => ({
   statusUpdates: many(statusUpdate),
   createdSchedules: many(schedule),
   scheduleTargets: many(scheduleTarget),
+  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const teamRelations = relations(team, ({ one, many }) => ({
@@ -178,6 +193,7 @@ export const teamRelations = relations(team, ({ one, many }) => ({
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
   scheduleTargets: many(scheduleTarget),
+  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
@@ -262,7 +278,7 @@ export const slackChannelRelations = relations(slackChannel, ({ one, many }) => 
     references: [slackIntegration.id],
   }),
   events: many(slackEvent),
-  scheduleTargets: many(scheduleTarget),
+  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
@@ -335,6 +351,8 @@ export const scheduleRelations = relations(schedule, ({ one, many }) => ({
   }),
   scheduleRuns: many(scheduleRun),
   targets: many(scheduleTarget),
+  deliveries: many(scheduleDelivery),
+  deliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const scheduleRunRelations = relations(scheduleRun, ({ one }) => ({
@@ -365,8 +383,30 @@ export const scheduleTargetRelations = relations(scheduleTarget, ({ one }) => ({
     fields: [scheduleTarget.memberId],
     references: [member.id],
   }),
+}));
+
+export const scheduleDeliveryRelations = relations(scheduleDelivery, ({ one }) => ({
+  schedule: one(schedule, {
+    fields: [scheduleDelivery.scheduleId],
+    references: [schedule.id],
+  }),
+}));
+
+export const scheduleDeliveryTargetRelations = relations(scheduleDeliveryTarget, ({ one }) => ({
+  schedule: one(schedule, {
+    fields: [scheduleDeliveryTarget.scheduleId],
+    references: [schedule.id],
+  }),
+  team: one(team, {
+    fields: [scheduleDeliveryTarget.teamId],
+    references: [team.id],
+  }),
+  member: one(member, {
+    fields: [scheduleDeliveryTarget.memberId],
+    references: [member.id],
+  }),
   slackChannel: one(slackChannel, {
-    fields: [scheduleTarget.slackChannelId],
+    fields: [scheduleDeliveryTarget.slackChannelId],
     references: [slackChannel.id],
   }),
 }));

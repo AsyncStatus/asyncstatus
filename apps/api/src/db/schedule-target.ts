@@ -3,14 +3,12 @@ import { z } from "zod/v4";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { member } from "./member";
 import { schedule } from "./schedule";
-import { slackChannel } from "./slack-channel";
 import { team } from "./team";
 
 export const ScheduleTargetType = z.enum([
   "organization", // All members in the organization
   "team", // All members in a specific team
   "member", // Specific member
-  "slack_channel", // Specific Slack channel (for summaries)
 ]);
 export type ScheduleTargetType = z.infer<typeof ScheduleTargetType>;
 
@@ -26,11 +24,7 @@ export const scheduleTarget = sqliteTable(
 
     teamId: text("team_id").references(() => team.id, { onDelete: "cascade" }),
     memberId: text("member_id").references(() => member.id, { onDelete: "cascade" }),
-    slackChannelId: text("slack_channel_id").references(() => slackChannel.id, {
-      onDelete: "cascade",
-    }),
 
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
@@ -39,7 +33,6 @@ export const scheduleTarget = sqliteTable(
     index("schedule_target_type_index").on(t.targetType),
     index("schedule_target_team_id_index").on(t.teamId),
     index("schedule_target_member_id_index").on(t.memberId),
-    index("schedule_target_slack_channel_id_index").on(t.slackChannelId),
   ],
 );
 

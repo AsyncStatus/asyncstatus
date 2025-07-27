@@ -4,31 +4,15 @@ import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./co
 import { member } from "./member";
 import { organization } from "./organization";
 
-export const ScheduleActionType = z.enum(["reminder", "summary"]);
+export const ScheduleActionType = z.enum(["pingForUpdates", "generateUpdates", "sendSummaries"]);
 export type ScheduleActionType = z.infer<typeof ScheduleActionType>;
 
 export const ScheduleRecurrence = z.enum([
-  "once", // One-time execution
   "daily", // Every day
   "weekly", // Every week
   "monthly", // Every month
 ]);
 export type ScheduleRecurrence = z.infer<typeof ScheduleRecurrence>;
-
-export const DELIVERY_METHODS = ["email", "slack"] as const;
-export const DeliveryMethod = z
-  .string()
-  .min(1, "At least one delivery method is required")
-  .refine((val) => {
-    const methods = val.split(",").map((m) => m.trim());
-    return methods.every((method) => DELIVERY_METHODS.includes(method as any));
-  }, "Invalid delivery method. Valid options: email, slack")
-  .refine((val) => {
-    const methods = val.split(",").map((m) => m.trim());
-    return new Set(methods).size === methods.length;
-  }, "Duplicate delivery methods are not allowed");
-
-export type DeliveryMethod = z.infer<typeof DeliveryMethod>;
 
 export const schedule = sqliteTable(
   "schedule",
@@ -41,19 +25,13 @@ export const schedule = sqliteTable(
       .notNull()
       .references(() => member.id, { onDelete: "cascade" }),
 
-    actionType: text("action_type").notNull().$type<ScheduleActionType>(), // "reminder" or "summary"
-    deliveryMethod: text("delivery_method").notNull(), // e.g. "email,slack" - comma-delimited
+    actionType: text("action_type").notNull().$type<ScheduleActionType>(),
 
-    recurrence: text("recurrence").notNull().$type<ScheduleRecurrence>(), // "once", "daily", "weekly", "monthly"
+    recurrence: text("recurrence").notNull().$type<ScheduleRecurrence>(),
     timezone: text("timezone").notNull(), // IANA timezone like "America/New_York"
-    dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0 = Sunday), null for other recurrences
-    dayOfMonth: integer("day_of_month"), // 1-31 for monthly, null for other recurrences
+    dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0 = Monday), null for other recurrences
+    dayOfMonth: integer("day_of_month"), // 1-28 for monthly, null for other recurrences
     timeOfDay: text("time_of_day").notNull(), // HH:MM format like "09:00"
-
-    autoGenerateFromIntegrations: integer("auto_generate_from_integrations", {
-      mode: "boolean",
-    }).default(false),
-    reminderMessageTemplate: text("reminder_message_template"),
 
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -68,31 +46,28 @@ export const schedule = sqliteTable(
 
 export const Schedule = createSelectSchema(schedule, {
   actionType: ScheduleActionType,
-  deliveryMethod: DeliveryMethod,
   recurrence: ScheduleRecurrence,
   timezone: z.string().min(1),
-  timeOfDay: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/), // HH:MM format
+  timeOfDay: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
   dayOfWeek: z.number().min(0).max(6).optional(),
-  dayOfMonth: z.number().min(1).max(31).optional(),
+  dayOfMonth: z.number().min(1).max(28).optional(),
 });
 export type Schedule = z.output<typeof Schedule>;
 export const ScheduleInsert = createInsertSchema(schedule, {
   actionType: ScheduleActionType,
-  deliveryMethod: DeliveryMethod,
   recurrence: ScheduleRecurrence,
   timezone: z.string().min(1),
   timeOfDay: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
   dayOfWeek: z.number().min(0).max(6).optional(),
-  dayOfMonth: z.number().min(1).max(31).optional(),
+  dayOfMonth: z.number().min(1).max(28).optional(),
 });
 export type ScheduleInsert = z.output<typeof ScheduleInsert>;
 export const ScheduleUpdate = createUpdateSchema(schedule, {
   actionType: ScheduleActionType,
-  deliveryMethod: DeliveryMethod,
   recurrence: ScheduleRecurrence,
   timezone: z.string().min(1),
   timeOfDay: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
   dayOfWeek: z.number().min(0).max(6).optional(),
-  dayOfMonth: z.number().min(1).max(31).optional(),
+  dayOfMonth: z.number().min(1).max(28).optional(),
 });
 export type ScheduleUpdate = z.output<typeof ScheduleUpdate>;

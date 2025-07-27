@@ -1,6 +1,15 @@
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { Member, Schedule, ScheduleInsert, ScheduleUpdate, User } from "../db";
+import {
+  Member,
+  Schedule,
+  ScheduleDelivery,
+  ScheduleDeliveryTarget,
+  ScheduleInsert,
+  ScheduleTarget,
+  ScheduleUpdate,
+  User,
+} from "../db";
 
 export const listSchedulesContract = typedContract(
   "get /organizations/:idOrSlug/schedules",
@@ -9,6 +18,9 @@ export const listSchedulesContract = typedContract(
     z.strictObject({
       ...Schedule.shape,
       createdByMember: z.strictObject({ ...Member.shape, user: User }),
+      targets: z.array(ScheduleTarget),
+      deliveryTargets: z.array(ScheduleDeliveryTarget),
+      deliveries: z.array(ScheduleDelivery),
     }),
   ),
 );
@@ -22,6 +34,9 @@ export const getScheduleContract = typedContract(
   z.strictObject({
     ...Schedule.shape,
     createdByMember: z.strictObject({ ...Member.shape, user: User }),
+    targets: z.array(ScheduleTarget),
+    deliveryTargets: z.array(ScheduleDeliveryTarget),
+    deliveries: z.array(ScheduleDelivery),
   }),
 );
 
@@ -31,14 +46,11 @@ export const createScheduleContract = typedContract(
     .strictObject({
       idOrSlug: z.string(),
       actionType: ScheduleInsert.shape.actionType,
-      deliveryMethod: ScheduleInsert.shape.deliveryMethod,
       recurrence: ScheduleInsert.shape.recurrence,
       timezone: ScheduleInsert.shape.timezone,
       dayOfWeek: ScheduleInsert.shape.dayOfWeek,
       dayOfMonth: ScheduleInsert.shape.dayOfMonth,
       timeOfDay: ScheduleInsert.shape.timeOfDay,
-      autoGenerateFromIntegrations: ScheduleInsert.shape.autoGenerateFromIntegrations,
-      reminderMessageTemplate: ScheduleInsert.shape.reminderMessageTemplate,
       isActive: ScheduleInsert.shape.isActive,
     })
     .refine(
@@ -106,6 +118,9 @@ export const createScheduleContract = typedContract(
   z.strictObject({
     ...Schedule.shape,
     createdByMember: z.strictObject({ ...Member.shape, user: User }),
+    targets: z.array(ScheduleTarget),
+    deliveryTargets: z.array(ScheduleDeliveryTarget),
+    deliveries: z.array(ScheduleDelivery),
   }),
 );
 
@@ -116,14 +131,11 @@ export const updateScheduleContract = typedContract(
       idOrSlug: z.string(),
       scheduleId: z.string(),
       actionType: ScheduleUpdate.shape.actionType,
-      deliveryMethod: ScheduleUpdate.shape.deliveryMethod,
       recurrence: ScheduleUpdate.shape.recurrence,
       timezone: ScheduleUpdate.shape.timezone,
       dayOfWeek: ScheduleUpdate.shape.dayOfWeek,
       dayOfMonth: ScheduleUpdate.shape.dayOfMonth,
       timeOfDay: ScheduleUpdate.shape.timeOfDay,
-      autoGenerateFromIntegrations: ScheduleUpdate.shape.autoGenerateFromIntegrations,
-      reminderMessageTemplate: ScheduleUpdate.shape.reminderMessageTemplate,
       isActive: ScheduleUpdate.shape.isActive,
     })
     .refine(
@@ -197,6 +209,9 @@ export const updateScheduleContract = typedContract(
   z.strictObject({
     ...Schedule.shape,
     createdByMember: z.strictObject({ ...Member.shape, user: User }),
+    targets: z.array(ScheduleTarget),
+    deliveryTargets: z.array(ScheduleDeliveryTarget),
+    deliveries: z.array(ScheduleDelivery),
   }),
 );
 

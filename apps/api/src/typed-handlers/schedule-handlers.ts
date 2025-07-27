@@ -1,6 +1,6 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "./middleware";
@@ -20,8 +20,17 @@ export const listSchedulesHandler = typedHandler<
     where: eq(schema.schedule.organizationId, organization.id),
     with: {
       createdByMember: { with: { user: true } },
+      targets: {
+        orderBy: [asc(schema.scheduleTarget.createdAt)],
+      },
+      deliveryTargets: {
+        orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
+      },
+      deliveries: {
+        orderBy: [asc(schema.scheduleDelivery.createdAt)],
+      },
     },
-    orderBy: [desc(schema.schedule.createdAt)],
+    orderBy: [asc(schema.schedule.createdAt)],
   });
 
   return schedules.map((scheduleItem) => ({
@@ -48,6 +57,15 @@ export const getScheduleHandler = typedHandler<
       ),
       with: {
         createdByMember: { with: { user: true } },
+        targets: {
+          orderBy: [asc(schema.scheduleTarget.createdAt)],
+        },
+        deliveryTargets: {
+          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
+        },
+        deliveries: {
+          orderBy: [asc(schema.scheduleDelivery.createdAt)],
+        },
       },
     });
 
@@ -84,14 +102,11 @@ export const createScheduleHandler = typedHandler<
         organizationId: organization.id,
         createdByMemberId: member.id,
         actionType: input.actionType,
-        deliveryMethod: input.deliveryMethod,
         recurrence: input.recurrence,
         timezone: input.timezone,
         dayOfWeek: input.dayOfWeek,
         dayOfMonth: input.dayOfMonth,
         timeOfDay: input.timeOfDay,
-        autoGenerateFromIntegrations: input.autoGenerateFromIntegrations ?? false,
-        reminderMessageTemplate: input.reminderMessageTemplate,
         isActive: input.isActive ?? true,
         createdAt: now,
         updatedAt: now,
@@ -109,6 +124,15 @@ export const createScheduleHandler = typedHandler<
       where: eq(schema.schedule.id, scheduleId),
       with: {
         createdByMember: { with: { user: true } },
+        targets: {
+          orderBy: [asc(schema.scheduleTarget.createdAt)],
+        },
+        deliveryTargets: {
+          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
+        },
+        deliveries: {
+          orderBy: [asc(schema.scheduleDelivery.createdAt)],
+        },
       },
     });
 
@@ -169,6 +193,8 @@ export const updateScheduleHandler = typedHandler<
       .update(schema.schedule)
       .set({
         ...updateData,
+        dayOfWeek: updateData.recurrence === "weekly" ? updateData.dayOfWeek : undefined,
+        dayOfMonth: updateData.recurrence === "monthly" ? updateData.dayOfMonth : undefined,
         updatedAt: now,
       })
       .where(eq(schema.schedule.id, scheduleId))
@@ -185,6 +211,15 @@ export const updateScheduleHandler = typedHandler<
       where: eq(schema.schedule.id, scheduleId),
       with: {
         createdByMember: { with: { user: true } },
+        targets: {
+          orderBy: [asc(schema.scheduleTarget.createdAt)],
+        },
+        deliveryTargets: {
+          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
+        },
+        deliveries: {
+          orderBy: [asc(schema.scheduleDelivery.createdAt)],
+        },
       },
     });
 

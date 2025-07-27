@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "baf9d62c-2d55-4eb5-b112-0147ecc1a3b3",
+  "id": "d1aee225-aa3e-4e5a-bb6e-68da3491b34e",
   "prevId": "6294678e-729c-4e22-aba4-960cdb960193",
   "tables": {
     "account": {
@@ -1055,13 +1055,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "delivery_method": {
-          "name": "delivery_method",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "recurrence": {
           "name": "recurrence",
           "type": "text",
@@ -1095,21 +1088,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "auto_generate_from_integrations": {
-          "name": "auto_generate_from_integrations",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": false
-        },
-        "reminder_message_template": {
-          "name": "reminder_message_template",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "is_active": {
@@ -1178,6 +1156,235 @@
           "tableTo": "member",
           "columnsFrom": [
             "created_by_member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_delivery": {
+      "name": "schedule_delivery",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "delivery_method": {
+          "name": "delivery_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "schedule_delivery_schedule_id_index": {
+          "name": "schedule_delivery_schedule_id_index",
+          "columns": [
+            "schedule_id"
+          ],
+          "isUnique": false
+        },
+        "schedule_delivery_method_index": {
+          "name": "schedule_delivery_method_index",
+          "columns": [
+            "delivery_method"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_delivery_schedule_id_schedule_id_fk": {
+          "name": "schedule_delivery_schedule_id_schedule_id_fk",
+          "tableFrom": "schedule_delivery",
+          "tableTo": "schedule",
+          "columnsFrom": [
+            "schedule_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schedule_delivery_target": {
+      "name": "schedule_delivery_target",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "member_id": {
+          "name": "member_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "slack_channel_id": {
+          "name": "slack_channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "schedule_delivery_target_schedule_id_index": {
+          "name": "schedule_delivery_target_schedule_id_index",
+          "columns": [
+            "schedule_id"
+          ],
+          "isUnique": false
+        },
+        "schedule_delivery_target_type_index": {
+          "name": "schedule_delivery_target_type_index",
+          "columns": [
+            "target_type"
+          ],
+          "isUnique": false
+        },
+        "schedule_delivery_target_team_id_index": {
+          "name": "schedule_delivery_target_team_id_index",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "schedule_delivery_target_member_id_index": {
+          "name": "schedule_delivery_target_member_id_index",
+          "columns": [
+            "member_id"
+          ],
+          "isUnique": false
+        },
+        "schedule_delivery_target_slack_channel_id_index": {
+          "name": "schedule_delivery_target_slack_channel_id_index",
+          "columns": [
+            "slack_channel_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "schedule_delivery_target_schedule_id_schedule_id_fk": {
+          "name": "schedule_delivery_target_schedule_id_schedule_id_fk",
+          "tableFrom": "schedule_delivery_target",
+          "tableTo": "schedule",
+          "columnsFrom": [
+            "schedule_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "schedule_delivery_target_team_id_team_id_fk": {
+          "name": "schedule_delivery_target_team_id_team_id_fk",
+          "tableFrom": "schedule_delivery_target",
+          "tableTo": "team",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "schedule_delivery_target_member_id_member_id_fk": {
+          "name": "schedule_delivery_target_member_id_member_id_fk",
+          "tableFrom": "schedule_delivery_target",
+          "tableTo": "member",
+          "columnsFrom": [
+            "member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "schedule_delivery_target_slack_channel_id_slack_channel_id_fk": {
+          "name": "schedule_delivery_target_slack_channel_id_slack_channel_id_fk",
+          "tableFrom": "schedule_delivery_target",
+          "tableTo": "slack_channel",
+          "columnsFrom": [
+            "slack_channel_id"
           ],
           "columnsTo": [
             "id"
@@ -1444,21 +1651,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "slack_channel_id": {
-          "name": "slack_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": true
-        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -1502,13 +1694,6 @@
             "member_id"
           ],
           "isUnique": false
-        },
-        "schedule_target_slack_channel_id_index": {
-          "name": "schedule_target_slack_channel_id_index",
-          "columns": [
-            "slack_channel_id"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -1544,19 +1729,6 @@
           "tableTo": "member",
           "columnsFrom": [
             "member_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_target_slack_channel_id_slack_channel_id_fk": {
-          "name": "schedule_target_slack_channel_id_slack_channel_id_fk",
-          "tableFrom": "schedule_target",
-          "tableTo": "slack_channel",
-          "columnsFrom": [
-            "slack_channel_id"
           ],
           "columnsTo": [
             "id"

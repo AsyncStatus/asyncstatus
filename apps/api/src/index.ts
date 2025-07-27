@@ -45,12 +45,27 @@ import {
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
 import {
+  deleteScheduleDeliveryHandler,
+  getScheduleDeliveryHandler,
+  upsertScheduleDeliveryHandler,
+} from "./typed-handlers/schedule-delivery-handlers";
+import {
+  deleteScheduleDeliveryTargetHandler,
+  getScheduleDeliveryTargetHandler,
+  upsertScheduleDeliveryTargetHandler,
+} from "./typed-handlers/schedule-delivery-target-handlers";
+import {
   createScheduleHandler,
   deleteScheduleHandler,
   getScheduleHandler,
   listSchedulesHandler,
   updateScheduleHandler,
 } from "./typed-handlers/schedule-handlers";
+import {
+  deleteScheduleTargetHandler,
+  getScheduleTargetHandler,
+  upsertScheduleTargetHandler,
+} from "./typed-handlers/schedule-target-handlers";
 import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
@@ -231,6 +246,15 @@ const typedHandlersApp = typedHandlersHonoServer(
     createScheduleHandler,
     updateScheduleHandler,
     deleteScheduleHandler,
+    getScheduleTargetHandler,
+    upsertScheduleTargetHandler,
+    deleteScheduleTargetHandler,
+    getScheduleDeliveryHandler,
+    upsertScheduleDeliveryHandler,
+    deleteScheduleDeliveryHandler,
+    getScheduleDeliveryTargetHandler,
+    upsertScheduleDeliveryTargetHandler,
+    deleteScheduleDeliveryTargetHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
