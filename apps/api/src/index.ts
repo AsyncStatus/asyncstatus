@@ -45,6 +45,13 @@ import {
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
 import {
+  createScheduleHandler,
+  deleteScheduleHandler,
+  getScheduleHandler,
+  listSchedulesHandler,
+  updateScheduleHandler,
+} from "./typed-handlers/schedule-handlers";
+import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
   listSlackChannelsHandler,
@@ -219,6 +226,11 @@ const typedHandlersApp = typedHandlersHonoServer(
     deleteTeamHandler,
     addTeamMemberHandler,
     deleteTeamMemberHandler,
+    listSchedulesHandler,
+    getScheduleHandler,
+    createScheduleHandler,
+    updateScheduleHandler,
+    deleteScheduleHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,

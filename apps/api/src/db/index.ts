@@ -25,6 +25,31 @@ export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./in
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
+  DELIVERY_METHODS,
+  DeliveryMethod,
+  Schedule,
+  ScheduleActionType,
+  ScheduleInsert,
+  ScheduleRecurrence,
+  ScheduleUpdate,
+  schedule,
+} from "./schedule";
+export {
+  ScheduleExecutionStatus,
+  ScheduleRun,
+  ScheduleRunInsert,
+  ScheduleRunUpdate,
+  ScheduleStatus,
+  scheduleRun,
+} from "./schedule-run";
+export {
+  ScheduleTarget,
+  ScheduleTargetInsert,
+  ScheduleTargetType,
+  ScheduleTargetUpdate,
+  scheduleTarget,
+} from "./schedule-target";
+export {
   SlackChannel,
   SlackChannelInsert,
   SlackChannelUpdate,
@@ -83,6 +108,9 @@ import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
+import { schedule } from "./schedule";
+import { scheduleRun } from "./schedule-run";
+import { scheduleTarget } from "./schedule-target";
 import { slackChannel } from "./slack-channel";
 import { slackEvent } from "./slack-event";
 import { slackEventVector } from "./slack-event-vector";
@@ -124,6 +152,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   invitations: many(invitation),
   githubIntegration: one(githubIntegration),
   slackIntegration: one(slackIntegration),
+  schedules: many(schedule),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -137,6 +166,8 @@ export const memberRelations = relations(member, ({ one, many }) => ({
   }),
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
+  createdSchedules: many(schedule),
+  scheduleTargets: many(scheduleTarget),
 }));
 
 export const teamRelations = relations(team, ({ one, many }) => ({
@@ -146,6 +177,7 @@ export const teamRelations = relations(team, ({ one, many }) => ({
   }),
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
+  scheduleTargets: many(scheduleTarget),
 }));
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
@@ -230,6 +262,7 @@ export const slackChannelRelations = relations(slackChannel, ({ one, many }) => 
     references: [slackIntegration.id],
   }),
   events: many(slackEvent),
+  scheduleTargets: many(scheduleTarget),
 }));
 
 export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
@@ -288,5 +321,52 @@ export const statusGenerationJobRelations = relations(statusGenerationJob, ({ on
   statusUpdate: one(statusUpdate, {
     fields: [statusGenerationJob.statusUpdateId],
     references: [statusUpdate.id],
+  }),
+}));
+
+export const scheduleRelations = relations(schedule, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [schedule.organizationId],
+    references: [organization.id],
+  }),
+  createdByMember: one(member, {
+    fields: [schedule.createdByMemberId],
+    references: [member.id],
+  }),
+  scheduleRuns: many(scheduleRun),
+  targets: many(scheduleTarget),
+}));
+
+export const scheduleRunRelations = relations(scheduleRun, ({ one }) => ({
+  organization: one(organization, {
+    fields: [scheduleRun.organizationId],
+    references: [organization.id],
+  }),
+  createdByMember: one(member, {
+    fields: [scheduleRun.createdByMemberId],
+    references: [member.id],
+  }),
+  schedule: one(schedule, {
+    fields: [scheduleRun.scheduleId],
+    references: [schedule.id],
+  }),
+}));
+
+export const scheduleTargetRelations = relations(scheduleTarget, ({ one }) => ({
+  schedule: one(schedule, {
+    fields: [scheduleTarget.scheduleId],
+    references: [schedule.id],
+  }),
+  team: one(team, {
+    fields: [scheduleTarget.teamId],
+    references: [team.id],
+  }),
+  member: one(member, {
+    fields: [scheduleTarget.memberId],
+    references: [member.id],
+  }),
+  slackChannel: one(slackChannel, {
+    fields: [scheduleTarget.slackChannelId],
+    references: [slackChannel.id],
   }),
 }));

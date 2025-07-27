@@ -71,6 +71,13 @@
       "when": 1753531364198,
       "tag": "0009_magical_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1753598970192,
+      "tag": "0010_young_swordsman",
+      "breakpoints": true
     }
   ]
 }
