@@ -11,13 +11,17 @@
     "./typed-handlers/invitation": "./src/typed-handlers/invitation-contracts.ts",
     "./typed-handlers/member": "./src/typed-handlers/member-contracts.ts",
     "./typed-handlers/organization": "./src/typed-handlers/organization-contracts.ts",
+    "./typed-handlers/schedule-delivery-target": "./src/typed-handlers/schedule-delivery-target-contracts.ts",
+    "./typed-handlers/schedule-delivery": "./src/typed-handlers/schedule-delivery-contracts.ts",
+    "./typed-handlers/schedule-target": "./src/typed-handlers/schedule-target-contracts.ts",
+    "./typed-handlers/schedule": "./src/typed-handlers/schedule-contracts.ts",
     "./typed-handlers/slack-integration": "./src/typed-handlers/slack-integration-contracts.ts",
     "./typed-handlers/status-update": "./src/typed-handlers/status-update-contracts.ts",
     "./typed-handlers/team": "./src/typed-handlers/team-contracts.ts",
     "./typed-handlers/waitlist": "./src/typed-handlers/waitlist-contracts.ts"
   },
   "scripts": {
-    "dev": "TZ=UTC wrangler dev",
+    "dev": "TZ=UTC wrangler dev --test-scheduled",
     "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
     "dev:turso": "TZ=UTC turso dev --db-file ./src/db/local-db",

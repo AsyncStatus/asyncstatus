@@ -25,6 +25,31 @@ export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./in
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
+  Schedule,
+  ScheduleConfig,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigSendSummaries,
+  ScheduleInsert,
+  ScheduleName,
+  ScheduleUpdate,
+  schedule,
+} from "./schedule";
+export {
+  ScheduleRun,
+  ScheduleRunInsert,
+  ScheduleRunUpdate,
+  ScheduleStatus,
+  scheduleRun,
+} from "./schedule-run";
+export {
+  ScheduleRunTask,
+  ScheduleRunTaskInsert,
+  ScheduleRunTaskStatus,
+  ScheduleRunTaskUpdate,
+  scheduleRunTask,
+} from "./schedule-run-task";
+export {
   SlackChannel,
   SlackChannelInsert,
   SlackChannelUpdate,
@@ -83,6 +108,9 @@ import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
+import { schedule } from "./schedule";
+import { scheduleRun } from "./schedule-run";
+import { scheduleRunTask } from "./schedule-run-task";
 import { slackChannel } from "./slack-channel";
 import { slackEvent } from "./slack-event";
 import { slackEventVector } from "./slack-event-vector";
@@ -124,6 +152,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   invitations: many(invitation),
   githubIntegration: one(githubIntegration),
   slackIntegration: one(slackIntegration),
+  schedules: many(schedule),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -137,6 +166,7 @@ export const memberRelations = relations(member, ({ one, many }) => ({
   }),
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
+  createdSchedules: many(schedule),
 }));
 
 export const teamRelations = relations(team, ({ one, many }) => ({
@@ -288,5 +318,36 @@ export const statusGenerationJobRelations = relations(statusGenerationJob, ({ on
   statusUpdate: one(statusUpdate, {
     fields: [statusGenerationJob.statusUpdateId],
     references: [statusUpdate.id],
+  }),
+}));
+
+export const scheduleRelations = relations(schedule, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [schedule.organizationId],
+    references: [organization.id],
+  }),
+  createdByMember: one(member, {
+    fields: [schedule.createdByMemberId],
+    references: [member.id],
+  }),
+  scheduleRuns: many(scheduleRun),
+}));
+
+export const scheduleRunRelations = relations(scheduleRun, ({ one, many }) => ({
+  createdByMember: one(member, {
+    fields: [scheduleRun.createdByMemberId],
+    references: [member.id],
+  }),
+  schedule: one(schedule, {
+    fields: [scheduleRun.scheduleId],
+    references: [schedule.id],
+  }),
+  tasks: many(scheduleRunTask),
+}));
+
+export const scheduleRunTaskRelations = relations(scheduleRunTask, ({ one }) => ({
+  scheduleRun: one(scheduleRun, {
+    fields: [scheduleRunTask.scheduleRunId],
+    references: [scheduleRun.id],
   }),
 }));

@@ -15,7 +15,8 @@ import {
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { verifySlackRequest } from "./lib/slack";
-import { queue } from "./queue";
+import { queue } from "./queue/queue";
+import { scheduled } from "./scheduled";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   deleteGithubIntegrationHandler,
@@ -44,6 +45,13 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import {
+  createScheduleHandler,
+  deleteScheduleHandler,
+  getScheduleHandler,
+  listSchedulesHandler,
+  updateScheduleHandler,
+} from "./typed-handlers/schedule-handlers";
 import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
@@ -219,6 +227,11 @@ const typedHandlersApp = typedHandlersHonoServer(
     deleteTeamHandler,
     addTeamMemberHandler,
     deleteTeamMemberHandler,
+    listSchedulesHandler,
+    getScheduleHandler,
+    createScheduleHandler,
+    updateScheduleHandler,
+    deleteScheduleHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
@@ -265,9 +278,13 @@ const typedHandlersApp = typedHandlersHonoServer(
 export default {
   fetch: typedHandlersApp.fetch,
   queue: queue,
+  scheduled: scheduled,
 };
 export type App = typeof app;
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { GenerateStatusUpdatesWorkflow } from "./workflows/schedules/generate-status-updates";
+export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
+export { SendSummariesWorkflow } from "./workflows/schedules/send-summaries";
 export { DeleteSlackIntegrationWorkflow } from "./workflows/slack/delete-slack-integration";
 export { SyncSlackWorkflow } from "./workflows/slack/sync-slack";

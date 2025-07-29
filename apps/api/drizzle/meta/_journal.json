@@ -71,6 +71,13 @@
       "when": 1753531364198,
       "tag": "0009_magical_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1753805826866,
+      "tag": "0010_unknown_killraven",
+      "breakpoints": true
     }
   ]
 }

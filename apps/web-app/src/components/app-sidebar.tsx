@@ -35,7 +35,7 @@ import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, Outlet, useParams } from "@tanstack/react-router";
-import { LifeBuoy, Plug, Plus, Send, Settings, Sun, Users } from "lucide-react";
+import { CalendarDays, LifeBuoy, Plug, Plus, Send, Settings, Sun, Users } from "lucide-react";
 import { Suspense, useState } from "react";
 import {
   sendVerificationEmailMutationOptions,
@@ -53,7 +53,19 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
         <SidebarMenuButton asChild>
           <Link to="/$organizationSlug" params={{ organizationSlug: props.organizationSlug }}>
             <Sun />
-            <span>Status updates</span>
+            <span className="pt-px">Status updates</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to={"/$organizationSlug/schedules"}
+            params={{ organizationSlug: props.organizationSlug }}
+          >
+            <CalendarDays />
+            <span className="pt-px">Schedules</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -65,7 +77,7 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
             params={{ organizationSlug: props.organizationSlug }}
           >
             <Users />
-            <span>Users</span>
+            <span className="pt-px">Users</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -77,7 +89,7 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
             params={{ organizationSlug: props.organizationSlug }}
           >
             <Plug />
-            <span>Integrations</span>
+            <span className="pt-px">Integrations</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -89,7 +101,7 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
             params={{ organizationSlug: props.organizationSlug }}
           >
             <Settings />
-            <span>Settings</span>
+            <span className="pt-px">Settings</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

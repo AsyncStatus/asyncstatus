@@ -14,6 +14,9 @@
   "ai": {
     "binding": "AI"
   },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
   "queues": {
     "consumers": [
       {
@@ -39,6 +42,34 @@
       },
       {
         "queue": "slack-process-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-triggers",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-ping-for-updates",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-generate-updates",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-send-summaries",
         "max_batch_size": 10,
         "max_batch_timeout": 2,
         "retry_delay": 60,
@@ -84,6 +115,21 @@
       "name": "delete-slack-integration",
       "binding": "DELETE_SLACK_INTEGRATION_WORKFLOW",
       "class_name": "DeleteSlackIntegrationWorkflow"
+    },
+    {
+      "name": "ping-for-updates",
+      "binding": "PING_FOR_UPDATES_WORKFLOW",
+      "class_name": "PingForUpdatesWorkflow"
+    },
+    {
+      "name": "generate-status-updates",
+      "binding": "GENERATE_STATUS_UPDATES_WORKFLOW",
+      "class_name": "GenerateStatusUpdatesWorkflow"
+    },
+    {
+      "name": "send-summaries",
+      "binding": "SEND_SUMMARIES_WORKFLOW",
+      "class_name": "SendSummariesWorkflow"
     }
   ],
   "kv_namespaces": [
