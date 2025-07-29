@@ -9,9 +9,9 @@ import { VoyageAIClient } from "voyageai";
 import type * as schema from "../db";
 import type { Db } from "../db/db";
 import { createDb } from "../db/db";
-import type { GenerateStatusWorkflowParams } from "../workflows/generate-status";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-for-updates";
 import type { DeleteSlackIntegrationWorkflowParams } from "../workflows/slack/delete-slack-integration";
 import type { SyncSlackWorkflowParams } from "../workflows/slack/sync-slack";
 import type { Auth, Session } from "./auth";
@@ -42,7 +42,6 @@ export type Bindings = {
   RATE_LIMITER: KVNamespace;
   SYNC_GITHUB_WORKFLOW: Workflow<SyncGithubWorkflowParams>;
   DELETE_GITHUB_INTEGRATION_WORKFLOW: Workflow<DeleteGithubIntegrationWorkflowParams>;
-  GENERATE_STATUS_WORKFLOW: Workflow<GenerateStatusWorkflowParams>;
   AI: Ai;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
@@ -57,6 +56,10 @@ export type Bindings = {
   SLACK_PROCESS_EVENTS_QUEUE: Queue<string>;
   SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
   DELETE_SLACK_INTEGRATION_WORKFLOW: Workflow<DeleteSlackIntegrationWorkflowParams>;
+  PING_FOR_UPDATES_WORKFLOW: Workflow<PingForUpdatesWorkflowParams>;
+  SCHEDULE_PING_FOR_UPDATES_QUEUE: Queue<string>;
+  SCHEDULE_GENERATE_UPDATES_QUEUE: Queue<string>;
+  SCHEDULE_SEND_SUMMARIES_QUEUE: Queue<string>;
 };
 
 export type Variables = {
@@ -75,6 +78,7 @@ export type Variables = {
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
     syncSlack: Workflow<SyncSlackWorkflowParams>;
     deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
+    pingForUpdates: Workflow<PingForUpdatesWorkflowParams>;
   };
   slack: {
     appId: string;
@@ -150,6 +154,7 @@ export async function createContext(c: Context<HonoEnv>) {
       deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
       syncSlack: c.env.SYNC_SLACK_WORKFLOW,
       deleteSlackIntegration: c.env.DELETE_SLACK_INTEGRATION_WORKFLOW,
+      pingForUpdates: c.env.PING_FOR_UPDATES_WORKFLOW,
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

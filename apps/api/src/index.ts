@@ -15,7 +15,7 @@ import {
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { verifySlackRequest } from "./lib/slack";
-import { queue } from "./queue";
+import { queue } from "./queue/queue";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   deleteGithubIntegrationHandler,
@@ -305,5 +305,6 @@ export default {
 export type App = typeof app;
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
 export { DeleteSlackIntegrationWorkflow } from "./workflows/slack/delete-slack-integration";
 export { SyncSlackWorkflow } from "./workflows/slack/sync-slack";

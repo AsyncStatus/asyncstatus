@@ -33,8 +33,8 @@ export const scheduleRun = sqliteTable(
       .references(() => schedule.id, { onDelete: "cascade" }),
 
     status: text("status").notNull().$type<ScheduleStatus>().default("active"),
-    nextExecutionAt: integer("next_execution_at", { mode: "timestamp" }),
-    lastExecutionAt: integer("last_execution_at", { mode: "timestamp" }),
+    nextExecutionAt: integer("next_execution_at", { mode: "timestamp_ms" }),
+    lastExecutionAt: integer("last_execution_at", { mode: "timestamp_ms" }),
     lastExecutionStatus: text("last_execution_status").$type<ScheduleExecutionStatus>(),
     lastExecutionError: text("last_execution_error"),
     executionCount: integer("execution_count").notNull().default(0),

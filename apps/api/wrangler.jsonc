@@ -14,6 +14,9 @@
   "ai": {
     "binding": "AI"
   },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
   "queues": {
     "consumers": [
       {
@@ -43,6 +46,34 @@
         "max_batch_timeout": 2,
         "retry_delay": 60,
         "max_retries": 10
+      },
+      {
+        "queue": "schedule-triggers",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-ping-for-updates",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-generate-updates",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
+      },
+      {
+        "queue": "schedule-send-summaries",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
       }
     ],
     "producers": [
@@ -61,6 +92,18 @@
       {
         "queue": "slack-process-events",
         "binding": "SLACK_PROCESS_EVENTS_QUEUE"
+      },
+      {
+        "queue": "schedule-ping-for-updates",
+        "binding": "SCHEDULE_PING_FOR_UPDATES_QUEUE"
+      },
+      {
+        "queue": "schedule-generate-updates",
+        "binding": "SCHEDULE_GENERATE_UPDATES_QUEUE"
+      },
+      {
+        "queue": "schedule-send-summaries",
+        "binding": "SCHEDULE_SEND_SUMMARIES_QUEUE"
       }
     ]
   },
@@ -84,6 +127,11 @@
       "name": "delete-slack-integration",
       "binding": "DELETE_SLACK_INTEGRATION_WORKFLOW",
       "class_name": "DeleteSlackIntegrationWorkflow"
+    },
+    {
+      "name": "ping-for-updates",
+      "binding": "PING_FOR_UPDATES_WORKFLOW",
+      "class_name": "PingForUpdatesWorkflow"
     }
   ],
   "kv_namespaces": [
