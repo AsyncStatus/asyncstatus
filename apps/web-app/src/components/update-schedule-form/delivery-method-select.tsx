@@ -60,8 +60,7 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
 
   const selectedSlackChannel = useMemo(() => {
     return (
-      props.type === "slack" &&
-      slackChannels.data?.find((channel) => channel.channelId === props.value)
+      props.type === "slack" && slackChannels.data?.find((channel) => channel.id === props.value)
     );
   }, [props.type, props.value, slackChannels.data]);
 
@@ -242,16 +241,16 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
               {slackChannels.data?.map((channel) => {
                 return (
                   <CommandItem
-                    key={channel.channelId}
-                    value={channel.channelId}
+                    key={channel.id}
+                    value={channel.id}
                     onSelect={() => {
-                      if (props.type === "slack" && props.value === channel.channelId) {
+                      if (props.type === "slack" && props.value === channel.id) {
                         props.onSelect(undefined, undefined);
                         setIsOpen(false);
                         return;
                       }
 
-                      props.onSelect("slack", channel.channelId);
+                      props.onSelect("slack", channel.id);
                       setIsOpen(false);
                     }}
                   >
@@ -260,7 +259,7 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",
-                        props.type === "slack" && props.value === channel.channelId
+                        props.type === "slack" && props.value === channel.id
                           ? "opacity-100"
                           : "opacity-0",
                       )}

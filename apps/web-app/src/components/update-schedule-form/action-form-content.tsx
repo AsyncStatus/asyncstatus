@@ -124,7 +124,7 @@ export function ActionFormContent(props: ActionFormContentProps) {
 
                     form.setValue("config.generateForEveryMember", false);
                     field.onChange(
-                      generateFor?.map((field, i) => (i === index ? value : field)) ?? [],
+                      generateFor?.map((field, i) => (i === index ? { type, value } : field)) ?? [],
                     );
                   }}
                 />
@@ -143,7 +143,7 @@ export function ActionFormContent(props: ActionFormContentProps) {
               variant="outline"
               className="text-muted-foreground"
               onClick={() => {
-                field.onChange([...(field.value ?? []), undefined]);
+                field.onChange([...(field.value ?? []), { type: undefined, value: undefined }]);
               }}
             >
               <PlusIcon className="size-4" />

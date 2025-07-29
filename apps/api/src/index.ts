@@ -278,7 +278,7 @@ const typedHandlersApp = typedHandlersHonoServer(
 export default {
   fetch: typedHandlersApp.fetch,
   queue: queue,
-  // scheduled: scheduled,
+  scheduled: scheduled,
 };
 export type App = typeof app;
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";

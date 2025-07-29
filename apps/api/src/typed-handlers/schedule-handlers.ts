@@ -1,7 +1,9 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, asc, eq } from "drizzle-orm";
 import * as schema from "../db";
+import { calculateNextScheduleExecution } from "../lib/calculate-next-schedule-execution";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
@@ -69,40 +71,64 @@ export const createScheduleHandler = typedHandler<
     const now = new Date();
     const scheduleId = generateId();
 
-    const newSchedule = await db
-      .insert(schema.schedule)
-      .values({
-        id: scheduleId,
-        organizationId: organization.id,
-        createdByMemberId: member.id,
-        name: input.name,
-        config: input.config as schema.ScheduleConfig,
-        isActive: input.isActive ?? true,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+    const scheduleWithMember = await db.transaction(async (tx) => {
+      const newSchedule = await tx
+        .insert(schema.schedule)
+        .values({
+          id: scheduleId,
+          organizationId: organization.id,
+          createdByMemberId: member.id,
+          name: input.name,
+          config: input.config as schema.ScheduleConfig,
+          isActive: input.isActive ?? true,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
 
-    if (!newSchedule || !newSchedule[0]) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create schedule",
+      if (!newSchedule || !newSchedule[0]) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create schedule",
+        });
+      }
+
+      const schedule = newSchedule[0];
+
+      // Create the initial schedule run if the schedule is active
+      if (schedule.isActive) {
+        const nextExecutionTime = calculateNextScheduleExecution(schedule);
+
+        if (nextExecutionTime) {
+          await tx.insert(schema.scheduleRun).values({
+            id: generateId(),
+            scheduleId: schedule.id,
+            createdByMemberId: member.id,
+            status: "pending",
+            nextExecutionAt: nextExecutionTime,
+            executionCount: 0,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      }
+
+      const scheduleWithMember = await db.query.schedule.findFirst({
+        where: eq(schema.schedule.id, scheduleId),
+        with: {
+          createdByMember: { with: { user: true } },
+        },
       });
-    }
 
-    const scheduleWithMember = await db.query.schedule.findFirst({
-      where: eq(schema.schedule.id, scheduleId),
-      with: {
-        createdByMember: { with: { user: true } },
-      },
+      if (!scheduleWithMember) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch created schedule",
+        });
+      }
+
+      return scheduleWithMember;
     });
-
-    if (!scheduleWithMember) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch created schedule",
-      });
-    }
 
     return scheduleWithMember;
   },
@@ -144,38 +170,85 @@ export const updateScheduleHandler = typedHandler<
       });
     }
 
-    const now = new Date();
+    const now = dayjs.utc().toDate();
 
-    const updatedSchedule = await db
-      .update(schema.schedule)
-      .set({
-        ...updateData,
-        config: updateData.config as schema.ScheduleConfig,
-        updatedAt: now,
-      })
-      .where(eq(schema.schedule.id, scheduleId))
-      .returning();
+    // Use transaction to ensure schedule and schedule run updates are atomic
+    const scheduleWithMember = await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(schema.schedule)
+        .set({
+          ...updateData,
+          config: updateData.config as schema.ScheduleConfig,
+          updatedAt: now,
+        })
+        .where(eq(schema.schedule.id, scheduleId))
+        .returning();
 
-    if (!updatedSchedule || !updatedSchedule[0]) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to update schedule",
+      if (!updated || !updated[0]) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update schedule",
+        });
+      }
+
+      const schedule = updated[0];
+
+      // If schedule timing changed or activation status changed, update schedule runs
+      const configChanged =
+        JSON.stringify(existingSchedule.config) !== JSON.stringify(schedule.config);
+      const activationChanged = existingSchedule.isActive !== schedule.isActive;
+
+      if (configChanged || activationChanged) {
+        // Cancel any pending schedule runs for this schedule
+        await tx
+          .update(schema.scheduleRun)
+          .set({
+            status: "cancelled",
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(schema.scheduleRun.scheduleId, scheduleId),
+              eq(schema.scheduleRun.status, "pending"),
+            ),
+          );
+
+        // Create new schedule run if schedule is active
+        if (schedule.isActive) {
+          const nextExecutionTime = calculateNextScheduleExecution(schedule);
+          console.log(nextExecutionTime);
+
+          if (nextExecutionTime) {
+            await tx.insert(schema.scheduleRun).values({
+              id: generateId(),
+              scheduleId: schedule.id,
+              createdByMemberId: member.id,
+              status: "pending",
+              nextExecutionAt: nextExecutionTime,
+              executionCount: 0,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
+        }
+      }
+
+      const scheduleWithMember = await db.query.schedule.findFirst({
+        where: eq(schema.schedule.id, scheduleId),
+        with: {
+          createdByMember: { with: { user: true } },
+        },
       });
-    }
 
-    const scheduleWithMember = await db.query.schedule.findFirst({
-      where: eq(schema.schedule.id, scheduleId),
-      with: {
-        createdByMember: { with: { user: true } },
-      },
+      if (!scheduleWithMember) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch updated schedule",
+        });
+      }
+
+      return scheduleWithMember;
     });
-
-    if (!scheduleWithMember) {
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch updated schedule",
-      });
-    }
 
     return scheduleWithMember;
   },

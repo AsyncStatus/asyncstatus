@@ -49,7 +49,7 @@ export function ResetPasswordEmail(props: {
       <Link href="https://asyncstatus.com" style={footerLink}>
         <strong>AsyncStatus</strong>
         <br />
-        Modern status updates for high-performing teams
+        Async status updates for remote startups. Built for high-agency teams that value their time.
       </Link>
     </Layout>
   );

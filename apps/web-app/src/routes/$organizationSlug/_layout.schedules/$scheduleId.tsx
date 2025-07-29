@@ -4,6 +4,7 @@ import {
   listSchedulesContract,
   updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
+import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { dayjs } from "@asyncstatus/dayjs";
 import {
   Breadcrumb,
@@ -35,6 +36,13 @@ export const Route = createFileRoute("/$organizationSlug/_layout/schedules/$sche
     );
     queryClient.prefetchQuery(
       typedQueryOptions(getScheduleContract, { idOrSlug: organizationSlug, scheduleId }),
+    );
+    queryClient.prefetchQuery(
+      typedQueryOptions(
+        listSlackChannelsContract,
+        { idOrSlug: organizationSlug },
+        { throwOnError: false },
+      ),
     );
   },
 });

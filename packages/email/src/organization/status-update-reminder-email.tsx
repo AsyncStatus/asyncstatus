@@ -2,11 +2,11 @@ import { Button, Heading, Img, Link, Section, Text } from "@react-email/componen
 import { Layout } from "../layout";
 import { bodyText, divider, footerLink, h1, h2, primaryButton, secondaryText } from "../styles";
 
-export function VerificationEmail(props: {
+export function StatusUpdateReminderEmail(props: {
   preview: string;
-  firstName: string;
-  expiration: string;
-  verificationLink: string;
+  recipientName: string;
+  organizationName: string;
+  updateLink: string;
 }) {
   return (
     <Layout preview={props.preview}>
@@ -21,23 +21,31 @@ export function VerificationEmail(props: {
 
       <Section>
         <Heading as="h1" style={h1}>
-          Hi {props.firstName},
+          Hi {props.recipientName.split(" ")[0] ?? props.recipientName},
         </Heading>
         <Heading as="h2" style={h2}>
-          Welcome to AsyncStatus. Verify your account to continue.
+          It's time to share your status update for <strong>{props.organizationName}</strong>.
         </Heading>
+
+        <Text style={bodyText}>Here's what we'd love to hear about:</Text>
+
+        <Text style={{ ...bodyText, marginLeft: 16 }}>
+          • What did you work on recently?
+          <br />• What are you planning next?
+          <br />• Any blockers or challenges?
+        </Text>
+
+        <Button href={props.updateLink} style={primaryButton}>
+          Share your update
+        </Button>
+
+        <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
+          Keep it brief and focus on outcomes that matter to the team!
+        </Text>
       </Section>
 
-      <Button href={props.verificationLink} style={primaryButton}>
-        Verify email
-      </Button>
-
-      <Text style={{ ...secondaryText, textAlign: "center", marginTop: -16 }}>
-        This link will expire in {props.expiration}.
-      </Text>
-
       <Text style={{ ...bodyText, margin: "64px 0 128px" }}>
-        Happy to have you on board,
+        Happy collaborating,
         <br />
         <span style={{ ...secondaryText, fontSize: 14 }}>AsyncStatus Team</span>
       </Text>
@@ -53,11 +61,11 @@ export function VerificationEmail(props: {
   );
 }
 
-VerificationEmail.PreviewProps = {
-  preview: "Verify your email with https://app.asyncstatus.com/verify-email",
-  firstName: "Michael",
-  verificationLink: "https://app.asyncstatus.com/verify-email",
-  expiration: "7 days",
+StatusUpdateReminderEmail.PreviewProps = {
+  preview: "Time for your status update",
+  recipientName: "John",
+  organizationName: "AsyncStatus",
+  updateLink: "https://app.asyncstatus.com",
 };
 
-export default VerificationEmail;
+export default StatusUpdateReminderEmail;

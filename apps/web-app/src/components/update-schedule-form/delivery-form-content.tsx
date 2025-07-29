@@ -49,9 +49,9 @@ export function DeliveryFormContent(props: DeliveryFormContentProps) {
           />
         )}
 
-        {deliveryMethods?.map((field, index) => (
+        {deliveryMethods?.map((deliveryMethod, index) => (
           <FormField
-            key={`${field?.type}-${field?.value}`}
+            key={`${deliveryMethod?.type}-${deliveryMethod?.value}`}
             control={form.control}
             name="config.deliveryMethods"
             render={({ field }) => (
@@ -62,19 +62,19 @@ export function DeliveryFormContent(props: DeliveryFormContentProps) {
                 onSelect={(type, value) => {
                   if (type === undefined) {
                     form.setValue("config.deliverToEveryone", false);
-                    field.onChange(deliveryMethods?.filter((_, i) => i !== index) ?? []);
+                    field.onChange(field.value?.filter((_, i) => i !== index) ?? []);
                     return;
                   }
 
                   if (type === "everyone") {
                     form.setValue("config.deliverToEveryone", true);
-                    field.onChange(deliveryMethods?.filter((_, i) => i !== index) ?? []);
+                    field.onChange(field.value?.filter((_, i) => i !== index) ?? []);
                     return;
                   }
 
                   form.setValue("config.deliverToEveryone", false);
                   field.onChange(
-                    deliveryMethods?.map((field, i) => (i === index ? value : field)) ?? [],
+                    field.value?.map((field, i) => (i === index ? { type, value } : field)) ?? [],
                   );
                 }}
               />
@@ -93,7 +93,7 @@ export function DeliveryFormContent(props: DeliveryFormContentProps) {
               variant="outline"
               className="text-muted-foreground"
               onClick={() => {
-                field.onChange([...(field.value ?? []), undefined]);
+                field.onChange([...(field.value ?? []), { type: undefined, value: undefined }]);
               }}
             >
               <PlusIcon className="size-4" />
