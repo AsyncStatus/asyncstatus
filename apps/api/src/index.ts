@@ -16,6 +16,7 @@ import {
 import { createContext, type HonoEnv } from "./lib/env";
 import { verifySlackRequest } from "./lib/slack";
 import { queue } from "./queue/queue";
+import { scheduled } from "./scheduled";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   deleteGithubIntegrationHandler,
@@ -45,27 +46,12 @@ import {
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
 import {
-  deleteScheduleDeliveryHandler,
-  getScheduleDeliveryHandler,
-  upsertScheduleDeliveryHandler,
-} from "./typed-handlers/schedule-delivery-handlers";
-import {
-  deleteScheduleDeliveryTargetHandler,
-  getScheduleDeliveryTargetHandler,
-  upsertScheduleDeliveryTargetHandler,
-} from "./typed-handlers/schedule-delivery-target-handlers";
-import {
   createScheduleHandler,
   deleteScheduleHandler,
   getScheduleHandler,
   listSchedulesHandler,
   updateScheduleHandler,
 } from "./typed-handlers/schedule-handlers";
-import {
-  deleteScheduleTargetHandler,
-  getScheduleTargetHandler,
-  upsertScheduleTargetHandler,
-} from "./typed-handlers/schedule-target-handlers";
 import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
@@ -246,15 +232,6 @@ const typedHandlersApp = typedHandlersHonoServer(
     createScheduleHandler,
     updateScheduleHandler,
     deleteScheduleHandler,
-    getScheduleTargetHandler,
-    upsertScheduleTargetHandler,
-    deleteScheduleTargetHandler,
-    getScheduleDeliveryHandler,
-    upsertScheduleDeliveryHandler,
-    deleteScheduleDeliveryHandler,
-    getScheduleDeliveryTargetHandler,
-    upsertScheduleDeliveryTargetHandler,
-    deleteScheduleDeliveryTargetHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
@@ -301,6 +278,7 @@ const typedHandlersApp = typedHandlersHonoServer(
 export default {
   fetch: typedHandlersApp.fetch,
   queue: queue,
+  // scheduled: scheduled,
 };
 export type App = typeof app;
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";

@@ -20,24 +20,11 @@ export const listSchedulesHandler = typedHandler<
     where: eq(schema.schedule.organizationId, organization.id),
     with: {
       createdByMember: { with: { user: true } },
-      targets: {
-        orderBy: [asc(schema.scheduleTarget.createdAt)],
-      },
-      deliveryTargets: {
-        orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
-      },
-      deliveries: {
-        orderBy: [asc(schema.scheduleDelivery.createdAt)],
-      },
     },
     orderBy: [asc(schema.schedule.createdAt)],
   });
 
-  return schedules.map((scheduleItem) => ({
-    ...scheduleItem,
-    dayOfWeek: scheduleItem.dayOfWeek ?? undefined,
-    dayOfMonth: scheduleItem.dayOfMonth ?? undefined,
-  }));
+  return schedules;
 });
 
 export const getScheduleHandler = typedHandler<
@@ -57,15 +44,6 @@ export const getScheduleHandler = typedHandler<
       ),
       with: {
         createdByMember: { with: { user: true } },
-        targets: {
-          orderBy: [asc(schema.scheduleTarget.createdAt)],
-        },
-        deliveryTargets: {
-          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
-        },
-        deliveries: {
-          orderBy: [asc(schema.scheduleDelivery.createdAt)],
-        },
       },
     });
 
@@ -76,11 +54,7 @@ export const getScheduleHandler = typedHandler<
       });
     }
 
-    return {
-      ...scheduleResult,
-      dayOfWeek: scheduleResult.dayOfWeek ?? undefined,
-      dayOfMonth: scheduleResult.dayOfMonth ?? undefined,
-    };
+    return scheduleResult;
   },
 );
 
@@ -101,12 +75,8 @@ export const createScheduleHandler = typedHandler<
         id: scheduleId,
         organizationId: organization.id,
         createdByMemberId: member.id,
-        actionType: input.actionType,
-        recurrence: input.recurrence,
-        timezone: input.timezone,
-        dayOfWeek: input.dayOfWeek,
-        dayOfMonth: input.dayOfMonth,
-        timeOfDay: input.timeOfDay,
+        name: input.name,
+        config: input.config as schema.ScheduleConfig,
         isActive: input.isActive ?? true,
         createdAt: now,
         updatedAt: now,
@@ -124,15 +94,6 @@ export const createScheduleHandler = typedHandler<
       where: eq(schema.schedule.id, scheduleId),
       with: {
         createdByMember: { with: { user: true } },
-        targets: {
-          orderBy: [asc(schema.scheduleTarget.createdAt)],
-        },
-        deliveryTargets: {
-          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
-        },
-        deliveries: {
-          orderBy: [asc(schema.scheduleDelivery.createdAt)],
-        },
       },
     });
 
@@ -143,11 +104,7 @@ export const createScheduleHandler = typedHandler<
       });
     }
 
-    return {
-      ...scheduleWithMember,
-      dayOfWeek: scheduleWithMember.dayOfWeek ?? undefined,
-      dayOfMonth: scheduleWithMember.dayOfMonth ?? undefined,
-    };
+    return scheduleWithMember;
   },
 );
 
@@ -193,8 +150,7 @@ export const updateScheduleHandler = typedHandler<
       .update(schema.schedule)
       .set({
         ...updateData,
-        dayOfWeek: updateData.recurrence === "weekly" ? updateData.dayOfWeek : undefined,
-        dayOfMonth: updateData.recurrence === "monthly" ? updateData.dayOfMonth : undefined,
+        config: updateData.config as schema.ScheduleConfig,
         updatedAt: now,
       })
       .where(eq(schema.schedule.id, scheduleId))
@@ -211,15 +167,6 @@ export const updateScheduleHandler = typedHandler<
       where: eq(schema.schedule.id, scheduleId),
       with: {
         createdByMember: { with: { user: true } },
-        targets: {
-          orderBy: [asc(schema.scheduleTarget.createdAt)],
-        },
-        deliveryTargets: {
-          orderBy: [asc(schema.scheduleDeliveryTarget.createdAt)],
-        },
-        deliveries: {
-          orderBy: [asc(schema.scheduleDelivery.createdAt)],
-        },
       },
     });
 
@@ -230,11 +177,7 @@ export const updateScheduleHandler = typedHandler<
       });
     }
 
-    return {
-      ...scheduleWithMember,
-      dayOfWeek: scheduleWithMember.dayOfWeek ?? undefined,
-      dayOfMonth: scheduleWithMember.dayOfMonth ?? undefined,
-    };
+    return scheduleWithMember;
   },
 );
 

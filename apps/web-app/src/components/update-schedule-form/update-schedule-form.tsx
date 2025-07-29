@@ -5,15 +5,14 @@ import {
 } from "@asyncstatus/api/typed-handlers/schedule";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import useDebouncedCallback from "@/lib/use-debounced-callback";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 import { Form } from "../form";
 import { ActionFormContent } from "./action-form-content";
-import { DeliverToForm } from "./deliver-to-form";
-import { DeliveryMethodForm } from "./delivery-method-form";
+import { DeliveryFormContent } from "./delivery-form-content";
 import { WhenFormContent } from "./when-form-content";
 
 export type UpdateScheduleFormProps = {
@@ -38,13 +37,15 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
     defaultValues: {
       idOrSlug: props.organizationSlug,
       scheduleId: props.scheduleId,
-      recurrence: schedule.data?.recurrence ?? "daily",
-      timeOfDay: schedule.data?.timeOfDay ?? "09:30",
-      timezone: schedule.data?.timezone ?? "UTC",
-      actionType: schedule.data?.actionType ?? "pingForUpdates",
+      name: schedule.data?.name ?? "remindToPostUpdates",
+      config: schedule.data?.config ?? {
+        name: "remindToPostUpdates",
+        timeOfDay: "09:30",
+        timezone: "UTC",
+        remindEveryMember: true,
+        deliveryMethods: [],
+      },
       isActive: schedule.data?.isActive ?? false,
-      dayOfMonth: schedule.data?.dayOfMonth ?? undefined,
-      dayOfWeek: schedule.data?.dayOfWeek ?? undefined,
     },
   });
 
@@ -72,7 +73,7 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
 
   useEffect(() => {
     if (session.data?.user.timezone) {
-      form.setValue("timezone", session.data.user.timezone);
+      form.setValue("config.timezone", session.data.user.timezone);
     }
   }, [session.data?.user.timezone]);
 
@@ -81,13 +82,9 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
       form.reset({
         idOrSlug: props.organizationSlug,
         scheduleId: props.scheduleId,
-        recurrence: schedule.data.recurrence,
-        timeOfDay: schedule.data.timeOfDay,
-        timezone: schedule.data.timezone,
-        actionType: schedule.data.actionType,
+        name: schedule.data.name,
+        config: schedule.data.config,
         isActive: schedule.data.isActive,
-        dayOfMonth: schedule.data.dayOfMonth,
-        dayOfWeek: schedule.data.dayOfWeek,
       });
     }
   }, [schedule.data, props.organizationSlug, props.scheduleId]);
@@ -117,9 +114,7 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
     form.formState.isDirty,
   ]);
 
-  const hasAnyDeliveries = useMemo(() => {
-    return schedule.data?.deliveries.length > 0;
-  }, [schedule.data?.deliveries]);
+  const configName = form.watch("config.name");
 
   return (
     <div className="flex flex-col gap-2">
@@ -142,31 +137,17 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
             </div>
           </div>
 
-          {schedule.data?.actionType !== "generateUpdates" && (
+          {configName !== "generateUpdates" && (
             <div className="flex flex-col gap-2 border border-border rounded-md p-4">
               <p className="text-base font-medium">Delivery</p>
               <div className="flex items-center flex-wrap gap-2">
-                <DeliveryMethodForm
+                <DeliveryFormContent
                   organizationSlug={props.organizationSlug}
                   scheduleId={props.scheduleId}
                 />
               </div>
             </div>
           )}
-
-          {hasAnyDeliveries &&
-            schedule.data?.actionType !== "pingForUpdates" &&
-            schedule.data?.actionType !== "generateUpdates" && (
-              <div className="flex flex-col gap-2 border border-border rounded-md p-4">
-                <p className="text-base font-medium">Deliver to</p>
-                <div className="flex items-center flex-wrap gap-2">
-                  <DeliverToForm
-                    organizationSlug={props.organizationSlug}
-                    scheduleId={props.scheduleId}
-                  />
-                </div>
-              </div>
-            )}
         </form>
       </Form>
     </div>
@@ -176,6 +157,7 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
 export const UpdateScheduleForm = memo(UpdateScheduleFormUnmemoized, (prevProps, nextProps) => {
   return (
     prevProps.organizationSlug === nextProps.organizationSlug &&
-    prevProps.scheduleId === nextProps.scheduleId
+    prevProps.scheduleId === nextProps.scheduleId &&
+    prevProps.onSuccess === nextProps.onSuccess
   );
 });

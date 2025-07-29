@@ -107,11 +107,11 @@ function RouteComponent() {
                       to="/$organizationSlug/schedules/$scheduleId"
                       params={{ organizationSlug, scheduleId }}
                     >
-                      {schedule.data?.actionType === "generateUpdates"
+                      {schedule.data?.config.name === "generateUpdates"
                         ? "Generate updates"
-                        : schedule.data?.actionType === "pingForUpdates"
-                          ? "Ping for updates"
-                          : schedule.data?.actionType === "sendSummaries"
+                        : schedule.data?.config.name === "remindToPostUpdates"
+                          ? "Remind to post updates"
+                          : schedule.data?.config.name === "sendSummaries"
                             ? "Send summaries"
                             : ""}
                     </Link>
@@ -136,15 +136,9 @@ function RouteComponent() {
                 updateSchedule.mutate({
                   idOrSlug: organizationSlug,
                   scheduleId: schedule.data?.id,
-                  actionType: schedule.data?.actionType,
-                  recurrence: schedule.data?.recurrence,
-                  timezone: schedule.data?.timezone,
-                  timeOfDay: schedule.data?.timeOfDay,
+                  name: schedule.data?.name,
+                  config: schedule.data?.config,
                   isActive: !schedule.data?.isActive,
-                  dayOfWeek:
-                    schedule.data?.recurrence === "weekly" ? schedule.data?.dayOfWeek : undefined,
-                  dayOfMonth:
-                    schedule.data?.recurrence === "monthly" ? schedule.data?.dayOfMonth : undefined,
                 });
               }}
             >
@@ -181,7 +175,7 @@ function RouteComponent() {
 
               <div className="flex items-center gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {schedule.data.createdByMember.user.name},{" "}
+                  {schedule.data.createdByMember?.user.name},{" "}
                   <span
                     title={dayjs(schedule.data.updatedAt ?? schedule.data.createdAt)
                       .tz(session.data?.user.timezone ?? "UTC")

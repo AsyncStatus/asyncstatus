@@ -5,18 +5,7 @@ import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
-import {
-  Bell,
-  Clock,
-  FileText,
-  Hash,
-  Mail,
-  Send,
-  Target,
-  User,
-  Users,
-  Zap,
-} from "@asyncstatus/ui/icons";
+import { Bell, Clock, FileText, Send, Target, Users, Zap } from "@asyncstatus/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { typedQueryOptions, typedUrl } from "@/typed-handlers";
@@ -39,24 +28,24 @@ export function SchedulePrettyDescription(props: {
 
   // Format action type
   const getActionDescription = () => {
-    switch (schedule.actionType) {
-      case "pingForUpdates":
-        return "Ping for status updates";
+    switch (schedule.config.name) {
+      case "remindToPostUpdates":
+        return "Remind to post updates";
       case "generateUpdates":
-        return "Generate status updates";
+        return "Generate updates";
       case "sendSummaries":
-        return "Send summaries";
+        return "Send update summaries";
       default:
-        return schedule.actionType;
+        return "Unknown action";
     }
   };
 
   // Format timing
   const getTimingDescription = () => {
-    const time = schedule.timeOfDay;
-    const timezone = schedule.timezone.replace("_", " ");
+    const time = schedule.config.timeOfDay;
+    const timezone = schedule.config.timezone.replace("_", " ");
 
-    switch (schedule.recurrence) {
+    switch (schedule.config.recurrence) {
       case "daily":
         return (
           <>
@@ -74,7 +63,9 @@ export function SchedulePrettyDescription(props: {
           "Sunday",
         ];
         const dayName =
-          schedule.dayOfWeek !== undefined ? dayNames[schedule.dayOfWeek] : "Unknown day";
+          schedule.config.dayOfWeek !== undefined
+            ? dayNames[schedule.config.dayOfWeek]
+            : "Unknown day";
         return (
           <>
             Every {dayName} at {time} <span>{timezone}</span>
@@ -82,7 +73,9 @@ export function SchedulePrettyDescription(props: {
         );
       }
       case "monthly": {
-        const dayOrdinal = schedule.dayOfMonth ? getOrdinal(schedule.dayOfMonth) : "Unknown day";
+        const dayOrdinal = schedule.config.dayOfMonth
+          ? getOrdinal(schedule.config.dayOfMonth)
+          : "Unknown day";
         return (
           <>
             On the {dayOrdinal} of every month at {time} <span>{timezone}</span>
@@ -92,7 +85,7 @@ export function SchedulePrettyDescription(props: {
       default:
         return (
           <>
-            {schedule.recurrence} at {time} <span>{timezone}</span>
+            {schedule.config.recurrence} at {time} <span>{timezone}</span>
           </>
         );
     }
@@ -100,45 +93,21 @@ export function SchedulePrettyDescription(props: {
 
   // Format delivery methods
   const getDeliveryMethods = () => {
-    if (!schedule.deliveries?.length) return [];
+    if (
+      schedule.config.name === "remindToPostUpdates" ||
+      schedule.config.name === "sendSummaries"
+    ) {
+      return schedule.config.deliveryMethods.map((delivery) => {
+        if (!delivery) return null;
 
-    return schedule.deliveries.map((delivery) => ({
-      id: delivery.id,
-      icon:
-        delivery.deliveryMethod === "email" ? (
-          <Mail className="size-3.5 text-muted-foreground inline" />
-        ) : (
-          <SiSlack className="size-3.5 text-muted-foreground inline" />
-        ),
-      text: delivery.deliveryMethod === "email" ? "Email" : "Slack",
-    }));
-  };
+        const member = members.data?.members.find((m) => m.id === delivery.value);
+        const team = teams.data?.find((t) => t.id === delivery.value);
+        const slackChannel = slackChannels.data?.find((c) => c.id === delivery.value);
 
-  // Format delivery targets
-  const getDeliveryTargets = () => {
-    if (!schedule.deliveryTargets?.length) return [];
-
-    return schedule.deliveryTargets.map((target) => {
-      switch (target.targetType) {
-        case "organization":
-          return {
-            id: target.id,
-            icon: <Users className="size-3.5 text-muted-foreground inline" />,
-            text: "Everyone",
-          };
-        case "team": {
-          const team = teams.data?.find((t) => t.id === target.teamId);
-          return {
-            id: target.id,
-            icon: <Users className="size-3.5 text-muted-foreground inline" />,
-            text: team ? `the ${team.name} team` : "a team",
-          };
-        }
-        case "member": {
-          const member = members.data?.members?.find((m) => m.id === target.memberId);
-          return {
-            id: target.id,
-            icon: (
+        return {
+          id: delivery.value,
+          icon:
+            delivery.type === "member" ? (
               <Avatar className="size-3.5">
                 <AvatarImage
                   src={typedUrl(getFileContract, {
@@ -150,53 +119,36 @@ export function SchedulePrettyDescription(props: {
                   {getInitials(member?.user.name ?? "")}
                 </AvatarFallback>
               </Avatar>
+            ) : delivery.type === "team" ? (
+              <Users className="size-3.5 text-muted-foreground inline" />
+            ) : delivery.type === "slack" ? (
+              <SiSlack className="size-3.5 text-muted-foreground inline" />
+            ) : (
+              <Target className="size-3.5 text-muted-foreground inline" />
             ),
-            text: member ? member.user.name || member.user.email : "a member",
-          };
-        }
-        case "slack_channel": {
-          const channel = slackChannels.data?.find((c) => c.id === target.slackChannelId);
-          return {
-            id: target.id,
-            icon: <Hash className="size-3.5 text-muted-foreground inline" />,
-            text: channel ? `#${channel.name}` : "a Slack channel",
-          };
-        }
-        default:
-          return {
-            id: target.id,
-            icon: <Target className="size-3.5 text-muted-foreground inline" />,
-            text: target.targetType,
-          };
-      }
-    });
+          text:
+            delivery.type === "member"
+              ? member?.user.name
+              : delivery.type === "team"
+                ? team?.name
+                : slackChannel?.name,
+        };
+      });
+    }
   };
 
-  // Format targets (who the action applies to)
   const getTargets = () => {
-    if (!schedule.targets?.length) return [];
+    if (schedule.config.name === "generateUpdates") {
+      return schedule.config.generateFor.map((generateFor) => {
+        if (!generateFor) return null;
 
-    return schedule.targets.map((target) => {
-      switch (target.targetType) {
-        case "organization":
-          return {
-            id: target.id,
-            icon: <Users className="size-3.5 text-muted-foreground inline" />,
-            text: "Everyone",
-          };
-        case "team": {
-          const team = teams.data?.find((t) => t.id === target.teamId);
-          return {
-            id: target.id,
-            icon: <Users className="size-3.5 text-muted-foreground inline" />,
-            text: team ? `the ${team.name} team` : "a team",
-          };
-        }
-        case "member": {
-          const member = members.data?.members?.find((m) => m.id === target.memberId);
-          return {
-            id: target.id,
-            icon: (
+        const member = members.data?.members.find((m) => m.id === generateFor.value);
+        const team = teams.data?.find((t) => t.id === generateFor.value);
+
+        return {
+          id: generateFor.value,
+          icon:
+            generateFor.type === "member" ? (
               <Avatar className="size-3.5">
                 <AvatarImage
                   src={typedUrl(getFileContract, {
@@ -208,18 +160,20 @@ export function SchedulePrettyDescription(props: {
                   {getInitials(member?.user.name ?? "")}
                 </AvatarFallback>
               </Avatar>
+            ) : generateFor.type === "team" ? (
+              <Users className="size-3.5 text-muted-foreground inline" />
+            ) : (
+              <Target className="size-3.5 text-muted-foreground inline" />
             ),
-            text: member ? member.user.name || member.user.email : "a member",
-          };
-        }
-        default:
-          return {
-            id: target.id,
-            icon: <Target className="size-3.5 text-muted-foreground inline" />,
-            text: target.targetType,
-          };
-      }
-    });
+          text:
+            generateFor.type === "member"
+              ? member?.user.name
+              : generateFor.type === "team"
+                ? team?.name
+                : "unknown",
+        };
+      });
+    }
   };
 
   const getOrdinal = (n: number): string => {
@@ -228,7 +182,9 @@ export function SchedulePrettyDescription(props: {
     return n + (suffixes?.[(remainder - 20) % 10] ?? suffixes?.[remainder] ?? suffixes?.[0] ?? "");
   };
 
-  const renderList = (items: Array<{ id: string; icon: React.ReactNode; text: string }>) => {
+  const renderList = (
+    items: Array<{ id: string; icon: React.ReactNode; text: string | undefined } | null>,
+  ) => {
     if (!items || items.length === 0) return null;
     if (items.length === 1) {
       const firstItem = items[0];
@@ -247,9 +203,9 @@ export function SchedulePrettyDescription(props: {
     return (
       <>
         {items.slice(0, -1).map((item, index) => (
-          <span key={item.id} className="inline-flex items-center gap-1">
-            {item.icon}
-            {item.text}
+          <span key={item?.id} className="inline-flex items-center gap-1">
+            {item?.icon}
+            {item?.text}
             {index < items.length - 2 && ", "}
           </span>
         ))}
@@ -263,8 +219,8 @@ export function SchedulePrettyDescription(props: {
   };
 
   const actionIcon = (() => {
-    switch (schedule.actionType) {
-      case "pingForUpdates":
+    switch (schedule.config.name) {
+      case "remindToPostUpdates":
         return <Bell className="size-3.5 text-muted-foreground inline" />;
       case "generateUpdates":
         return <Zap className="size-3.5 text-muted-foreground inline" />;
@@ -276,7 +232,6 @@ export function SchedulePrettyDescription(props: {
   })();
 
   const deliveryMethods = getDeliveryMethods();
-  const deliveryTargets = getDeliveryTargets();
   const targets = getTargets();
 
   return (
@@ -284,7 +239,7 @@ export function SchedulePrettyDescription(props: {
       <div className="flex items-center gap-2 flex-wrap">
         {actionIcon}
         <span>{getActionDescription()}</span>
-        {targets.length > 0 && (
+        {targets && targets.length > 0 && (
           <>
             <span>for</span>
             {renderList(targets)}
@@ -297,19 +252,11 @@ export function SchedulePrettyDescription(props: {
         <span>{getTimingDescription()}</span>
       </div>
 
-      {deliveryMethods.length > 0 && (
+      {deliveryMethods && deliveryMethods.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <Send className="size-3.5 text-muted-foreground" />
           <span>via</span>
           {renderList(deliveryMethods)}
-        </div>
-      )}
-
-      {deliveryTargets.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <Target className="size-3.5 text-muted-foreground" />
-          <span>to</span>
-          {renderList(deliveryTargets)}
         </div>
       )}
     </div>

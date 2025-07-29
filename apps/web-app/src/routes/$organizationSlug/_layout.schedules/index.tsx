@@ -16,7 +16,7 @@ import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { CalendarDaysIcon, PencilIcon, PlusIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { EmptyState } from "@/components/empty-state";
 import { SchedulePrettyDescription } from "@/components/schedule-pretty-description";
@@ -111,10 +111,16 @@ function RouteComponent() {
               onClick={() =>
                 createSchedule.mutate({
                   idOrSlug: organizationSlug,
-                  recurrence: "daily",
-                  timeOfDay: "09:00",
-                  timezone: session.data?.user.timezone ?? "UTC",
-                  actionType: "generateUpdates",
+                  name: "remindToPostUpdates",
+                  config: {
+                    name: "remindToPostUpdates",
+                    timeOfDay: "09:30",
+                    timezone: session.data?.user.timezone ?? "UTC",
+                    recurrence: "daily",
+                    deliverToEveryone: true,
+                    deliveryMethods: [],
+                  },
+                  isActive: false,
                 })
               }
             >
@@ -137,10 +143,16 @@ function RouteComponent() {
               onClick={() =>
                 createSchedule.mutate({
                   idOrSlug: organizationSlug,
-                  recurrence: "daily",
-                  timeOfDay: "09:00",
-                  timezone: session.data?.user.timezone ?? "UTC",
-                  actionType: "generateUpdates",
+                  name: "remindToPostUpdates",
+                  config: {
+                    name: "remindToPostUpdates",
+                    timeOfDay: "09:30",
+                    timezone: session.data?.user.timezone ?? "UTC",
+                    recurrence: "daily",
+                    deliverToEveryone: true,
+                    deliveryMethods: [],
+                  },
+                  isActive: false,
                 })
               }
             >
@@ -174,7 +186,7 @@ function RouteComponent() {
 
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">
-                      {schedule.createdByMember.user.name},{" "}
+                      {schedule.createdByMember?.user.name},{" "}
                       <span
                         title={dayjs(schedule.updatedAt ?? schedule.createdAt)
                           .tz(session.data?.user.timezone ?? "UTC")
@@ -207,15 +219,9 @@ function RouteComponent() {
                       updateSchedule.mutate({
                         idOrSlug: organizationSlug,
                         scheduleId: schedule.id,
-                        actionType: schedule.actionType,
-                        recurrence: schedule.recurrence,
-                        timezone: schedule.timezone,
-                        timeOfDay: schedule.timeOfDay,
+                        name: schedule.name,
+                        config: schedule.config,
                         isActive: !schedule.isActive,
-                        dayOfWeek:
-                          schedule.recurrence === "weekly" ? schedule.dayOfWeek : undefined,
-                        dayOfMonth:
-                          schedule.recurrence === "monthly" ? schedule.dayOfMonth : undefined,
                       })
                     }
                   >

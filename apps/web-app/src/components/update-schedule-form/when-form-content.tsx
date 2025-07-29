@@ -13,21 +13,21 @@ import { TimezoneSelect } from "./timezone-select";
 
 export function WhenFormContent() {
   const form = useFormContext<typeof updateScheduleContract.$infer.input>();
-  const recurrence = form.watch("recurrence");
+  const recurrence = form.watch("config.recurrence");
 
   return (
     <>
       <FormField
         control={form.control}
-        name="recurrence"
+        name="config.recurrence"
         render={({ field }) => (
           <Select
             value={field.value}
             onValueChange={(value) => {
               field.onChange(value);
-              form.setValue("dayOfWeek", undefined);
-              form.setValue("dayOfMonth", undefined);
-              form.setValue("timeOfDay", "09:30");
+              form.setValue("config.dayOfWeek", undefined);
+              form.setValue("config.dayOfMonth", undefined);
+              form.setValue("config.timeOfDay", "09:30");
             }}
           >
             <SelectTrigger ref={field.ref} onBlur={field.onBlur} disabled={field.disabled}>
@@ -47,7 +47,7 @@ export function WhenFormContent() {
           <p className="text-sm font-medium text-muted-foreground">on</p>
           <FormField
             control={form.control}
-            name="dayOfWeek"
+            name="config.dayOfWeek"
             render={({ field }) => (
               <Select
                 value={field.value?.toString()}
@@ -76,7 +76,7 @@ export function WhenFormContent() {
           <p className="text-sm font-medium text-muted-foreground">on the</p>
           <FormField
             control={form.control}
-            name="dayOfMonth"
+            name="config.dayOfMonth"
             render={({ field }) => (
               <Select
                 value={field.value?.toString()}
@@ -109,7 +109,7 @@ export function WhenFormContent() {
           <p className="text-sm font-medium text-muted-foreground">at</p>
           <FormField
             control={form.control}
-            name="timeOfDay"
+            name="config.timeOfDay"
             render={({ field }) => (
               <Input
                 {...field}

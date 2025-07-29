@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d1aee225-aa3e-4e5a-bb6e-68da3491b34e",
+  "id": "42383c41-38a4-4767-a422-745ad2a3045f",
   "prevId": "6294678e-729c-4e22-aba4-960cdb960193",
   "tables": {
     "account": {
@@ -1045,46 +1045,18 @@
           "name": "created_by_member_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "action_type": {
-          "name": "action_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "recurrence": {
-          "name": "recurrence",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "timezone": {
-          "name": "timezone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "day_of_week": {
-          "name": "day_of_week",
-          "type": "integer",
-          "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "day_of_month": {
-          "name": "day_of_month",
-          "type": "integer",
+        "name": {
+          "name": "name",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "time_of_day": {
-          "name": "time_of_day",
+        "config": {
+          "name": "config",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1121,10 +1093,10 @@
           ],
           "isUnique": false
         },
-        "schedule_action_type_index": {
-          "name": "schedule_action_type_index",
+        "schedule_created_by_member_id_index": {
+          "name": "schedule_created_by_member_id_index",
           "columns": [
-            "action_type"
+            "created_by_member_id"
           ],
           "isUnique": false
         },
@@ -1132,6 +1104,13 @@
           "name": "schedule_active_index",
           "columns": [
             "is_active"
+          ],
+          "isUnique": false
+        },
+        "schedule_name_index": {
+          "name": "schedule_name_index",
+          "columns": [
+            "name"
           ],
           "isUnique": false
         }
@@ -1160,236 +1139,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "schedule_delivery": {
-      "name": "schedule_delivery",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "schedule_id": {
-          "name": "schedule_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "delivery_method": {
-          "name": "delivery_method",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "schedule_delivery_schedule_id_index": {
-          "name": "schedule_delivery_schedule_id_index",
-          "columns": [
-            "schedule_id"
-          ],
-          "isUnique": false
-        },
-        "schedule_delivery_method_index": {
-          "name": "schedule_delivery_method_index",
-          "columns": [
-            "delivery_method"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "schedule_delivery_schedule_id_schedule_id_fk": {
-          "name": "schedule_delivery_schedule_id_schedule_id_fk",
-          "tableFrom": "schedule_delivery",
-          "tableTo": "schedule",
-          "columnsFrom": [
-            "schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "schedule_delivery_target": {
-      "name": "schedule_delivery_target",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "schedule_id": {
-          "name": "schedule_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "target_type": {
-          "name": "target_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "team_id": {
-          "name": "team_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "member_id": {
-          "name": "member_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "slack_channel_id": {
-          "name": "slack_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "schedule_delivery_target_schedule_id_index": {
-          "name": "schedule_delivery_target_schedule_id_index",
-          "columns": [
-            "schedule_id"
-          ],
-          "isUnique": false
-        },
-        "schedule_delivery_target_type_index": {
-          "name": "schedule_delivery_target_type_index",
-          "columns": [
-            "target_type"
-          ],
-          "isUnique": false
-        },
-        "schedule_delivery_target_team_id_index": {
-          "name": "schedule_delivery_target_team_id_index",
-          "columns": [
-            "team_id"
-          ],
-          "isUnique": false
-        },
-        "schedule_delivery_target_member_id_index": {
-          "name": "schedule_delivery_target_member_id_index",
-          "columns": [
-            "member_id"
-          ],
-          "isUnique": false
-        },
-        "schedule_delivery_target_slack_channel_id_index": {
-          "name": "schedule_delivery_target_slack_channel_id_index",
-          "columns": [
-            "slack_channel_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "schedule_delivery_target_schedule_id_schedule_id_fk": {
-          "name": "schedule_delivery_target_schedule_id_schedule_id_fk",
-          "tableFrom": "schedule_delivery_target",
-          "tableTo": "schedule",
-          "columnsFrom": [
-            "schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_delivery_target_team_id_team_id_fk": {
-          "name": "schedule_delivery_target_team_id_team_id_fk",
-          "tableFrom": "schedule_delivery_target",
-          "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_delivery_target_member_id_member_id_fk": {
-          "name": "schedule_delivery_target_member_id_member_id_fk",
-          "tableFrom": "schedule_delivery_target",
-          "tableTo": "member",
-          "columnsFrom": [
-            "member_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_delivery_target_slack_channel_id_slack_channel_id_fk": {
-          "name": "schedule_delivery_target_slack_channel_id_slack_channel_id_fk",
-          "tableFrom": "schedule_delivery_target",
-          "tableTo": "slack_channel",
-          "columnsFrom": [
-            "slack_channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1407,8 +1157,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "organization_id": {
-          "name": "organization_id",
+        "schedule_id": {
+          "name": "schedule_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1418,14 +1168,7 @@
           "name": "created_by_member_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "schedule_id": {
-          "name": "schedule_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "status": {
@@ -1434,7 +1177,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'active'"
+          "default": "'pending'"
         },
         "next_execution_at": {
           "name": "next_execution_at",
@@ -1446,13 +1189,6 @@
         "last_execution_at": {
           "name": "last_execution_at",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "last_execution_status": {
-          "name": "last_execution_status",
-          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -1479,36 +1215,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "durable_object_id": {
-          "name": "durable_object_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "alarm_id": {
-          "name": "alarm_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "max_retries": {
-          "name": "max_retries",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 3
-        },
-        "current_retries": {
-          "name": "current_retries",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -1532,13 +1238,6 @@
         }
       },
       "indexes": {
-        "schedule_run_organization_id_index": {
-          "name": "schedule_run_organization_id_index",
-          "columns": [
-            "organization_id"
-          ],
-          "isUnique": false
-        },
         "schedule_run_schedule_id_index": {
           "name": "schedule_run_schedule_id_index",
           "columns": [
@@ -1559,22 +1258,15 @@
             "next_execution_at"
           ],
           "isUnique": false
-        },
-        "schedule_run_durable_object_index": {
-          "name": "schedule_run_durable_object_index",
-          "columns": [
-            "durable_object_id"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {
-        "schedule_run_organization_id_organization_id_fk": {
-          "name": "schedule_run_organization_id_organization_id_fk",
+        "schedule_run_schedule_id_schedule_id_fk": {
+          "name": "schedule_run_schedule_id_schedule_id_fk",
           "tableFrom": "schedule_run",
-          "tableTo": "organization",
+          "tableTo": "schedule",
           "columnsFrom": [
-            "organization_id"
+            "schedule_id"
           ],
           "columnsTo": [
             "id"
@@ -1594,27 +1286,14 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        },
-        "schedule_run_schedule_id_schedule_id_fk": {
-          "name": "schedule_run_schedule_id_schedule_id_fk",
-          "tableFrom": "schedule_run",
-          "tableTo": "schedule",
-          "columnsFrom": [
-            "schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "schedule_target": {
-      "name": "schedule_target",
+    "schedule_run_task": {
+      "name": "schedule_run_task",
       "columns": {
         "id": {
           "name": "id",
@@ -1623,33 +1302,43 @@
           "notNull": true,
           "autoincrement": false
         },
-        "schedule_id": {
-          "name": "schedule_id",
+        "schedule_run_id": {
+          "name": "schedule_run_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "target_type": {
-          "name": "target_type",
+        "status": {
+          "name": "status",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'pending'"
         },
-        "team_id": {
-          "name": "team_id",
+        "results": {
+          "name": "results",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "member_id": {
-          "name": "member_id",
-          "type": "text",
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "max_attempts": {
+          "name": "max_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 3
         },
         "created_at": {
           "name": "created_at",
@@ -1662,73 +1351,33 @@
           "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
       "indexes": {
-        "schedule_target_schedule_id_index": {
-          "name": "schedule_target_schedule_id_index",
+        "schedule_run_task_schedule_run_id": {
+          "name": "schedule_run_task_schedule_run_id",
           "columns": [
-            "schedule_id"
+            "schedule_run_id"
           ],
           "isUnique": false
         },
-        "schedule_target_type_index": {
-          "name": "schedule_target_type_index",
+        "schedule_run_task_status": {
+          "name": "schedule_run_task_status",
           "columns": [
-            "target_type"
-          ],
-          "isUnique": false
-        },
-        "schedule_target_team_id_index": {
-          "name": "schedule_target_team_id_index",
-          "columns": [
-            "team_id"
-          ],
-          "isUnique": false
-        },
-        "schedule_target_member_id_index": {
-          "name": "schedule_target_member_id_index",
-          "columns": [
-            "member_id"
+            "status"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "schedule_target_schedule_id_schedule_id_fk": {
-          "name": "schedule_target_schedule_id_schedule_id_fk",
-          "tableFrom": "schedule_target",
-          "tableTo": "schedule",
+        "schedule_run_task_schedule_run_id_schedule_run_id_fk": {
+          "name": "schedule_run_task_schedule_run_id_schedule_run_id_fk",
+          "tableFrom": "schedule_run_task",
+          "tableTo": "schedule_run",
           "columnsFrom": [
-            "schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_target_team_id_team_id_fk": {
-          "name": "schedule_target_team_id_team_id_fk",
-          "tableFrom": "schedule_target",
-          "tableTo": "team",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "schedule_target_member_id_member_id_fk": {
-          "name": "schedule_target_member_id_member_id_fk",
-          "tableFrom": "schedule_target",
-          "tableTo": "member",
-          "columnsFrom": [
-            "member_id"
+            "schedule_run_id"
           ],
           "columnsTo": [
             "id"

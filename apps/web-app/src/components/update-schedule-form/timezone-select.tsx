@@ -33,7 +33,7 @@ export function TimezoneSelect() {
   return (
     <FormField
       control={form.control}
-      name="timezone"
+      name="config.timezone"
       render={({ field }) => {
         return (
           <FormItem>

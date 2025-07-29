@@ -26,28 +26,16 @@ export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
   Schedule,
-  ScheduleActionType,
+  ScheduleConfig,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigSendSummaries,
   ScheduleInsert,
-  ScheduleRecurrence,
+  ScheduleName,
   ScheduleUpdate,
   schedule,
 } from "./schedule";
 export {
-  ScheduleDelivery,
-  ScheduleDeliveryInsert,
-  ScheduleDeliveryMethod,
-  ScheduleDeliveryUpdate,
-  scheduleDelivery,
-} from "./schedule-delivery";
-export {
-  ScheduleDeliveryTarget,
-  ScheduleDeliveryTargetInsert,
-  ScheduleDeliveryTargetType,
-  ScheduleDeliveryTargetUpdate,
-  scheduleDeliveryTarget,
-} from "./schedule-delivery-target";
-export {
-  ScheduleExecutionStatus,
   ScheduleRun,
   ScheduleRunInsert,
   ScheduleRunUpdate,
@@ -55,12 +43,12 @@ export {
   scheduleRun,
 } from "./schedule-run";
 export {
-  ScheduleTarget,
-  ScheduleTargetInsert,
-  ScheduleTargetType,
-  ScheduleTargetUpdate,
-  scheduleTarget,
-} from "./schedule-target";
+  ScheduleRunTask,
+  ScheduleRunTaskInsert,
+  ScheduleRunTaskStatus,
+  ScheduleRunTaskUpdate,
+  scheduleRunTask,
+} from "./schedule-run-task";
 export {
   SlackChannel,
   SlackChannelInsert,
@@ -121,10 +109,8 @@ import { invitation } from "./invitation";
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";
-import { scheduleDelivery } from "./schedule-delivery";
-import { scheduleDeliveryTarget } from "./schedule-delivery-target";
 import { scheduleRun } from "./schedule-run";
-import { scheduleTarget } from "./schedule-target";
+import { scheduleRunTask } from "./schedule-run-task";
 import { slackChannel } from "./slack-channel";
 import { slackEvent } from "./slack-event";
 import { slackEventVector } from "./slack-event-vector";
@@ -181,8 +167,6 @@ export const memberRelations = relations(member, ({ one, many }) => ({
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
   createdSchedules: many(schedule),
-  scheduleTargets: many(scheduleTarget),
-  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const teamRelations = relations(team, ({ one, many }) => ({
@@ -192,8 +176,6 @@ export const teamRelations = relations(team, ({ one, many }) => ({
   }),
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
-  scheduleTargets: many(scheduleTarget),
-  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
@@ -278,7 +260,6 @@ export const slackChannelRelations = relations(slackChannel, ({ one, many }) => 
     references: [slackIntegration.id],
   }),
   events: many(slackEvent),
-  scheduleDeliveryTargets: many(scheduleDeliveryTarget),
 }));
 
 export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
@@ -350,16 +331,9 @@ export const scheduleRelations = relations(schedule, ({ one, many }) => ({
     references: [member.id],
   }),
   scheduleRuns: many(scheduleRun),
-  targets: many(scheduleTarget),
-  deliveries: many(scheduleDelivery),
-  deliveryTargets: many(scheduleDeliveryTarget),
 }));
 
-export const scheduleRunRelations = relations(scheduleRun, ({ one }) => ({
-  organization: one(organization, {
-    fields: [scheduleRun.organizationId],
-    references: [organization.id],
-  }),
+export const scheduleRunRelations = relations(scheduleRun, ({ one, many }) => ({
   createdByMember: one(member, {
     fields: [scheduleRun.createdByMemberId],
     references: [member.id],
@@ -368,45 +342,12 @@ export const scheduleRunRelations = relations(scheduleRun, ({ one }) => ({
     fields: [scheduleRun.scheduleId],
     references: [schedule.id],
   }),
+  tasks: many(scheduleRunTask),
 }));
 
-export const scheduleTargetRelations = relations(scheduleTarget, ({ one }) => ({
-  schedule: one(schedule, {
-    fields: [scheduleTarget.scheduleId],
-    references: [schedule.id],
-  }),
-  team: one(team, {
-    fields: [scheduleTarget.teamId],
-    references: [team.id],
-  }),
-  member: one(member, {
-    fields: [scheduleTarget.memberId],
-    references: [member.id],
-  }),
-}));
-
-export const scheduleDeliveryRelations = relations(scheduleDelivery, ({ one }) => ({
-  schedule: one(schedule, {
-    fields: [scheduleDelivery.scheduleId],
-    references: [schedule.id],
-  }),
-}));
-
-export const scheduleDeliveryTargetRelations = relations(scheduleDeliveryTarget, ({ one }) => ({
-  schedule: one(schedule, {
-    fields: [scheduleDeliveryTarget.scheduleId],
-    references: [schedule.id],
-  }),
-  team: one(team, {
-    fields: [scheduleDeliveryTarget.teamId],
-    references: [team.id],
-  }),
-  member: one(member, {
-    fields: [scheduleDeliveryTarget.memberId],
-    references: [member.id],
-  }),
-  slackChannel: one(slackChannel, {
-    fields: [scheduleDeliveryTarget.slackChannelId],
-    references: [slackChannel.id],
+export const scheduleRunTaskRelations = relations(scheduleRunTask, ({ one }) => ({
+  scheduleRun: one(scheduleRun, {
+    fields: [scheduleRunTask.scheduleRunId],
+    references: [scheduleRun.id],
   }),
 }));
