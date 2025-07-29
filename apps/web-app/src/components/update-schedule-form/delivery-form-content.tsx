@@ -12,7 +12,6 @@ export type DeliveryFormContentProps = {
 
 export function DeliveryFormContent(props: DeliveryFormContentProps) {
   const form = useFormContext<typeof updateScheduleContract.$infer.input>();
-  const configName = form.watch("config.name");
   const deliveryMethods = form.watch("config.deliveryMethods");
   const deliverToEveryone = form.watch("config.deliverToEveryone");
   const isAddingDeliveryMethods = deliveryMethods?.findIndex((field) => field === undefined) !== -1;

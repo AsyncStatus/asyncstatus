@@ -128,7 +128,7 @@ export function SchedulePrettyDescription(props: {
             ),
           text:
             delivery.type === "member"
-              ? member?.user.name
+              ? member?.user.email
               : delivery.type === "team"
                 ? team?.name
                 : slackChannel?.name,
