@@ -46,34 +46,6 @@
         "max_batch_timeout": 2,
         "retry_delay": 60,
         "max_retries": 10
-      },
-      {
-        "queue": "schedule-triggers",
-        "max_batch_size": 10,
-        "max_batch_timeout": 2,
-        "retry_delay": 60,
-        "max_retries": 10
-      },
-      {
-        "queue": "schedule-ping-for-updates",
-        "max_batch_size": 10,
-        "max_batch_timeout": 2,
-        "retry_delay": 60,
-        "max_retries": 10
-      },
-      {
-        "queue": "schedule-generate-updates",
-        "max_batch_size": 10,
-        "max_batch_timeout": 2,
-        "retry_delay": 60,
-        "max_retries": 10
-      },
-      {
-        "queue": "schedule-send-summaries",
-        "max_batch_size": 10,
-        "max_batch_timeout": 2,
-        "retry_delay": 60,
-        "max_retries": 10
       }
     ],
     "producers": [
