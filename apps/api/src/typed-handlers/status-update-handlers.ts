@@ -4,7 +4,7 @@ import { generateId } from "better-auth";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
-import { generateStatusUpdate } from "../workflows/generate-status-update/generate-status-update";
+import { generateStatusUpdate } from "../workflows/status-updates/generate-status-update/generate-status-update";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createStatusUpdateContract,

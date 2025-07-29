@@ -68,10 +68,10 @@ export const createScheduleHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ db, organization, input, member }) => {
-    const now = new Date();
-    const scheduleId = generateId();
-
     const scheduleWithMember = await db.transaction(async (tx) => {
+      const now = new Date();
+      const scheduleId = generateId();
+
       const newSchedule = await tx
         .insert(schema.schedule)
         .values({
@@ -113,21 +113,21 @@ export const createScheduleHandler = typedHandler<
         }
       }
 
-      const scheduleWithMember = await db.query.schedule.findFirst({
+      const data = await tx.query.schedule.findFirst({
         where: eq(schema.schedule.id, scheduleId),
         with: {
           createdByMember: { with: { user: true } },
         },
       });
 
-      if (!scheduleWithMember) {
+      if (!data) {
         throw new TypedHandlersError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch created schedule",
         });
       }
 
-      return scheduleWithMember;
+      return data;
     });
 
     return scheduleWithMember;
@@ -216,7 +216,6 @@ export const updateScheduleHandler = typedHandler<
         // Create new schedule run if schedule is active
         if (schedule.isActive) {
           const nextExecutionTime = calculateNextScheduleExecution(schedule);
-          console.log(nextExecutionTime);
 
           if (nextExecutionTime) {
             await tx.insert(schema.scheduleRun).values({
@@ -233,7 +232,7 @@ export const updateScheduleHandler = typedHandler<
         }
       }
 
-      const scheduleWithMember = await db.query.schedule.findFirst({
+      const scheduleWithMember = await tx.query.schedule.findFirst({
         where: eq(schema.schedule.id, scheduleId),
         with: {
           createdByMember: { with: { user: true } },

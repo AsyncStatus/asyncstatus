@@ -11,7 +11,9 @@ import type { Db } from "../db/db";
 import { createDb } from "../db/db";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { GenerateStatusUpdatesWorkflowParams } from "../workflows/schedules/generate-status-updates";
 import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-for-updates";
+import type { SendSummariesWorkflowParams } from "../workflows/schedules/send-summaries";
 import type { DeleteSlackIntegrationWorkflowParams } from "../workflows/slack/delete-slack-integration";
 import type { SyncSlackWorkflowParams } from "../workflows/slack/sync-slack";
 import type { Auth, Session } from "./auth";
@@ -57,9 +59,8 @@ export type Bindings = {
   SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
   DELETE_SLACK_INTEGRATION_WORKFLOW: Workflow<DeleteSlackIntegrationWorkflowParams>;
   PING_FOR_UPDATES_WORKFLOW: Workflow<PingForUpdatesWorkflowParams>;
-  SCHEDULE_PING_FOR_UPDATES_QUEUE: Queue<string>;
-  SCHEDULE_GENERATE_UPDATES_QUEUE: Queue<string>;
-  SCHEDULE_SEND_SUMMARIES_QUEUE: Queue<string>;
+  GENERATE_STATUS_UPDATES_WORKFLOW: Workflow<GenerateStatusUpdatesWorkflowParams>;
+  SEND_SUMMARIES_WORKFLOW: Workflow<SendSummariesWorkflowParams>;
 };
 
 export type Variables = {
@@ -79,6 +80,7 @@ export type Variables = {
     syncSlack: Workflow<SyncSlackWorkflowParams>;
     deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
     pingForUpdates: Workflow<PingForUpdatesWorkflowParams>;
+    generateStatusUpdates: Workflow<GenerateStatusUpdatesWorkflowParams>;
   };
   slack: {
     appId: string;
@@ -155,6 +157,8 @@ export async function createContext(c: Context<HonoEnv>) {
       syncSlack: c.env.SYNC_SLACK_WORKFLOW,
       deleteSlackIntegration: c.env.DELETE_SLACK_INTEGRATION_WORKFLOW,
       pingForUpdates: c.env.PING_FOR_UPDATES_WORKFLOW,
+      generateStatusUpdates: c.env.GENERATE_STATUS_UPDATES_WORKFLOW,
+      sendSummaries: c.env.SEND_SUMMARIES_WORKFLOW,
     },
     bucket: {
       private: c.env.PRIVATE_BUCKET,

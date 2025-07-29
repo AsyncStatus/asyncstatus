@@ -49,14 +49,35 @@ export async function scheduled(
     );
   }
 
-  // TODO: Add other workflow triggers when implemented
-  // if (generateUpdatesScheduleRuns.length > 0) {
-  //   await env.GENERATE_UPDATES_WORKFLOW.createBatch(...)
-  // }
+  // Trigger generate updates workflows
+  if (generateUpdatesScheduleRuns.length > 0) {
+    ctx.waitUntil(
+      env.GENERATE_STATUS_UPDATES_WORKFLOW.createBatch(
+        generateUpdatesScheduleRuns.map((scheduleRun) => ({
+          params: {
+            scheduleRunId: scheduleRun.id,
+            organizationId: scheduleRun.schedule.organizationId,
+          },
+        })),
+      ),
+    );
+  }
 
-  // if (sendSummariesScheduleRuns.length > 0) {
-  //   await env.SEND_SUMMARIES_WORKFLOW.createBatch(...)
-  // }
+  // Trigger send summaries workflows
+  if (sendSummariesScheduleRuns.length > 0) {
+    ctx.waitUntil(
+      env.SEND_SUMMARIES_WORKFLOW.createBatch(
+        sendSummariesScheduleRuns.map((scheduleRun) => ({
+          params: {
+            scheduleRunId: scheduleRun.id,
+            organizationId: scheduleRun.schedule.organizationId,
+          },
+        })),
+      ),
+    );
+  }
 
-  console.log(`Triggered ${pingForUpdatesScheduleRuns.length} ping-for-updates workflows`);
+  console.log(
+    `Triggered ${pingForUpdatesScheduleRuns.length} ping-for-updates, ${generateUpdatesScheduleRuns.length} generate-status-updates, and ${sendSummariesScheduleRuns.length} send-summaries workflows`,
+  );
 }
