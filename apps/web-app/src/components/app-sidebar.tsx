@@ -111,31 +111,20 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
 
 function AppSidebarBetaNotice() {
   return (
-    <Card className="p-2">
-      <CardHeader className="px-0">
-        <CardTitle className="text-md">We&apos;re in beta</CardTitle>
-        <CardDescription className="text-xs text-pretty">
-          We&apos;re working hard to bring you the best experience but there are some features that
-          are still under development or might not work as expected.
-        </CardDescription>
-      </CardHeader>
-      <CardFooter className="px-0">
-        <div className="flex w-full flex-col items-center gap-2">
-          <Button variant="outline" size="sm" className="w-full text-xs" asChild>
-            <a href="mailto:support@asyncstatus.com" target="_blank" rel="noreferrer">
-              <LifeBuoy className="size-3" />
-              <span>Report an issue</span>
-            </a>
-          </Button>
-          <Button size="sm" className="w-full text-xs" asChild>
-            <a href="mailto:kacper@asyncstatus.com" target="_blank" rel="noreferrer">
-              <Send className="size-3" />
-              <span>Give feedback</span>
-            </a>
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+    <div className="flex w-full flex-col items-center gap-2">
+      <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+        <a href="mailto:support@asyncstatus.com" target="_blank" rel="noreferrer">
+          <LifeBuoy className="size-3" />
+          <span>Report an issue</span>
+        </a>
+      </Button>
+      <Button size="sm" className="w-full text-xs" asChild>
+        <a href="mailto:kacper@asyncstatus.com" target="_blank" rel="noreferrer">
+          <Send className="size-3" />
+          <span>Give feedback</span>
+        </a>
+      </Button>
+    </div>
   );
 }
 
