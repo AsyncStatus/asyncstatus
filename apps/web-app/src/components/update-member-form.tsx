@@ -110,7 +110,7 @@ export function UpdateMemberForm(props: {
     () => [
       {
         value: "auto",
-        label: `Auto (${dayjs.tz.guess()})`,
+        label: `Auto (${member.data?.user.timezone})`,
       },
       {
         value: "UTC",
@@ -121,7 +121,7 @@ export function UpdateMemberForm(props: {
         label: tz.replace(/_/g, " "),
       })),
     ],
-    [session.data?.user.timezone],
+    [member.data?.user.timezone],
   );
 
   useEffect(() => {
@@ -320,7 +320,7 @@ export function UpdateMemberForm(props: {
                         className="w-full justify-between"
                       >
                         {autoDetectTimezone
-                          ? `Auto (${dayjs.tz.guess()})`
+                          ? `Auto (${member.data?.user.timezone})`
                           : field.value
                             ? timezones.find((timezone) => timezone.value === field.value)?.label
                             : "Select a timezone..."}
