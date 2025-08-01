@@ -73,14 +73,14 @@ export default async function Page(props: {
             Login
           </Link>
 
-          <Link
-            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-            className="hover:text-foreground"
-          >
-            <Button size="sm">
+          <Button size="sm" asChild>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+              className="hover:text-foreground"
+            >
               <span>Create an account</span>
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         <MobileMenu />
@@ -154,14 +154,14 @@ export default async function Page(props: {
         </h3>
 
         <div className="mt-14 flex flex-col items-center justify-center max-sm:mt-6">
-          <Link
-            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-            className="hover:text-foreground"
-          >
-            <Button size="lg">
+          <Button size="lg" asChild>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+              className="hover:text-foreground"
+            >
               <span>Turn activity into updates</span>
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
           <p className="text-muted-foreground text-xs mt-2">
             No credit card required. Cancel anytime.
@@ -180,6 +180,20 @@ export default async function Page(props: {
           <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
+
+        <div className="flex justify-center mt-12 gap-4 max-sm:flex-col">
+          <Button variant="secondary" asChild>
+            <Link href="https://youtu.be/y_Hl0rVJHKs" target="_blank">
+              <span>Watch intro video</span>
+            </Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href="https://youtu.be/kPK0FMHNSDY" target="_blank">
+              <span>Watch full product demo</span>
+            </Link>
+          </Button>
+        </div>
+
         {/* <img
           src="/hero-light.webp"
           alt="AsyncStatus app screenshot"
@@ -274,14 +288,14 @@ export default async function Page(props: {
         <section id="early-stage">
           <BetaMessage />
           <div className="flex justify-center mt-12">
-            <Link
-              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-              className="hover:text-foreground"
-            >
-              <Button size="lg">
+            <Button size="lg" asChild>
+              <Link
+                href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                className="hover:text-foreground"
+              >
                 <span>Turn activity into updates</span>
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </section>
 

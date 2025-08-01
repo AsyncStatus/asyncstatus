@@ -137,14 +137,14 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <div className="block w-full py-6">
-                  <Link
-                    href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-                    className="hover:text-foreground"
-                  >
-                    <Button size="lg">
+                  <Button size="lg" asChild>
+                    <Link
+                      href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                      className="hover:text-foreground"
+                    >
                       <span>Create an account</span>
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </motion.div>
             </motion.nav>

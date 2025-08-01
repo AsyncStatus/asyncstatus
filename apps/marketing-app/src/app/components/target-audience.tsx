@@ -91,11 +91,14 @@ export function TargetAudience() {
         <p className="text-muted-foreground text-center text-lg text-balance">
           Ready to transform how your team shares progress?
         </p>
-        <Link href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`} className="hover:text-foreground">
-          <Button size="lg">
+        <Button size="lg" asChild>
+          <Link
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+            className="hover:text-foreground"
+          >
             <span>Turn activity into updates</span>
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </section>
   );

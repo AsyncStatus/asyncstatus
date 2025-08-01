@@ -44,14 +44,14 @@ export function Footer() {
                 >
                   Create an account
                 </Link>
-                <Link
-                  href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-                  className="hover:text-foreground"
-                >
-                  <Button size="sm">
+                <Button size="sm" asChild>
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                    className="hover:text-foreground"
+                  >
                     <span>Turn activity into updates</span>
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
 
