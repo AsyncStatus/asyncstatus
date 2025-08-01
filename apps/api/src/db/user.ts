@@ -15,6 +15,7 @@ export const user = sqliteTable(
       .default(true),
     timezone: text("timezone").notNull().default("UTC"),
     activeOrganizationSlug: text("active_organization_slug"),
+    stripeCustomerId: text("stripe_customer_id"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },

@@ -18,6 +18,7 @@
     "./typed-handlers/slack-integration": "./src/typed-handlers/slack-integration-contracts.ts",
     "./typed-handlers/status-update": "./src/typed-handlers/status-update-contracts.ts",
     "./typed-handlers/team": "./src/typed-handlers/team-contracts.ts",
+    "./typed-handlers/stripe": "./src/typed-handlers/stripe-contracts.ts",
     "./typed-handlers/waitlist": "./src/typed-handlers/waitlist-contracts.ts"
   },
   "scripts": {
@@ -56,6 +57,7 @@
     "octokit": "5.0.3",
     "random-words": "2.0.1",
     "resend": "4.7.0",
+    "stripe": "^17.3.1",
     "voyageai": "0.0.4",
     "zod": "catalog:"
   },

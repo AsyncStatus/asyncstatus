@@ -4,6 +4,7 @@ import { generateId } from "better-auth";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { getOrganizationPlan } from "../lib/get-organization-plan";
 import { generateStatusUpdate } from "../workflows/status-updates/generate-status-update/generate-status-update";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
@@ -621,18 +622,32 @@ export const generateStatusUpdateHandler = typedHandler<
   generateStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, openRouterProvider, input, organization, member }) => {
+  async ({ db, openRouterProvider, input, organization, member, stripe }) => {
     let generatedItems: { content: string; isBlocker: boolean; isInProgress: boolean }[] = [];
     // The frontend sends dates in UTC ISO format, so we should parse them as UTC
     const effectiveFrom = dayjs.utc(input.effectiveFrom);
     const effectiveTo = dayjs.utc(input.effectiveTo);
 
     try {
+      // Get organization's plan
+      const { plan: orgPlan, stripeCustomerId } = await getOrganizationPlan(
+        db,
+        stripe.secretKey,
+        stripe.kv,
+        organization.id,
+        stripe.priceIds,
+      );
+
       generatedItems = await generateStatusUpdate({
         db,
         openRouterProvider,
         organizationId: organization.id,
         memberId: member.id,
+        plan: orgPlan,
+        kv: stripe.kv,
+        stripeSecretKey: stripe.secretKey,
+        stripeCustomerId,
+        aiLimits: stripe.aiLimits,
         effectiveFrom: effectiveFrom.toISOString(),
         effectiveTo: effectiveTo.toISOString(),
       });

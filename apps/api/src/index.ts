@@ -15,8 +15,14 @@ import {
 } from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { verifySlackRequest } from "./lib/slack";
+import { handleStripeWebhook } from "./lib/stripe-webhook";
 import { queue } from "./queue/queue";
 import { scheduled } from "./scheduled";
+import {
+  addGenerationsHandler,
+  checkAiUsageLimitHandler,
+  getAiUsageStatsHandler,
+} from "./typed-handlers/ai-usage-handlers";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   deleteGithubIntegrationHandler,
@@ -71,6 +77,12 @@ import {
   listStatusUpdatesHandler,
   updateStatusUpdateHandler,
 } from "./typed-handlers/status-update-handlers";
+import {
+  generateStripeCheckoutHandler,
+  getSubscriptionHandler,
+  stripeSuccessHandler,
+  syncSubscriptionHandler,
+} from "./typed-handlers/stripe-handlers";
 import {
   addTeamMemberHandler,
   createTeamHandler,
@@ -133,6 +145,30 @@ const slackWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
   return c.json({ ok: true }, 200);
 });
 
+const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const body = await c.req.raw.text();
+  const signature = c.req.header("Stripe-Signature");
+
+  if (!signature) {
+    return c.json({ error: "Missing signature" }, 400);
+  }
+
+  const result = await handleStripeWebhook(
+    c.env.STRIPE_SECRET_KEY,
+    c.env.STRIPE_WEBHOOK_SECRET,
+    c.env.STRIPE_KV,
+    body,
+    signature,
+  );
+
+  if (!result.success) {
+    console.error("[STRIPE WEBHOOK] Error:", result.error);
+    return c.json({ error: result.error }, 400);
+  }
+
+  return c.json({ received: true });
+});
+
 const app = new Hono<HonoEnv>()
   .use(
     "*",
@@ -172,11 +208,13 @@ const app = new Hono<HonoEnv>()
     c.set("session" as any, context.session);
     c.set("workflow", context.workflow);
     c.set("slack", context.slack);
+    c.set("stripe", context.stripe);
     return next();
   })
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
+  .route("/stripe/webhooks", stripeWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
     if (err instanceof TypedHandlersError) {
@@ -252,6 +290,13 @@ const typedHandlersApp = typedHandlersHonoServer(
     listSlackChannelsHandler,
     listSlackUsersHandler,
     deleteSlackIntegrationHandler,
+    generateStripeCheckoutHandler,
+    stripeSuccessHandler,
+    getSubscriptionHandler,
+    syncSubscriptionHandler,
+    checkAiUsageLimitHandler,
+    getAiUsageStatsHandler,
+    addGenerationsHandler,
   ],
   {
     getContext: (c) => ({
@@ -269,6 +314,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       organization: c.get("organization" as any),
       member: c.get("member" as any),
       slack: c.get("slack"),
+      stripe: c.get("stripe"),
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
     }),
@@ -282,7 +328,7 @@ export default {
 };
 export type App = typeof app;
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
-export { SyncGithubWorkflow } from "./workflows/github/sync-github-v2";
+export { SyncGithubWorkflow } from "./workflows/github/sync-github";
 export { GenerateStatusUpdatesWorkflow } from "./workflows/schedules/generate-status-updates";
 export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
 export { SendSummariesWorkflow } from "./workflows/schedules/send-summaries";

@@ -10,7 +10,7 @@ import type * as schema from "../db";
 import type { Db } from "../db/db";
 import { createDb } from "../db/db";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
-import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github-v2";
+import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github";
 import type { GenerateStatusUpdatesWorkflowParams } from "../workflows/schedules/generate-status-updates";
 import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-for-updates";
 import type { SendSummariesWorkflowParams } from "../workflows/schedules/send-summaries";
@@ -61,6 +61,17 @@ export type Bindings = {
   PING_FOR_UPDATES_WORKFLOW: Workflow<PingForUpdatesWorkflowParams>;
   GENERATE_STATUS_UPDATES_WORKFLOW: Workflow<GenerateStatusUpdatesWorkflowParams>;
   SEND_SUMMARIES_WORKFLOW: Workflow<SendSummariesWorkflowParams>;
+  STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+  STRIPE_KV: KVNamespace;
+  // Stripe Plan Price IDs
+  STRIPE_BASIC_PRICE_ID: string;
+  STRIPE_STARTUP_PRICE_ID: string;
+  STRIPE_ENTERPRISE_PRICE_ID: string;
+  // AI Generation Limits per Plan
+  AI_BASIC_MONTHLY_LIMIT: string;
+  AI_STARTUP_MONTHLY_LIMIT: string;
+  AI_ENTERPRISE_MONTHLY_LIMIT: string;
 };
 
 export type Variables = {
@@ -88,6 +99,21 @@ export type Variables = {
     clientSecret: string;
     signingSecret: string;
     stateSecret: string;
+  };
+  stripe: {
+    secretKey: string;
+    webhookSecret: string;
+    kv: KVNamespace;
+    priceIds: {
+      basic: string;
+      startup: string;
+      enterprise: string;
+    };
+    aiLimits: {
+      basic: number;
+      startup: number;
+      enterprise: number;
+    };
   };
 };
 
@@ -145,6 +171,21 @@ export async function createContext(c: Context<HonoEnv>) {
       clientSecret: c.env.SLACK_CLIENT_SECRET,
       signingSecret: c.env.SLACK_SIGNING_SECRET,
       stateSecret: c.env.SLACK_STATE_SECRET,
+    },
+    stripe: {
+      secretKey: c.env.STRIPE_SECRET_KEY,
+      webhookSecret: c.env.STRIPE_WEBHOOK_SECRET,
+      kv: c.env.STRIPE_KV,
+      priceIds: {
+        basic: c.env.STRIPE_BASIC_PRICE_ID,
+        startup: c.env.STRIPE_STARTUP_PRICE_ID,
+        enterprise: c.env.STRIPE_ENTERPRISE_PRICE_ID,
+      },
+      aiLimits: {
+        basic: parseInt(c.env.AI_BASIC_MONTHLY_LIMIT),
+        startup: parseInt(c.env.AI_STARTUP_MONTHLY_LIMIT),
+        enterprise: parseInt(c.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+      },
     },
     openRouterProvider,
     rateLimiter: {

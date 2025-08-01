@@ -24,15 +24,15 @@ export function Pricing() {
           </p>
         </div>
         {/* Grid */}
-        <div className="mt-12 grid sm:grid-cols-1 lg:grid-cols-3 gap-6 lg:items-center">
+        <div className="mt-12 grid sm:grid-cols-1 lg:grid-cols-3 gap-6 lg:items-start">
           {/* Card */}
-          <Card className="flex flex-col">
-            <CardHeader className="text-center pb-2">
+          <Card className="flex flex-col h-full">
+            <CardHeader className="text-center py-2">
               <CardTitle className="mb-7">Basic</CardTitle>
               <span className="font-bold text-5xl">$9</span>
             </CardHeader>
-            <CardDescription className="text-center">
-              For small teams and trying out AsyncStatus.
+            <CardDescription className="text-center text-balance">
+              For small teams and trying out AsyncStatus. 14 days free trial.
             </CardDescription>
             <CardContent className="flex-1">
               <ul className="mt-7 space-y-2.5 text-sm">
@@ -50,15 +50,15 @@ export function Pricing() {
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
-                  <span className="text-muted-foreground">1 customizable schedule</span>
+                  <span className="text-muted-foreground">2 customizable schedules</span>
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
-                  <span className="text-muted-foreground">No chat</span>
+                  <span className="text-muted-foreground">Chat with activity data</span>
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
-                  <span className="text-muted-foreground">Basic status generation</span>
+                  <span className="text-muted-foreground">100 AI generations/month</span>
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
@@ -76,14 +76,14 @@ export function Pricing() {
           </Card>
           {/* End Card */}
           {/* Card */}
-          <Card className="border-primary flex flex-col">
-            <CardHeader className="text-center pb-2">
-              <Badge className="uppercase w-max self-center mb-3">Most popular</Badge>
+          <Card className="border-primary flex flex-col h-full">
+            <CardHeader className="text-center py-2">
+              {/* <Badge className="uppercase w-max self-center mb-3">Most popular</Badge> */}
               <CardTitle className="!mb-7">Startup</CardTitle>
               <span className="font-bold text-5xl">$49</span>
             </CardHeader>
-            <CardDescription className="text-center w-11/12 mx-auto">
-              For teams that want to get started with AsyncStatus.
+            <CardDescription className="text-center w-11/12 mx-auto text-balance">
+              For teams that want to get started with AsyncStatus. 14 days free trial.
             </CardDescription>
             <CardContent className="flex-1">
               <ul className="mt-7 space-y-2.5 text-sm">
@@ -109,7 +109,7 @@ export function Pricing() {
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
-                  <span className="text-muted-foreground">Advanced status generation</span>
+                  <span className="text-muted-foreground">500 AI generations/month</span>
                 </li>
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
@@ -127,8 +127,8 @@ export function Pricing() {
           </Card>
           {/* End Card */}
           {/* Card */}
-          <Card className="flex flex-col">
-            <CardHeader className="text-center pb-2">
+          <Card className="flex flex-col h-full">
+            <CardHeader className="text-center py-2">
               <CardTitle className="mb-7">Enterprise</CardTitle>
               <span className="font-bold text-3xl">Schedule a call</span>
             </CardHeader>
@@ -160,7 +160,7 @@ export function Pricing() {
                 <li className="flex space-x-2">
                   <CheckIcon className="flex-shrink-0 mt-0.5 h-4 w-4" />
                   <span className="text-muted-foreground">
-                    Advanced status generation with best models available
+                    Unlimited AI generations with best models available
                   </span>
                 </li>
                 <li className="flex space-x-2">
@@ -192,6 +192,14 @@ export function Pricing() {
           {/* End Card */}
         </div>
         {/* End Grid */}
+
+        {/* Small note about add-ons */}
+        <div className="text-center mt-12">
+          <p className="text-sm text-muted-foreground">
+            Need more AI generations? Purchase additional credits from your dashboard. <br /> 25 for
+            $5 or 100 for $15. Credits never expire.
+          </p>
+        </div>
       </div>
       {/* End Pricing */}
     </>

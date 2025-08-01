@@ -2,6 +2,7 @@ import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type * as schema from "../../../db";
 import type { Db } from "../../../db/db";
+import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getExistingStatusUpdateItemsTool } from "../tools/get-existing-status-update-items-tool";
 import { getGithubEventDetailTool } from "../tools/get-github-event-detail-tool";
 import { getGithubRepositoryTool } from "../tools/get-github-repository-tool";
@@ -20,6 +21,11 @@ export type GenerateStatusUpdateOptions = {
   db: Db;
   memberId: schema.Member["id"];
   organizationId: schema.Organization["id"];
+  plan: "basic" | "startup" | "enterprise"; // for usage limits
+  kv: KVNamespace; // for usage tracking
+  stripeSecretKey: string; // for billing
+  stripeCustomerId?: string; // for billing
+  aiLimits: { basic: number; startup: number; enterprise: number }; // AI generation limits
   effectiveFrom: string;
   effectiveTo: string;
 };
@@ -29,11 +35,18 @@ export async function generateStatusUpdate({
   db,
   memberId,
   organizationId,
+  plan,
+  kv,
+  stripeSecretKey,
+  stripeCustomerId,
+  aiLimits,
   effectiveFrom,
   effectiveTo,
 }: GenerateStatusUpdateOptions) {
-  const { text } = await generateText({
-    model: openRouterProvider("google/gemini-2.5-flash"),
+  const model = "google/gemini-2.5-flash";
+
+  const { text, usage } = await generateText({
+    model: openRouterProvider(model),
     seed: 123,
     maxSteps: 30,
     system: systemPrompt,
@@ -61,6 +74,22 @@ The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effecti
       getSlackIntegration: getSlackIntegrationTool(db),
     },
   });
+
+  // Track AI usage with plan limits
+  const usageResult = await trackAiUsage(
+    kv,
+    stripeSecretKey,
+    organizationId,
+    "status_generation",
+    plan,
+    stripeCustomerId,
+    1,
+    aiLimits,
+  );
+
+  if (!usageResult.success) {
+    throw new Error("AI generation limit exceeded for your plan");
+  }
 
   return postProcess(text);
 }

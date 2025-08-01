@@ -10,6 +10,7 @@ import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 import type { HonoEnv } from "../../lib/env";
+import { getOrganizationPlan } from "../../lib/get-organization-plan";
 import { summarizeStatusUpdates } from "../status-updates/summarize-status-updates/summarize-status-updates";
 
 export type SendSummariesWorkflowParams = {
@@ -117,10 +118,32 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
         const effectiveTo = now.endOf("day").toISOString();
 
         try {
+          // Get organization's plan for usage tracking
+          const { plan: orgPlan, stripeCustomerId } = await getOrganizationPlan(
+            db,
+            this.env.STRIPE_SECRET_KEY,
+            this.env.STRIPE_KV,
+            organizationId,
+            {
+              basic: this.env.STRIPE_BASIC_PRICE_ID,
+              startup: this.env.STRIPE_STARTUP_PRICE_ID,
+              enterprise: this.env.STRIPE_ENTERPRISE_PRICE_ID,
+            },
+          );
+
           const summary = await summarizeStatusUpdates({
             db,
             openRouterProvider,
             organizationId,
+            plan: orgPlan,
+            kv: this.env.STRIPE_KV,
+            stripeSecretKey: this.env.STRIPE_SECRET_KEY,
+            stripeCustomerId,
+            aiLimits: {
+              basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+              startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+              enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+            },
             effectiveFrom,
             effectiveTo,
           });
