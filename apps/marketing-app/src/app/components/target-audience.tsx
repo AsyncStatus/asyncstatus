@@ -1,5 +1,6 @@
+import { Button } from "@asyncstatus/ui/components/button";
 import { BarChartIcon, CodeIcon, RocketIcon } from "@asyncstatus/ui/icons";
-
+import Link from "next/link";
 import { WaitlistDialog } from "./waitlist-dialog";
 
 export function TargetAudience() {
@@ -90,7 +91,11 @@ export function TargetAudience() {
         <p className="text-muted-foreground text-center text-lg text-balance">
           Ready to transform how your team shares progress?
         </p>
-        <WaitlistDialog buttonSize="lg" />
+        <Link href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`} className="hover:text-foreground">
+          <Button size="lg">
+            <span>Turn activity into updates</span>
+          </Button>
+        </Link>
       </div>
     </section>
   );

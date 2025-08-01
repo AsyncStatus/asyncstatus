@@ -1,6 +1,6 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
+import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
-
 import { BetaMessage } from "../components/beta-message";
 import { ConnectCard } from "../components/connect-card";
 import { CtaSection } from "../components/cta-section";
@@ -8,12 +8,12 @@ import { FeaturesList } from "../components/features-list";
 import { Footer } from "../components/footer";
 import { GenerateCard } from "../components/generate-card";
 import { MobileMenu } from "../components/mobile-menu";
+import { Pricing } from "../components/pricing";
 import { ReviewCard } from "../components/review-card";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
 import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
-import { WaitlistDialog } from "../components/waitlist-dialog";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
 
@@ -62,8 +62,8 @@ export default async function Page(props: {
             <Link href="#team" className="hover:text-foreground">
               Use cases
             </Link>
-            <Link href="/why-use-our-app" className="hover:text-foreground">
-              Why AsyncStatus
+            <Link href="#pricing" className="hover:text-foreground">
+              Pricing
             </Link>
           </div>
         </div>
@@ -73,13 +73,20 @@ export default async function Page(props: {
             Login
           </Link>
 
-          <WaitlistDialog buttonSize="sm" />
+          <Link
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+            className="hover:text-foreground"
+          >
+            <Button size="sm">
+              <span>Create an account</span>
+            </Button>
+          </Link>
         </div>
 
         <MobileMenu />
       </header>
 
-      <main className="mx-auto mt-48 w-full max-w-6xl px-4 max-sm:mt-28">
+      <main className="mx-auto mt-12 w-full max-w-6xl px-4 max-sm:mt-4">
         {/* <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
             <span>Async status updates for remote startups</span>
@@ -113,6 +120,23 @@ export default async function Page(props: {
           that value their time.
         </h3> */}
 
+        <div className="flex justify-center pt-16 pb-12 max-sm:pt-16 max-sm:pb-12">
+          <a
+            href="https://www.producthunt.com/products/async-status-updates-for-remote-startups?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-asyncstatus"
+            target="_blank"
+            rel="noopener"
+          >
+            {/** biome-ignore lint/performance/noImgElement: it's a product hunt badge */}
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=999509&theme=neutral&t=1754003756146"
+              alt="AsyncStatus - Don&#0039;t&#0032;join&#0032;another&#0032;9&#0058;30am&#0032;standup&#0032;meeting&#0032;ever&#0032;again&#0046; | Product Hunt"
+              style={{ width: "250px", height: "54px" }}
+              width="250"
+              height="54"
+            />
+          </a>
+        </div>
+
         <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
             <span>Standup meetings suck</span>
@@ -129,8 +153,19 @@ export default async function Page(props: {
           one has to talk about it at 9:30 a.m.
         </h3>
 
-        <div className="mt-14 flex justify-center max-sm:mt-6">
-          <WaitlistDialog buttonSize="lg" />
+        <div className="mt-14 flex flex-col items-center justify-center max-sm:mt-6">
+          <Link
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+            className="hover:text-foreground"
+          >
+            <Button size="lg">
+              <span>Turn activity into updates</span>
+            </Button>
+          </Link>
+
+          <p className="text-muted-foreground text-xs mt-2">
+            No credit card required. Cancel anytime.
+          </p>
         </div>
 
         {/* aspect-[2.4/1] */}
@@ -236,6 +271,20 @@ export default async function Page(props: {
           <FeaturesList />
         </section>
 
+        <section id="early-stage">
+          <BetaMessage />
+          <div className="flex justify-center mt-12">
+            <Link
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+              className="hover:text-foreground"
+            >
+              <Button size="lg">
+                <span>Turn activity into updates</span>
+              </Button>
+            </Link>
+          </div>
+        </section>
+
         <section id="calculator" className="mt-36">
           <div className="mb-12 text-center">
             <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
@@ -274,8 +323,8 @@ export default async function Page(props: {
           </p>
         </section>
 
-        <section id="beta">
-          <BetaMessage />
+        <section id="pricing">
+          <Pricing />
         </section>
 
         <CtaSection />

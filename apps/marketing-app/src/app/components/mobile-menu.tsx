@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@asyncstatus/ui/components/button";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
-
 import { WaitlistDialog } from "./waitlist-dialog";
 
 const menuVariants = {
@@ -119,11 +119,11 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <Link
-                  href="/why-use-our-app"
+                  href="/#pricing"
                   className="block w-full py-6"
                   onClick={() => setIsOpen(false)}
                 >
-                  Why use AsyncStatus?
+                  Pricing
                 </Link>
               </motion.div>
               <motion.div variants={linkVariants}>
@@ -137,7 +137,14 @@ export function MobileMenu() {
               </motion.div>
               <motion.div variants={linkVariants}>
                 <div className="block w-full py-6">
-                  <WaitlistDialog buttonSize="lg" className="h-12 w-full text-lg font-normal" />
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                    className="hover:text-foreground"
+                  >
+                    <Button size="lg">
+                      <span>Create an account</span>
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             </motion.nav>

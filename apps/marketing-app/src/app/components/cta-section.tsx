@@ -1,6 +1,5 @@
+import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
-
-import { WaitlistDialog } from "./waitlist-dialog";
 
 export function CtaSection() {
   return (
@@ -10,10 +9,17 @@ export function CtaSection() {
         <p className="text-muted-foreground mt-6 text-lg text-balance sm:text-xl">
           Remote teams are already saving hundreds of hours with async updates.
           <br />
-          Join the beta and help shape how work gets shared.
+          Join and help us shape how work gets shared.
         </p>
         <div className="mt-6 flex flex-col items-center gap-2">
-          <WaitlistDialog buttonSize="lg" />
+          <Link
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+            className="hover:text-foreground"
+          >
+            <Button size="lg">
+              <span>Turn activity into updates</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

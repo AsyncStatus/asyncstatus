@@ -1,7 +1,6 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
+import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
-
-import { WaitlistDialog } from "./waitlist-dialog";
 
 export function Footer() {
   return (
@@ -33,7 +32,26 @@ export function Footer() {
                 <Link href="#team" className="hover:text-foreground transition-colors">
                   Use cases
                 </Link>
-                <WaitlistDialog buttonSize="sm" />
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Create an account
+                </Link>
+                <Link
+                  href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                  className="hover:text-foreground"
+                >
+                  <Button size="sm">
+                    <span>Turn activity into updates</span>
+                  </Button>
+                </Link>
               </div>
             </div>
 
