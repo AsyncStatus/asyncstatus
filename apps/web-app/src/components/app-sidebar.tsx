@@ -1,5 +1,8 @@
 import { listUserInvitationsContract } from "@asyncstatus/api/typed-handlers/invitation";
+import { getSubscriptionContract } from "@asyncstatus/api/typed-handlers/stripe";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
+import { dayjs } from "@asyncstatus/dayjs";
+import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
   Card,
@@ -17,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@asyncstatus/ui/components/dialog";
+import { Progress } from "@asyncstatus/ui/components/progress";
 import {
   Sidebar,
   SidebarContent,
@@ -34,8 +38,18 @@ import {
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, Outlet, useParams } from "@tanstack/react-router";
-import { CalendarDays, LifeBuoy, Plug, Plus, Send, Settings, Sun, Users } from "lucide-react";
+import { Link, Outlet, useNavigate, useParams } from "@tanstack/react-router";
+import {
+  CalendarDays,
+  Crown,
+  LifeBuoy,
+  Plug,
+  Plus,
+  Send,
+  Settings,
+  Sun,
+  Users,
+} from "lucide-react";
 import { Suspense, useState } from "react";
 import {
   sendVerificationEmailMutationOptions,
@@ -217,6 +231,110 @@ function AppSidebarTeamsSkeleton() {
   );
 }
 
+function AppSidebarPlanUsage(props: { organizationSlug: string }) {
+  const navigate = useNavigate();
+  const subscription = useSuspenseQuery(
+    typedQueryOptions(getSubscriptionContract, { idOrSlug: props.organizationSlug }),
+  );
+
+  // Don't show if no subscription data
+  if (!subscription.data) {
+    return null;
+  }
+
+  const isCustomTrial =
+    subscription.data.customTrial && subscription.data.customTrial.status === "active";
+  const isActive =
+    subscription.data.status === "active" ||
+    subscription.data.status === "trialing" ||
+    isCustomTrial;
+
+  if (!isActive) {
+    return null;
+  }
+
+  const planName =
+    isCustomTrial && subscription.data.customTrial
+      ? subscription.data.customTrial.plan
+      : subscription.data.planName;
+  const endDate =
+    isCustomTrial && subscription.data.customTrial
+      ? new Date(subscription.data.customTrial.endDate * 1000)
+      : subscription.data.currentPeriodEnd
+        ? new Date(subscription.data.currentPeriodEnd * 1000)
+        : null;
+
+  const isTrialEnding =
+    isCustomTrial && endDate && endDate.getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000; // 3 days
+
+  const usage = subscription.data.usage;
+  const usagePercentage = usage
+    ? Math.round((usage.currentMonth.used / usage.currentMonth.limit) * 100)
+    : 0;
+
+  return (
+    <Card className="p-2 gap-0">
+      <CardHeader className="px-0 gap-0">
+        <CardTitle
+          className="text-md flex items-center gap-2 cursor-pointer"
+          onClick={() => {
+            navigate({
+              to: "/$organizationSlug/billing",
+              params: { organizationSlug: props.organizationSlug },
+            });
+          }}
+        >
+          {planName ? planName.charAt(0).toUpperCase() + planName.slice(1) : "Unknown"}
+          {isCustomTrial && <Badge variant="secondary">Trial</Badge>}
+        </CardTitle>
+        {isCustomTrial && (
+          <CardDescription className="text-xs text-pretty text-muted-foreground">
+            Trial ends {dayjs(endDate).fromNow()}
+          </CardDescription>
+        )}
+      </CardHeader>
+
+      {usage && (
+        <CardContent className="px-0 pb-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">AI Generations</span>
+              <span className="font-medium">
+                {usage.currentMonth.used} / {usage.currentMonth.limit}
+              </span>
+            </div>
+            <Progress value={usagePercentage} className="h-2" />
+          </div>
+        </CardContent>
+      )}
+
+      {isCustomTrial && isTrialEnding && (
+        <CardFooter className="px-0">
+          <Button asChild variant="outline" size="sm" className="w-full text-xs">
+            <Link
+              to="/$organizationSlug/billing"
+              params={{ organizationSlug: props.organizationSlug }}
+            >
+              <Crown className="size-3" />
+              <span>Upgrade Plan</span>
+            </Link>
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
+  );
+}
+
+function AppSidebarPlanUsageSkeleton() {
+  return (
+    <Card className="p-2 gap-0">
+      <CardHeader className="px-0 gap-0">
+        <Skeleton className="h-16 w-full rounded-md" />
+      </CardHeader>
+    </Card>
+  );
+}
+
 function AppSidebarUserEmailNotVerified() {
   const session = useSuspenseQuery(sessionBetterAuthQueryOptions());
   const sendVerificationEmail = useMutation({
@@ -311,6 +429,10 @@ export function AppSidebar(props: { organizationSlug: string }) {
           <AppSidebarInvitations />
         </Suspense>
 
+        <Suspense fallback={<AppSidebarPlanUsageSkeleton />}>
+          <AppSidebarPlanUsage organizationSlug={props.organizationSlug} />
+        </Suspense>
+
         <AppSidebarBetaNotice />
 
         <Suspense fallback={<UserMenuSkeleton />}>
@@ -355,6 +477,10 @@ export function AppSidebarSkeleton() {
         </SidebarContent>
 
         <SidebarFooter className="p-0 max-sm:p-2">
+          <Suspense fallback={<AppSidebarPlanUsageSkeleton />}>
+            <AppSidebarPlanUsage organizationSlug={params?.organizationSlug ?? ""} />
+          </Suspense>
+
           <AppSidebarBetaNotice />
 
           <Suspense fallback={<UserMenuSkeleton />}>

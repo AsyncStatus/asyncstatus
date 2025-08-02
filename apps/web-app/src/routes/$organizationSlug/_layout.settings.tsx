@@ -191,10 +191,13 @@ function RouteComponent() {
 
         <div className="flex gap-2">
           <Button variant="secondary" asChild>
-            <a href={import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL} target="_blank" rel="noreferrer">
+            <Link
+              to="/$organizationSlug/billing"
+              params={{ organizationSlug: params.organizationSlug }}
+            >
               <CreditCard />
               Plan and billing
-            </a>
+            </Link>
           </Button>
         </div>
       </header>

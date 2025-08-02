@@ -78,8 +78,11 @@ import {
   updateStatusUpdateHandler,
 } from "./typed-handlers/status-update-handlers";
 import {
+  cancelStripeSubscriptionHandler,
+  createPortalSessionHandler,
   generateStripeCheckoutHandler,
   getSubscriptionHandler,
+  reactivateStripeSubscriptionHandler,
   stripeSuccessHandler,
   syncSubscriptionHandler,
 } from "./typed-handlers/stripe-handlers";
@@ -153,13 +156,15 @@ const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => 
     return c.json({ error: "Missing signature" }, 400);
   }
 
-  const result = await handleStripeWebhook(
-    c.env.STRIPE_SECRET_KEY,
-    c.env.STRIPE_WEBHOOK_SECRET,
-    c.env.STRIPE_KV,
+  const result = await handleStripeWebhook({
+    stripe: c.get("stripeClient"),
+    db: c.get("db"),
+    webhookSecret: c.env.STRIPE_WEBHOOK_SECRET,
+    kv: c.env.STRIPE_KV,
     body,
     signature,
-  );
+    waitUntil: c.executionCtx.waitUntil,
+  });
 
   if (!result.success) {
     console.error("[STRIPE WEBHOOK] Error:", result.error);
@@ -295,6 +300,9 @@ const typedHandlersApp = typedHandlersHonoServer(
     stripeSuccessHandler,
     getSubscriptionHandler,
     syncSubscriptionHandler,
+    createPortalSessionHandler,
+    cancelStripeSubscriptionHandler,
+    reactivateStripeSubscriptionHandler,
     checkAiUsageLimitHandler,
     getAiUsageStatsHandler,
     addGenerationsHandler,

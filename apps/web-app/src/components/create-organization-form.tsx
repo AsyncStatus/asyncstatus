@@ -38,7 +38,7 @@ export function CreateOrganizationForm(props: {
   const slug = form.watch("slug");
   const [debouncedSlug] = useDebounce(slug, 300);
   const existingOrganization = useQuery({
-    ...typedQueryOptions(getOrganizationContract, { idOrSlug: debouncedSlug }),
+    ...typedQueryOptions(getOrganizationContract, { idOrSlug: debouncedSlug! }),
     retry: 0,
     throwOnError: false,
   });

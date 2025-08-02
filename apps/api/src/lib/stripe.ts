@@ -38,7 +38,11 @@ export const ALLOWED_STRIPE_EVENTS: Stripe.Event.Type[] = [
 ];
 
 export function createStripe(secretKey: string): Stripe {
-  return new Stripe(secretKey, { apiVersion: "2025-02-24.acacia" });
+  return new Stripe(secretKey, {
+    apiVersion: "2025-02-24.acacia",
+    maxNetworkRetries: 3,
+    timeout: 30 * 1000,
+  });
 }
 
 export async function syncStripeDataToKV(

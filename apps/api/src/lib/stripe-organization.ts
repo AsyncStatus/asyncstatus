@@ -8,7 +8,7 @@ type GetOrCreateOrganizationStripeCustomerIdOptions = {
   stripe: Stripe;
   organizationId: string;
   adminEmail: string;
-  organizationName: string;
+  adminName: string;
 };
 
 export async function getOrCreateOrganizationStripeCustomerId({
@@ -16,7 +16,7 @@ export async function getOrCreateOrganizationStripeCustomerId({
   stripe,
   organizationId,
   adminEmail,
-  organizationName,
+  adminName,
 }: GetOrCreateOrganizationStripeCustomerIdOptions): Promise<string> {
   const org = await db.query.organization.findFirst({
     where: eq(schema.organization.id, organizationId),
@@ -26,23 +26,28 @@ export async function getOrCreateOrganizationStripeCustomerId({
     throw new Error("Organization not found");
   }
 
+  async function createCustomer(organizationSlug: string) {
+    const customer = await stripe.customers.create({
+      email: adminEmail,
+      name: adminName,
+      metadata: { organizationId, organizationSlug },
+    });
+
+    await db
+      .update(schema.organization)
+      .set({ stripeCustomerId: customer.id })
+      .where(eq(schema.organization.id, organizationId));
+
+    return customer.id;
+  }
+
   if (org.stripeCustomerId) {
+    const customer = await stripe.customers.retrieve(org.stripeCustomerId);
+    if (customer.deleted) {
+      return createCustomer(org.slug);
+    }
     return org.stripeCustomerId;
   }
 
-  const customer = await stripe.customers.create({
-    email: adminEmail,
-    name: organizationName,
-    metadata: {
-      organizationId,
-      organizationSlug: org.slug,
-    },
-  });
-
-  await db
-    .update(schema.organization)
-    .set({ stripeCustomerId: customer.id })
-    .where(eq(schema.organization.id, organizationId));
-
-  return customer.id;
+  return createCustomer(org.slug);
 }

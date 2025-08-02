@@ -1,12 +1,13 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { desc, eq } from "drizzle-orm";
-import { member, organization, team, teamMembership, user } from "../db";
+import * as schema from "../db";
 import type { Session } from "../lib/auth";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
+
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createOrganizationContract,
@@ -21,11 +22,11 @@ export const listMemberOrganizationsHandler = typedHandler<
   typeof listMemberOrganizationsContract
 >(listMemberOrganizationsContract, requiredSession, async ({ db, session }) => {
   const result = await db
-    .select({ organization: organization, member: member })
-    .from(organization)
-    .innerJoin(member, eq(organization.id, member.organizationId))
-    .where(eq(member.userId, session.user.id))
-    .orderBy(desc(organization.createdAt))
+    .select({ organization: schema.organization, member: schema.member })
+    .from(schema.organization)
+    .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+    .where(eq(schema.member.userId, session.user.id))
+    .orderBy(desc(schema.organization.createdAt))
     .limit(100);
 
   return result;
@@ -52,9 +53,9 @@ export const setActiveOrganizationHandler = typedHandler<
   requiredOrganization,
   async ({ db, session, authKv, organization }) => {
     await db
-      .update(user)
+      .update(schema.user)
       .set({ activeOrganizationSlug: organization.slug })
-      .where(eq(user.id, session.user.id));
+      .where(eq(schema.user.id, session.user.id));
 
     const data = await authKv.get<Session>(session.session.token, {
       type: "json",
@@ -84,7 +85,7 @@ export const createOrganizationHandler = typedHandler<
   const { name, slug, logo } = input;
 
   const existingOrganization = await db.query.organization.findFirst({
-    where: eq(organization.slug, slug),
+    where: eq(schema.organization.slug, slug),
   });
 
   if (existingOrganization) {
@@ -109,18 +110,25 @@ export const createOrganizationHandler = typedHandler<
   }
 
   const now = new Date();
+  const trialEnd = new Date(now);
+  trialEnd.setDate(trialEnd.getDate() + 14); // 14-day free trial
 
   // Use a transaction to ensure all operations are atomic
   const results = await db.transaction(async (tx) => {
-    // Create the organization
+    // Create the organization with trial data
     const newOrganization = await tx
-      .insert(organization)
+      .insert(schema.organization)
       .values({
         id: organizationId,
         name,
         slug,
         logo: logoKey,
         createdAt: now,
+        // Start 14-day free trial on basic plan
+        trialPlan: "basic",
+        trialStartDate: now,
+        trialEndDate: trialEnd,
+        trialStatus: "active",
       })
       .returning();
 
@@ -133,7 +141,7 @@ export const createOrganizationHandler = typedHandler<
 
     // Create the owner member record
     const newMember = await tx
-      .insert(member)
+      .insert(schema.member)
       .values({
         id: generateId(),
         organizationId,
@@ -151,9 +159,9 @@ export const createOrganizationHandler = typedHandler<
     }
 
     await tx
-      .update(user)
+      .update(schema.user)
       .set({ activeOrganizationSlug: newOrganization[0].slug })
-      .where(eq(user.id, session.user.id));
+      .where(eq(schema.user.id, session.user.id));
 
     return {
       organization: newOrganization[0],
@@ -194,9 +202,9 @@ export const updateOrganizationHandler = typedHandler<
     }
 
     const updatedOrganization = await db
-      .update(organization)
+      .update(schema.organization)
       .set(input as any)
-      .where(eq(organization.id, currentOrganization.id))
+      .where(eq(schema.organization.id, currentOrganization.id))
       .returning();
     if (!updatedOrganization || !updatedOrganization[0]) {
       throw new TypedHandlersError({

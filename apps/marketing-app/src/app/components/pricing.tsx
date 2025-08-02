@@ -179,11 +179,7 @@ export function Pricing() {
             </CardContent>
             <CardFooter>
               <Button className="w-full" variant={"outline"} asChild>
-                <Link
-                  href="mailto:kacper@asyncstatus.com?subject=Enterprise%20inquiry&body=I%20would%20like%20to%20schedule%20a%20call%20to%20discuss%20the%20enterprise%20plan."
-                  target="_blank"
-                  rel="noopener"
-                >
+                <Link href="https://cal.com/kacper/15min" target="_blank" rel="noopener">
                   Schedule a call
                 </Link>
               </Button>

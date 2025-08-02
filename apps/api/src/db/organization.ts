@@ -11,8 +11,11 @@ export const organization = sqliteTable(
     logo: text("logo"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     metadata: text("metadata"),
-    // Stripe billing fields
     stripeCustomerId: text("stripe_customer_id"),
+    trialPlan: text("trial_plan", { enum: ["basic", "startup", "enterprise"] }),
+    trialStartDate: integer("trial_start_date", { mode: "timestamp" }),
+    trialEndDate: integer("trial_end_date", { mode: "timestamp" }),
+    trialStatus: text("trial_status", { enum: ["active", "expired", "converted", "cancelled"] }),
   },
   (t) => [index("slug_index").on(t.slug)],
 );

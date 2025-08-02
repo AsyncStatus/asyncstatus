@@ -27,6 +27,7 @@ import { Route as authLayoutLoginRouteImport } from './routes/(auth)/_layout.log
 import { Route as authLayoutForgotPasswordRouteImport } from './routes/(auth)/_layout.forgot-password'
 import { Route as OrganizationSlugLayoutSettingsRouteImport } from './routes/$organizationSlug/_layout.settings'
 import { Route as OrganizationSlugLayoutIntegrationsRouteImport } from './routes/$organizationSlug/_layout.integrations'
+import { Route as OrganizationSlugLayoutBillingRouteImport } from './routes/$organizationSlug/_layout.billing'
 import { Route as OrganizationSlugLayoutUsersIndexRouteImport } from './routes/$organizationSlug/_layout.users/index'
 import { Route as OrganizationSlugLayoutTeamsIndexRouteImport } from './routes/$organizationSlug/_layout.teams/index'
 import { Route as OrganizationSlugLayoutStatusUpdatesIndexRouteImport } from './routes/$organizationSlug/_layout.status-updates/index'
@@ -141,6 +142,12 @@ const OrganizationSlugLayoutIntegrationsRoute =
     path: '/integrations',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
+const OrganizationSlugLayoutBillingRoute =
+  OrganizationSlugLayoutBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
 const OrganizationSlugLayoutUsersIndexRoute =
   OrganizationSlugLayoutUsersIndexRouteImport.update({
     id: '/users/',
@@ -196,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/error': typeof errorErrorRoute
   '/create-organization': typeof CreateOrganizationLayoutRouteWithChildren
   '/invitations': typeof InvitationsLayoutRouteWithChildren
+  '/$organizationSlug/billing': typeof OrganizationSlugLayoutBillingRoute
   '/$organizationSlug/integrations': typeof OrganizationSlugLayoutIntegrationsRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/error': typeof errorErrorRoute
   '/create-organization': typeof CreateOrganizationLayoutIndexRoute
   '/invitations': typeof InvitationsLayoutIndexRoute
+  '/$organizationSlug/billing': typeof OrganizationSlugLayoutBillingRoute
   '/$organizationSlug/integrations': typeof OrganizationSlugLayoutIntegrationsRoute
   '/$organizationSlug/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -248,6 +257,7 @@ export interface FileRoutesById {
   '/invitations': typeof InvitationsRouteWithChildren
   '/invitations/_layout': typeof InvitationsLayoutRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
+  '/$organizationSlug/_layout/billing': typeof OrganizationSlugLayoutBillingRoute
   '/$organizationSlug/_layout/integrations': typeof OrganizationSlugLayoutIntegrationsRoute
   '/$organizationSlug/_layout/settings': typeof OrganizationSlugLayoutSettingsRoute
   '/(auth)/_layout/forgot-password': typeof authLayoutForgotPasswordRoute
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/error'
     | '/create-organization'
     | '/invitations'
+    | '/$organizationSlug/billing'
     | '/$organizationSlug/integrations'
     | '/$organizationSlug/settings'
     | '/forgot-password'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/error'
     | '/create-organization'
     | '/invitations'
+    | '/$organizationSlug/billing'
     | '/$organizationSlug/integrations'
     | '/$organizationSlug/settings'
     | '/forgot-password'
@@ -325,6 +337,7 @@ export interface FileRouteTypes {
     | '/invitations'
     | '/invitations/_layout'
     | '/_layout/'
+    | '/$organizationSlug/_layout/billing'
     | '/$organizationSlug/_layout/integrations'
     | '/$organizationSlug/_layout/settings'
     | '/(auth)/_layout/forgot-password'
@@ -495,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutIntegrationsRouteImport
       parentRoute: typeof OrganizationSlugLayoutRoute
     }
+    '/$organizationSlug/_layout/billing': {
+      id: '/$organizationSlug/_layout/billing'
+      path: '/billing'
+      fullPath: '/$organizationSlug/billing'
+      preLoaderRoute: typeof OrganizationSlugLayoutBillingRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
     '/$organizationSlug/_layout/users/': {
       id: '/$organizationSlug/_layout/users/'
       path: '/users'
@@ -566,6 +586,7 @@ const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 interface OrganizationSlugLayoutRouteChildren {
+  OrganizationSlugLayoutBillingRoute: typeof OrganizationSlugLayoutBillingRoute
   OrganizationSlugLayoutIntegrationsRoute: typeof OrganizationSlugLayoutIntegrationsRoute
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
@@ -581,6 +602,7 @@ interface OrganizationSlugLayoutRouteChildren {
 
 const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
   {
+    OrganizationSlugLayoutBillingRoute: OrganizationSlugLayoutBillingRoute,
     OrganizationSlugLayoutIntegrationsRoute:
       OrganizationSlugLayoutIntegrationsRoute,
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,

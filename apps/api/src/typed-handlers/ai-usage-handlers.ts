@@ -22,7 +22,6 @@ export const getAiUsageStatsHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ db, organization, stripeClient, stripeConfig }) => {
-    // Get organization's plan from owner/admin's Stripe subscription
     const orgPlan = await getOrganizationPlan(
       db,
       stripeClient,
@@ -57,7 +56,6 @@ export const checkAiUsageLimitHandler = typedHandler<
   requiredSession,
   requiredOrganization,
   async ({ db, organization, stripeClient, stripeConfig }) => {
-    // Get organization's plan from owner/admin's Stripe subscription
     const orgPlan = await getOrganizationPlan(
       db,
       stripeClient,
@@ -109,7 +107,6 @@ export const addGenerationsHandler = typedHandler<
       });
     }
 
-    // Add generations to organization's KV
     const usage = await getCurrentUsage(stripeConfig.kv, organization.id);
     usage.addOnGenerations += quantity;
     usage.lastUpdated = new Date().toISOString();

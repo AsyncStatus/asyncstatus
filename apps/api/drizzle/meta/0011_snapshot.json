@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8bfc0b03-11c1-4db5-97c3-f171061d9609",
+  "id": "ea56e7bc-e6b5-43ec-8647-0e130f590883",
   "prevId": "42383c41-38a4-4767-a422-745ad2a3045f",
   "tables": {
     "account": {
@@ -997,6 +997,41 @@
         },
         "metadata": {
           "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "trial_plan": {
+          "name": "trial_plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "trial_start_date": {
+          "name": "trial_start_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "trial_end_date": {
+          "name": "trial_end_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "trial_status": {
+          "name": "trial_status",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -2572,94 +2607,6 @@
           "tableTo": "status_update",
           "columnsFrom": [
             "status_update_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "stripe_customer": {
-      "name": "stripe_customer",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "stripe_customer_user_id_unique": {
-          "name": "stripe_customer_user_id_unique",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": true
-        },
-        "stripe_customer_stripe_customer_id_unique": {
-          "name": "stripe_customer_stripe_customer_id_unique",
-          "columns": [
-            "stripe_customer_id"
-          ],
-          "isUnique": true
-        },
-        "stripe_customer_user_id_index": {
-          "name": "stripe_customer_user_id_index",
-          "columns": [
-            "user_id"
-          ],
-          "isUnique": false
-        },
-        "stripe_customer_stripe_customer_id_index": {
-          "name": "stripe_customer_stripe_customer_id_index",
-          "columns": [
-            "stripe_customer_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "stripe_customer_user_id_user_id_fk": {
-          "name": "stripe_customer_user_id_user_id_fk",
-          "tableFrom": "stripe_customer",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
           ],
           "columnsTo": [
             "id"
