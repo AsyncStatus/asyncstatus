@@ -32,7 +32,7 @@ export function createRouter() {
       defaultPreloadStaleTime: 0,
       defaultPendingComponent: () => {
         return (
-          <div className="flex h-screen w-screen items-center justify-center">
+          <div className="fixed inset-0 flex items-center justify-center">
             <AsyncStatusLogo className="h-4 w-auto animate-pulse duration-1000" />
           </div>
         );

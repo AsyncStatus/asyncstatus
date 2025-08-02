@@ -65,11 +65,11 @@ export type Bindings = {
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   STRIPE_KV: KVNamespace;
-  // Stripe Plan Price IDs
   STRIPE_BASIC_PRICE_ID: string;
   STRIPE_STARTUP_PRICE_ID: string;
   STRIPE_ENTERPRISE_PRICE_ID: string;
-  // AI Generation Limits per Plan
+  STRIPE_ADD_25_GENERATIONS_PRICE_ID: string;
+  STRIPE_ADD_100_GENERATIONS_PRICE_ID: string;
   AI_BASIC_MONTHLY_LIMIT: string;
   AI_STARTUP_MONTHLY_LIMIT: string;
   AI_ENTERPRISE_MONTHLY_LIMIT: string;
@@ -110,6 +110,8 @@ export type Variables = {
       basic: string;
       startup: string;
       enterprise: string;
+      add25Generations: string;
+      add100Generations: string;
     };
     aiLimits: {
       basic: number;
@@ -183,6 +185,8 @@ export async function createContext(c: Context<HonoEnv>) {
         basic: c.env.STRIPE_BASIC_PRICE_ID,
         startup: c.env.STRIPE_STARTUP_PRICE_ID,
         enterprise: c.env.STRIPE_ENTERPRISE_PRICE_ID,
+        add25Generations: c.env.STRIPE_ADD_25_GENERATIONS_PRICE_ID,
+        add100Generations: c.env.STRIPE_ADD_100_GENERATIONS_PRICE_ID,
       },
       aiLimits: {
         basic: parseInt(c.env.AI_BASIC_MONTHLY_LIMIT),

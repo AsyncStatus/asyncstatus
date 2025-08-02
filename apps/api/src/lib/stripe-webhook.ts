@@ -3,6 +3,7 @@ import type { ExecutionContext } from "hono";
 import type Stripe from "stripe";
 import * as schema from "../db";
 import type { Db } from "../db/db";
+import { getCurrentUsage, getUsageKvKey } from "./ai-usage-kv";
 import { ALLOWED_STRIPE_EVENTS, syncStripeDataToKV } from "./stripe";
 
 type ProcessStripeEventOptions = {
@@ -24,7 +25,29 @@ export async function processStripeEvent({
     return;
   }
 
-  // All the events we track have a customerId
+  // Handle additional generation purchases via Payment Intent
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const { type, organizationId, generationsToAdd } = paymentIntent.metadata || {};
+
+    if (type === "additional_generations" && organizationId && generationsToAdd) {
+      const addGenerations = parseInt(generationsToAdd, 10);
+
+      // Update the organization's AI usage
+      const usage = await getCurrentUsage(kv, organizationId);
+      usage.addOnGenerations += addGenerations;
+      usage.lastUpdated = new Date().toISOString();
+
+      const key = getUsageKvKey(organizationId);
+      await kv.put(key, JSON.stringify(usage));
+
+      console.log(
+        `[STRIPE WEBHOOK] Added ${addGenerations} generations to org ${organizationId} via payment intent ${paymentIntent.id}`,
+      );
+    }
+  }
+
+  // All other events we track have a customerId
   const { customer: customerId } = event?.data?.object as {
     customer: string; // Sadly TypeScript does not know this
   };

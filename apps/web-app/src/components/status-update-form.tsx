@@ -6,6 +6,7 @@ import {
   listStatusUpdatesByDateContract,
   updateStatusUpdateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
+import { getSubscriptionContract } from "@asyncstatus/api/typed-handlers/stripe";
 import { dayjs } from "@asyncstatus/dayjs";
 import { AsyncStatusEditor, type AsyncStatusEditorOnUpdateArgs } from "@asyncstatus/editor";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -15,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deepEqual, useNavigate } from "@tanstack/react-router";
 import { generateId } from "better-auth";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import useDebouncedCallback from "@/lib/use-debounced-callback";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
@@ -167,6 +168,10 @@ function StatusUpdateFormUnmemoized({
             statusUpdateIdOrDate: date,
           }),
         );
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getSubscriptionContract, { idOrSlug: organizationSlug })
+            .queryKey,
+        });
         form.reset();
         navigate({
           to: "/$organizationSlug/status-updates/$statusUpdateId",

@@ -5,6 +5,7 @@ import {
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
+import { getSubscriptionContract } from "@asyncstatus/api/typed-handlers/stripe";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { dayjs, formatRelativeTime } from "@asyncstatus/dayjs";
 import {
@@ -140,6 +141,10 @@ function RouteComponent() {
             idOrSlug: organizationSlug,
             date: dayjs.utc(data.effectiveFrom).format("YYYY-MM-DD"),
           }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getSubscriptionContract, { idOrSlug: organizationSlug })
+            .queryKey,
         });
         navigate({
           to: "/$organizationSlug/status-updates/$statusUpdateId",

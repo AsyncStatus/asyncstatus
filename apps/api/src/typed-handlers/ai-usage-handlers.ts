@@ -1,124 +1,222 @@
-import { TypedHandlersError, typedHandler, typedMiddleware } from "@asyncstatus/typed-handlers";
-import {
-  checkAiUsageLimit,
-  getCurrentUsage,
-  getUsageKvKey,
-  getUsageStats,
-} from "../lib/ai-usage-kv";
+import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
+import { and, eq } from "drizzle-orm";
+import * as schema from "../db";
+import { getCurrentUsage, getUsageKvKey } from "../lib/ai-usage-kv";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
-import { getOrganizationPlan } from "../lib/get-organization-plan";
+import { getOrCreateOrganizationStripeCustomerId } from "../lib/stripe-organization";
 import {
-  addGenerationsContract,
-  checkAiUsageLimitContract,
-  getAiUsageStatsContract,
+  confirmAdditionalGenerationsPaymentContract,
+  purchaseAdditionalGenerationsContract,
 } from "./ai-usage-contracts";
 import { requiredOrganization, requiredSession } from "./middleware";
 
-export const getAiUsageStatsHandler = typedHandler<
+export const purchaseAdditionalGenerationsHandler = typedHandler<
   TypedHandlersContextWithOrganization,
-  typeof getAiUsageStatsContract
+  typeof purchaseAdditionalGenerationsContract
 >(
-  getAiUsageStatsContract,
+  purchaseAdditionalGenerationsContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, stripeClient, stripeConfig }) => {
-    const orgPlan = await getOrganizationPlan(
-      db,
-      stripeClient,
-      stripeConfig.kv,
-      organization.id,
-      stripeConfig.priceIds,
-    );
+  async ({ db, session, organization, stripeClient, stripeConfig, input }) => {
+    const { idOrSlug: _idOrSlug, option, paymentMethodId } = input;
 
-    if (!orgPlan) {
-      return null;
-    }
+    const membership = await db.query.member.findFirst({
+      where: and(
+        eq(schema.member.organizationId, organization.id),
+        eq(schema.member.userId, session.user.id),
+      ),
+    });
 
-    const stats = await getUsageStats(
-      stripeConfig.kv,
-      organization.id,
-      orgPlan.plan,
-      stripeConfig.aiLimits,
-    );
-
-    return {
-      currentMonth: stats.currentMonth,
-      plan: orgPlan.plan,
-    };
-  },
-);
-
-export const checkAiUsageLimitHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof checkAiUsageLimitContract
->(
-  checkAiUsageLimitContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, stripeClient, stripeConfig }) => {
-    const orgPlan = await getOrganizationPlan(
-      db,
-      stripeClient,
-      stripeConfig.kv,
-      organization.id,
-      stripeConfig.priceIds,
-    );
-
-    if (!orgPlan) {
-      return null;
-    }
-
-    const limitCheck = await checkAiUsageLimit(
-      stripeConfig.kv,
-      organization.id,
-      orgPlan.plan,
-      stripeConfig.aiLimits,
-    );
-
-    return {
-      allowed: limitCheck.allowed,
-      used: limitCheck.used,
-      limit: limitCheck.limit,
-      addOnAvailable: limitCheck.addOnAvailable,
-      plan: orgPlan.plan,
-    };
-  },
-);
-
-export const addGenerationsHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof addGenerationsContract
->(
-  addGenerationsContract,
-  requiredSession,
-  requiredOrganization,
-  typedMiddleware<TypedHandlersContextWithOrganization>(({ rateLimiter }, next) =>
-    rateLimiter.waitlist(next),
-  ),
-  async ({ organization, stripeConfig, input, stripeClient }) => {
-    const { quantity, stripePaymentIntentId } = input;
-
-    const paymentIntent = await stripeClient.paymentIntents.retrieve(stripePaymentIntentId);
-
-    if (paymentIntent.status !== "succeeded") {
+    if (!membership || (membership.role !== "admin" && membership.role !== "owner")) {
       throw new TypedHandlersError({
-        code: "BAD_REQUEST",
-        message: "Payment not completed",
+        code: "FORBIDDEN",
+        message: "Only admins and owners can purchase additional generations",
       });
     }
 
-    const usage = await getCurrentUsage(stripeConfig.kv, organization.id);
-    usage.addOnGenerations += quantity;
-    usage.lastUpdated = new Date().toISOString();
+    const stripeCustomerId = await getOrCreateOrganizationStripeCustomerId({
+      db,
+      stripe: stripeClient,
+      organizationId: organization.id,
+      adminEmail: session.user.email,
+      adminName: session.user.name,
+    });
 
-    const key = getUsageKvKey(organization.id);
-    await stripeConfig.kv.put(key, JSON.stringify(usage));
+    const customer = await stripeClient.customers.retrieve(stripeCustomerId);
+    if (customer.deleted || customer.id !== stripeCustomerId) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "You are not authorized to manage this organization's billing.",
+      });
+    }
 
-    console.log(`[AI USAGE] Added ${quantity} generations to org ${organization.id}`);
+    // Get the price ID based on the option
+    const priceId =
+      option === "add_25"
+        ? stripeConfig.priceIds.add25Generations
+        : stripeConfig.priceIds.add100Generations;
+
+    // Get the price details to determine the amount
+    const price = await stripeClient.prices.retrieve(priceId);
+    if (!price.unit_amount) {
+      throw new TypedHandlersError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Price configuration error",
+      });
+    }
+
+    // Determine the payment method to use
+    let paymentMethod = paymentMethodId;
+    if (!paymentMethod) {
+      // Get the customer's default payment method from their active subscription
+      const subscriptions = await stripeClient.subscriptions.list({
+        customer: stripeCustomerId,
+        status: "active",
+        limit: 1,
+      });
+
+      if (subscriptions.data.length > 0) {
+        const subscription = subscriptions.data[0];
+        paymentMethod = (subscription?.default_payment_method as string) || undefined;
+      }
+
+      if (!paymentMethod) {
+        throw new TypedHandlersError({
+          code: "BAD_REQUEST",
+          message: "No payment method available. Please add a payment method first.",
+        });
+      }
+    }
+
+    const generationsToAdd = option === "add_25" ? 25 : 100;
+
+    // Create and confirm payment intent
+    const paymentIntent = await stripeClient.paymentIntents.create({
+      amount: price.unit_amount,
+      currency: price.currency,
+      customer: stripeCustomerId,
+      payment_method: paymentMethod,
+      confirmation_method: "automatic",
+      confirm: true,
+      metadata: {
+        organizationId: organization.id,
+        organizationSlug: organization.slug,
+        generationOption: option,
+        type: "additional_generations",
+        generationsToAdd: generationsToAdd.toString(),
+      },
+      return_url: `${process.env.WEB_APP_URL}/${organization.slug}/billing`,
+    });
+
+    // Handle the payment result
+    if (paymentIntent.status === "succeeded") {
+      // Payment succeeded immediately, add generations right away
+      const usage = await getCurrentUsage(stripeConfig.kv, organization.id);
+      usage.addOnGenerations += generationsToAdd;
+      usage.lastUpdated = new Date().toISOString();
+
+      const key = getUsageKvKey(organization.id);
+      await stripeConfig.kv.put(key, JSON.stringify(usage));
+
+      console.log(
+        `[AI USAGE] Added ${generationsToAdd} generations to org ${organization.id} via immediate payment`,
+      );
+
+      return {
+        success: true,
+        paymentIntentId: paymentIntent.id,
+        generationsAdded: generationsToAdd,
+      };
+    } else if (paymentIntent.status === "requires_action") {
+      // Payment requires additional authentication (3D Secure)
+      return {
+        success: false,
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret || undefined,
+        generationsAdded: 0,
+      };
+    } else {
+      // Payment failed
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: `Payment failed: ${paymentIntent.status}`,
+      });
+    }
+  },
+);
+
+export const confirmAdditionalGenerationsPaymentHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof confirmAdditionalGenerationsPaymentContract
+>(
+  confirmAdditionalGenerationsPaymentContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, session, organization, stripeClient, stripeConfig, input }) => {
+    const { idOrSlug: _idOrSlug, paymentIntentId } = input;
+
+    // Only admins/owners can confirm additional generation payments - check via query
+    const membership = await db.query.member.findFirst({
+      where: and(
+        eq(schema.member.organizationId, organization.id),
+        eq(schema.member.userId, session.user.id),
+      ),
+    });
+
+    if (!membership || (membership.role !== "admin" && membership.role !== "owner")) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "Only admins and owners can confirm additional generation payments",
+      });
+    }
+
+    // Retrieve the payment intent to check its status
+    const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId);
+
+    // Verify this payment intent belongs to the current organization
+    if (paymentIntent.metadata?.organizationId !== organization.id) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "Payment intent does not belong to this organization",
+      });
+    }
+
+    // Verify this is for additional generations
+    if (paymentIntent.metadata?.type !== "additional_generations") {
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: "Payment intent is not for additional generations",
+      });
+    }
+
+    if (paymentIntent.status === "succeeded") {
+      // Payment has succeeded, add the generations
+      const generationsToAdd = parseInt(paymentIntent.metadata?.generationsToAdd || "0", 10);
+
+      if (generationsToAdd > 0) {
+        const usage = await getCurrentUsage(stripeConfig.kv, organization.id);
+        usage.addOnGenerations += generationsToAdd;
+        usage.lastUpdated = new Date().toISOString();
+
+        const key = getUsageKvKey(organization.id);
+        await stripeConfig.kv.put(key, JSON.stringify(usage));
+
+        console.log(
+          `[AI USAGE] Added ${generationsToAdd} generations to org ${organization.id} via confirmed payment ${paymentIntentId}`,
+        );
+
+        return {
+          success: true,
+          generationsAdded: generationsToAdd,
+          status: paymentIntent.status,
+        };
+      }
+    }
 
     return {
-      success: true,
-      newTotal: usage.addOnGenerations,
+      success: paymentIntent.status === "succeeded",
+      generationsAdded: 0,
+      status: paymentIntent.status,
     };
   },
 );

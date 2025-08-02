@@ -1,49 +1,30 @@
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
 
-export const getAiUsageStatsContract = typedContract(
-  "get /ai-usage/stats",
-  z.strictObject({}),
-  z
-    .strictObject({
-      currentMonth: z.strictObject({
-        used: z.number(),
-        limit: z.number(),
-        planLimit: z.number(),
-        addOnGenerations: z.number(),
-        remaining: z.number(),
-        byType: z.strictObject({
-          status_generation: z.number(),
-          summary_generation: z.number(),
-        }),
-      }),
-      plan: z.enum(["basic", "startup", "enterprise"]),
-    })
-    .nullable(),
-);
-
-export const checkAiUsageLimitContract = typedContract(
-  "get /ai-usage/check-limit",
-  z.strictObject({}),
-  z
-    .strictObject({
-      allowed: z.boolean(),
-      used: z.number(),
-      limit: z.number(),
-      addOnAvailable: z.number(),
-      plan: z.enum(["basic", "startup", "enterprise"]),
-    })
-    .nullable(),
-);
-
-export const addGenerationsContract = typedContract(
-  "post /ai-usage/add-generations",
+export const purchaseAdditionalGenerationsContract = typedContract(
+  "post /organizations/:idOrSlug/ai-usage/purchase-additional-generations",
   z.strictObject({
-    quantity: z.number().int().min(1).max(10000),
-    stripePaymentIntentId: z.string().min(1), // Verify payment
+    idOrSlug: z.string().min(1),
+    option: z.enum(["add_25", "add_100"]),
+    paymentMethodId: z.string().optional(), // Optional - will use default if not provided
   }),
   z.strictObject({
     success: z.boolean(),
-    newTotal: z.number(),
+    paymentIntentId: z.string(),
+    clientSecret: z.string().optional(), // For 3D Secure if needed
+    generationsAdded: z.number(),
+  }),
+);
+
+export const confirmAdditionalGenerationsPaymentContract = typedContract(
+  "post /organizations/:idOrSlug/ai-usage/confirm-additional-generations-payment",
+  z.strictObject({
+    idOrSlug: z.string().min(1),
+    paymentIntentId: z.string().min(1),
+  }),
+  z.strictObject({
+    success: z.boolean(),
+    generationsAdded: z.number(),
+    status: z.string(),
   }),
 );

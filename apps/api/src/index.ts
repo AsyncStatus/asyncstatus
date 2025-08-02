@@ -19,9 +19,8 @@ import { handleStripeWebhook } from "./lib/stripe-webhook";
 import { queue } from "./queue/queue";
 import { scheduled } from "./scheduled";
 import {
-  addGenerationsHandler,
-  checkAiUsageLimitHandler,
-  getAiUsageStatsHandler,
+  confirmAdditionalGenerationsPaymentHandler,
+  purchaseAdditionalGenerationsHandler,
 } from "./typed-handlers/ai-usage-handlers";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
@@ -303,9 +302,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     createPortalSessionHandler,
     cancelStripeSubscriptionHandler,
     reactivateStripeSubscriptionHandler,
-    checkAiUsageLimitHandler,
-    getAiUsageStatsHandler,
-    addGenerationsHandler,
+    purchaseAdditionalGenerationsHandler,
+    confirmAdditionalGenerationsPaymentHandler,
   ],
   {
     getContext: (c) => ({

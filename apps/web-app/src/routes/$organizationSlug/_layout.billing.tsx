@@ -1,3 +1,4 @@
+import { purchaseAdditionalGenerationsContract } from "@asyncstatus/api/typed-handlers/ai-usage";
 import { getMemberContract } from "@asyncstatus/api/typed-handlers/member";
 import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
 import {
@@ -10,6 +11,7 @@ import {
   syncSubscriptionContract,
 } from "@asyncstatus/api/typed-handlers/stripe";
 import { dayjs } from "@asyncstatus/dayjs";
+import { SiStripe } from "@asyncstatus/ui/brand-icons";
 import { Alert, AlertDescription, AlertTitle } from "@asyncstatus/ui/components/alert";
 import {
   AlertDialog,
@@ -49,13 +51,16 @@ import {
 } from "@asyncstatus/ui/components/select";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
+import { toast } from "@asyncstatus/ui/components/sonner";
 import { Textarea } from "@asyncstatus/ui/components/textarea";
 import {
   AlertTriangleIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
   CreditCardIcon,
+  PlusIcon,
   RefreshCwIcon,
+  ZapIcon,
 } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -196,10 +201,10 @@ function RouteComponent() {
 
     generateCheckoutMutation.mutate({
       plan: planId as "basic" | "startup",
-      successUrl: typedUrl(stripeSuccessContract, {
+      successUrl: `${typedUrl(stripeSuccessContract, {
         idOrSlug: params.organizationSlug,
         sessionId: "{CHECKOUT_SESSION_ID}",
-      }),
+      })}?sessionId={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${import.meta.env.VITE_WEB_APP_URL}/${params.organizationSlug}/billing?payment=cancelled`,
       idOrSlug: params.organizationSlug,
     });
@@ -226,18 +231,18 @@ function RouteComponent() {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        {isAdmin && !subscriptionQuery.data?.customTrial && (
-          <div className="flex items-center gap-2">
-            <form
-              action={typedUrl(createPortalSessionContract, { idOrSlug: params.organizationSlug })}
-              method="post"
-            >
-              <Button variant="outline" size="sm" type="submit">
-                <CreditCardIcon className="size-4" />
-                Manage in Stripe
-              </Button>
-            </form>
+        <div className="flex items-center gap-2">
+          <form
+            action={typedUrl(createPortalSessionContract, { idOrSlug: params.organizationSlug })}
+            method="post"
+          >
+            <Button variant="outline" size="sm" type="submit">
+              <SiStripe className="size-4" />
+              Manage in Stripe
+            </Button>
+          </form>
 
+          {isAdmin && !subscriptionQuery.data?.customTrial && (
             <Button
               variant="outline"
               size="sm"
@@ -249,8 +254,8 @@ function RouteComponent() {
               />
               Sync
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       <AlertDialog
@@ -326,6 +331,10 @@ function RouteComponent() {
               className="col-span-1 md:col-span-3"
               organizationSlug={params.organizationSlug}
             />
+            <UsageCard
+              className="col-span-1 md:col-span-3"
+              organizationSlug={params.organizationSlug}
+            />
             {plans.map((plan) => (
               <PricingPlanCard
                 key={plan.id}
@@ -336,15 +345,6 @@ function RouteComponent() {
                 onSelect={() => handleSelectPlan(plan.id)}
               />
             ))}
-          </div>
-
-          {/* Additional Credits */}
-          <div className="text-center pt-6 border-t">
-            <p className="text-sm text-muted-foreground">
-              Need more AI generations? Purchase additional credits from your dashboard.
-              <br />
-              25 for $5 or 100 for $15. Credits never expire.
-            </p>
           </div>
         </div>
       </div>
@@ -646,6 +646,233 @@ function CurrentPlanCard({
               )}
             </div>
           )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UsageCard({
+  className,
+  organizationSlug,
+}: {
+  className?: string;
+  organizationSlug: string;
+}) {
+  const queryClient = useQueryClient();
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<"add_25" | "add_100">("add_25");
+
+  const subscriptionQuery = useQuery(
+    typedQueryOptions(getSubscriptionContract, { idOrSlug: organizationSlug }),
+  );
+  const organizationQuery = useQuery(
+    typedQueryOptions(getOrganizationContract, { idOrSlug: organizationSlug }),
+  );
+
+  const purchaseGenerationsMutation = useMutation(
+    typedMutationOptions(purchaseAdditionalGenerationsContract, {
+      onSuccess: (data) => {
+        if (data.success) {
+          // Refresh subscription data to get updated usage
+          queryClient.invalidateQueries({
+            queryKey: typedQueryOptions(getSubscriptionContract, {
+              idOrSlug: organizationSlug,
+            }).queryKey,
+          });
+          setPurchaseDialogOpen(false);
+        } else if (data.clientSecret) {
+          // @TODO: Handle 3D Secure authentication - would need Stripe Elements integration. For now, just show a message
+          alert("Additional authentication required. Please contact support.");
+        }
+      },
+      onError: (error) => {
+        console.error("Purchase failed:", error);
+      },
+    }),
+  );
+
+  const isAdmin =
+    organizationQuery.data?.member.role === "admin" ||
+    organizationQuery.data?.member.role === "owner";
+
+  const usage = subscriptionQuery.data?.usage;
+  const hasSubscription = Boolean(subscriptionQuery.data);
+
+  if (!usage || !hasSubscription) return null;
+
+  const usagePercentage = Math.min((usage.currentMonth.used / usage.currentMonth.limit) * 100, 100);
+  const isNearLimit = usagePercentage >= 80;
+  const isOverLimit = usage.currentMonth.used >= usage.currentMonth.limit;
+
+  const handlePurchaseGenerations = () => {
+    if (!isAdmin) return;
+
+    purchaseGenerationsMutation.mutate({
+      idOrSlug: organizationSlug,
+      option: selectedOption,
+    });
+  };
+
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <ZapIcon className="size-5" />
+            AI usage this month
+          </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Usage Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Monthly Usage</span>
+              <span className="text-muted-foreground">
+                {usage.currentMonth.remaining} remaining
+              </span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  isOverLimit ? "bg-destructive" : isNearLimit ? "bg-yellow-500" : "bg-primary"
+                }`}
+                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Usage Breakdown */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Status Updates</p>
+              <p className="font-medium">{usage.currentMonth.byType.status_generation}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Summaries</p>
+              <p className="font-medium">{usage.currentMonth.byType.summary_generation}</p>
+            </div>
+          </div>
+
+          {/* Purchase Additional Generations */}
+          {isAdmin && (
+            <div className="pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Need more generations?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Purchase additional credits that never expire
+                  </p>
+                </div>
+                <Dialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        if (subscriptionQuery.data?.customTrial) {
+                          e.preventDefault();
+                          toast.error(
+                            "You're on a free trial, you didn't provide a payment method. Please upgrade to a paid plan to purchase additional credits",
+                            {
+                              id: "custom-trial-toast",
+                              position: "top-center",
+                              duration: 10_000,
+                            },
+                          );
+                          return;
+                        }
+                      }}
+                    >
+                      <PlusIcon className="size-4" />
+                      Buy more credits
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Purchase additional credits</DialogTitle>
+                      <DialogDescription>
+                        Add more AI generations to your account. Credits never expire.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-2">
+                      <div className="space-y-2">
+                        <Label>Choose your package</Label>
+                        <Select
+                          value={selectedOption}
+                          onValueChange={(value) =>
+                            setSelectedOption(value as typeof selectedOption)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="add_25">25 generations - $5</SelectItem>
+                            <SelectItem value="add_100">100 generations - $15</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="p-3 bg-muted rounded-lg">
+                        <div className="flex justify-between text-sm">
+                          <span>Current balance:</span>
+                          <span>{usage.currentMonth.remaining}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>After purchase:</span>
+                          <span className="font-medium">
+                            {usage.currentMonth.remaining +
+                              (selectedOption === "add_25" ? 25 : 100)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        onClick={handlePurchaseGenerations}
+                        disabled={purchaseGenerationsMutation.isPending}
+                      >
+                        {purchaseGenerationsMutation.isPending
+                          ? "Purchasing..."
+                          : `Purchase now for ${selectedOption === "add_25" ? "$5" : "$15"}`}
+                      </Button>
+                      <Button variant="outline" onClick={() => setPurchaseDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          )}
+
+          {/* Usage Warning */}
+          {isOverLimit && (
+            <Alert variant="destructive">
+              <AlertTriangleIcon className="size-4" />
+              <AlertTitle>Usage Limit Reached</AlertTitle>
+              <AlertDescription>
+                You've reached your monthly generation limit. Purchase additional generations to
+                continue using AI features.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isNearLimit && !isOverLimit && (
+            <Alert>
+              <AlertTriangleIcon className="size-4" />
+              <AlertTitle>Approaching Usage Limit</AlertTitle>
+              <AlertDescription>
+                You're approaching your monthly generation limit. Consider purchasing additional
+                generations to avoid interruption.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
