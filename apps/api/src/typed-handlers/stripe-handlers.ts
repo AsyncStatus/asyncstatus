@@ -1,16 +1,11 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type Stripe from "stripe";
-import { user } from "../db";
-import type { TypedHandlersContextWithSession } from "../lib/env";
-import {
-  createStripe,
-  getOrCreateStripeCustomer,
-  type STRIPE_SUB_CACHE,
-  syncStripeDataToKV,
-} from "../lib/stripe";
-
-import { requiredSession } from "./middleware";
+import * as schema from "../db";
+import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { syncStripeDataToKV } from "../lib/stripe";
+import { getOrCreateOrganizationStripeCustomerId } from "../lib/stripe-organization";
+import { requiredOrganization, requiredSession } from "./middleware";
 import {
   generateStripeCheckoutContract,
   getSubscriptionContract,
@@ -19,51 +14,66 @@ import {
 } from "./stripe-contracts";
 
 export const generateStripeCheckoutHandler = typedHandler<
-  TypedHandlersContextWithSession,
+  TypedHandlersContextWithOrganization,
   typeof generateStripeCheckoutContract
 >(
   generateStripeCheckoutContract,
   requiredSession,
-  async ({ stripe: stripeConfig, session, webAppUrl, db, input }) => {
-    const { priceId, successUrl, cancelUrl, trialPeriodDays } = input;
-    const stripe = createStripe(stripeConfig.secretKey);
+  requiredOrganization,
+  async ({ db, session, organization, stripeClient, stripeConfig, input }) => {
+    const { plan, successUrl, cancelUrl, startTrial } = input;
 
-    // Get or create Stripe customer
-    const stripeCustomerId = await getOrCreateStripeCustomer(
-      stripe,
-      stripeConfig.kv,
+    // Only admins/owners can initiate billing - check via query
+    const membership = await db.query.member.findFirst({
+      where: (members, { and, eq }) =>
+        and(eq(members.organizationId, organization.id), eq(members.userId, session.user.id)),
+    });
+
+    if (!membership || (membership.role !== "admin" && membership.role !== "owner")) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "Only admins and owners can manage billing",
+      });
+    }
+
+    const stripeCustomerId = await getOrCreateOrganizationStripeCustomerId({
       db,
-      session.user.id,
-      session.user.email,
-    );
+      stripe: stripeClient,
+      organizationId: organization.id,
+      adminEmail: session.user.email,
+      organizationName: organization.name,
+    });
 
-    // ALWAYS create a checkout with a stripeCustomerId
     const checkoutSessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: stripeCustomerId,
-      success_url: successUrl || `${webAppUrl}/stripe/success`,
-      cancel_url: cancelUrl || webAppUrl,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      success_url:
+        successUrl ||
+        `${process.env.WEB_APP_URL}/${organization.slug}/billing?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:
+        cancelUrl || `${process.env.WEB_APP_URL}/${organization.slug}/billing?payment=cancelled`,
+      line_items: [{ price: stripeConfig.priceIds[plan], quantity: 1 }],
       mode: "subscription",
       billing_address_collection: "auto",
-      customer_update: {
-        address: "auto",
-        name: "auto",
+      customer_update: { address: "auto", name: "auto" },
+      metadata: {
+        organizationId: organization.id,
+        organizationSlug: organization.slug,
+        planType: startTrial ? "trial" : "paid",
+        plan: plan,
       },
     };
 
-    // Add trial period if specified
-    if (trialPeriodDays) {
+    if (startTrial) {
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 14);
+
       checkoutSessionParams.subscription_data = {
-        trial_period_days: trialPeriodDays,
+        trial_end: Math.floor(trialEnd.getTime() / 1000), // Stripe expects Unix timestamp
       };
+      checkoutSessionParams.metadata!.isTrialSignup = "true";
     }
 
-    const checkout = await stripe.checkout.sessions.create(checkoutSessionParams);
+    const checkout = await stripeClient.checkout.sessions.create(checkoutSessionParams);
 
     if (!checkout.url) {
       throw new TypedHandlersError({
@@ -72,76 +82,153 @@ export const generateStripeCheckoutHandler = typedHandler<
       });
     }
 
+    let trialEndDate: string | undefined;
+    if (startTrial) {
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 14);
+      trialEndDate = endDate.toISOString();
+    }
+
     return {
       checkoutUrl: checkout.url,
+      ...(trialEndDate && { trialEndDate }),
     };
   },
 );
 
 export const stripeSuccessHandler = typedHandler<
-  TypedHandlersContextWithSession,
+  TypedHandlersContextWithOrganization,
   typeof stripeSuccessContract
->(stripeSuccessContract, requiredSession, async ({ stripe: stripeConfig, session, db }) => {
-  const stripe = createStripe(stripeConfig.secretKey);
+>(
+  stripeSuccessContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, input, organization, stripeClient, stripeConfig }) => {
+    const { sessionId } = input;
 
-  // Get the stripeCustomerId from the user record
-  const userRecord = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
+    if (!sessionId) {
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: "Session ID is required",
+      });
+    }
 
-  const stripeCustomerId = userRecord[0]?.stripeCustomerId;
-  if (!stripeCustomerId) {
-    throw new TypedHandlersError({
-      code: "NOT_FOUND",
-      message: "Stripe customer not found",
-    });
-  }
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
 
-  // Sync the subscription data
-  await syncStripeDataToKV(stripe, stripeConfig.kv, stripeCustomerId);
+    if (!session) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Checkout session not found",
+      });
+    }
 
-  return { success: true };
-});
+    if (session.payment_status !== "paid") {
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: "Payment not completed",
+      });
+    }
+
+    // Verify this session belongs to the current organization
+    if (session.metadata?.organizationId !== organization.id) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "This payment session does not belong to your organization",
+      });
+    }
+
+    // Update organization with Stripe customer ID if not already set
+    if (session.customer && typeof session.customer === "string") {
+      const org = await db.query.organization.findFirst({
+        where: eq(schema.organization.id, organization.id),
+      });
+
+      if (!org?.stripeCustomerId) {
+        await db
+          .update(schema.organization)
+          .set({ stripeCustomerId: session.customer })
+          .where(eq(schema.organization.id, organization.id));
+      }
+
+      // Trial conversion is handled automatically by Stripe
+      // The subscription status will change from "trialing" to "active" in Stripe
+
+      // Sync the latest subscription data to KV
+      await syncStripeDataToKV(stripeClient, stripeConfig.kv, session.customer);
+    }
+
+    return {
+      success: true,
+      paymentStatus: session.payment_status,
+    };
+  },
+);
 
 export const getSubscriptionHandler = typedHandler<
-  TypedHandlersContextWithSession,
+  TypedHandlersContextWithOrganization,
   typeof getSubscriptionContract
->(getSubscriptionContract, requiredSession, async ({ stripe: stripeConfig, session, db }) => {
-  // Get the stripeCustomerId from the user record
-  const userRecord = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
+>(
+  getSubscriptionContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, stripeClient, stripeConfig }) => {
+    // Get organization's Stripe customer ID
+    const org = await db.query.organization.findFirst({
+      where: (orgs, { eq }) => eq(orgs.id, organization.id),
+    });
 
-  const stripeCustomerId = userRecord[0]?.stripeCustomerId;
-  if (!stripeCustomerId) {
-    return { status: "none" } as const;
-  }
+    if (!org?.stripeCustomerId) {
+      return null;
+    }
 
-  // Get cached subscription data
-  const cachedDataString = await stripeConfig.kv.get(`stripe:customer:${stripeCustomerId}`);
-  if (!cachedDataString) {
-    return { status: "none" } as const;
-  }
+    const stripeData = await syncStripeDataToKV(
+      stripeClient,
+      stripeConfig.kv,
+      org.stripeCustomerId,
+    );
 
-  try {
-    const cachedData = JSON.parse(cachedDataString) as STRIPE_SUB_CACHE;
-    return cachedData;
-  } catch {
-    return { status: "none" } as const;
-  }
-});
+    return stripeData;
+  },
+);
 
 export const syncSubscriptionHandler = typedHandler<
-  TypedHandlersContextWithSession,
+  TypedHandlersContextWithOrganization,
   typeof syncSubscriptionContract
->(syncSubscriptionContract, requiredSession, async ({ stripe: stripeConfig, session, db }) => {
-  const stripe = createStripe(stripeConfig.secretKey);
+>(
+  syncSubscriptionContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, session, organization, stripeClient, stripeConfig }) => {
+    // Only admins/owners can sync subscription - check via query
+    const membership = await db.query.member.findFirst({
+      where: and(
+        eq(schema.member.organizationId, organization.id),
+        eq(schema.member.userId, session.user.id),
+      ),
+    });
 
-  // Get the stripeCustomerId from the user record
-  const userRecord = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
+    if (!membership || (membership.role !== "admin" && membership.role !== "owner")) {
+      throw new TypedHandlersError({
+        code: "FORBIDDEN",
+        message: "Only admins and owners can sync subscription",
+      });
+    }
 
-  const stripeCustomerId = userRecord[0]?.stripeCustomerId;
-  if (!stripeCustomerId) {
-    return { status: "none" } as const;
-  }
+    // Get organization's Stripe customer ID
+    const org = await db.query.organization.findFirst({
+      where: eq(schema.organization.id, organization.id),
+    });
 
-  // Sync and return the fresh data
-  const syncedData = await syncStripeDataToKV(stripe, stripeConfig.kv, stripeCustomerId);
-  return syncedData;
-});
+    if (!org?.stripeCustomerId) {
+      return null;
+    }
+
+    const stripeData = await syncStripeDataToKV(
+      stripeClient,
+      stripeConfig.kv,
+      org.stripeCustomerId,
+    );
+
+    return stripeData;
+  },
+);

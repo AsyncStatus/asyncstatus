@@ -1,5 +1,6 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import type Stripe from "stripe";
 import type * as schema from "../../../db";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
@@ -23,7 +24,7 @@ export type GenerateStatusUpdateOptions = {
   organizationId: schema.Organization["id"];
   plan: "basic" | "startup" | "enterprise"; // for usage limits
   kv: KVNamespace; // for usage tracking
-  stripeSecretKey: string; // for billing
+  stripeClient: Stripe;
   stripeCustomerId?: string; // for billing
   aiLimits: { basic: number; startup: number; enterprise: number }; // AI generation limits
   effectiveFrom: string;
@@ -37,7 +38,7 @@ export async function generateStatusUpdate({
   organizationId,
   plan,
   kv,
-  stripeSecretKey,
+  stripeClient,
   stripeCustomerId,
   aiLimits,
   effectiveFrom,
@@ -78,7 +79,7 @@ The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effecti
   // Track AI usage with plan limits
   const usageResult = await trackAiUsage(
     kv,
-    stripeSecretKey,
+    stripeClient,
     organizationId,
     "status_generation",
     plan,

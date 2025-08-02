@@ -1,26 +1,19 @@
-import { eq } from "drizzle-orm";
 import Stripe from "stripe";
-import * as schema from "../db";
-import type { Db } from "../db/db";
 
-export type STRIPE_SUB_CACHE =
-  | {
-      subscriptionId: string | null;
-      status: Stripe.Subscription.Status;
-      priceId: string | null;
-      currentPeriodStart: number | null;
-      currentPeriodEnd: number | null;
-      cancelAtPeriodEnd: boolean;
-      trialEnd: number | null;
-      trialStart: number | null;
-      paymentMethod: {
-        brand: string | null; // e.g., "visa", "mastercard"
-        last4: string | null; // e.g., "4242"
-      } | null;
-    }
-  | {
-      status: "none";
-    };
+export type STRIPE_SUB_CACHE = {
+  subscriptionId: string | null;
+  status: Stripe.Subscription.Status;
+  priceId: string | null;
+  currentPeriodStart: number | null;
+  currentPeriodEnd: number | null;
+  cancelAtPeriodEnd: boolean;
+  trialEnd: number | null;
+  trialStart: number | null;
+  paymentMethod: {
+    brand: string | null; // e.g., "visa", "mastercard"
+    last4: string | null; // e.g., "4242"
+  } | null;
+} | null;
 
 // Events to track as recommended in the stripe-recommendation.md
 export const ALLOWED_STRIPE_EVENTS: Stripe.Event.Type[] = [
@@ -45,9 +38,7 @@ export const ALLOWED_STRIPE_EVENTS: Stripe.Event.Type[] = [
 ];
 
 export function createStripe(secretKey: string): Stripe {
-  return new Stripe(secretKey, {
-    apiVersion: "2025-02-24.acacia",
-  });
+  return new Stripe(secretKey, { apiVersion: "2025-02-24.acacia" });
 }
 
 export async function syncStripeDataToKV(
@@ -65,7 +56,7 @@ export async function syncStripeDataToKV(
     });
 
     if (subscriptions.data.length === 0) {
-      const subData: STRIPE_SUB_CACHE = { status: "none" };
+      const subData: STRIPE_SUB_CACHE = null;
       await kv.put(`stripe:customer:${customerId}`, JSON.stringify(subData));
       return subData;
     }
@@ -73,7 +64,7 @@ export async function syncStripeDataToKV(
     // If a user can have multiple subscriptions, that's your problem
     const subscription = subscriptions.data[0];
     if (!subscription) {
-      const subData: STRIPE_SUB_CACHE = { status: "none" };
+      const subData: STRIPE_SUB_CACHE = null;
       await kv.put(`stripe:customer:${customerId}`, JSON.stringify(subData));
       return subData;
     }
@@ -105,47 +96,6 @@ export async function syncStripeDataToKV(
     console.error(`[STRIPE] Error syncing data for customer ${customerId}:`, error);
     throw error;
   }
-}
-
-export async function getOrCreateStripeCustomer(
-  stripe: Stripe,
-  kv: KVNamespace,
-  db: Db,
-  userId: string,
-  userEmail: string,
-): Promise<string> {
-  // First check if user already has a stripe customer ID in database
-  const userRecord = await db.select().from(schema.user).where(eq(schema.user.id, userId)).limit(1);
-
-  let stripeCustomerId = userRecord[0]?.stripeCustomerId;
-
-  // Create a new Stripe customer if this user doesn't have one
-  if (!stripeCustomerId) {
-    const newCustomer = await stripe.customers.create({
-      email: userEmail,
-      metadata: {
-        userId: userId, // DO NOT FORGET THIS
-      },
-    });
-
-    stripeCustomerId = newCustomer.id;
-
-    // Store the relation in both the database and KV
-    await db
-      .update(schema.user)
-      .set({ stripeCustomerId: stripeCustomerId })
-      .where(eq(schema.user.id, userId));
-
-    await kv.put(`stripe:user:${userId}`, stripeCustomerId);
-  } else {
-    // Also store in KV if not already there for faster lookups
-    const kvCustomerId = await kv.get(`stripe:user:${userId}`);
-    if (!kvCustomerId) {
-      await kv.put(`stripe:user:${userId}`, stripeCustomerId);
-    }
-  }
-
-  return stripeCustomerId;
 }
 
 /**

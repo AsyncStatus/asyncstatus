@@ -7,7 +7,6 @@ import {
 } from "../lib/ai-usage-kv";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { getOrganizationPlan } from "../lib/get-organization-plan";
-import { createStripe } from "../lib/stripe";
 import {
   addGenerationsContract,
   checkAiUsageLimitContract,
@@ -22,27 +21,30 @@ export const getAiUsageStatsHandler = typedHandler<
   getAiUsageStatsContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, stripe: stripeConfig }) => {
+  async ({ db, organization, stripeClient, stripeConfig }) => {
     // Get organization's plan from owner/admin's Stripe subscription
-    const { plan: orgPlan } = await getOrganizationPlan(
+    const orgPlan = await getOrganizationPlan(
       db,
-      stripeConfig.secretKey,
+      stripeClient,
       stripeConfig.kv,
       organization.id,
       stripeConfig.priceIds,
     );
 
-    // Get usage stats from KV
+    if (!orgPlan) {
+      return null;
+    }
+
     const stats = await getUsageStats(
       stripeConfig.kv,
       organization.id,
-      orgPlan,
+      orgPlan.plan,
       stripeConfig.aiLimits,
     );
 
     return {
       currentMonth: stats.currentMonth,
-      plan: orgPlan,
+      plan: orgPlan.plan,
     };
   },
 );
@@ -54,20 +56,24 @@ export const checkAiUsageLimitHandler = typedHandler<
   checkAiUsageLimitContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, organization, stripe: stripeConfig }) => {
+  async ({ db, organization, stripeClient, stripeConfig }) => {
     // Get organization's plan from owner/admin's Stripe subscription
-    const { plan: orgPlan } = await getOrganizationPlan(
+    const orgPlan = await getOrganizationPlan(
       db,
-      stripeConfig.secretKey,
+      stripeClient,
       stripeConfig.kv,
       organization.id,
       stripeConfig.priceIds,
     );
 
+    if (!orgPlan) {
+      return null;
+    }
+
     const limitCheck = await checkAiUsageLimit(
       stripeConfig.kv,
       organization.id,
-      orgPlan,
+      orgPlan.plan,
       stripeConfig.aiLimits,
     );
 
@@ -76,7 +82,7 @@ export const checkAiUsageLimitHandler = typedHandler<
       used: limitCheck.used,
       limit: limitCheck.limit,
       addOnAvailable: limitCheck.addOnAvailable,
-      plan: orgPlan,
+      plan: orgPlan.plan,
     };
   },
 );
@@ -91,12 +97,10 @@ export const addGenerationsHandler = typedHandler<
   typedMiddleware<TypedHandlersContextWithOrganization>(({ rateLimiter }, next) =>
     rateLimiter.waitlist(next),
   ),
-  async ({ organization, stripe: stripeConfig, input }) => {
+  async ({ organization, stripeConfig, input, stripeClient }) => {
     const { quantity, stripePaymentIntentId } = input;
 
-    // Verify the payment with Stripe
-    const stripe = createStripe(stripeConfig.secretKey);
-    const paymentIntent = await stripe.paymentIntents.retrieve(stripePaymentIntentId);
+    const paymentIntent = await stripeClient.paymentIntents.retrieve(stripePaymentIntentId);
 
     if (paymentIntent.status !== "succeeded") {
       throw new TypedHandlersError({

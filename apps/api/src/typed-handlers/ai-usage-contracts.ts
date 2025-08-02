@@ -4,32 +4,36 @@ import { z } from "zod/v4";
 export const getAiUsageStatsContract = typedContract(
   "get /ai-usage/stats",
   z.strictObject({}),
-  z.strictObject({
-    currentMonth: z.strictObject({
-      used: z.number(),
-      limit: z.number(),
-      planLimit: z.number(),
-      addOnGenerations: z.number(),
-      remaining: z.number(),
-      byType: z.strictObject({
-        status_generation: z.number(),
-        summary_generation: z.number(),
+  z
+    .strictObject({
+      currentMonth: z.strictObject({
+        used: z.number(),
+        limit: z.number(),
+        planLimit: z.number(),
+        addOnGenerations: z.number(),
+        remaining: z.number(),
+        byType: z.strictObject({
+          status_generation: z.number(),
+          summary_generation: z.number(),
+        }),
       }),
-    }),
-    plan: z.enum(["basic", "startup", "enterprise"]),
-  }),
+      plan: z.enum(["basic", "startup", "enterprise"]),
+    })
+    .nullable(),
 );
 
 export const checkAiUsageLimitContract = typedContract(
   "get /ai-usage/check-limit",
   z.strictObject({}),
-  z.strictObject({
-    allowed: z.boolean(),
-    used: z.number(),
-    limit: z.number(),
-    addOnAvailable: z.number(),
-    plan: z.enum(["basic", "startup", "enterprise"]),
-  }),
+  z
+    .strictObject({
+      allowed: z.boolean(),
+      used: z.number(),
+      limit: z.number(),
+      addOnAvailable: z.number(),
+      plan: z.enum(["basic", "startup", "enterprise"]),
+    })
+    .nullable(),
 );
 
 export const addGenerationsContract = typedContract(

@@ -4,29 +4,33 @@ import { z } from "zod/v4";
 export const generateStripeCheckoutContract = typedContract(
   "post /stripe/generate-checkout",
   z.strictObject({
-    priceId: z.string().min(1),
-    successUrl: z.string().url().optional(),
-    cancelUrl: z.string().url().optional(),
-    trialPeriodDays: z.number().int().min(1).max(365).optional(),
+    plan: z.enum(["basic", "startup", "enterprise"]),
+    successUrl: z.url().optional(),
+    cancelUrl: z.url().optional(),
+    startTrial: z.boolean().optional(),
   }),
   z.strictObject({
-    checkoutUrl: z.string().url(),
+    checkoutUrl: z.url(),
+    trialEndDate: z.iso.datetime().optional(),
   }),
 );
 
 export const stripeSuccessContract = typedContract(
   "post /stripe/success",
-  z.strictObject({}),
+  z.strictObject({
+    sessionId: z.string(),
+  }),
   z.strictObject({
     success: z.boolean(),
+    paymentStatus: z.string().optional(),
   }),
 );
 
 export const getSubscriptionContract = typedContract(
   "get /stripe/subscription",
   z.strictObject({}),
-  z.union([
-    z.strictObject({
+  z
+    .strictObject({
       subscriptionId: z.string().nullable(),
       status: z.enum([
         "incomplete",
@@ -50,18 +54,15 @@ export const getSubscriptionContract = typedContract(
           last4: z.string().nullable(),
         })
         .nullable(),
-    }),
-    z.strictObject({
-      status: z.literal("none"),
-    }),
-  ]),
+    })
+    .nullable(),
 );
 
 export const syncSubscriptionContract = typedContract(
   "post /stripe/sync",
   z.strictObject({}),
-  z.union([
-    z.strictObject({
+  z
+    .strictObject({
       subscriptionId: z.string().nullable(),
       status: z.enum([
         "incomplete",
@@ -85,9 +86,6 @@ export const syncSubscriptionContract = typedContract(
           last4: z.string().nullable(),
         })
         .nullable(),
-    }),
-    z.strictObject({
-      status: z.literal("none"),
-    }),
-  ]),
+    })
+    .nullable(),
 );

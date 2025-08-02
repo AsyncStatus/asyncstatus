@@ -208,7 +208,8 @@ const app = new Hono<HonoEnv>()
     c.set("session" as any, context.session);
     c.set("workflow", context.workflow);
     c.set("slack", context.slack);
-    c.set("stripe", context.stripe);
+    c.set("stripeClient", context.stripeClient);
+    c.set("stripeConfig", context.stripeConfig);
     return next();
   })
   .route("/auth", authRouter)
@@ -314,7 +315,8 @@ const typedHandlersApp = typedHandlersHonoServer(
       organization: c.get("organization" as any),
       member: c.get("member" as any),
       slack: c.get("slack"),
-      stripe: c.get("stripe"),
+      stripeClient: c.get("stripeClient"),
+      stripeConfig: c.get("stripeConfig"),
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
     }),

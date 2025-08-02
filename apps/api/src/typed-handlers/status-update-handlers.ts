@@ -622,7 +622,7 @@ export const generateStatusUpdateHandler = typedHandler<
   generateStatusUpdateContract,
   requiredSession,
   requiredOrganization,
-  async ({ db, openRouterProvider, input, organization, member, stripe }) => {
+  async ({ db, openRouterProvider, input, organization, member, stripeClient, stripeConfig }) => {
     let generatedItems: { content: string; isBlocker: boolean; isInProgress: boolean }[] = [];
     // The frontend sends dates in UTC ISO format, so we should parse them as UTC
     const effectiveFrom = dayjs.utc(input.effectiveFrom);
@@ -630,24 +630,31 @@ export const generateStatusUpdateHandler = typedHandler<
 
     try {
       // Get organization's plan
-      const { plan: orgPlan, stripeCustomerId } = await getOrganizationPlan(
+      const orgPlan = await getOrganizationPlan(
         db,
-        stripe.secretKey,
-        stripe.kv,
+        stripeClient,
+        stripeConfig.kv,
         organization.id,
-        stripe.priceIds,
+        stripeConfig.priceIds,
       );
+
+      if (!orgPlan) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Organization not found",
+        });
+      }
 
       generatedItems = await generateStatusUpdate({
         db,
         openRouterProvider,
         organizationId: organization.id,
         memberId: member.id,
-        plan: orgPlan,
-        kv: stripe.kv,
-        stripeSecretKey: stripe.secretKey,
-        stripeCustomerId,
-        aiLimits: stripe.aiLimits,
+        plan: orgPlan.plan,
+        stripeClient,
+        kv: stripeConfig.kv,
+        stripeCustomerId: orgPlan.stripeCustomerId,
+        aiLimits: stripeConfig.aiLimits,
         effectiveFrom: effectiveFrom.toISOString(),
         effectiveTo: effectiveTo.toISOString(),
       });

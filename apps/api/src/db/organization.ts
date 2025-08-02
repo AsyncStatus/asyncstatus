@@ -11,6 +11,8 @@ export const organization = sqliteTable(
     logo: text("logo"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     metadata: text("metadata"),
+    // Stripe billing fields
+    stripeCustomerId: text("stripe_customer_id"),
   },
   (t) => [index("slug_index").on(t.slug)],
 );

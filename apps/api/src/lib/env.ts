@@ -21,6 +21,7 @@ import { createAuth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
 import type { RateLimiter } from "./rate-limiter";
 import { createRateLimiter } from "./rate-limiter";
+import { createStripe } from "./stripe";
 
 export type Bindings = {
   NODE_ENV: string;
@@ -100,7 +101,8 @@ export type Variables = {
     signingSecret: string;
     stateSecret: string;
   };
-  stripe: {
+  stripeClient: ReturnType<typeof createStripe>;
+  stripeConfig: {
     secretKey: string;
     webhookSecret: string;
     kv: KVNamespace;
@@ -172,7 +174,8 @@ export async function createContext(c: Context<HonoEnv>) {
       signingSecret: c.env.SLACK_SIGNING_SECRET,
       stateSecret: c.env.SLACK_STATE_SECRET,
     },
-    stripe: {
+    stripeClient: createStripe(c.env.STRIPE_SECRET_KEY),
+    stripeConfig: {
       secretKey: c.env.STRIPE_SECRET_KEY,
       webhookSecret: c.env.STRIPE_WEBHOOK_SECRET,
       kv: c.env.STRIPE_KV,

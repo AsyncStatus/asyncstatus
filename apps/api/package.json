@@ -26,6 +26,7 @@
     "dev:remote": "wrangler dev --remote",
     "deploy": "wrangler deploy --minify",
     "dev:turso": "TZ=UTC turso dev --db-file ./src/db/local-db",
+    "dev:stripe": "stripe listen --load-from-webhooks-api --forward-to localhost:8787/stripe/webhooks",
     "migrate": "drizzle-kit migrate",
     "migrate:push": "drizzle-kit push",
     "migrate:generate": "drizzle-kit generate",

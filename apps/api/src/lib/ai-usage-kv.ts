@@ -1,6 +1,5 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import type Stripe from "stripe";
-import { createStripe } from "./stripe";
 
 export type AiUsageType = "status_generation" | "summary_generation";
 
@@ -91,7 +90,7 @@ export async function checkAiUsageLimit(
  */
 export async function trackAiUsage(
   kv: KVNamespace,
-  stripeSecretKey: string,
+  stripeClient: Stripe,
   organizationId: string,
   type: AiUsageType,
   plan: keyof PlanLimits,
@@ -122,13 +121,11 @@ export async function trackAiUsage(
   await kv.put(key, JSON.stringify(usage));
 
   // Report to Stripe for billing (if customer has subscription)
-  if (stripeCustomerId && stripeSecretKey) {
+  if (stripeCustomerId) {
     try {
-      const stripe = createStripe(stripeSecretKey);
-
       // You would need to get the subscription item ID from the customer's subscription
       // For now, we'll just log it - you can implement the actual reporting based on your Stripe setup
-      await reportUsageToStripe(stripe, stripeCustomerId, quantity);
+      await reportUsageToStripe(stripeClient, stripeCustomerId, quantity);
     } catch (error) {
       console.error("[AI USAGE] Failed to report to Stripe:", error);
       // Don't fail the operation if Stripe reporting fails
