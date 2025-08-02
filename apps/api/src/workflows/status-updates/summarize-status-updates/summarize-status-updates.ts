@@ -12,8 +12,6 @@ export type SummarizeStatusUpdatesOptions = {
   organizationId: string;
   plan: "basic" | "startup" | "enterprise"; // for usage limits
   kv: KVNamespace; // for usage tracking
-  stripeSecretKey: string; // for billing
-  stripeCustomerId?: string; // for billing
   aiLimits: { basic: number; startup: number; enterprise: number }; // AI generation limits
   effectiveFrom: string;
   effectiveTo: string;
@@ -25,8 +23,6 @@ export async function summarizeStatusUpdates({
   organizationId,
   plan,
   kv,
-  stripeSecretKey,
-  stripeCustomerId,
   aiLimits,
   effectiveFrom,
   effectiveTo,
@@ -56,11 +52,9 @@ Please analyze all team member status updates and create both a general team sum
   // Track AI usage with plan limits
   const usageResult = await trackAiUsage(
     kv,
-    stripeSecretKey,
     organizationId,
     "summary_generation",
     plan,
-    stripeCustomerId,
     1,
     aiLimits,
   );

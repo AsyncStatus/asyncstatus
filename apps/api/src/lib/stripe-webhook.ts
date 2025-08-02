@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import type { ExecutionContext } from "hono";
 import type Stripe from "stripe";
 import * as schema from "../db";
 import type { Db } from "../db/db";
@@ -73,7 +74,7 @@ type HandleStripeWebhookOptions = {
   kv: KVNamespace;
   body: string;
   signature: string;
-  waitUntil: (promise: Promise<void>) => void;
+  executionCtx: ExecutionContext;
 };
 
 export async function handleStripeWebhook({
@@ -83,7 +84,7 @@ export async function handleStripeWebhook({
   kv,
   body,
   signature,
-  waitUntil,
+  executionCtx,
 }: HandleStripeWebhookOptions): Promise<{ success: boolean; error?: string }> {
   let event: Stripe.Event | null = null;
   try {
@@ -94,7 +95,7 @@ export async function handleStripeWebhook({
   }
 
   try {
-    waitUntil(processStripeEvent({ stripe, db, kv, event }));
+    executionCtx.waitUntil(processStripeEvent({ stripe, db, kv, event }));
   } catch (error) {
     console.error("[STRIPE WEBHOOK] Error processing event:", error);
     return { success: false, error: "Failed to process webhook" };

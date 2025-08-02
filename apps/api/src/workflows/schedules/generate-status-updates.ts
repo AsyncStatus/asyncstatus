@@ -3,6 +3,7 @@ import { dayjs } from "@asyncstatus/dayjs";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateId } from "better-auth";
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import Stripe from "stripe";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
@@ -229,6 +230,16 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
         const openRouterProvider = createOpenRouter({ apiKey: this.env.OPENROUTER_API_KEY });
         const now = dayjs.utc();
 
+        const stripe = new Stripe(this.env.STRIPE_SECRET_KEY);
+        const orgPlan = await getOrganizationPlan(db, stripe, this.env.STRIPE_KV, organizationId, {
+          basic: this.env.STRIPE_BASIC_PRICE_ID,
+          startup: this.env.STRIPE_STARTUP_PRICE_ID,
+          enterprise: this.env.STRIPE_ENTERPRISE_PRICE_ID,
+        });
+        if (!orgPlan) {
+          throw new Error("Organization plan not found");
+        }
+
         // Calculate time range for status update (typically yesterday to today)
         const effectiveFrom = now.subtract(1, "day").startOf("day").toISOString();
         const effectiveTo = now.startOf("day").toISOString();
@@ -244,29 +255,14 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
           // Process batch in parallel
           const batchPromises = batch.map(async (target) => {
             try {
-              // Get organization's plan
-              const { plan: orgPlan, stripeCustomerId } = await getOrganizationPlan(
-                db,
-                this.env.STRIPE_SECRET_KEY,
-                this.env.STRIPE_KV,
-                organizationId,
-                {
-                  basic: this.env.STRIPE_BASIC_PRICE_ID,
-                  startup: this.env.STRIPE_STARTUP_PRICE_ID,
-                  enterprise: this.env.STRIPE_ENTERPRISE_PRICE_ID,
-                },
-              );
-
               // Generate status update items using AI
               const generatedItems = await generateStatusUpdate({
                 db,
                 openRouterProvider,
                 organizationId,
                 memberId: target.memberId,
-                plan: orgPlan,
+                plan: orgPlan.plan,
                 kv: this.env.STRIPE_KV,
-                stripeSecretKey: this.env.STRIPE_SECRET_KEY,
-                stripeCustomerId,
                 aiLimits: {
                   basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
                   startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),

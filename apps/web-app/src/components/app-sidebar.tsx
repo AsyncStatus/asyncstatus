@@ -288,7 +288,7 @@ function AppSidebarPlanUsage(props: { organizationSlug: string }) {
           {isCustomTrial && <Badge variant="secondary">Trial</Badge>}
         </CardTitle>
         {isCustomTrial && (
-          <CardDescription className="text-xs text-pretty text-muted-foreground">
+          <CardDescription className="text-xs text-pretty text-muted-foreground mb-4">
             Trial ends {dayjs(endDate).fromNow()}
           </CardDescription>
         )}

@@ -163,7 +163,7 @@ const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => 
     kv: c.env.STRIPE_KV,
     body,
     signature,
-    waitUntil: c.executionCtx.waitUntil,
+    executionCtx: c.executionCtx,
   });
 
   if (!result.success) {

@@ -6,6 +6,7 @@ import { WebClient as SlackWebClient } from "@slack/web-api";
 import { generateId } from "better-auth";
 import { and, eq, inArray } from "drizzle-orm";
 import { Resend } from "resend";
+import Stripe from "stripe";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
@@ -118,10 +119,10 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
         const effectiveTo = now.endOf("day").toISOString();
 
         try {
-          // Get organization's plan for usage tracking
-          const { plan: orgPlan, stripeCustomerId } = await getOrganizationPlan(
+          const stripe = new Stripe(this.env.STRIPE_SECRET_KEY);
+          const orgPlan = await getOrganizationPlan(
             db,
-            this.env.STRIPE_SECRET_KEY,
+            stripe,
             this.env.STRIPE_KV,
             organizationId,
             {
@@ -130,15 +131,16 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               enterprise: this.env.STRIPE_ENTERPRISE_PRICE_ID,
             },
           );
+          if (!orgPlan) {
+            throw new Error("Organization plan not found");
+          }
 
           const summary = await summarizeStatusUpdates({
             db,
             openRouterProvider,
             organizationId,
-            plan: orgPlan,
+            plan: orgPlan?.plan,
             kv: this.env.STRIPE_KV,
-            stripeSecretKey: this.env.STRIPE_SECRET_KEY,
-            stripeCustomerId,
             aiLimits: {
               basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
               startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),

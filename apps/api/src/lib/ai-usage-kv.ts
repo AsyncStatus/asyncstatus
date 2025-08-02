@@ -1,5 +1,4 @@
 import { dayjs } from "@asyncstatus/dayjs";
-import type Stripe from "stripe";
 
 export type AiUsageType = "status_generation" | "summary_generation";
 
@@ -64,9 +63,6 @@ export async function getCurrentUsage(
   return newUsage;
 }
 
-/**
- * Check if organization has exceeded their AI generation limit
- */
 export async function checkAiUsageLimit(
   kv: KVNamespace,
   organizationId: string,
@@ -85,20 +81,14 @@ export async function checkAiUsageLimit(
   };
 }
 
-/**
- * Track AI usage with plan limit checking
- */
 export async function trackAiUsage(
   kv: KVNamespace,
-  stripeClient: Stripe,
   organizationId: string,
   type: AiUsageType,
   plan: keyof PlanLimits,
-  stripeCustomerId?: string,
   quantity: number = 1,
   aiLimits?: { basic: number; startup: number; enterprise: number },
 ): Promise<{ success: boolean; limitExceeded?: boolean }> {
-  // Check limits before tracking
   const limitCheck = await checkAiUsageLimit(kv, organizationId, plan, aiLimits);
 
   if (!limitCheck.allowed) {
@@ -111,7 +101,6 @@ export async function trackAiUsage(
     };
   }
 
-  // Update KV usage
   const usage = await getCurrentUsage(kv, organizationId);
   usage.usage[type] += quantity;
   usage.usage.total += quantity;
@@ -120,58 +109,11 @@ export async function trackAiUsage(
   const key = getUsageKvKey(organizationId);
   await kv.put(key, JSON.stringify(usage));
 
-  // Report to Stripe for billing (if customer has subscription)
-  if (stripeCustomerId) {
-    try {
-      // You would need to get the subscription item ID from the customer's subscription
-      // For now, we'll just log it - you can implement the actual reporting based on your Stripe setup
-      await reportUsageToStripe(stripeClient, stripeCustomerId, quantity);
-    } catch (error) {
-      console.error("[AI USAGE] Failed to report to Stripe:", error);
-      // Don't fail the operation if Stripe reporting fails
-    }
-  }
-
   console.log(
     `[AI USAGE] Tracked ${quantity}x ${type} for org ${organizationId} (${usage.usage.total}/${limitCheck.limit})`,
   );
 
   return { success: true };
-}
-
-/**
- * Report usage to Stripe (simplified version)
- */
-async function reportUsageToStripe(
-  stripe: Stripe,
-  customerId: string,
-  quantity: number,
-): Promise<void> {
-  // Get customer's subscriptions
-  const subscriptions = await stripe.subscriptions.list({
-    customer: customerId,
-    status: "active",
-    limit: 1,
-  });
-
-  if (subscriptions.data.length === 0) {
-    return; // No active subscription
-  }
-
-  const subscription = subscriptions.data[0];
-
-  // Find metered subscription item (you'd configure this based on your Stripe setup)
-  const meteredItem = subscription?.items.data.find(
-    (item) => item.price.recurring?.usage_type === "metered",
-  );
-
-  if (meteredItem) {
-    await stripe.subscriptionItems.createUsageRecord(meteredItem.id, {
-      quantity,
-      timestamp: Math.floor(Date.now() / 1000),
-      action: "increment",
-    });
-  }
 }
 
 export async function getUsageStats(
