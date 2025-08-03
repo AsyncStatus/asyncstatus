@@ -3,6 +3,7 @@ import {
   TypedHandlersError,
 } from "@asyncstatus/typed-handlers";
 import { typedHandlersHonoServer } from "@asyncstatus/typed-handlers/hono";
+import { verifyAsync } from "@noble/ed25519";
 import { createWebMiddleware as createGithubWebhooksMiddleware } from "@octokit/webhooks";
 import type { SlackEvent } from "@slack/web-api";
 import { Hono } from "hono";
@@ -22,6 +23,14 @@ import {
   confirmAdditionalGenerationsPaymentHandler,
   purchaseAdditionalGenerationsHandler,
 } from "./typed-handlers/ai-usage-handlers";
+import {
+  deleteDiscordIntegrationHandler,
+  discordIntegrationCallbackHandler,
+  getDiscordIntegrationHandler,
+  listDiscordChannelsHandler,
+  listDiscordServersHandler,
+  listDiscordUsersHandler,
+} from "./typed-handlers/discord-integration-handlers";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
   deleteGithubIntegrationHandler,
@@ -147,6 +156,57 @@ const slackWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
   return c.json({ ok: true }, 200);
 });
 
+const discordWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const rawBody = await c.req.raw.text();
+  const signature = c.req.header("X-Signature-Ed25519");
+  const timestamp = c.req.header("X-Signature-Timestamp");
+
+  if (!signature || !timestamp) {
+    return c.json({ error: "Missing signature headers" }, 401);
+  }
+
+  try {
+    const message = timestamp + rawBody;
+    const isValid = await verifyAsync(
+      Buffer.from(signature, "hex"),
+      Buffer.from(message),
+      Buffer.from(c.env.DISCORD_PUBLIC_KEY, "hex"),
+    );
+
+    if (!isValid) {
+      console.warn("Invalid Discord webhook signature");
+      return c.json({ error: "Invalid signature" }, 401);
+    }
+  } catch (error) {
+    console.error("Discord signature verification error:", error);
+    return c.json({ error: "Signature verification failed" }, 401);
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return c.json({ error: "Invalid JSON payload" }, 400);
+  }
+
+  // Handle Discord webhook types
+  // Type 0 = PING (verify webhook URL is active)
+  if (body.type === 0) {
+    return c.body(null, 204); // Return 204 No Content for PING
+  }
+
+  // Type 1 = Event (actual webhook event)
+  if (body.type === 1 && body.event) {
+    const queue = c.env.DISCORD_WEBHOOK_EVENTS_QUEUE;
+    await queue.send(body.event, { contentType: "json" });
+    return c.body(null, 204); // Return 204 No Content for successful processing
+  }
+
+  // Unknown webhook type
+  console.error("Unknown Discord webhook type:", body.type);
+  return c.json({ error: "Unknown webhook type" }, 400);
+});
+
 const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
   const body = await c.req.raw.text();
   const signature = c.req.header("Stripe-Signature");
@@ -212,6 +272,7 @@ const app = new Hono<HonoEnv>()
     c.set("session" as any, context.session);
     c.set("workflow", context.workflow);
     c.set("slack", context.slack);
+    c.set("discord", context.discord);
     c.set("stripeClient", context.stripeClient);
     c.set("stripeConfig", context.stripeConfig);
     return next();
@@ -219,6 +280,7 @@ const app = new Hono<HonoEnv>()
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
+  .route("/integrations/discord/webhooks", discordWebhooksRouter)
   .route("/stripe/webhooks", stripeWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -295,6 +357,12 @@ const typedHandlersApp = typedHandlersHonoServer(
     listSlackChannelsHandler,
     listSlackUsersHandler,
     deleteSlackIntegrationHandler,
+    discordIntegrationCallbackHandler,
+    getDiscordIntegrationHandler,
+    listDiscordServersHandler,
+    listDiscordChannelsHandler,
+    listDiscordUsersHandler,
+    deleteDiscordIntegrationHandler,
     generateStripeCheckoutHandler,
     stripeSuccessHandler,
     getSubscriptionHandler,
@@ -320,6 +388,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       authKv: c.env.AS_PROD_AUTH_KV,
       organization: c.get("organization" as any),
       member: c.get("member" as any),
+      discord: c.get("discord"),
       slack: c.get("slack"),
       stripeClient: c.get("stripeClient"),
       stripeConfig: c.get("stripeConfig"),
@@ -335,6 +404,8 @@ export default {
   scheduled: scheduled,
 };
 export type App = typeof app;
+export { DeleteDiscordIntegrationWorkflow } from "./workflows/discord/delete-discord-integration";
+export { SyncDiscordWorkflow } from "./workflows/discord/sync-discord";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github";
 export { GenerateStatusUpdatesWorkflow } from "./workflows/schedules/generate-status-updates";

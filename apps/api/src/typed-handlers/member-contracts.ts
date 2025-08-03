@@ -33,6 +33,7 @@ export const updateMemberContract = typedContract(
     archivedAt: MemberUpdate.shape.archivedAt,
     slackId: MemberUpdate.shape.slackId,
     githubId: MemberUpdate.shape.githubId,
+    discordId: MemberUpdate.shape.discordId,
     timezone: UserUpdate.shape.timezone,
     autoDetectTimezone: UserUpdate.shape.autoDetectTimezone,
     image: UserUpdate.shape.image.or(z.file().max(1024 * 1024 * 10)),

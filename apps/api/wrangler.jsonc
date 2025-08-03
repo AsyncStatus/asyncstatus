@@ -46,6 +46,20 @@
         "max_batch_timeout": 2,
         "retry_delay": 60,
         "max_retries": 10
+      },
+      {
+        "queue": "discord-webhook-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 2,
+        "retry_delay": 10,
+        "max_retries": 3
+      },
+      {
+        "queue": "discord-process-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
       }
     ],
     "producers": [
@@ -64,6 +78,14 @@
       {
         "queue": "slack-process-events",
         "binding": "SLACK_PROCESS_EVENTS_QUEUE"
+      },
+      {
+        "queue": "discord-webhook-events",
+        "binding": "DISCORD_WEBHOOK_EVENTS_QUEUE"
+      },
+      {
+        "queue": "discord-process-events",
+        "binding": "DISCORD_PROCESS_EVENTS_QUEUE"
       }
     ]
   },
@@ -102,6 +124,16 @@
       "name": "send-summaries",
       "binding": "SEND_SUMMARIES_WORKFLOW",
       "class_name": "SendSummariesWorkflow"
+    },
+    {
+      "name": "sync-discord",
+      "binding": "SYNC_DISCORD_WORKFLOW",
+      "class_name": "SyncDiscordWorkflow"
+    },
+    {
+      "name": "delete-discord-integration",
+      "binding": "DELETE_DISCORD_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteDiscordIntegrationWorkflow"
     }
   ],
   "kv_namespaces": [
