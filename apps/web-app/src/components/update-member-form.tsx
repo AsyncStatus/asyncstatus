@@ -385,7 +385,7 @@ export function UpdateMemberForm(props: {
                       field.onChange(value === field.value ? "" : value);
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a GitHub user" />
                     </SelectTrigger>
                     <SelectContent>
@@ -430,7 +430,7 @@ export function UpdateMemberForm(props: {
                       field.onChange(value === field.value ? "" : value);
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a Slack user" />
                     </SelectTrigger>
                     <SelectContent>
