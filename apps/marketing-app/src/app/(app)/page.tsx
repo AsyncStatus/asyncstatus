@@ -16,6 +16,7 @@ import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
+import { NotificationAnimation } from "../components/notification-animation";
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -166,6 +167,11 @@ export default async function Page(props: {
           <p className="text-muted-foreground text-xs mt-2">
             No credit card required. Cancel anytime.
           </p>
+        </div>
+        
+        {/* Video animation demo */}
+        <div className="mt-24 flex justify-center">
+          <NotificationAnimation />
         </div>
 
         {/* aspect-[2.4/1] */}
