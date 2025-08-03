@@ -172,6 +172,7 @@ export const generateStripeCheckoutHandler = typedHandler<
       line_items: [{ price: targetPriceId, quantity: 1 }],
       mode: "subscription",
       billing_address_collection: "auto",
+      allow_promotion_codes: true,
       client_reference_id: organization.id,
       customer_update: { address: "auto", name: "auto" },
       metadata: {
