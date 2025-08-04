@@ -10,7 +10,7 @@ Install the latest version using our installation script:
 
 ```bash
 # Install to ~/.asyncstatus/cli (no sudo required)
-curl -fsSL https://raw.githubusercontent.com/asyncstatus/web-v3/main/apps/cli/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AsyncStatus/asyncstatus/main/apps/cli/install.sh | bash
 
 # Add to your PATH (add this to your ~/.bashrc, ~/.zshrc, etc.)
 echo 'export PATH="$HOME/.asyncstatus/cli:$PATH"' >> ~/.bashrc
@@ -21,15 +21,15 @@ Alternative installation locations:
 
 ```bash
 # Install to system directory (requires sudo)
-curl -fsSL https://raw.githubusercontent.com/asyncstatus/web-v3/main/apps/cli/install.sh | sudo INSTALL_DIR="/usr/local/bin" bash
+curl -fsSL https://raw.githubusercontent.com/AsyncStatus/asyncstatus/main/apps/cli/install.sh | sudo INSTALL_DIR="/usr/local/bin" bash
 
 # Install to user's local bin
-curl -fsSL https://raw.githubusercontent.com/asyncstatus/web-v3/main/apps/cli/install.sh | INSTALL_DIR="$HOME/.local/bin" bash
+curl -fsSL https://raw.githubusercontent.com/AsyncStatus/asyncstatus/main/apps/cli/install.sh | INSTALL_DIR="$HOME/.local/bin" bash
 ```
 
 ### Manual Installation
 
-Download the appropriate binary for your platform from the [latest release](https://github.com/asyncstatus/web-v3/releases/latest):
+Download the appropriate binary for your platform from the [latest release](https://github.com/AsyncStatus/asyncstatus/releases/latest):
 
 - **Linux (x64)**: `asyncstatus-linux-amd64`
 - **macOS (Intel)**: `asyncstatus-darwin-amd64` 
