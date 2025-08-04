@@ -205,10 +205,65 @@ rm -rf ~/.asyncstatus/cli
 
 ## Release Process
 
-When publishing releases:
+The CLI uses automated GitHub Actions for building and releasing. There are two ways to create a release:
 
-1. Tag the release: `git tag v1.0.0`
-2. Push the tag: `git push origin v1.0.0`
-3. Build all platforms: `make build-all`
-4. Upload binaries to GitHub release
-5. Users can install via: `curl -fsSL .../install.sh | bash`
+### Creating a Release
+
+#### Option 1: Tag Release (Recommended)
+```bash
+# Create and push a version tag
+git tag cli/v1.0.0
+git push origin cli/v1.0.0
+```
+
+#### Option 2: Manual Workflow Dispatch
+1. Go to GitHub Actions in the repository
+2. Select "Build and Release CLI" workflow
+3. Click "Run workflow"
+4. Optionally enter a version (e.g., `v1.0.1`)
+
+### Automated Release Process
+
+The automated workflow will:
+1. **Build** binaries for all supported platforms:
+   - Linux (amd64, arm64)
+   - macOS (amd64, arm64) 
+   - Windows (amd64)
+2. **Test** the code with comprehensive checks
+3. **Create** a GitHub release with:
+   - Pre-compiled binaries
+   - SHA256 checksums
+   - Installation instructions
+   - Release notes
+
+### Testing Releases Locally
+
+Before creating a release, test the build process locally:
+
+```bash
+make release
+```
+
+This will:
+- Build for all platforms
+- Generate checksums
+- Verify all artifacts are created correctly
+
+### Supported Platforms
+
+The CLI is automatically built and tested for:
+- **Linux**: amd64, arm64
+- **macOS**: amd64 (Intel), arm64 (Apple Silicon)
+- **Windows**: amd64
+
+### Installation After Release
+
+Once released, users can install using:
+
+```bash
+# Automatic installation
+curl -fsSL https://raw.githubusercontent.com/asyncstatus/web-v3/main/apps/cli/install.sh | bash
+
+# Manual download from GitHub releases
+# Download appropriate binary from: https://github.com/asyncstatus/web-v3/releases
+```

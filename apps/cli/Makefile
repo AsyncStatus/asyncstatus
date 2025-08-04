@@ -14,7 +14,7 @@ BUILD_FLAGS=-trimpath -buildmode=pie
 CGO_ENABLED=0
 
 # Build targets
-.PHONY: build build-debug build-all clean install test fmt vet lint deps run version help
+.PHONY: build build-debug build-all clean install test fmt vet lint deps run version help checksums release
 
 build: ## Build the binary (production optimized)
 	@echo "Building ${BINARY_NAME} ${VERSION} (production)..."
@@ -24,12 +24,16 @@ build-debug: ## Build the binary with debug information
 	@echo "Building ${BINARY_NAME} ${VERSION} (debug)..."
 	go build -ldflags "-X asyncstatus.com/cli/cmd.Version=${VERSION} -X asyncstatus.com/cli/cmd.BuildTime=${BUILD_TIME} -X asyncstatus.com/cli/cmd.GitCommit=${GIT_COMMIT}" -o bin/${BINARY_NAME}-debug .
 
-build-all: ## Build for multiple platforms
+build-all: clean ## Build for multiple platforms
 	@echo "Building ${BINARY_NAME} ${VERSION} for multiple platforms..."
+	mkdir -p bin
 	CGO_ENABLED=${CGO_ENABLED} GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} ${LDFLAGS} -o bin/${BINARY_NAME}-linux-amd64 .
+	CGO_ENABLED=${CGO_ENABLED} GOOS=linux GOARCH=arm64 go build ${BUILD_FLAGS} ${LDFLAGS} -o bin/${BINARY_NAME}-linux-arm64 .
 	CGO_ENABLED=${CGO_ENABLED} GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-amd64 .
 	CGO_ENABLED=${CGO_ENABLED} GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} ${LDFLAGS} -o bin/${BINARY_NAME}-darwin-arm64 .
 	CGO_ENABLED=${CGO_ENABLED} GOOS=windows GOARCH=amd64 go build ${BUILD_FLAGS} ${LDFLAGS} -o bin/${BINARY_NAME}-windows-amd64.exe .
+	@echo "All builds completed:"
+	@ls -la bin/
 
 install: build ## Install the binary to GOPATH/bin
 	@echo "Installing ${BINARY_NAME}..."
@@ -39,6 +43,15 @@ clean: ## Clean build artifacts
 	@echo "Cleaning..."
 	rm -rf bin/
 	go clean
+
+checksums: build-all ## Generate checksums for release binaries
+	@echo "Generating checksums..."
+	cd bin && sha256sum * > checksums.txt
+	@echo "Checksums generated:"
+	@cat bin/checksums.txt
+
+release: checksums ## Prepare release artifacts (used by CI)
+	@echo "Release artifacts ready in bin/"
 
 test: ## Run tests
 	go test -v ./...
