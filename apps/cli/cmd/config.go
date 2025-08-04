@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 // Config represents the stored configuration
@@ -80,14 +82,14 @@ func clearConfig() error {
 func getCurrentUserEmail() string {
 	config, err := loadConfig()
 	if err != nil {
-		fmt.Println("❌ You are not authenticated.")
-		fmt.Println("   Please run: asyncstatus login")
+		color.New(color.FgRed).Println("⧗ not authenticated")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 		os.Exit(1)
 	}
 	
 	if config.Email == "" {
-		fmt.Println("❌ No user email found.")
-		fmt.Println("   Please run: asyncstatus login")
+		color.New(color.FgRed).Println("⧗ no user email found")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 		os.Exit(1)
 	}
 	
@@ -99,14 +101,14 @@ func getCurrentUserEmail() string {
 func getCurrentToken() string {
 	config, err := loadConfig()
 	if err != nil {
-		fmt.Println("❌ You are not authenticated.")
-		fmt.Println("   Please run: asyncstatus login")
+		color.New(color.FgRed).Println("⧗ not authenticated")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 		os.Exit(1)
 	}
 	
 	if config.Token == "" {
-		fmt.Println("❌ No authentication token found.")
-		fmt.Println("   Please run: asyncstatus login")
+		color.New(color.FgRed).Println("⧗ no authentication token found")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 		os.Exit(1)
 	}
 	

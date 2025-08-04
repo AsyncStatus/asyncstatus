@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +22,8 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := handleDoneStatus(args[0]); err != nil {
-			fmt.Printf("❌ Failed to add status update: %v\n", err)
-			fmt.Println("   Make sure you're logged in: asyncstatus login")
+			color.New(color.FgRed).Printf("⧗ failed: %v\n", err)
+			color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 		}
 	},
 }
@@ -41,7 +42,8 @@ type StatusUpdateRequest struct {
 
 // handleDoneStatus processes adding a done status update
 func handleDoneStatus(message string) error {
-	fmt.Printf("📝 Adding done status: %s\n", message)
+	color.New(color.FgGreen).Print("⧗ done: ")
+	color.New(color.FgWhite).Println(message)
 	
 	// Get active organization slug
 	orgSlug, err := getActiveOrganizationSlug()
@@ -82,6 +84,6 @@ func handleDoneStatus(message string) error {
 		return fmt.Errorf("server error (status %d): %s", resp.StatusCode, string(body))
 	}
 	
-	fmt.Println("✅ Status update added successfully")
+	color.New(color.FgGreen).Println("  ✓ saved")
 	return nil
 }

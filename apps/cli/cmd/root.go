@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -19,8 +20,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "asyncstatus",
-	Short: "A CLI tool for managing async status updates",
-	Long: `AsyncStatus CLI allows you to quickly add status updates from the command line.
+	Short: "⧗ CLI for async status updates",
+	Long: `⧗ AsyncStatus CLI - minimalistic status tracking from the terminal.
 	
 Examples:
   asyncstatus login                     # Login to AsyncStatus
@@ -40,8 +41,8 @@ Examples:
 		// treat it as a "done" status update
 		if len(args) == 1 {
 			if err := handleDoneStatus(args[0]); err != nil {
-				fmt.Printf("❌ Failed to add status update: %v\n", err)
-				fmt.Println("   Make sure you're logged in: asyncstatus login")
+				color.New(color.FgRed).Printf("⧗ failed: %v\n", err)
+				color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 			}
 		} else {
 			cmd.Help()

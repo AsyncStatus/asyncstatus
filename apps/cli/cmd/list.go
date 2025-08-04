@@ -6,6 +6,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
 	"github.com/spf13/cobra"
 )
@@ -96,25 +97,29 @@ func handleListStatus(days int) error {
 	// Display the status updates
 	if len(response.StatusUpdates) == 0 {
 		if days == 1 {
-			fmt.Println("📝 No status updates found for today")
+			color.New(color.FgHiBlack).Println("⧗ no updates found for today")
 		} else {
-			fmt.Printf("📝 No status updates found for the past %d days\n", days)
+			color.New(color.FgHiBlack).Printf("⧗ no updates found for the past %d days\n", days)
 		}
-		fmt.Println("   Add your first update with: asyncstatus done \"your task\"")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus done \"your task\""), "to create one")
 		return nil
 	}
 
+	headerColor := color.New(color.FgWhite, color.Bold)
+	countColor := color.New(color.FgCyan)
+	
+	headerColor.Print("⧗ ")
 	if days == 1 {
-		fmt.Println("📅 Today's Status Updates")
+		headerColor.Println("today's updates")
 	} else {
-		fmt.Printf("📅 Status Updates (Past %d days)\n", days)
+		headerColor.Printf("past %d days\n", days)
 	}
-	fmt.Printf("Found %d status update(s)\n\n", len(response.StatusUpdates))
+	countColor.Printf("  %d update(s)\n\n", len(response.StatusUpdates))
 
 	for i, statusUpdate := range response.StatusUpdates {
 		displayStatusUpdateSummary(&statusUpdate, i+1)
 		if i < len(response.StatusUpdates)-1 {
-			fmt.Println("─────────────────────────────────────────")
+			color.New(color.FgHiBlack).Println("  ────────────────────────────────────")
 		}
 	}
 
@@ -123,15 +128,26 @@ func handleListStatus(days int) error {
 
 // displayStatusUpdateSummary formats and displays a concise version of a status update
 func displayStatusUpdateSummary(statusUpdate *StatusUpdate, index int) {
-	fmt.Printf("%d. %s\n", index, statusUpdate.EffectiveFrom.Format("Monday, January 2, 2006"))
-	fmt.Printf("   👤 %s (%s)\n", statusUpdate.Member.User.Name, statusUpdate.Member.User.Email)
+	indexColor := color.New(color.FgHiBlack)
+	dateColor := color.New(color.FgWhite, color.Bold)
+	userColor := color.New(color.FgCyan)
+	emailColor := color.New(color.FgHiBlack)
+	teamColor := color.New(color.FgMagenta)
+	
+	indexColor.Printf("  %d. ", index)
+	dateColor.Println(statusUpdate.EffectiveFrom.Format("Monday, January 2"))
+	
+	userColor.Print("     ")
+	userColor.Print(statusUpdate.Member.User.Name)
+	emailColor.Printf(" (%s)\n", statusUpdate.Member.User.Email)
 	
 	if statusUpdate.Team != nil {
-		fmt.Printf("   👥 Team: %s\n", statusUpdate.Team.Name)
+		teamColor.Print("     ")
+		teamColor.Println(statusUpdate.Team.Name)
 	}
 	
 	if len(statusUpdate.Items) == 0 {
-		fmt.Println("   (No items)")
+		color.New(color.FgHiBlack).Println("     (empty)")
 		fmt.Println()
 		return
 	}
@@ -151,56 +167,47 @@ func displayStatusUpdateSummary(statusUpdate *StatusUpdate, index int) {
 	// Show summary counts
 	var summaryParts []string
 	if completedCount > 0 {
-		summaryParts = append(summaryParts, fmt.Sprintf("✅ %d completed", completedCount))
+		summaryParts = append(summaryParts, color.New(color.FgGreen).Sprintf("✓%d", completedCount))
 	}
 	if progressCount > 0 {
-		summaryParts = append(summaryParts, fmt.Sprintf("🔄 %d in progress", progressCount))
+		summaryParts = append(summaryParts, color.New(color.FgYellow).Sprintf("→%d", progressCount))
 	}
 	if blockerCount > 0 {
-		summaryParts = append(summaryParts, fmt.Sprintf("🚫 %d blockers", blockerCount))
+		summaryParts = append(summaryParts, color.New(color.FgRed).Sprintf("✗%d", blockerCount))
 	}
 
 	if len(summaryParts) > 0 {
-		fmt.Printf("   %s\n", joinStrings(summaryParts, " • "))
+		fmt.Printf("     %s\n", joinStrings(summaryParts, " "))
 	}
 
-	// Show first few items as preview
-	maxPreviewItems := 3
-	for i, item := range statusUpdate.Items {
-		if i >= maxPreviewItems {
-			remaining := len(statusUpdate.Items) - maxPreviewItems
-			fmt.Printf("   ... and %d more\n", remaining)
-			break
-		}
-
-		var icon string
+	// Show all items
+	for _, item := range statusUpdate.Items {
+		var itemColor *color.Color
 		if item.IsBlocker {
-			icon = "🚫"
+			itemColor = color.New(color.FgRed)
 		} else if item.IsInProgress {
-			icon = "🔄"
+			itemColor = color.New(color.FgYellow)
 		} else {
-			icon = "✅"
+			itemColor = color.New(color.FgGreen)
 		}
 
-		// Truncate long content for summary view
-		content := item.Content
-		if len(content) > 50 {
-			content = content[:47] + "..."
-		}
-
-		fmt.Printf("   %s %s\n", icon, content)
+		fmt.Print("     ")
+		itemColor.Printf("• %s\n", item.Content)
 	}
 
-	fmt.Printf("   Updated: %s\n", statusUpdate.UpdatedAt.Format("3:04 PM"))
+	timeColor := color.New(color.FgHiBlack)
+	timeColor.Printf("     %s", statusUpdate.UpdatedAt.Format("15:04"))
 	
 	// Get organization slug and construct the web URL
 	orgSlug, err := getActiveOrganizationSlug()
 	if err == nil {
 		webURL := getWebAppURL()
 		statusUpdateURL := fmt.Sprintf("%s/%s/status-updates/%s", webURL, orgSlug, statusUpdate.ID)
-		link := termlink.Link("View online", statusUpdateURL)
-		fmt.Printf("   🔗 %s\n", link)
+		link := termlink.Link("view", statusUpdateURL)
+		linkColor := color.New(color.FgBlue)
+		linkColor.Printf(" • %s", link)
 	}
+	fmt.Println()
 	
 	fmt.Println()
 }

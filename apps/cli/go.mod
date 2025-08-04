@@ -6,6 +6,7 @@ toolchain go1.23.11
 
 require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0
+	github.com/fatih/color v1.18.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/savioxavier/termlink v1.4.3
 	github.com/spf13/cobra v1.9.1
@@ -14,6 +15,8 @@ require (
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 )

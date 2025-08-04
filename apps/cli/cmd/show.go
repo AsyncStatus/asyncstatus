@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/savioxavier/termlink"
 	"github.com/spf13/cobra"
 )
@@ -134,8 +135,8 @@ func handleShowStatus() error {
 
 	// Display the status update
 	if response.StatusUpdate == nil {
-		fmt.Println("📝 No status update found for today")
-		fmt.Println("   Add your first update with: asyncstatus done \"your task\"")
+		color.New(color.FgHiBlack).Println("⧗ no updates found for today")
+		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus done \"your task\""), "to create one")
 		return nil
 	}
 
@@ -145,11 +146,23 @@ func handleShowStatus() error {
 
 // displayStatusUpdate formats and displays a status update
 func displayStatusUpdate(statusUpdate *StatusUpdate) {
-	fmt.Printf("📅 Status Update for %s\n", statusUpdate.EffectiveFrom.Format("Monday, January 2, 2006"))
-	fmt.Printf("👤 %s (%s)\n", statusUpdate.Member.User.Name, statusUpdate.Member.User.Email)
+	// Header with logo
+	headerColor := color.New(color.FgWhite, color.Bold)
+	dateColor := color.New(color.FgWhite)
+	userColor := color.New(color.FgCyan)
+	emailColor := color.New(color.FgHiBlack)
+	teamColor := color.New(color.FgMagenta)
+	
+	headerColor.Print("⧗ ")
+	dateColor.Println(statusUpdate.EffectiveFrom.Format("Monday, January 2, 2006"))
+	
+	userColor.Print("  ")
+	userColor.Print(statusUpdate.Member.User.Name)
+	emailColor.Printf(" (%s)\n", statusUpdate.Member.User.Email)
 	
 	if statusUpdate.Team != nil {
-		fmt.Printf("👥 Team: %s\n", statusUpdate.Team.Name)
+		teamColor.Print("  ")
+		teamColor.Println(statusUpdate.Team.Name)
 	}
 	
 	// Get organization slug and construct the web URL
@@ -157,14 +170,16 @@ func displayStatusUpdate(statusUpdate *StatusUpdate) {
 	if err == nil {
 		webURL := getWebAppURL()
 		statusUpdateURL := fmt.Sprintf("%s/%s/status-updates/%s", webURL, orgSlug, statusUpdate.ID)
-		link := termlink.Link("View online", statusUpdateURL)
-		fmt.Printf("🔗 %s\n", link)
+		link := termlink.Link("view online", statusUpdateURL)
+		linkColor := color.New(color.FgBlue)
+		linkColor.Print("  ")
+		linkColor.Println(link)
 	}
 	
 	fmt.Println()
 
 	if len(statusUpdate.Items) == 0 {
-		fmt.Println("   No items in status update")
+		color.New(color.FgHiBlack).Println("  (empty)")
 		return
 	}
 
@@ -185,30 +200,31 @@ func displayStatusUpdate(statusUpdate *StatusUpdate) {
 
 	// Display completed items
 	if len(completedItems) > 0 {
-		fmt.Println("✅ Completed:")
+		color.New(color.FgGreen).Println("  ✓ completed")
 		for _, item := range completedItems {
-			fmt.Printf("   • %s\n", item.Content)
+			color.New(color.FgWhite).Printf("    %s\n", item.Content)
 		}
 		fmt.Println()
 	}
 
 	// Display in-progress items
 	if len(progressItems) > 0 {
-		fmt.Println("🔄 In Progress:")
+		color.New(color.FgYellow).Println("  → in progress")
 		for _, item := range progressItems {
-			fmt.Printf("   • %s\n", item.Content)
+			color.New(color.FgWhite).Printf("    %s\n", item.Content)
 		}
 		fmt.Println()
 	}
 
 	// Display blockers
 	if len(blockerItems) > 0 {
-		fmt.Println("🚫 Blockers:")
+		color.New(color.FgRed).Println("  ✗ blocked")
 		for _, item := range blockerItems {
-			fmt.Printf("   • %s\n", item.Content)
+			color.New(color.FgWhite).Printf("    %s\n", item.Content)
 		}
 		fmt.Println()
 	}
 
-	fmt.Printf("Last updated: %s\n", statusUpdate.UpdatedAt.Format("3:04 PM"))
+	timeColor := color.New(color.FgHiBlack)
+	timeColor.Printf("  updated %s\n", statusUpdate.UpdatedAt.Format("15:04"))
 }
