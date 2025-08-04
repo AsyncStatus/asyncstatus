@@ -182,6 +182,18 @@ install_binary() {
     
     log_success "Successfully installed $BINARY_NAME to $install_path"
     
+    # Create aliases for the CLI
+    log_info "Creating aliases..."
+    local aliases=("⧗" "async")
+    for alias in "${aliases[@]}"; do
+        local alias_path="${INSTALL_DIR}/${alias}"
+        if ln -sf "$install_path" "$alias_path" 2>/dev/null; then
+            log_success "Created alias: $alias"
+        else
+            log_warning "Failed to create alias: $alias (this is optional)"
+        fi
+    done
+    
     # Check if the installation directory is in PATH
     if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
         log_warning "Installation directory $INSTALL_DIR is not in your PATH."
@@ -189,7 +201,7 @@ install_binary() {
         log_warning "To add to PATH, add this line to your shell profile (~/.bashrc, ~/.zshrc, etc.):"
         log_warning "  export PATH=\"$INSTALL_DIR:\$PATH\""
     else
-        log_success "You can now run: $BINARY_NAME"
+        log_success "You can now run: $BINARY_NAME, ⧗, or async"
     fi
 }
 
@@ -206,6 +218,20 @@ uninstall_binary() {
     
     if rm "$install_path"; then
         log_success "Successfully removed AsyncStatus CLI"
+        
+        # Remove aliases
+        log_info "Removing aliases..."
+        local aliases=("⧗" "async")
+        for alias in "${aliases[@]}"; do
+            local alias_path="${INSTALL_DIR}/${alias}"
+            if [ -f "$alias_path" ] || [ -L "$alias_path" ]; then
+                if rm "$alias_path" 2>/dev/null; then
+                    log_success "Removed alias: $alias"
+                else
+                    log_warning "Failed to remove alias: $alias"
+                fi
+            fi
+        done
         
         # Check if directory is empty and remove it
         if [ -d "$INSTALL_DIR" ] && [ -z "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
@@ -243,6 +269,8 @@ show_usage() {
     echo "  $0 --dir \$HOME/.local/bin            # Install to user's local bin"
     echo "  $0 --uninstall                       # Remove AsyncStatus CLI"
     echo "  INSTALL_DIR=\$HOME/bin $0             # Install using environment variable"
+    echo ""
+    echo "Note: Installation creates aliases 'async' and '⧗' for convenience."
 }
 
 # Parse command line arguments
@@ -326,6 +354,11 @@ main() {
         echo ""
         log_info "Verifying installation..."
         "$BINARY_NAME" --version
+        echo ""
+        log_info "You can now use any of these commands:"
+        log_info "  asyncstatus --help"
+        log_info "  async --help"
+        log_info "  ⧗ --help"
     fi
 }
 

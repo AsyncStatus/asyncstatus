@@ -21,6 +21,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "asyncstatus",
 	Short: "⧗ CLI for async status updates",
+	Aliases: []string{"⧗", "async"},
 	Long: `⧗ AsyncStatus CLI - minimalistic status tracking from the terminal.
 	
 Examples:
@@ -34,7 +35,13 @@ Examples:
   asyncstatus show                      # Show current status update
   asyncstatus list                      # List today's status updates
   asyncstatus list 7                    # List status updates from past 7 days
-  asyncstatus undo                      # Remove the previous status update`,
+  asyncstatus undo                      # Remove the previous status update
+  
+ Links:
+  - https://asyncstatus.com
+  - https://github.com/asyncstatus/asyncstatus
+  - https://github.com/asyncstatus/asyncstatus/issues
+  - https://github.com/asyncstatus/asyncstatus/releases`,
 	Version: Version,
 	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
