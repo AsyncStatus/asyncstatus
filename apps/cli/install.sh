@@ -56,7 +56,6 @@ detect_arch() {
 # Function to get the latest release version
 get_latest_version() {
     local repo=$1
-    log_info "Fetching latest release information..."
     
     # Try to get the latest release tag from GitHub API
     if command -v curl >/dev/null 2>&1; then
@@ -68,7 +67,7 @@ get_latest_version() {
             grep '"tag_name":' | \
             sed -E 's/.*"([^"]+)".*/\1/'
     else
-        log_error "Neither curl nor wget is available. Please install one of them."
+        log_error "Neither curl nor wget is available. Please install one of them." >&2
         exit 1
     fi
 }
@@ -333,6 +332,7 @@ main() {
     
     # Get version
     if [ -z "$VERSION" ]; then
+        log_info "Fetching latest release information..."
         VERSION=$(get_latest_version "$GITHUB_REPO")
         if [ -z "$VERSION" ]; then
             log_error "Failed to fetch latest version. Please specify a version manually."
