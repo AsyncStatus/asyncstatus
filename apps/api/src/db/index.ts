@@ -22,6 +22,7 @@ export {
 } from "./github-repository";
 export { GithubUser, GithubUserInsert, GithubUserUpdate, githubUser } from "./github-user";
 export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./invitation";
+export { Jwks, JwksInsert, JwksUpdate, jwks } from "./jwks";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
@@ -107,6 +108,7 @@ import { githubIntegration } from "./github-integration";
 import { githubRepository } from "./github-repository";
 import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
+import { jwks } from "./jwks";
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";

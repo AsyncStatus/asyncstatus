@@ -2,7 +2,7 @@ import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { customSession } from "better-auth/plugins";
+import { bearer, customSession, jwt } from "better-auth/plugins";
 import { desc, eq } from "drizzle-orm";
 import type { Resend } from "resend";
 import * as schema from "../db";
@@ -154,6 +154,8 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         return { ...session, session: { ...session.session, activeOrganizationSlug } };
       }),
       authCookiesPlugin(),
+      jwt(),
+      bearer(),
     ],
   });
 }
