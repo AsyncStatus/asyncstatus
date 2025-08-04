@@ -144,7 +144,7 @@ export const addCliStatusUpdateItemHandler = typedHandler<
       // Update the status update with the new editorJson
       await tx
         .update(schema.statusUpdate)
-        .set({ editorJson: nextEditorJson, updatedAt: nowDate })
+        .set({ editorJson: nextEditorJson, updatedAt: nowDate, isDraft: false })
         .where(eq(schema.statusUpdate.id, statusUpdateId));
 
       // Return the complete status update with all items
@@ -275,7 +275,7 @@ export const undoLastCliStatusUpdateItemHandler = typedHandler<
         // Update the status update with new editorJson and updatedAt timestamp
         await tx
           .update(schema.statusUpdate)
-          .set({ editorJson: nextEditorJson, updatedAt: dayjs().utc().toDate() })
+          .set({ editorJson: nextEditorJson, updatedAt: dayjs().utc().toDate(), isDraft: false })
           .where(eq(schema.statusUpdate.id, statusUpdate.id));
 
         return {
