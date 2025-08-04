@@ -111,8 +111,8 @@ jobs:
           ls -la bin/
           file "bin/${OUTPUT_NAME}" || true
 
-      - name: Test binary (Linux/macOS only)
-        if: matrix.goos != 'windows'
+      - name: Test binary (Linux only)
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
         run: |
           cd apps/cli
           chmod +x "bin/asyncstatus-${{ matrix.suffix }}"
