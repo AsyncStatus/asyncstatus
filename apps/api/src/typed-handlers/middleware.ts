@@ -1,6 +1,6 @@
 import { TypedHandlersError, typedMiddleware } from "@asyncstatus/typed-handlers";
 import { desc, eq, or } from "drizzle-orm";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createLocalJWKSet, jwtVerify } from "jose";
 import { member, organization } from "../db";
 import type {
   TypedHandlersContextWithOrganization,
@@ -53,7 +53,7 @@ export const requiredSession = typedMiddleware<TypedHandlersContextWithSession>(
 );
 
 export const requiredJwt = typedMiddleware<TypedHandlersContextWithSession>(
-  async ({ req, set, betterAuthUrl }, next) => {
+  async ({ req, set, betterAuthUrl, auth }, next) => {
     // Extract JWT token from Authorization header
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -66,11 +66,25 @@ export const requiredJwt = typedMiddleware<TypedHandlersContextWithSession>(
     const token = authHeader.substring(7); // Remove "Bearer " prefix
 
     try {
-      const jwksUrl = new URL("/auth/jwks", betterAuthUrl);
+      // Try to get JWKS directly from the local Better Auth instance
+      let JWKS: unknown;
+      try {
+        const jwksResponse = await auth.api.getJwks();
+        JWKS = createLocalJWKSet(jwksResponse);
+      } catch (jwksError) {
+        console.warn("Failed to get local JWKS, falling back to direct verification:", jwksError);
+        // Fallback: verify the token directly with Better Auth
+        const headers = new Headers();
+        headers.set("authorization", `Bearer ${token}`);
+        const session = await auth.api.getSession({ headers });
+        if (!session) {
+          throw new Error("Invalid session");
+        }
+        set("session", session);
+        return next();
+      }
 
-      const JWKS = createRemoteJWKSet(jwksUrl);
-
-      const { payload } = await jwtVerify(token, JWKS, {
+      const { payload } = await jwtVerify(token, JWKS as Parameters<typeof jwtVerify>[1], {
         issuer: betterAuthUrl,
         audience: betterAuthUrl,
       });
