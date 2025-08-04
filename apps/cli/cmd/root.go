@@ -24,6 +24,7 @@ var rootCmd = &cobra.Command{
 	Long: `⧗ AsyncStatus CLI - minimalistic status tracking from the terminal.
 	
 Examples:
+  asyncstatus                           # Show current status update
   asyncstatus login                     # Login to AsyncStatus
   asyncstatus logout                    # Logout from AsyncStatus
   asyncstatus "did something"           # Add a done status (default)
@@ -45,7 +46,11 @@ Examples:
 				color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 			}
 		} else {
-			cmd.Help()
+			// Show current status update when no arguments provided
+			if err := handleShowStatus(); err != nil {
+				color.New(color.FgRed).Printf("⧗ failed: %v\n", err)
+				color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
+			}
 		}
 	},
 }
