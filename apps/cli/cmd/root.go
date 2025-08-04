@@ -29,6 +29,9 @@ Examples:
   asyncstatus done "did something"      # Add a done status (explicit)
   asyncstatus blocker "something"       # Add a blocker status
   asyncstatus progress "did something"  # Add a progress status
+  asyncstatus show                      # Show current status update
+  asyncstatus list                      # List today's status updates
+  asyncstatus list 7                    # List status updates from past 7 days
   asyncstatus undo                      # Remove the previous status update`,
 	Version: Version,
 	Args:    cobra.MaximumNArgs(1),

@@ -115,10 +115,7 @@ func getCurrentToken() string {
 
 // makeAuthenticatedRequest creates an HTTP client and request with JWT authentication
 func makeAuthenticatedRequest(method, endpoint string) (*http.Client, *http.Request, error) {
-	// Get the JWT token (will exit if not authenticated)
 	token := getCurrentToken()
-	
-	// Get API URL from environment or use default
 	apiURL := os.Getenv("ASYNCSTATUS_API_URL")
 	if apiURL == "" {
 		apiURL = "https://api.asyncstatus.com"
@@ -139,6 +136,18 @@ func makeAuthenticatedRequest(method, endpoint string) (*http.Client, *http.Requ
 	// Add authentication headers
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("User-Agent", "AsyncStatus-CLI/"+Version)
+	
+	return client, req, nil
+}
+
+// makeAuthenticatedJSONRequest creates an HTTP client and request with JWT authentication and JSON content type
+func makeAuthenticatedJSONRequest(method, endpoint string) (*http.Client, *http.Request, error) {
+	client, req, err := makeAuthenticatedRequest(method, endpoint)
+	if err != nil {
+		return nil, nil, err
+	}
+	
+	// Set JSON content type for requests with body
 	req.Header.Set("Content-Type", "application/json")
 	
 	return client, req, nil

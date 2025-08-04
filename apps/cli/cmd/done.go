@@ -37,10 +37,18 @@ type StatusUpdateRequest struct {
 	Message string `json:"message"`
 }
 
+
+
 // handleDoneStatus processes adding a done status update
 func handleDoneStatus(message string) error {
 	fmt.Printf("📝 Adding done status: %s\n", message)
 	
+	// Get active organization slug
+	orgSlug, err := getActiveOrganizationSlug()
+	if err != nil {
+		return err
+	}
+
 	// Create the request payload
 	payload := StatusUpdateRequest{
 		Type:    "done",
@@ -52,8 +60,8 @@ func handleDoneStatus(message string) error {
 		return fmt.Errorf("failed to prepare request: %v", err)
 	}
 	
-	// Make authenticated request
-	client, req, err := makeAuthenticatedRequest("POST", "/api/status-updates")
+	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates", orgSlug)
+	client, req, err := makeAuthenticatedJSONRequest("POST", endpoint)
 	if err != nil {
 		return err
 	}

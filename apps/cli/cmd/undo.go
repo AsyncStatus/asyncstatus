@@ -32,8 +32,14 @@ func init() {
 func handleUndoStatus() error {
 	fmt.Println("🔙 Removing previous status update...")
 	
-	// Make authenticated request to delete last status update
-	client, req, err := makeAuthenticatedRequest("DELETE", "/api/status-updates/last")
+	// Get active organization slug
+	orgSlug, err := getActiveOrganizationSlug()
+	if err != nil {
+		return err
+	}
+	
+	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates/last", orgSlug)
+	client, req, err := makeAuthenticatedRequest("DELETE", endpoint)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,44 @@
 import { TypedHandlersError, typedMiddleware } from "@asyncstatus/typed-handlers";
 import { desc, eq, or } from "drizzle-orm";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { member, organization } from "../db";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
+
+interface JWTSessionData {
+  ipAddress: string;
+  userAgent: string;
+  expiresAt: string;
+  userId: string;
+  token: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface JWTUser {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  createdAt: string;
+  updatedAt: string;
+  activeOrganizationSlug: string;
+  timezone: string;
+  autoDetectTimezone: boolean;
+}
+
+interface JWTPayload {
+  session: JWTSessionData;
+  user: JWTUser;
+  iat: number;
+  iss: string;
+  aud: string;
+  exp: number;
+  sub: string;
+}
 
 export const requiredSession = typedMiddleware<TypedHandlersContextWithSession>(
   async ({ session }, next) => {
@@ -15,6 +49,60 @@ export const requiredSession = typedMiddleware<TypedHandlersContextWithSession>(
       });
     }
     return next();
+  },
+);
+
+export const requiredJwt = typedMiddleware<TypedHandlersContextWithSession>(
+  async ({ req, set, betterAuthUrl }, next) => {
+    // Extract JWT token from Authorization header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new TypedHandlersError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to access this resource",
+      });
+    }
+
+    const token = authHeader.substring(7); // Remove "Bearer " prefix
+
+    try {
+      const jwksUrl = new URL("/auth/jwks", betterAuthUrl);
+
+      const JWKS = createRemoteJWKSet(jwksUrl);
+
+      const { payload } = await jwtVerify(token, JWKS, {
+        issuer: betterAuthUrl,
+        audience: betterAuthUrl,
+      });
+
+      const jwtPayload = payload as unknown as JWTPayload;
+      const jwtSession = jwtPayload.session;
+      const jwtUser = jwtPayload.user;
+
+      if (!jwtSession || !jwtUser) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "Invalid token payload",
+        });
+      }
+
+      const session = {
+        session: {
+          ...jwtSession,
+          activeOrganizationSlug: jwtUser.activeOrganizationSlug,
+        },
+        user: jwtUser,
+      };
+
+      set("session", session);
+      return next();
+    } catch (error) {
+      console.error("JWT validation failed:", error);
+      throw new TypedHandlersError({
+        code: "UNAUTHORIZED",
+        message: "Invalid or expired token",
+      });
+    }
   },
 );
 

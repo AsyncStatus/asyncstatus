@@ -35,6 +35,12 @@ func init() {
 func handleBlockerStatus(message string) error {
 	fmt.Printf("🚫 Adding blocker: %s\n", message)
 	
+	// Get active organization slug
+	orgSlug, err := getActiveOrganizationSlug()
+	if err != nil {
+		return err
+	}
+	
 	// Create the request payload
 	payload := StatusUpdateRequest{
 		Type:    "blocker",
@@ -46,8 +52,9 @@ func handleBlockerStatus(message string) error {
 		return fmt.Errorf("failed to prepare request: %v", err)
 	}
 	
-	// Make authenticated request
-	client, req, err := makeAuthenticatedRequest("POST", "/api/status-updates")
+	// Make authenticated request to the new CLI endpoint
+	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates", orgSlug)
+	client, req, err := makeAuthenticatedJSONRequest("POST", endpoint)
 	if err != nil {
 		return err
 	}

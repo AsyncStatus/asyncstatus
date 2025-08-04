@@ -154,7 +154,13 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         return { ...session, session: { ...session.session, activeOrganizationSlug } };
       }),
       authCookiesPlugin(),
-      jwt(),
+      jwt({
+        jwt: {
+          definePayload(session) {
+            return session;
+          },
+        },
+      }),
       bearer(),
     ],
   });
