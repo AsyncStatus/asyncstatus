@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/savioxavier/termlink"
 	"github.com/spf13/cobra"
 )
 
@@ -97,13 +96,7 @@ type Team struct {
 
 // handleShowStatus processes retrieving the current status update
 func handleShowStatus() error {
-	// Get active organization slug
-	orgSlug, err := getActiveOrganizationSlug()
-	if err != nil {
-		return err
-	}
-
-	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates/current", orgSlug)
+	endpoint := "/cli/status-updates/current"
 	client, req, err := makeAuthenticatedRequest("GET", endpoint)
 	if err != nil {
 		return err
@@ -165,16 +158,7 @@ func displayStatusUpdate(statusUpdate *StatusUpdate) {
 		teamColor.Println(statusUpdate.Team.Name)
 	}
 	
-	// Get organization slug and construct the web URL
-	orgSlug, err := getActiveOrganizationSlug()
-	if err == nil {
-		webURL := getWebAppURL()
-		statusUpdateURL := fmt.Sprintf("%s/%s/status-updates/%s", webURL, orgSlug, statusUpdate.ID)
-		link := termlink.Link("view online", statusUpdateURL)
-		linkColor := color.New(color.FgBlue)
-		linkColor.Print("  ")
-		linkColor.Println(link)
-	}
+	// TODO: Add web URL link when organization slug is available in response
 	
 	fmt.Println()
 

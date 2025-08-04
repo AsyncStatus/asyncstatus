@@ -41,13 +41,7 @@ type UndoResponse struct {
 func handleUndoStatus() error {
 	color.New(color.FgHiBlack).Println("⧗ undoing last item...")
 	
-	// Get active organization slug
-	orgSlug, err := getActiveOrganizationSlug()
-	if err != nil {
-		return err
-	}
-	
-	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates/last", orgSlug)
+	endpoint := "/cli/status-updates/last"
 	client, req, err := makeAuthenticatedRequest("DELETE", endpoint)
 	if err != nil {
 		return err

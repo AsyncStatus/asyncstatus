@@ -37,12 +37,6 @@ func handleBlockerStatus(message string) error {
 	color.New(color.FgRed).Print("⧗ blocked: ")
 	color.New(color.FgWhite).Println(message)
 	
-	// Get active organization slug
-	orgSlug, err := getActiveOrganizationSlug()
-	if err != nil {
-		return err
-	}
-	
 	// Create the request payload
 	payload := StatusUpdateRequest{
 		Type:    "blocker",
@@ -55,7 +49,7 @@ func handleBlockerStatus(message string) error {
 	}
 	
 	// Make authenticated request to the new CLI endpoint
-	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates", orgSlug)
+	endpoint := "/cli/status-updates"
 	client, req, err := makeAuthenticatedJSONRequest("POST", endpoint)
 	if err != nil {
 		return err

@@ -10,7 +10,7 @@ import {
   showCurrentStatusUpdateContract,
   undoLastCliStatusUpdateItemContract,
 } from "./cli-contracts";
-import { requiredJwt, requiredOrganization } from "./middleware";
+import { requiredActiveOrganization, requiredJwt } from "./middleware";
 
 export const addCliStatusUpdateItemHandler = typedHandler<
   TypedHandlersContextWithOrganization,
@@ -18,8 +18,8 @@ export const addCliStatusUpdateItemHandler = typedHandler<
 >(
   addCliStatusUpdateItemContract,
   requiredJwt,
-  requiredOrganization,
-  async ({ db, organization, input, session, member }) => {
+  requiredActiveOrganization,
+  async ({ db, input, session, organization, member }) => {
     const { type, message } = input;
 
     // Get current date in user's timezone for the status update
@@ -179,14 +179,13 @@ export const undoLastCliStatusUpdateItemHandler = typedHandler<
 >(
   undoLastCliStatusUpdateItemContract,
   requiredJwt,
-  requiredOrganization,
+  requiredActiveOrganization,
   async ({ db, organization, member }) => {
     const now = dayjs().utc();
     const effectiveFromStartOfDay = now.startOf("day").toDate();
     const effectiveToEndOfDay = now.endOf("day").toDate();
 
     const result = await db.transaction(async (tx) => {
-      // Find today's status update for this member
       const statusUpdate = await tx.query.statusUpdate.findFirst({
         where: and(
           eq(schema.statusUpdate.memberId, member.id),
@@ -297,13 +296,12 @@ export const showCurrentStatusUpdateHandler = typedHandler<
 >(
   showCurrentStatusUpdateContract,
   requiredJwt,
-  requiredOrganization,
+  requiredActiveOrganization,
   async ({ db, organization, member }) => {
     const now = dayjs().utc();
     const effectiveFromStartOfDay = now.startOf("day").toDate();
     const effectiveToEndOfDay = now.endOf("day").toDate();
 
-    // Find today's status update for this member
     const statusUpdate = await db.query.statusUpdate.findFirst({
       where: and(
         eq(schema.statusUpdate.memberId, member.id),
@@ -340,7 +338,7 @@ export const listRecentStatusUpdatesHandler = typedHandler<
 >(
   listRecentStatusUpdatesContract,
   requiredJwt,
-  requiredOrganization,
+  requiredActiveOrganization,
   async ({ db, organization, member, input }) => {
     const { days = 1 } = input;
 

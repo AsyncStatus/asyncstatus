@@ -3,9 +3,8 @@ import { z } from "zod/v4";
 import { Member, StatusUpdate, StatusUpdateItem, Team, User } from "../db";
 
 export const addCliStatusUpdateItemContract = typedContract(
-  "post /organizations/:idOrSlug/cli/status-updates",
+  "post /cli/status-updates",
   z.strictObject({
-    idOrSlug: z.string(),
     type: z.enum(["done", "progress", "blocker"]),
     message: z.string().min(1),
   }),
@@ -18,10 +17,8 @@ export const addCliStatusUpdateItemContract = typedContract(
 );
 
 export const undoLastCliStatusUpdateItemContract = typedContract(
-  "delete /organizations/:idOrSlug/cli/status-updates/last",
-  z.strictObject({
-    idOrSlug: z.string(),
-  }),
+  "delete /cli/status-updates/last",
+  z.strictObject({}),
   z.strictObject({
     success: z.boolean(),
     deletedStatusUpdate: z.boolean(), // true if entire status update was deleted
@@ -30,10 +27,8 @@ export const undoLastCliStatusUpdateItemContract = typedContract(
 );
 
 export const showCurrentStatusUpdateContract = typedContract(
-  "get /organizations/:idOrSlug/cli/status-updates/current",
-  z.strictObject({
-    idOrSlug: z.string(),
-  }),
+  "get /cli/status-updates/current",
+  z.strictObject({}),
   z.strictObject({
     statusUpdate: z
       .strictObject({
@@ -48,9 +43,8 @@ export const showCurrentStatusUpdateContract = typedContract(
 );
 
 export const listRecentStatusUpdatesContract = typedContract(
-  "get /organizations/:idOrSlug/cli/status-updates/recent",
+  "get /cli/status-updates/recent",
   z.strictObject({
-    idOrSlug: z.string(),
     days: z.coerce.number().min(1).max(30).optional().default(1),
   }),
   z.strictObject({

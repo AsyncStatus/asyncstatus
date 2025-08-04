@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/fatih/color"
-	"github.com/savioxavier/termlink"
 	"github.com/spf13/cobra"
 )
 
@@ -58,13 +57,7 @@ func handleListStatus(days int) error {
 		return fmt.Errorf("days must be between 1 and 30")
 	}
 
-	// Get active organization slug
-	orgSlug, err := getActiveOrganizationSlug()
-	if err != nil {
-		return err
-	}
-
-	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates/recent?days=%d", orgSlug, days)
+	endpoint := fmt.Sprintf("/cli/status-updates/recent?days=%d", days)
 	client, req, err := makeAuthenticatedRequest("GET", endpoint)
 	if err != nil {
 		return err
@@ -198,15 +191,7 @@ func displayStatusUpdateSummary(statusUpdate *StatusUpdate, index int) {
 	timeColor := color.New(color.FgHiBlack)
 	timeColor.Printf("     %s", statusUpdate.UpdatedAt.Format("15:04"))
 	
-	// Get organization slug and construct the web URL
-	orgSlug, err := getActiveOrganizationSlug()
-	if err == nil {
-		webURL := getWebAppURL()
-		statusUpdateURL := fmt.Sprintf("%s/%s/status-updates/%s", webURL, orgSlug, statusUpdate.ID)
-		link := termlink.Link("view", statusUpdateURL)
-		linkColor := color.New(color.FgBlue)
-		linkColor.Printf(" • %s", link)
-	}
+	// TODO: Add web URL link when organization slug is available in response
 	fmt.Println()
 	
 	fmt.Println()

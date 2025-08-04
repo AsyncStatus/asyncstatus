@@ -148,3 +148,47 @@ export const requiredOrganization = typedMiddleware<TypedHandlersContextWithOrga
     return next();
   },
 );
+
+export const requiredActiveOrganization = typedMiddleware<TypedHandlersContextWithOrganization>(
+  async ({ db, set, session }, next) => {
+    if (!session.session.activeOrganizationSlug) {
+      throw new TypedHandlersError({
+        code: "BAD_REQUEST",
+        message: "No active organization found.",
+      });
+    }
+
+    const org = await db.query.organization.findFirst({
+      where: or(
+        eq(organization.id, session.session.activeOrganizationSlug),
+        eq(organization.slug, session.session.activeOrganizationSlug),
+      ),
+      with: {
+        members: {
+          limit: 1,
+          where: eq(member.userId, session.user.id),
+          orderBy: [desc(member.role)],
+        },
+      },
+    });
+
+    if (!org) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Organization not found",
+      });
+    }
+
+    const { members, ...restOrg } = org;
+    if (!members[0]) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "You are not a member of this organization",
+      });
+    }
+
+    set("organization", restOrg);
+    set("member", members[0]);
+    return next();
+  },
+);

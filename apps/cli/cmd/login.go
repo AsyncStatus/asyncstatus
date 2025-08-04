@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -60,45 +61,45 @@ func handleLogin() {
 	
 	// Prompt for email if not provided
 	if email == "" {
-		fmt.Print("Email: ")
+		fmt.Print("email: ")
 		fmt.Scanln(&email)
 	}
 	
 	// Validate email
 	email = strings.TrimSpace(email)
 	if email == "" {
-		fmt.Println("❌ Error: Email is required")
+		color.New(color.FgRed).Println("⧗ email is required")
 		os.Exit(1)
 	}
 	
 	if !isValidEmail(email) {
-		fmt.Println("❌ Error: Please enter a valid email address")
+		color.New(color.FgRed).Println("⧗ please enter a valid email address")
 		os.Exit(1)
 	}
 	
-	// Prompt for password securely
-	fmt.Print("Password: ")
+	fmt.Print("password: ")
 	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
-	fmt.Println() // Add newline after password input
+	fmt.Println()
 	
 	if err != nil {
-		fmt.Printf("❌ Error reading password: %v\n", err)
+		color.New(color.FgRed).Printf("⧗ error reading password: %v\n", err)
 		os.Exit(1)
 	}
 	
 	password := string(passwordBytes)
 	if strings.TrimSpace(password) == "" {
-		fmt.Println("❌ Error: Password is required")
+		color.New(color.FgRed).Println("⧗ password is required")
 		os.Exit(1)
 	}
 	
 	// Perform login
 	if err := performLogin(email, password); err != nil {
-		fmt.Printf("❌ Login failed: %v\n", err)
+		color.New(color.FgRed).Printf("⧗ login failed: %v\n", err)
 		os.Exit(1)
 	}
 	
-	fmt.Printf("✅ Successfully logged in as %s\n", email)
+	color.New(color.FgGreen).Print("⧗ logged in as ")
+	color.New(color.FgCyan).Println(email)
 }
 
 // isValidEmail performs basic email validation
@@ -134,7 +135,9 @@ type LoginResponse struct {
 
 // performLogin handles the actual authentication
 func performLogin(email, password string) error {
-	fmt.Printf("🔐 Authenticating %s...\n", email)
+	color.New(color.FgHiBlack).Print("⧗ authenticating ")
+	color.New(color.FgCyan).Print(email)
+	color.New(color.FgHiBlack).Println("...")
 	
 	// Prepare login request
 	loginReq := LoginRequest{
@@ -188,8 +191,9 @@ func performLogin(email, password string) error {
 		return fmt.Errorf("failed to parse login response: %v", err)
 	}
 	
-	fmt.Printf("✅ Authentication successful for %s\n", loginResp.User.Email)
-	fmt.Println("🎫 Retrieving JWT token...")
+	color.New(color.FgGreen).Print("  ✓ authenticated ")
+	color.New(color.FgCyan).Println(loginResp.User.Email)
+	color.New(color.FgHiBlack).Println("  retrieving token...")
 	
 	// Now get the JWT token from the session (uses the same client with cookies)
 	jwtToken, err := getJWTToken(client)
@@ -225,14 +229,14 @@ func getJWTToken(client *http.Client) (string, error) {
 	// Check for JWT token in set-auth-jwt header (as per Better Auth docs)
 	jwtToken := resp.Header.Get("set-auth-jwt")
 	if jwtToken != "" {
-		fmt.Println("✅ JWT token received via header")
+		color.New(color.FgHiBlack).Println("  ✓ token received via header")
 		return jwtToken, nil
 	}
 	
 	// Also check alternative header names
 	if token := resp.Header.Get("authorization"); token != "" && strings.HasPrefix(token, "Bearer ") {
 		jwtToken = strings.TrimPrefix(token, "Bearer ")
-		fmt.Println("✅ JWT token received via Authorization header")
+		color.New(color.FgHiBlack).Println("  ✓ token received via authorization header")
 		return jwtToken, nil
 	}
 	
@@ -251,25 +255,27 @@ func getJWTToken(client *http.Client) (string, error) {
 	}
 	
 	if tokenResp.Token != "" {
-		fmt.Println("✅ JWT token received via JSON response (token field)")
+		color.New(color.FgHiBlack).Println("  ✓ token received via json response (token field)")
 		return tokenResp.Token, nil
 	}
 	
 	if tokenResp.JWT != "" {
-		fmt.Println("✅ JWT token received via JSON response (jwt field)")
+		color.New(color.FgHiBlack).Println("  ✓ token received via json response (jwt field)")
 		return tokenResp.JWT, nil
 	}
 	
 	// Debug: show response headers and body
-	fmt.Printf("⚠️  No JWT token found. Response headers: %v\n", resp.Header)
-	fmt.Printf("⚠️  Response body: %s\n", string(body))
+	color.New(color.FgHiBlack).Printf("  no jwt token found. response headers: %v\n", resp.Header)
+	color.New(color.FgHiBlack).Printf("  response body: %s\n", string(body))
 	
 	return "", fmt.Errorf("no JWT token received from server")
 }
 
 // storeCredentials stores authentication credentials
 func storeCredentials(email, token string) error {
-	fmt.Printf("💾 Storing credentials for %s...\n", email)
+	color.New(color.FgHiBlack).Print("  storing credentials for ")
+	color.New(color.FgCyan).Print(email)
+	color.New(color.FgHiBlack).Println("...")
 	
 	config := &Config{
 		Email: email,

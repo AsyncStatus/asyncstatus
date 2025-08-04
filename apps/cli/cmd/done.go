@@ -45,12 +45,6 @@ func handleDoneStatus(message string) error {
 	color.New(color.FgGreen).Print("⧗ done: ")
 	color.New(color.FgWhite).Println(message)
 	
-	// Get active organization slug
-	orgSlug, err := getActiveOrganizationSlug()
-	if err != nil {
-		return err
-	}
-
 	// Create the request payload
 	payload := StatusUpdateRequest{
 		Type:    "done",
@@ -62,7 +56,7 @@ func handleDoneStatus(message string) error {
 		return fmt.Errorf("failed to prepare request: %v", err)
 	}
 	
-	endpoint := fmt.Sprintf("/organizations/%s/cli/status-updates", orgSlug)
+	endpoint := "/cli/status-updates"
 	client, req, err := makeAuthenticatedJSONRequest("POST", endpoint)
 	if err != nil {
 		return err

@@ -30,7 +30,6 @@ export function typedHandlersHonoServer<_Hono extends Hono<any, any, any>>(
         object,
         TypedContract<any, any, any>
       >;
-      console.log(c.req.header("Content-Type"));
       typedHandlerCtx.input = await getHandlerInput(c);
       typedHandlerCtx.req = c.req.raw;
       typedHandlerCtx.res = c.res;
