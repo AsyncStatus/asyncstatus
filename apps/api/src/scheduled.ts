@@ -87,74 +87,74 @@ export async function scheduled(
     );
   }
 
-  ctx.waitUntil(activateDiscordGateways(db, env));
+  // ctx.waitUntil(activateDiscordGateways(db, env));
 }
 
-async function activateDiscordGateways(db: ReturnType<typeof createDb>, env: HonoEnv["Bindings"]) {
-  try {
-    // Find all organizations with Discord integrations
-    const discordIntegrations = await db.query.discordIntegration.findMany({
-      with: { organization: true },
-    });
+// async function activateDiscordGateways(db: ReturnType<typeof createDb>, env: HonoEnv["Bindings"]) {
+//   try {
+//     // Find all organizations with Discord integrations
+//     const discordIntegrations = await db.query.discordIntegration.findMany({
+//       with: { organization: true },
+//     });
 
-    if (discordIntegrations.length === 0) {
-      return;
-    }
+//     if (discordIntegrations.length === 0) {
+//       return;
+//     }
 
-    // Check and activate Discord Gateway for each integration
-    const gatewayChecks = discordIntegrations.map(async (integration) => {
-      // Skip if no Durable Object ID
-      if (!integration.gatewayDurableObjectId) {
-        console.log(
-          `[Scheduled] No Gateway Durable Object ID for organization ${integration.organization.slug}, skipping`,
-        );
-        return;
-      }
+//     // Check and activate Discord Gateway for each integration
+//     const gatewayChecks = discordIntegrations.map(async (integration) => {
+//       // Skip if no Durable Object ID
+//       if (!integration.gatewayDurableObjectId) {
+//         console.log(
+//           `[Scheduled] No Gateway Durable Object ID for organization ${integration.organization.slug}, skipping`,
+//         );
+//         return;
+//       }
 
-      const durableObject = env.DISCORD_GATEWAY_DO.get(
-        env.DISCORD_GATEWAY_DO.idFromName(integration.gatewayDurableObjectId),
-      );
+//       const durableObject = env.DISCORD_GATEWAY_DO.get(
+//         env.DISCORD_GATEWAY_DO.idFromName(integration.gatewayDurableObjectId),
+//       );
 
-      try {
-        const status = await durableObject.getStatus();
+//       try {
+//         const status = await durableObject.getStatus();
 
-        if (!status.isConnected) {
-          console.log(
-            `[Scheduled] Starting Discord Gateway for organization ${integration.organization.slug}`,
-          );
+//         if (!status.isConnected) {
+//           console.log(
+//             `[Scheduled] Starting Discord Gateway for organization ${integration.organization.slug}`,
+//           );
 
-          const result = await durableObject.startGateway(integration.id);
+//           const result = await durableObject.startGateway(integration.id);
 
-          if (result.success) {
-            console.log(
-              `[Scheduled] Successfully started Discord Gateway for organization ${integration.organization.slug}`,
-            );
-          } else {
-            console.error(
-              `[Scheduled] Failed to start Discord Gateway for organization ${integration.organization.slug}: ${result.message}`,
-            );
-          }
-        }
-      } catch (error) {
-        console.error(
-          `[Scheduled] Error checking Discord Gateway for organization ${integration.organization.slug}:`,
-          error,
-        );
-      }
-    });
+//           if (result.success) {
+//             console.log(
+//               `[Scheduled] Successfully started Discord Gateway for organization ${integration.organization.slug}`,
+//             );
+//           } else {
+//             console.error(
+//               `[Scheduled] Failed to start Discord Gateway for organization ${integration.organization.slug}: ${result.message}`,
+//             );
+//           }
+//         }
+//       } catch (error) {
+//         console.error(
+//           `[Scheduled] Error checking Discord Gateway for organization ${integration.organization.slug}:`,
+//           error,
+//         );
+//       }
+//     });
 
-    const results = await Promise.allSettled(gatewayChecks);
-    const failed = results.filter((result) => result.status === "rejected");
-    if (failed.length > 0) {
-      console.error(
-        `[Scheduled] Failed to start Discord Gateway for ${failed.length} organizations`,
-      );
-    }
+//     const results = await Promise.allSettled(gatewayChecks);
+//     const failed = results.filter((result) => result.status === "rejected");
+//     if (failed.length > 0) {
+//       console.error(
+//         `[Scheduled] Failed to start Discord Gateway for ${failed.length} organizations`,
+//       );
+//     }
 
-    console.log(
-      `[Scheduled] Checked Discord Gateway status for ${discordIntegrations.length} organizations`,
-    );
-  } catch (error) {
-    console.error("[Scheduled] Error activating Discord Gateways:", error);
-  }
-}
+//     console.log(
+//       `[Scheduled] Checked Discord Gateway status for ${discordIntegrations.length} organizations`,
+//     );
+//   } catch (error) {
+//     console.error("[Scheduled] Error activating Discord Gateways:", error);
+//   }
+// }

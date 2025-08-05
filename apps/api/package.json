@@ -17,6 +17,7 @@
     "./typed-handlers/schedule": "./src/typed-handlers/schedule-contracts.ts",
     "./typed-handlers/slack-integration": "./src/typed-handlers/slack-integration-contracts.ts",
     "./typed-handlers/discord-integration": "./src/typed-handlers/discord-integration-contracts.ts",
+    "./typed-handlers/discord-gateway": "./src/typed-handlers/discord-gateway-contracts.ts",
     "./typed-handlers/status-update": "./src/typed-handlers/status-update-contracts.ts",
     "./typed-handlers/team": "./src/typed-handlers/team-contracts.ts",
     "./typed-handlers/stripe": "./src/typed-handlers/stripe-contracts.ts",

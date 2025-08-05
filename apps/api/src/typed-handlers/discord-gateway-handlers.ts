@@ -147,10 +147,10 @@ export const getDiscordGatewayStatusHandler = typedHandler<
       return {
         isConnected: status.isConnected,
         hasIntegration: true,
-        sessionId: status.sessionId,
-        sequenceNumber: status.sequenceNumber,
-        connectionAttempts: status.connectionAttempts,
-        lastHeartbeat: status.lastHeartbeat,
+        sessionId: status.sessionId ?? null,
+        sequenceNumber: status.sequenceNumber ?? null,
+        connectionAttempts: status.connectionAttempts ?? 0,
+        lastHeartbeat: status.lastHeartbeat ?? null,
       };
     } catch (error) {
       return {

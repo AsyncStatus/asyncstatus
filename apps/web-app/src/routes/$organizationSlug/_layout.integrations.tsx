@@ -1,4 +1,9 @@
 import {
+  getDiscordGatewayStatusContract,
+  startDiscordGatewayContract,
+  stopDiscordGatewayContract,
+} from "@asyncstatus/api/typed-handlers/discord-gateway";
+import {
   deleteDiscordIntegrationContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
@@ -40,6 +45,7 @@ import {
   SiZoom,
 } from "@asyncstatus/ui/brand-icons";
 import { Alert, AlertDescription, AlertTitle } from "@asyncstatus/ui/components/alert";
+import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -57,7 +63,14 @@ import {
 } from "@asyncstatus/ui/components/select";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
-import { AlertTriangleIcon, ArrowRight, Send, XIcon } from "@asyncstatus/ui/icons";
+import {
+  AlertTriangleIcon,
+  ArrowRight,
+  PlayIcon,
+  Send,
+  StopCircleIcon,
+  XIcon,
+} from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
@@ -838,6 +851,11 @@ function RouteComponent() {
                 </div>
               )}
             </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Real-time Discord Gateway</h4>
+              <DiscordGatewayControls organizationSlug={params.organizationSlug} />
+            </div>
           </div>
         ),
         children: (
@@ -1112,5 +1130,119 @@ function RouteComponent() {
         )}
       </div>
     </>
+  );
+}
+
+function DiscordGatewayControls({ organizationSlug }: { organizationSlug: string }) {
+  const queryClient = useQueryClient();
+
+  const gatewayStatusQuery = useQuery(
+    typedQueryOptions(getDiscordGatewayStatusContract, {
+      idOrSlug: organizationSlug,
+    }),
+  );
+
+  const startGatewayMutation = useMutation(
+    typedMutationOptions(startDiscordGatewayContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+
+  const stopGatewayMutation = useMutation(
+    typedMutationOptions(stopDiscordGatewayContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+
+  const handleStart = () => {
+    startGatewayMutation.mutate({ idOrSlug: organizationSlug });
+  };
+
+  const handleStop = () => {
+    stopGatewayMutation.mutate({ idOrSlug: organizationSlug });
+  };
+
+  const isLoading =
+    gatewayStatusQuery.isLoading || startGatewayMutation.isPending || stopGatewayMutation.isPending;
+
+  const isConnected = gatewayStatusQuery.data?.isConnected;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          <Badge variant={isConnected ? "default" : "secondary"}>
+            {isLoading ? "Loading..." : isConnected ? "Connected" : "Disconnected"}
+          </Badge>
+        </div>
+      </div>
+
+      {gatewayStatusQuery.data && (
+        <div className="text-xs text-muted-foreground space-y-1">
+          {gatewayStatusQuery.data.lastHeartbeat && (
+            <div>
+              Last heartbeat: {new Date(gatewayStatusQuery.data.lastHeartbeat).toLocaleString()}
+            </div>
+          )}
+          {gatewayStatusQuery.data.sessionId && (
+            <div>Session ID: {gatewayStatusQuery.data.sessionId}</div>
+          )}
+          <div>Connection attempts: {gatewayStatusQuery.data.connectionAttempts}</div>
+          {gatewayStatusQuery.data.sequenceNumber && (
+            <div>Sequence number: {gatewayStatusQuery.data.sequenceNumber}</div>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant={isConnected ? "secondary" : "default"}
+          onClick={handleStart}
+          disabled={isLoading || isConnected}
+        >
+          <PlayIcon className="size-4 mr-2" />
+          Start Gateway
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleStop}
+          disabled={isLoading || !isConnected}
+        >
+          <StopCircleIcon className="size-4 mr-2" />
+          Stop Gateway
+        </Button>
+      </div>
+
+      {(startGatewayMutation.error || stopGatewayMutation.error) && (
+        <Alert variant="destructive">
+          <AlertTriangleIcon className="size-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {startGatewayMutation.error?.message || stopGatewayMutation.error?.message}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        The Discord Gateway enables real-time message processing and event tracking. When connected,
+        your Discord events will be processed immediately for status updates.
+      </div>
+    </div>
   );
 }

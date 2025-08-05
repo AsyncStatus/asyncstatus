@@ -3,10 +3,16 @@ import { generateText } from "ai";
 import type * as schema from "../../../db";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
+import { getDiscordChannelTool } from "../tools/get-discord-channel-tool";
+import { getDiscordEventDetailTool } from "../tools/get-discord-event-detail-tool";
+import { getDiscordIntegrationTool } from "../tools/get-discord-integration-tool";
+import { getDiscordServerTool } from "../tools/get-discord-server-tool";
+import { getDiscordUserTool } from "../tools/get-discord-user-tool";
 import { getExistingStatusUpdateItemsTool } from "../tools/get-existing-status-update-items-tool";
 import { getGithubEventDetailTool } from "../tools/get-github-event-detail-tool";
 import { getGithubRepositoryTool } from "../tools/get-github-repository-tool";
 import { getGithubUserTool } from "../tools/get-github-user-tool";
+import { getMemberDiscordEventsTool } from "../tools/get-member-discord-events-tool";
 import { getMemberGithubEventsTool } from "../tools/get-member-github-events-tool";
 import { getMemberSlackEventsTool } from "../tools/get-member-slack-events-tool";
 import { getSlackChannelTool } from "../tools/get-slack-channel-tool";
@@ -68,6 +74,13 @@ The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effecti
       getSlackChannel: getSlackChannelTool(db),
       getSlackUser: getSlackUserTool(db),
       getSlackIntegration: getSlackIntegrationTool(db),
+
+      getMemberDiscordEvents: getMemberDiscordEventsTool(db),
+      getDiscordEventDetail: getDiscordEventDetailTool(db),
+      getDiscordChannel: getDiscordChannelTool(db),
+      getDiscordUser: getDiscordUserTool(db),
+      getDiscordServer: getDiscordServerTool(db),
+      getDiscordIntegration: getDiscordIntegrationTool(db),
     },
   });
 

@@ -95,6 +95,57 @@ export async function discordWebhookEventsQueue(
           break;
         }
 
+        case "APPLICATION_AUTHORIZED": {
+          // Handle application authorization - start Discord Gateway
+          console.log(`[DISCORD] Application authorized, starting Discord Gateway`, eventData);
+
+          const guildId = (eventData as any)?.guild?.id;
+          if (guildId) {
+            // Find the server and its integration
+            const server = await db.query.discordServer.findFirst({
+              where: eq(schema.discordServer.guildId, guildId),
+              with: {
+                integration: true,
+              },
+            });
+
+            if (server?.integration) {
+              try {
+                // Get or create Durable Object ID for this integration
+                let durableObjectId = server.integration.gatewayDurableObjectId;
+                if (!durableObjectId) {
+                  durableObjectId = crypto.randomUUID();
+                  await db
+                    .update(schema.discordIntegration)
+                    .set({ gatewayDurableObjectId: durableObjectId })
+                    .where(eq(schema.discordIntegration.id, server.integration.id));
+                }
+
+                // Start the Discord Gateway
+                const durableObject = env.DISCORD_GATEWAY_DO.get(
+                  env.DISCORD_GATEWAY_DO.idFromName(durableObjectId),
+                );
+                const result = await durableObject.startGateway(server.integration.id);
+
+                if (result.success) {
+                  console.log(
+                    `[DISCORD] Successfully started Gateway for guild ${guildId}: ${result.message}`,
+                  );
+                } else {
+                  console.error(
+                    `[DISCORD] Failed to start Gateway for guild ${guildId}: ${result.message}`,
+                  );
+                }
+              } catch (error) {
+                console.error(`[DISCORD] Error starting Gateway for guild ${guildId}:`, error);
+              }
+            } else {
+              console.error(`[DISCORD] No Discord integration found for guild ${guildId}`);
+            }
+          }
+          break;
+        }
+
         case "MEMBER_ADD":
         case "MEMBER_UPDATE":
         case "MEMBER_REMOVE": {
