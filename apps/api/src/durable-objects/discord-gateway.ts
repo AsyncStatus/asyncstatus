@@ -85,8 +85,6 @@ export class DiscordGatewayDurableObject extends DurableObject<Bindings> {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    console.log("path", path);
-
     try {
       switch (path) {
         case "/connect":
@@ -148,7 +146,6 @@ export class DiscordGatewayDurableObject extends DurableObject<Bindings> {
   }
 
   private async handleStatus(): Promise<Response> {
-    console.log("handleStatus", this.state);
     return new Response(
       JSON.stringify({
         isConnected: this.state.isConnected,
