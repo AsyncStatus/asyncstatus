@@ -27,7 +27,7 @@ export async function summarizeStatusUpdates({
   effectiveFrom,
   effectiveTo,
 }: SummarizeStatusUpdatesOptions): Promise<SummaryResult> {
-  const model = "openai/gpt-oss-120b";
+  const model = "openai/gpt-4.1-mini";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),

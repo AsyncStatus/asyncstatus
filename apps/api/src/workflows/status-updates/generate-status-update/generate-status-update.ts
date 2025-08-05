@@ -45,7 +45,7 @@ export async function generateStatusUpdate({
   effectiveFrom,
   effectiveTo,
 }: GenerateStatusUpdateOptions) {
-  const model = "openai/gpt-oss-120b";
+  const model = "openai/gpt-4.1-mini";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),
