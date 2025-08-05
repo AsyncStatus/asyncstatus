@@ -21,23 +21,28 @@ export const getInvitationHandler = typedHandler<
     rateLimiter.invitation(next),
   ),
   async ({ db, input, session }) => {
-    const { id, email } = input;
+    const { id } = input;
 
-    const [invitation, user] = await Promise.all([
-      db.query.invitation.findFirst({
-        where: and(eq(schema.invitation.id, id), eq(schema.invitation.email, email)),
-        with: {
-          inviter: { columns: { name: true } },
-          organization: { columns: { name: true, slug: true, logo: true } },
-          team: { columns: { name: true } },
-        },
-      }),
-      db.query.user.findFirst({
-        where: eq(schema.user.email, email),
-      }),
-    ]);
+    const invitation = await db.query.invitation.findFirst({
+      where: and(eq(schema.invitation.id, id)),
+      with: {
+        inviter: { columns: { name: true } },
+        organization: { columns: { name: true, slug: true, logo: true } },
+        team: { columns: { name: true } },
+      },
+    });
+    if (!invitation) {
+      throw new TypedHandlersError({
+        message: "Invitation not found",
+        code: "NOT_FOUND",
+      });
+    }
 
-    if (!invitation || (session && session.user.email !== invitation.email)) {
+    const user = await db.query.user.findFirst({
+      where: eq(schema.user.email, invitation.email),
+    });
+
+    if (!invitation || (session && session.user.email !== invitation.email && !user)) {
       throw new TypedHandlersError({
         message: "Invitation not found",
         code: "NOT_FOUND",

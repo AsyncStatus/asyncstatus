@@ -41,6 +41,12 @@ export function MemberTimezoneChecker() {
           };
         });
       },
+      onError: (error) => {
+        toast.error("Failed to update timezone", {
+          description: error.message,
+        });
+      },
+      throwOnError: false,
     }),
   );
 

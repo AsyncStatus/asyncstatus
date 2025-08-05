@@ -94,7 +94,7 @@ export const updateMemberHandler = typedHandler<
       });
     }
     if (
-      existingMember.userId !== currentMember.id &&
+      existingMember.id !== currentMember.id &&
       currentMember.role !== "admin" &&
       currentMember.role !== "owner"
     ) {
@@ -248,17 +248,6 @@ export const inviteMemberHandler = typedHandler<
         throw new TypedHandlersError({
           code: "BAD_REQUEST",
           message: "Team not found",
-        });
-      }
-      firstTeamId = foundTeam.id;
-    } else {
-      const foundTeam = await db.query.team.findFirst({
-        where: eq(team.organizationId, organization.id),
-      });
-      if (!foundTeam) {
-        throw new TypedHandlersError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No teams found",
         });
       }
       firstTeamId = foundTeam.id;
