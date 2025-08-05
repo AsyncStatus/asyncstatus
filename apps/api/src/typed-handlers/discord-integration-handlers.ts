@@ -40,6 +40,7 @@ interface DiscordUser {
 import {
   deleteDiscordIntegrationContract,
   discordIntegrationCallbackContract,
+  fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
   listDiscordServersContract,
@@ -357,5 +358,59 @@ export const deleteDiscordIntegrationHandler = typedHandler<
       .where(eq(schema.discordIntegration.id, integration.id));
 
     return { success: true };
+  },
+);
+
+export const fetchDiscordMessagesHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof fetchDiscordMessagesContract
+>(
+  fetchDiscordMessagesContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, workflow }) => {
+    const { channelId, limit = 50, before, after } = input;
+
+    const integration = await db.query.discordIntegration.findFirst({
+      where: eq(schema.discordIntegration.organizationId, organization.id),
+      with: {
+        servers: {
+          with: {
+            channels: true,
+          },
+        },
+      },
+    });
+
+    if (!integration) {
+      return { success: false };
+    }
+
+    // If channelId is specified, validate it belongs to this integration
+    if (channelId) {
+      const hasChannel = integration.servers.some((server) =>
+        server.channels.some((channel) => channel.channelId === channelId),
+      );
+
+      if (!hasChannel) {
+        return { success: false };
+      }
+    }
+
+    // Trigger message fetch workflow
+    const workflowInstance = await workflow.fetchDiscordMessages.create({
+      params: {
+        integrationId: integration.id,
+        channelId,
+        limit,
+        before,
+        after,
+      },
+    });
+
+    return {
+      success: true,
+      workflowId: workflowInstance.id,
+    };
   },
 );

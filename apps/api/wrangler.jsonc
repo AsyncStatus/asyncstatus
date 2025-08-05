@@ -29,7 +29,7 @@
     }
   ],
   "triggers": {
-    "crons": ["* * * * *"]
+    "crons": ["* * * * *", "*/30 * * * *"]
   },
   "queues": {
     "consumers": [
@@ -148,6 +148,11 @@
       "name": "delete-discord-integration",
       "binding": "DELETE_DISCORD_INTEGRATION_WORKFLOW",
       "class_name": "DeleteDiscordIntegrationWorkflow"
+    },
+    {
+      "name": "fetch-discord-messages",
+      "binding": "FETCH_DISCORD_MESSAGES_WORKFLOW",
+      "class_name": "FetchDiscordMessagesWorkflow"
     }
   ],
   "kv_namespaces": [

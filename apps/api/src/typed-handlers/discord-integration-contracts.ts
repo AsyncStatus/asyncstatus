@@ -37,3 +37,19 @@ export const deleteDiscordIntegrationContract = typedContract(
   z.strictObject({ idOrSlug: z.string().min(1) }),
   z.strictObject({ success: z.boolean() }),
 );
+
+export const fetchDiscordMessagesContract = typedContract(
+  "post /organizations/:idOrSlug/integrations/discord/fetch-messages",
+  z.strictObject({
+    idOrSlug: z.string().min(1),
+    channelId: z.string().min(1).optional(),
+    limit: z.number().min(1).max(100).default(50).optional(),
+    before: z.string().optional(),
+    after: z.string().optional(),
+  }),
+  z.strictObject({
+    success: z.boolean(),
+    workflowId: z.string().optional(),
+    messageCount: z.number().optional(),
+  }),
+);

@@ -37,6 +37,7 @@ import {
 import {
   deleteDiscordIntegrationHandler,
   discordIntegrationCallbackHandler,
+  fetchDiscordMessagesHandler,
   getDiscordIntegrationHandler,
   listDiscordChannelsHandler,
   listDiscordServersHandler,
@@ -379,6 +380,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listDiscordChannelsHandler,
     listDiscordUsersHandler,
     deleteDiscordIntegrationHandler,
+    fetchDiscordMessagesHandler,
     startDiscordGatewayHandler,
     stopDiscordGatewayHandler,
     getDiscordGatewayStatusHandler,
@@ -430,6 +432,7 @@ export default {
 export type App = typeof app;
 export { DiscordGatewayDurableObject } from "./durable-objects/discord-gateway";
 export { DeleteDiscordIntegrationWorkflow } from "./workflows/discord/delete-discord-integration";
+export { FetchDiscordMessagesWorkflow } from "./workflows/discord/fetch-discord-messages";
 export { SyncDiscordWorkflow } from "./workflows/discord/sync-discord";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github";

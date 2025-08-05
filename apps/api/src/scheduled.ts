@@ -1,15 +1,30 @@
 import { dayjs } from "@asyncstatus/dayjs";
-import { and, eq, lte } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lte } from "drizzle-orm";
 import type { ExecutionContext } from "hono";
 import * as schema from "./db";
 import { createDb } from "./db/db";
 import type { HonoEnv } from "./lib/env";
 
 export async function scheduled(
-  _controller: ScheduledController,
+  controller: ScheduledController,
   env: HonoEnv["Bindings"],
   ctx: ExecutionContext,
 ) {
+  const cron = controller.cron;
+  console.log(controller);
+  console.log(`Scheduled event: ${cron}`);
+
+  // Handle different cron patterns
+  if (cron === "* * * * *") {
+    // Every minute - handle existing schedule workflows
+    await handleExistingScheduleWorkflows(env, ctx);
+  } else if (cron === "*/30 * * * *") {
+    // Every 30 minutes - handle Discord message fetching
+    await handleScheduledDiscordMessageFetch(env, ctx);
+  }
+}
+
+async function handleExistingScheduleWorkflows(env: HonoEnv["Bindings"], ctx: ExecutionContext) {
   const db = createDb(env);
   const now = dayjs.utc();
 
@@ -85,5 +100,70 @@ export async function scheduled(
     console.log(
       `Triggered ${pingForUpdatesScheduleRuns.length} ping-for-updates, ${generateUpdatesScheduleRuns.length} generate-status-updates, and ${sendSummariesScheduleRuns.length} send-summaries workflows`,
     );
+  }
+}
+
+async function handleScheduledDiscordMessageFetch(env: HonoEnv["Bindings"], ctx: ExecutionContext) {
+  console.log("Starting scheduled Discord message fetch...");
+
+  const db = createDb(env);
+
+  try {
+    // Get all active Discord integrations
+    const integrations = await db.query.discordIntegration.findMany({
+      where: isNull(schema.discordIntegration.deleteId),
+      with: {
+        organization: true,
+        servers: {
+          with: {
+            channels: true,
+          },
+        },
+      },
+    });
+
+    console.log(`Found ${integrations.length} active Discord integrations`);
+
+    for (const integration of integrations) {
+      try {
+        // Get the most recent message for this integration to use as "after" parameter
+        // We need to check across all servers for this integration
+        const serverIds = integration.servers.map((server) => server.id);
+
+        if (serverIds.length === 0) {
+          console.log(`No servers found for integration ${integration.id}, skipping`);
+          continue;
+        }
+
+        const lastEvent = await db.query.discordEvent.findFirst({
+          where: and(
+            eq(schema.discordEvent.type, "MESSAGE_CREATE"),
+            inArray(schema.discordEvent.serverId, serverIds),
+          ),
+          orderBy: desc(schema.discordEvent.createdAt),
+        });
+
+        const after = lastEvent?.messageId;
+
+        console.log(
+          `Starting fetch workflow for integration ${integration.id}, after message: ${after || "none"}`,
+        );
+
+        // Start the fetch workflow for this integration
+        const workflowInstance = await env.FETCH_DISCORD_MESSAGES_WORKFLOW.create({
+          params: {
+            integrationId: integration.id,
+            limit: 50,
+            after: after,
+          },
+        });
+
+        console.log(`Started workflow ${workflowInstance.id} for integration ${integration.id}`);
+      } catch (error) {
+        console.error(`Error processing integration ${integration.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error("Error in scheduled Discord message fetch:", error);
   }
 }
