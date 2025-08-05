@@ -205,8 +205,15 @@ export class DiscordGatewayDurableObject extends DurableObject<Bindings> {
         }
       });
 
-      this.webSocket.addEventListener("error", (event) => {
-        console.error("[Discord Gateway DO] WebSocket error:", event);
+      this.webSocket.addEventListener("error", (error) => {
+        console.log(
+          "[Discord Gateway DO] WebSocket error reason:",
+          "reason" in error ? error.reason : "no reason",
+        );
+        console.error(
+          "[Discord Gateway DO] WebSocket error:",
+          "message" in error ? error.message : error,
+        );
         reject(new Error("WebSocket connection failed"));
       });
     });
