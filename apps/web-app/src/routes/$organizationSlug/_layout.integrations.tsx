@@ -715,7 +715,7 @@ function RouteComponent() {
             : discordIntegrationQuery.data?.syncStartedAt
               ? "connecting"
               : "disconnected",
-        connectLink: `https://discord.com/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID}&permissions=590848&scope=bot+identify+email+guilds+guilds.members.read&response_type=code&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_API_URL}/integrations/discord/callback`)}&state=${params.organizationSlug}`,
+        connectLink: `https://discord.com/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID}&permissions=8&scope=bot+identify+email+guilds+guilds.members.read+messages.read&response_type=code&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_API_URL}/integrations/discord/callback`)}&state=${params.organizationSlug}`,
         onDisconnect: () => {
           deleteDiscordIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
         },

@@ -9,6 +9,7 @@ import { VoyageAIClient } from "voyageai";
 import type * as schema from "../db";
 import type { Db } from "../db/db";
 import { createDb } from "../db/db";
+import type { DiscordGatewayDurableObject } from "../durable-objects/discord-gateway";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github";
 import type { GenerateStatusUpdatesWorkflowParams } from "../workflows/schedules/generate-status-updates";
@@ -73,6 +74,7 @@ export type Bindings = {
   SEND_SUMMARIES_WORKFLOW: Workflow<SendSummariesWorkflowParams>;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+  DISCORD_GATEWAY_DO: DurableObjectNamespace<DiscordGatewayDurableObject>;
   STRIPE_KV: KVNamespace;
   STRIPE_BASIC_PRICE_ID: string;
   STRIPE_STARTUP_PRICE_ID: string;
@@ -120,6 +122,7 @@ export type Variables = {
     clientSecret: string;
     botToken: string;
     publicKey: string;
+    gatewayDo: DurableObjectNamespace<DiscordGatewayDurableObject>;
   };
   stripeClient: ReturnType<typeof createStripe>;
   stripeConfig: {
@@ -204,6 +207,7 @@ export async function createContext(c: Context<HonoEnv>) {
       clientSecret: c.env.DISCORD_CLIENT_SECRET,
       botToken: c.env.DISCORD_BOT_TOKEN,
       publicKey: c.env.DISCORD_PUBLIC_KEY,
+      gatewayDo: c.env.DISCORD_GATEWAY_DO,
     },
     stripeClient: createStripe(c.env.STRIPE_SECRET_KEY),
     stripeConfig: {

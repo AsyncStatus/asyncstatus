@@ -30,6 +30,11 @@ import {
   undoLastCliStatusUpdateItemHandler,
 } from "./typed-handlers/cli-handlers";
 import {
+  getDiscordGatewayStatusHandler,
+  startDiscordGatewayHandler,
+  stopDiscordGatewayHandler,
+} from "./typed-handlers/discord-gateway-handlers";
+import {
   deleteDiscordIntegrationHandler,
   discordIntegrationCallbackHandler,
   getDiscordIntegrationHandler,
@@ -374,6 +379,9 @@ const typedHandlersApp = typedHandlersHonoServer(
     listDiscordChannelsHandler,
     listDiscordUsersHandler,
     deleteDiscordIntegrationHandler,
+    startDiscordGatewayHandler,
+    stopDiscordGatewayHandler,
+    getDiscordGatewayStatusHandler,
     generateStripeCheckoutHandler,
     stripeSuccessHandler,
     getSubscriptionHandler,
@@ -420,6 +428,7 @@ export default {
   scheduled: scheduled,
 };
 export type App = typeof app;
+export { DiscordGatewayDurableObject } from "./durable-objects/discord-gateway";
 export { DeleteDiscordIntegrationWorkflow } from "./workflows/discord/delete-discord-integration";
 export { SyncDiscordWorkflow } from "./workflows/discord/sync-discord";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";

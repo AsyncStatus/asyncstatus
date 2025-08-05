@@ -19,6 +19,7 @@ export const discordIntegration = sqliteTable(
     applicationId: text("application_id"),
     tokenExpiresAt: integer("token_expires_at", { mode: "timestamp" }),
     refreshToken: text("refresh_token"),
+    gatewayDurableObjectId: text("gateway_durable_object_id"), // Durable Object ID for Discord Gateway
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
     syncId: text("sync_id"),
@@ -35,6 +36,7 @@ export const discordIntegration = sqliteTable(
     index("discord_sync_id_index").on(t.syncId),
     index("discord_delete_id_index").on(t.deleteId),
     index("discord_guild_id_index").on(t.guildId),
+    index("discord_gateway_do_id_index").on(t.gatewayDurableObjectId),
   ],
 );
 

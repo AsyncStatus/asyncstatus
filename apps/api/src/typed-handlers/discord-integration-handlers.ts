@@ -177,6 +177,15 @@ export const discordIntegrationCallbackHandler = typedHandler<
           throw new Error("Failed to create Discord integration");
         }
 
+        // Generate a Durable Object ID for Discord Gateway
+        const gatewayDurableObjectId = crypto.randomUUID();
+
+        // Update the integration with the Durable Object ID
+        await tx
+          .update(schema.discordIntegration)
+          .set({ gatewayDurableObjectId })
+          .where(eq(schema.discordIntegration.id, integrationId));
+
         // Store the guild/server information
         await tx
           .insert(schema.discordServer)
