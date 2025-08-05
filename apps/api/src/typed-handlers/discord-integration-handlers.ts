@@ -51,7 +51,7 @@ export const discordIntegrationCallbackHandler = typedHandler<
   typeof discordIntegrationCallbackContract
 >(
   discordIntegrationCallbackContract,
-  async ({ redirect, webAppUrl, db, input, discord, workflow }) => {
+  async ({ redirect, webAppUrl, betterAuthUrl, db, input, discord, workflow }) => {
     const { code, state: organizationSlug, guild_id: guildId, permissions } = input;
 
     if (!code || !organizationSlug || !guildId || !permissions) {
@@ -82,7 +82,7 @@ export const discordIntegrationCallbackHandler = typedHandler<
           client_secret: discord.clientSecret,
           grant_type: "authorization_code",
           code,
-          redirect_uri: `http://localhost:8787/integrations/discord/callback`,
+          redirect_uri: `${betterAuthUrl}/integrations/discord/callback`,
         }),
       });
 
