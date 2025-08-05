@@ -59,7 +59,6 @@ export async function processStripeEvent({
 
   if (event.type === "customer.deleted") {
     const { organizationId } = event.data.object.metadata;
-    console.log(event.data.object.metadata);
 
     if (!organizationId) {
       throw new Error(
@@ -74,7 +73,6 @@ export async function processStripeEvent({
 
   if (event.type === "customer.created" || event.type === "customer.updated") {
     const { organizationId } = event.data.object.metadata;
-    console.log(event.data.object.metadata);
 
     if (!organizationId) {
       throw new Error(

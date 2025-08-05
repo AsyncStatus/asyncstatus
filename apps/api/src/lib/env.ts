@@ -88,6 +88,7 @@ export type Variables = {
   auth: Auth;
   db: Db;
   resend: Resend;
+  betterAuthUrl: string;
   session: Auth["$Infer"]["Session"] | null;
   rateLimiter: { waitlist: RateLimiter };
   anthropicClient: Anthropic;
@@ -175,6 +176,7 @@ export async function createContext(c: Context<HonoEnv>) {
   const githubWebhooks = new GithubWebhooks({
     secret: c.env.GITHUB_WEBHOOK_SECRET,
   });
+  const betterAuthUrl = c.env.BETTER_AUTH_URL;
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   const openRouterProvider = createOpenRouter({ apiKey: c.env.OPENROUTER_API_KEY });
 
@@ -186,6 +188,7 @@ export async function createContext(c: Context<HonoEnv>) {
     voyageClient,
     githubWebhooks,
     session,
+    betterAuthUrl,
     webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
     slack: {

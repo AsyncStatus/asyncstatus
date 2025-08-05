@@ -24,6 +24,12 @@ import {
   purchaseAdditionalGenerationsHandler,
 } from "./typed-handlers/ai-usage-handlers";
 import {
+  addCliStatusUpdateItemHandler,
+  listRecentStatusUpdatesHandler,
+  showCurrentStatusUpdateHandler,
+  undoLastCliStatusUpdateItemHandler,
+} from "./typed-handlers/cli-handlers";
+import {
   deleteDiscordIntegrationHandler,
   discordIntegrationCallbackHandler,
   getDiscordIntegrationHandler,
@@ -275,6 +281,7 @@ const app = new Hono<HonoEnv>()
     c.set("discord", context.discord);
     c.set("stripeClient", context.stripeClient);
     c.set("stripeConfig", context.stripeConfig);
+    c.set("betterAuthUrl", context.betterAuthUrl);
     return next();
   })
   .route("/auth", authRouter)
@@ -347,6 +354,10 @@ const typedHandlersApp = typedHandlersHonoServer(
     createStatusUpdateHandler,
     deleteStatusUpdateHandler,
     generateStatusUpdateHandler,
+    addCliStatusUpdateItemHandler,
+    undoLastCliStatusUpdateItemHandler,
+    showCurrentStatusUpdateHandler,
+    listRecentStatusUpdatesHandler,
     getGithubIntegrationHandler,
     githubIntegrationCallbackHandler,
     listGithubRepositoriesHandler,
@@ -372,6 +383,10 @@ const typedHandlersApp = typedHandlersHonoServer(
     reactivateStripeSubscriptionHandler,
     purchaseAdditionalGenerationsHandler,
     confirmAdditionalGenerationsPaymentHandler,
+    addCliStatusUpdateItemHandler,
+    undoLastCliStatusUpdateItemHandler,
+    showCurrentStatusUpdateHandler,
+    listRecentStatusUpdatesHandler,
   ],
   {
     getContext: (c) => ({
@@ -394,6 +409,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       stripeConfig: c.get("stripeConfig"),
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
+      betterAuthUrl: c.env.BETTER_AUTH_URL,
     }),
   },
 );

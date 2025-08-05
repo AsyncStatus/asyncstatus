@@ -77,7 +77,13 @@ export async function scheduled(
     );
   }
 
-  console.log(
-    `Triggered ${pingForUpdatesScheduleRuns.length} ping-for-updates, ${generateUpdatesScheduleRuns.length} generate-status-updates, and ${sendSummariesScheduleRuns.length} send-summaries workflows`,
-  );
+  if (
+    pingForUpdatesScheduleRuns.length > 0 ||
+    generateUpdatesScheduleRuns.length > 0 ||
+    sendSummariesScheduleRuns.length > 0
+  ) {
+    console.log(
+      `Triggered ${pingForUpdatesScheduleRuns.length} ping-for-updates, ${generateUpdatesScheduleRuns.length} generate-status-updates, and ${sendSummariesScheduleRuns.length} send-summaries workflows`,
+    );
+  }
 }
