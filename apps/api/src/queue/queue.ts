@@ -1,5 +1,9 @@
 import type { Bindings } from "../lib/env";
 import {
+  type DiscordProcessEventsQueueMessage,
+  discordProcessEventsQueue,
+} from "./discord-process-events-queue";
+import {
   type DiscordWebhookEventsQueueMessage,
   discordWebhookEventsQueue,
 } from "./discord-webhook-events-queue";
@@ -25,7 +29,8 @@ type QueueMessage =
   | GithubProcessEventsQueueMessage
   | SlackWebhookEventsQueueMessage
   | SlackProcessEventsQueueMessage
-  | DiscordWebhookEventsQueueMessage;
+  | DiscordWebhookEventsQueueMessage
+  | DiscordProcessEventsQueueMessage;
 
 export async function queue(
   batch: MessageBatch<QueueMessage>,
@@ -59,6 +64,14 @@ export async function queue(
   if (batch.queue === "discord-webhook-events") {
     return discordWebhookEventsQueue(
       batch as MessageBatch<DiscordWebhookEventsQueueMessage>,
+      env,
+      ctx,
+    );
+  }
+
+  if (batch.queue === "discord-process-events") {
+    return discordProcessEventsQueue(
+      batch as MessageBatch<DiscordProcessEventsQueueMessage>,
       env,
       ctx,
     );

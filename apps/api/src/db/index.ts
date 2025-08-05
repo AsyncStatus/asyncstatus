@@ -14,6 +14,12 @@ export {
   discordEvent,
 } from "./discord-event";
 export {
+  DiscordEventVector,
+  DiscordEventVectorInsert,
+  DiscordEventVectorUpdate,
+  discordEventVector,
+} from "./discord-event-vector";
+export {
   DiscordIntegration,
   DiscordIntegrationInsert,
   DiscordIntegrationUpdate,

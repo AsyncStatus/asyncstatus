@@ -71,10 +71,11 @@ export async function discordWebhookEventsQueue(
           }
 
           // Store the event
+          const discordEventId = messageData.id || generateId();
           await db.insert(schema.discordEvent).values({
             id: generateId(),
             serverId: server.id,
-            discordEventId: messageData.id || generateId(),
+            discordEventId,
             discordUserId: messageData.author?.id || null,
             channelId: messageData.channel_id || null,
             type: event.type,
@@ -85,7 +86,12 @@ export async function discordWebhookEventsQueue(
             insertedAt: new Date(),
           });
 
-          console.log(`[DISCORD] Stored ${event.type} event`);
+          // Send to Discord process events queue for AI processing
+          await env.DISCORD_PROCESS_EVENTS_QUEUE.send(discordEventId, {
+            contentType: "text",
+          });
+
+          console.log(`[DISCORD] Stored ${event.type} event and queued for processing`);
           break;
         }
 

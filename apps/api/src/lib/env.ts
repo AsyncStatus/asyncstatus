@@ -207,6 +207,8 @@ export async function createContext(c: Context<HonoEnv>) {
       clientSecret: c.env.DISCORD_CLIENT_SECRET,
       botToken: c.env.DISCORD_BOT_TOKEN,
       publicKey: c.env.DISCORD_PUBLIC_KEY,
+      webhookEventsQueue: c.env.DISCORD_WEBHOOK_EVENTS_QUEUE,
+      processEventsQueue: c.env.DISCORD_PROCESS_EVENTS_QUEUE,
       gatewayDo: c.env.DISCORD_GATEWAY_DO,
     },
     stripeClient: createStripe(c.env.STRIPE_SECRET_KEY),
