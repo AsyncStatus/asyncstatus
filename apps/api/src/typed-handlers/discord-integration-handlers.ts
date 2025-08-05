@@ -1,6 +1,6 @@
 import { typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import * as schema from "../db";
 import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "./middleware";
@@ -397,6 +397,24 @@ export const fetchDiscordMessagesHandler = typedHandler<
       }
     }
 
+    // Automatically determine 'after' parameter from the most recent message
+    let finalAfter = after;
+    if (!after) {
+      const serverIds = integration.servers.map((server) => server.id);
+
+      if (serverIds.length > 0) {
+        const lastEvent = await db.query.discordEvent.findFirst({
+          where: and(
+            eq(schema.discordEvent.type, "MESSAGE_CREATE"),
+            inArray(schema.discordEvent.serverId, serverIds),
+          ),
+          orderBy: desc(schema.discordEvent.createdAt),
+        });
+
+        finalAfter = lastEvent?.messageId || undefined;
+      }
+    }
+
     // Trigger message fetch workflow
     const workflowInstance = await workflow.fetchDiscordMessages.create({
       params: {
@@ -404,7 +422,7 @@ export const fetchDiscordMessagesHandler = typedHandler<
         channelId,
         limit,
         before,
-        after,
+        after: finalAfter,
       },
     });
 

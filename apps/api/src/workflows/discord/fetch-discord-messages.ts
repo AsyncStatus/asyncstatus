@@ -1,6 +1,6 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { generateId } from "better-auth";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
@@ -133,17 +133,59 @@ export class FetchDiscordMessagesWorkflow extends WorkflowEntrypoint<
       return { storedCount, eventIds };
     });
 
-    // Step 3: Send events to processing queue
+    // Step 3: Send unprocessed events to processing queue
     await step.do("send-events-to-queue", async () => {
-      console.log(`Sending ${storeResult.eventIds.length} events to processing queue...`);
+      console.log(`Checking which of ${storeResult.eventIds.length} events need processing...`);
 
-      if (storeResult.eventIds.length > 0) {
+      if (storeResult.eventIds.length === 0) {
+        return { processed: true, messageCount: 0, skipped: 0 };
+      }
+
+      const db = createDb(this.env);
+
+      // Find the database IDs for these Discord event IDs
+      const discordEvents = await db.query.discordEvent.findMany({
+        where: inArray(schema.discordEvent.discordEventId, storeResult.eventIds),
+        columns: { id: true, discordEventId: true },
+      });
+
+      if (discordEvents.length === 0) {
+        console.log("No events found in database, nothing to process");
+        return { processed: true, messageCount: 0, skipped: 0 };
+      }
+
+      // Check which events already have vectors (are already processed)
+      const processedEventIds = await db
+        .select({ eventId: schema.discordEventVector.eventId })
+        .from(schema.discordEventVector)
+        .where(
+          inArray(
+            schema.discordEventVector.eventId,
+            discordEvents.map((e) => e.id),
+          ),
+        );
+
+      const processedSet = new Set(processedEventIds.map((e) => e.eventId));
+
+      // Filter to only unprocessed events
+      const unprocessedEvents = discordEvents.filter((event) => !processedSet.has(event.id));
+      const unprocessedDiscordEventIds = unprocessedEvents.map((event) => event.discordEventId);
+
+      console.log(
+        `Found ${unprocessedDiscordEventIds.length} unprocessed events out of ${storeResult.eventIds.length} total`,
+      );
+
+      if (unprocessedDiscordEventIds.length > 0) {
         await this.env.DISCORD_PROCESS_EVENTS_QUEUE.sendBatch(
-          storeResult.eventIds.map((eventId) => ({ body: eventId })),
+          unprocessedDiscordEventIds.map((eventId) => ({ body: eventId })),
         );
       }
 
-      return { processed: true, messageCount: storeResult.eventIds.length };
+      return {
+        processed: true,
+        messageCount: unprocessedDiscordEventIds.length,
+        skipped: storeResult.eventIds.length - unprocessedDiscordEventIds.length,
+      };
     });
 
     return {

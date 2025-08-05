@@ -5,6 +5,7 @@ import {
 } from "@asyncstatus/api/typed-handlers/discord-gateway";
 import {
   deleteDiscordIntegrationContract,
+  fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
   listDiscordServersContract,
@@ -66,6 +67,7 @@ import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import {
   AlertTriangleIcon,
   ArrowRight,
+  DownloadIcon,
   PlayIcon,
   Send,
   StopCircleIcon,
@@ -242,6 +244,9 @@ function RouteComponent() {
         });
       },
     }),
+  );
+  const fetchDiscordMessagesMutation = useMutation(
+    typedMutationOptions(fetchDiscordMessagesContract),
   );
   const updateMemberMutation = useMutation(
     typedMutationOptions(updateMemberContract, {
@@ -855,6 +860,45 @@ function RouteComponent() {
             <div className="space-y-2">
               <h4 className="font-medium">Real-time Discord Gateway</h4>
               <DiscordGatewayControls organizationSlug={params.organizationSlug} />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Manual Message Sync</h4>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Manually fetch the latest Discord messages for processing. This will fetch up to
+                  50 recent messages from all channels and send them for AI summarization.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    fetchDiscordMessagesMutation.mutate({ idOrSlug: params.organizationSlug });
+                  }}
+                  disabled={fetchDiscordMessagesMutation.isPending}
+                >
+                  <DownloadIcon className="size-4 mr-2" />
+                  {fetchDiscordMessagesMutation.isPending ? "Fetching..." : "Fetch Latest Messages"}
+                </Button>
+                {fetchDiscordMessagesMutation.error && (
+                  <Alert variant="destructive">
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                      {fetchDiscordMessagesMutation.error.message}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {fetchDiscordMessagesMutation.isSuccess && (
+                  <Alert>
+                    <AlertTitle>Success</AlertTitle>
+                    <AlertDescription>
+                      Discord message fetch started successfully. Messages will be processed for AI
+                      summarization.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             </div>
           </div>
         ),
