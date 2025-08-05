@@ -664,7 +664,7 @@ export const generateStatusUpdateHandler = typedHandler<
     if (generatedItems.length === 0) {
       throw new TypedHandlersError({
         code: "NOT_FOUND",
-        message: "No GitHub events found to generate status update",
+        message: "No activity found during this period",
       });
     }
 

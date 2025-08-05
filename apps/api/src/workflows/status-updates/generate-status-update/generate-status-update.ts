@@ -45,12 +45,12 @@ export async function generateStatusUpdate({
   effectiveFrom,
   effectiveTo,
 }: GenerateStatusUpdateOptions) {
-  const model = "google/gemini-2.5-flash";
+  const model = "openai/gpt-oss-120b";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),
     seed: 123,
-    maxSteps: 30,
+    maxSteps: 50,
     system: systemPrompt,
     messages: [
       {

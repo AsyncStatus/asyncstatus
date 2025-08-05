@@ -52,7 +52,7 @@ export function getExistingStatusUpdateItemsTool(db: Db) {
           ),
         )
         .orderBy(desc(schema.statusUpdateItem.order));
-      return existingItems;
+      return existingItems.filter((item) => item.statusUpdateItem.content !== "");
     },
   });
 }

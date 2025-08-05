@@ -27,7 +27,7 @@ export async function summarizeStatusUpdates({
   effectiveFrom,
   effectiveTo,
 }: SummarizeStatusUpdatesOptions): Promise<SummaryResult> {
-  const model = "google/gemini-2.5-flash";
+  const model = "openai/gpt-oss-120b";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),
