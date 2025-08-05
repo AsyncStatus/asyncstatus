@@ -1,4 +1,16 @@
 import {
+  getDiscordGatewayStatusContract,
+  startDiscordGatewayContract,
+  stopDiscordGatewayContract,
+} from "@asyncstatus/api/typed-handlers/discord-gateway";
+import {
+  deleteDiscordIntegrationContract,
+  getDiscordIntegrationContract,
+  listDiscordChannelsContract,
+  listDiscordServersContract,
+  listDiscordUsersContract,
+} from "@asyncstatus/api/typed-handlers/discord-integration";
+import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
   listGithubRepositoriesContract,
@@ -20,6 +32,7 @@ import {
   NotSiMicrosoftTeams,
   SiAsana,
   SiClickup,
+  SiDiscord,
   SiFigma,
   SiGithub,
   SiGitlab,
@@ -32,6 +45,7 @@ import {
   SiZoom,
 } from "@asyncstatus/ui/brand-icons";
 import { Alert, AlertDescription, AlertTitle } from "@asyncstatus/ui/components/alert";
+import { Badge } from "@asyncstatus/ui/components/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -49,7 +63,14 @@ import {
 } from "@asyncstatus/ui/components/select";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
-import { AlertTriangleIcon, ArrowRight, Send, XIcon } from "@asyncstatus/ui/icons";
+import {
+  AlertTriangleIcon,
+  ArrowRight,
+  PlayIcon,
+  Send,
+  StopCircleIcon,
+  XIcon,
+} from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
@@ -150,6 +171,9 @@ function RouteComponent() {
   const slackIntegrationQuery = useQuery(
     typedQueryOptions(getSlackIntegrationContract, { idOrSlug: params.organizationSlug }),
   );
+  const discordIntegrationQuery = useQuery(
+    typedQueryOptions(getDiscordIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
   const session = useQuery(sessionBetterAuthQueryOptions());
   const deleteGithubIntegrationMutation = useMutation(
     typedMutationOptions(deleteGithubIntegrationContract, {
@@ -187,6 +211,32 @@ function RouteComponent() {
         });
         queryClient.invalidateQueries({
           queryKey: typedQueryOptions(listSlackUsersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const deleteDiscordIntegrationMutation = useMutation(
+    typedMutationOptions(deleteDiscordIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getDiscordIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listDiscordServersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listDiscordChannelsContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listDiscordUsersContract, {
             idOrSlug: params.organizationSlug,
           }).queryKey,
         });
@@ -256,6 +306,30 @@ function RouteComponent() {
     ),
     select(data) {
       return data.filter((user) => !user.isBot && user.username !== "slackbot");
+    },
+  });
+  const discordServers = useQuery(
+    typedQueryOptions(
+      listDiscordServersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const discordChannels = useQuery(
+    typedQueryOptions(
+      listDiscordChannelsContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const discordUsers = useQuery({
+    ...typedQueryOptions(
+      listDiscordUsersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+    select(data) {
+      return data.filter((user) => !user.isBot);
     },
   });
   const organizationMembers = useQuery(
@@ -644,6 +718,202 @@ function RouteComponent() {
         ),
       },
       {
+        name: "Discord",
+        description: "Track server activity, voice channels, and community engagement.",
+        icon: <SiDiscord className="size-3.5" />,
+        status: discordIntegrationQuery.data?.syncErrorAt
+          ? "error"
+          : discordIntegrationQuery.data?.syncFinishedAt
+            ? "connected"
+            : discordIntegrationQuery.data?.syncStartedAt
+              ? "connecting"
+              : "disconnected",
+        connectLink: `https://discord.com/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID}&permissions=8&scope=bot+identify+email+guilds+guilds.members.read+messages.read&response_type=code&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_API_URL}/integrations/discord/callback`)}&state=${params.organizationSlug}`,
+        onDisconnect: () => {
+          deleteDiscordIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+        },
+        settingsChildren: (
+          <div className="space-y-6">
+            {discordUsers.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No users found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Users</h4>
+              {discordUsers.data && discordUsers.data.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-2">
+                  {discordUsers.data.map((user) => {
+                    const member = organizationMembers.data?.members.find(
+                      (member) => member.discordId === user.discordUserId,
+                    );
+
+                    return (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <span>
+                          {user.globalName || user.username}
+                          {user.discriminator &&
+                            user.discriminator !== "0" &&
+                            `#${user.discriminator}`}
+                        </span>
+                        <ArrowRight className="size-4" />
+                        <Select
+                          value={member?.id}
+                          onValueChange={(value) => {
+                            const member = organizationMembers.data?.members.find(
+                              (member) => member.id === value,
+                            );
+                            if (!member) {
+                              return;
+                            }
+                            updateMemberMutation.mutate({
+                              idOrSlug: params.organizationSlug,
+                              memberId: member.id,
+                              discordId: user.discordUserId,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AsyncStatus profile" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationMembers.data?.members.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {member && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              updateMemberMutation.mutate({
+                                idOrSlug: params.organizationSlug,
+                                memberId: member.id,
+                                discordId: null,
+                              });
+                            }}
+                          >
+                            <XIcon className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {discordServers.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No servers found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Servers</h4>
+              {discordServers.data && discordServers.data.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {discordServers.data.map((server) => (
+                    <div key={server.id} className="flex items-center gap-2">
+                      <span>{server.name}</span>
+                      {server.memberCount && (
+                        <span className="text-xs text-muted-foreground">
+                          ({server.memberCount} members)
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {discordChannels.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No channels found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Channels</h4>
+              {discordChannels.data && discordChannels.data.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {discordChannels.data.map((channel) => (
+                    <div key={channel.id} className="flex items-center gap-2">
+                      <span>
+                        #{channel.name}
+                        <span className="text-xs text-muted-foreground">
+                          {channel.type === 0 && " (text)"}
+                          {channel.type === 2 && " (voice)"}
+                          {channel.nsfw && " (NSFW)"}
+                          {channel.isArchived && " (archived)"}
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Real-time Discord Gateway</h4>
+              <DiscordGatewayControls organizationSlug={params.organizationSlug} />
+            </div>
+          </div>
+        ),
+        children: (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your Discord activity in real-time.</li>
+                <li>Generates meaningful status updates from community interactions.</li>
+                <li>Links AsyncStatus profiles to your Discord accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Read-only access to server data.</li>
+                <li>Secure OAuth authentication with Discord.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>
+                  Data is used only for status update generation. We don't store message content.
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Data we track</h4>
+              <p className="text-xs text-muted-foreground mb-2">
+                Read-only access to the following Discord data:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  <strong>Server Information:</strong> Server names, icons, member counts, and basic
+                  metadata.
+                </li>
+                <li>
+                  <strong>Channel Information:</strong> Channel names, types, and topics (text
+                  channels only).
+                </li>
+                <li>
+                  <strong>Member Information:</strong> Usernames, avatars, and member lists to link
+                  with AsyncStatus profiles.
+                </li>
+                <li>
+                  <strong>Message Activity:</strong> Message events and metadata for activity
+                  tracking (content requires Message Content Intent).
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <strong>Status Example:</strong> "Active in #engineering and #product channels,
+              participated in design discussions, helped 5 team members in #support channel."
+            </div>
+          </div>
+        ),
+      },
+      {
         name: "Linear",
         description: "Sync issue updates, sprint progress, and project milestones.",
         icon: <SiLinear className="size-3.5" />,
@@ -717,6 +987,10 @@ function RouteComponent() {
       slackIntegrationQuery.data,
       slackChannels.data,
       slackUsers.data,
+      discordIntegrationQuery.data,
+      discordServers.data,
+      discordChannels.data,
+      discordUsers.data,
       organizationMembers.data,
     ],
   );
@@ -856,5 +1130,119 @@ function RouteComponent() {
         )}
       </div>
     </>
+  );
+}
+
+function DiscordGatewayControls({ organizationSlug }: { organizationSlug: string }) {
+  const queryClient = useQueryClient();
+
+  const gatewayStatusQuery = useQuery(
+    typedQueryOptions(getDiscordGatewayStatusContract, {
+      idOrSlug: organizationSlug,
+    }),
+  );
+
+  const startGatewayMutation = useMutation(
+    typedMutationOptions(startDiscordGatewayContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+
+  const stopGatewayMutation = useMutation(
+    typedMutationOptions(stopDiscordGatewayContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+
+  const handleStart = () => {
+    startGatewayMutation.mutate({ idOrSlug: organizationSlug });
+  };
+
+  const handleStop = () => {
+    stopGatewayMutation.mutate({ idOrSlug: organizationSlug });
+  };
+
+  const isLoading =
+    gatewayStatusQuery.isLoading || startGatewayMutation.isPending || stopGatewayMutation.isPending;
+
+  const isConnected = gatewayStatusQuery.data?.isConnected;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          <Badge variant={isConnected ? "default" : "secondary"}>
+            {isLoading ? "Loading..." : isConnected ? "Connected" : "Disconnected"}
+          </Badge>
+        </div>
+      </div>
+
+      {gatewayStatusQuery.data && (
+        <div className="text-xs text-muted-foreground space-y-1">
+          {gatewayStatusQuery.data.lastHeartbeat && (
+            <div>
+              Last heartbeat: {new Date(gatewayStatusQuery.data.lastHeartbeat).toLocaleString()}
+            </div>
+          )}
+          {gatewayStatusQuery.data.sessionId && (
+            <div>Session ID: {gatewayStatusQuery.data.sessionId}</div>
+          )}
+          <div>Connection attempts: {gatewayStatusQuery.data.connectionAttempts}</div>
+          {gatewayStatusQuery.data.sequenceNumber && (
+            <div>Sequence number: {gatewayStatusQuery.data.sequenceNumber}</div>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant={isConnected ? "secondary" : "default"}
+          onClick={handleStart}
+          disabled={isLoading || isConnected}
+        >
+          <PlayIcon className="size-4 mr-2" />
+          Start Gateway
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleStop}
+          disabled={isLoading || !isConnected}
+        >
+          <StopCircleIcon className="size-4 mr-2" />
+          Stop Gateway
+        </Button>
+      </div>
+
+      {(startGatewayMutation.error || stopGatewayMutation.error) && (
+        <Alert variant="destructive">
+          <AlertTriangleIcon className="size-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {startGatewayMutation.error?.message || stopGatewayMutation.error?.message}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        The Discord Gateway enables real-time message processing and event tracking. When connected,
+        your Discord events will be processed immediately for status updates.
+      </div>
+    </div>
   );
 }

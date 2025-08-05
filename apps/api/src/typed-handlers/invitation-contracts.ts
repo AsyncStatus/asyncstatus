@@ -5,7 +5,7 @@ import { Invitation, Member, Organization, Team, User } from "../db";
 
 export const getInvitationContract = typedContract(
   "get /invitations/:id",
-  z.strictObject({ id: z.string(), email: z.email() }),
+  z.strictObject({ id: z.string() }),
   z.strictObject({
     ...Invitation.shape,
     inviter: User.pick({ name: true }),

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/invitations/_layout/")({
       queryClient.ensureQueryData(
         typedQueryOptions(
           getInvitationContract,
-          { id: search.invitationId ?? "", email: search.invitationEmail ?? "" },
+          { id: search.invitationId ?? "" },
           { throwOnError: false },
         ),
       ),
@@ -49,14 +49,22 @@ export const Route = createFileRoute("/invitations/_layout/")({
     if (!session && invitation?.hasUser) {
       throw redirect({
         to: "/login",
-        search: { ...search, redirect: location.href },
+        search: {
+          redirect: "/invitations",
+          invitationId: search.invitationId,
+          invitationEmail: search.invitationEmail,
+        },
       });
     }
 
     if (!session && !invitation?.hasUser) {
       throw redirect({
         to: "/sign-up",
-        search: { ...search, redirect: location.href },
+        search: {
+          redirect: "/invitations",
+          invitationId: search.invitationId,
+          invitationEmail: search.invitationEmail,
+        },
       });
     }
   },

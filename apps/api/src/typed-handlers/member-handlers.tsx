@@ -80,6 +80,7 @@ export const updateMemberHandler = typedHandler<
       lastName,
       githubId,
       slackId,
+      discordId,
       ...userUpdates
     } = input;
     const existingMember = await db.query.member.findFirst({
@@ -93,7 +94,7 @@ export const updateMemberHandler = typedHandler<
       });
     }
     if (
-      existingMember.userId !== currentMember.id &&
+      existingMember.id !== currentMember.id &&
       currentMember.role !== "admin" &&
       currentMember.role !== "owner"
     ) {
@@ -116,6 +117,11 @@ export const updateMemberHandler = typedHandler<
         await tx.update(member).set({ slackId }).where(eq(member.id, memberId));
       } else if (slackId === null && existingMember.slackId) {
         await tx.update(member).set({ slackId: null }).where(eq(member.id, memberId));
+      }
+      if (discordId) {
+        await tx.update(member).set({ discordId }).where(eq(member.id, memberId));
+      } else if (discordId === null && existingMember.discordId) {
+        await tx.update(member).set({ discordId: null }).where(eq(member.id, memberId));
       }
       if (archivedAt) {
         await tx
@@ -242,17 +248,6 @@ export const inviteMemberHandler = typedHandler<
         throw new TypedHandlersError({
           code: "BAD_REQUEST",
           message: "Team not found",
-        });
-      }
-      firstTeamId = foundTeam.id;
-    } else {
-      const foundTeam = await db.query.team.findFirst({
-        where: eq(team.organizationId, organization.id),
-      });
-      if (!foundTeam) {
-        throw new TypedHandlersError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No teams found",
         });
       }
       firstTeamId = foundTeam.id;

@@ -1,5 +1,13 @@
 import type { Bindings } from "../lib/env";
 import {
+  type DiscordProcessEventsQueueMessage,
+  discordProcessEventsQueue,
+} from "./discord-process-events-queue";
+import {
+  type DiscordWebhookEventsQueueMessage,
+  discordWebhookEventsQueue,
+} from "./discord-webhook-events-queue";
+import {
   type GithubProcessEventsQueueMessage,
   githubProcessEventsQueue,
 } from "./github-process-events-queue";
@@ -16,13 +24,19 @@ import {
   slackWebhookEventsQueue,
 } from "./slack-webhook-events-queue";
 
-type Message =
+type QueueMessage =
   | GithubWebhookEventsQueueMessage
   | GithubProcessEventsQueueMessage
   | SlackWebhookEventsQueueMessage
-  | SlackProcessEventsQueueMessage;
+  | SlackProcessEventsQueueMessage
+  | DiscordWebhookEventsQueueMessage
+  | DiscordProcessEventsQueueMessage;
 
-export async function queue(batch: MessageBatch<Message>, env: Bindings, ctx: ExecutionContext) {
+export async function queue(
+  batch: MessageBatch<QueueMessage>,
+  env: Bindings,
+  ctx: ExecutionContext,
+) {
   if (batch.queue === "github-webhook-events") {
     return githubWebhookEventsQueue(
       batch as MessageBatch<GithubWebhookEventsQueueMessage>,
@@ -45,6 +59,22 @@ export async function queue(batch: MessageBatch<Message>, env: Bindings, ctx: Ex
 
   if (batch.queue === "slack-process-events") {
     return slackProcessEventsQueue(batch as MessageBatch<SlackProcessEventsQueueMessage>, env, ctx);
+  }
+
+  if (batch.queue === "discord-webhook-events") {
+    return discordWebhookEventsQueue(
+      batch as MessageBatch<DiscordWebhookEventsQueueMessage>,
+      env,
+      ctx,
+    );
+  }
+
+  if (batch.queue === "discord-process-events") {
+    return discordProcessEventsQueue(
+      batch as MessageBatch<DiscordProcessEventsQueueMessage>,
+      env,
+      ctx,
+    );
   }
 
   throw new Error(`Unknown queue: ${batch.queue}`);

@@ -15,14 +15,14 @@ import { typedQueryOptions } from "@/typed-handlers";
 export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,
   beforeLoad: async ({ context: { queryClient }, search }) => {
-    if (!search.invitationId || !search.invitationEmail) {
+    if (!search.invitationId) {
       return;
     }
 
     const invitation = await queryClient.ensureQueryData(
       typedQueryOptions(
         getInvitationContract,
-        { id: search.invitationId, email: search.invitationEmail },
+        { id: search.invitationId },
         { throwOnError: false },
       ),
     );
@@ -51,9 +51,7 @@ function RouteComponent() {
   const invitation = useQuery(
     typedQueryOptions(
       getInvitationContract,
-      search.invitationId && search.invitationEmail
-        ? { id: search.invitationId, email: search.invitationEmail }
-        : skipToken,
+      search.invitationId ? { id: search.invitationId } : skipToken,
       { throwOnError: false },
     ),
   );

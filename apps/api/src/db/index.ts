@@ -1,6 +1,37 @@
 import { relations } from "drizzle-orm";
 
 export { Account, AccountInsert, AccountUpdate, account } from "./account";
+export {
+  DiscordChannel,
+  DiscordChannelInsert,
+  DiscordChannelUpdate,
+  discordChannel,
+} from "./discord-channel";
+export {
+  DiscordEvent,
+  DiscordEventInsert,
+  DiscordEventUpdate,
+  discordEvent,
+} from "./discord-event";
+export {
+  DiscordEventVector,
+  DiscordEventVectorInsert,
+  DiscordEventVectorUpdate,
+  discordEventVector,
+} from "./discord-event-vector";
+export {
+  DiscordIntegration,
+  DiscordIntegrationInsert,
+  DiscordIntegrationUpdate,
+  discordIntegration,
+} from "./discord-integration";
+export {
+  DiscordServer,
+  DiscordServerInsert,
+  DiscordServerUpdate,
+  discordServer,
+} from "./discord-server";
+export { DiscordUser, DiscordUserInsert, DiscordUserUpdate, discordUser } from "./discord-user";
 export { GithubEvent, GithubEventInsert, GithubEventUpdate, githubEvent } from "./github-event";
 export {
   GithubEventVector,
@@ -102,6 +133,11 @@ export { Verification, VerificationInsert, VerificationUpdate, verification } fr
 
 // Import tables for relations
 import { account } from "./account";
+import { discordChannel } from "./discord-channel";
+import { discordEvent } from "./discord-event";
+import { discordIntegration } from "./discord-integration";
+import { discordServer } from "./discord-server";
+import { discordUser } from "./discord-user";
 import { githubEvent } from "./github-event";
 import { githubEventVector } from "./github-event-vector";
 import { githubIntegration } from "./github-integration";
@@ -279,6 +315,54 @@ export const slackEventRelations = relations(slackEvent, ({ one, many }) => ({
     references: [slackChannel.channelId],
   }),
   vectors: many(slackEventVector),
+}));
+
+export const discordIntegrationRelations = relations(discordIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [discordIntegration.organizationId],
+    references: [organization.id],
+  }),
+  servers: many(discordServer),
+  users: many(discordUser),
+}));
+
+export const discordServerRelations = relations(discordServer, ({ one, many }) => ({
+  integration: one(discordIntegration, {
+    fields: [discordServer.integrationId],
+    references: [discordIntegration.id],
+  }),
+  channels: many(discordChannel),
+  events: many(discordEvent),
+}));
+
+export const discordChannelRelations = relations(discordChannel, ({ one, many }) => ({
+  server: one(discordServer, {
+    fields: [discordChannel.serverId],
+    references: [discordServer.id],
+  }),
+  events: many(discordEvent),
+}));
+
+export const discordUserRelations = relations(discordUser, ({ one }) => ({
+  integration: one(discordIntegration, {
+    fields: [discordUser.integrationId],
+    references: [discordIntegration.id],
+  }),
+}));
+
+export const discordEventRelations = relations(discordEvent, ({ one }) => ({
+  server: one(discordServer, {
+    fields: [discordEvent.serverId],
+    references: [discordServer.id],
+  }),
+  user: one(discordUser, {
+    fields: [discordEvent.discordUserId],
+    references: [discordUser.discordUserId],
+  }),
+  channel: one(discordChannel, {
+    fields: [discordEvent.channelId],
+    references: [discordChannel.channelId],
+  }),
 }));
 
 export const slackEventVectorRelations = relations(slackEventVector, ({ one }) => ({

@@ -20,6 +20,7 @@ export const member = sqliteTable(
     role: text("role").notNull().$type<MemberRole>(),
     githubId: text("github_id"),
     slackId: text("slack_id"),
+    discordId: text("discord_id"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     archivedAt: integer("archived_at", { mode: "timestamp" }),
   },
@@ -28,6 +29,7 @@ export const member = sqliteTable(
     index("user_member_id_index").on(t.userId),
     index("member_github_id_index").on(t.githubId),
     index("member_slack_id_index").on(t.slackId),
+    index("member_discord_id_index").on(t.discordId),
   ],
 );
 
