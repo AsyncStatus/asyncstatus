@@ -470,7 +470,14 @@ export class DiscordGatewayDurableObject extends DurableObject<Bindings> {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to get Gateway URL: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(
+          `[Discord Gateway DO] Discord API Error: ${response.status} ${response.statusText}`,
+          errorText,
+        );
+        throw new Error(
+          `Failed to get Gateway URL: ${response.status} ${response.statusText} - ${errorText}`,
+        );
       }
 
       const data = (await response.json()) as DiscordGatewayBotResponse;
@@ -518,6 +525,10 @@ export class DiscordGatewayDurableObject extends DurableObject<Bindings> {
       if (this.state.isConnected) {
         return { success: true, message: "Gateway already started" };
       }
+
+      // Log bot token info for debugging (safely)
+      const tokenStart = integration.botAccessToken?.slice(0, 10) || "undefined";
+      console.log(`[Discord Gateway DO] Starting gateway with token: ${tokenStart}...`);
 
       await this.connectToGateway(integration.botAccessToken);
       await this.persistState();
