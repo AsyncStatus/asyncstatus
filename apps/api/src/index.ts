@@ -294,7 +294,7 @@ const app = new Hono<HonoEnv>()
   .route("/integrations/github/webhooks", githubWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
   .route("/integrations/discord/webhooks", discordWebhooksRouter)
-  .route("/stripe/webhooks", stripeWebhooksRouter)
+  .route("/integrations/stripe/webhooks", stripeWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
     if (err instanceof TypedHandlersError) {
