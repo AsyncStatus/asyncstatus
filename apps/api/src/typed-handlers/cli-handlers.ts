@@ -420,13 +420,26 @@ export const editCliStatusUpdateHandler = typedHandler<
           .where(eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId));
 
         // Update the updatedAt timestamp, mood, and notes
+        // For mood and notes: if they are provided (even as null), use them; otherwise keep existing values
+        const updateData: {
+          updatedAt: Date;
+          mood?: string | null;
+          notes?: string | null;
+        } = {
+          updatedAt: nowDate,
+        };
+
+        if (mood !== undefined) {
+          updateData.mood = mood;
+        }
+
+        if (notes !== undefined) {
+          updateData.notes = notes;
+        }
+
         await tx
           .update(schema.statusUpdate)
-          .set({
-            updatedAt: nowDate,
-            mood: mood !== undefined ? mood : existingStatusUpdate.mood,
-            notes: notes !== undefined ? notes : existingStatusUpdate.notes,
-          })
+          .set(updateData)
           .where(eq(schema.statusUpdate.id, statusUpdateId));
       } else {
         // Create new status update

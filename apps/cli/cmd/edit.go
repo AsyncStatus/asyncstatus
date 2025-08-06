@@ -66,8 +66,8 @@ func init() {
 type EditStatusUpdateRequest struct {
 	Items []EditStatusUpdateItem `json:"items"`
 	Date  string                 `json:"date,omitempty"`
-	Mood  *string                `json:"mood,omitempty"`
-	Notes *string                `json:"notes,omitempty"`
+	Mood  *string                `json:"mood"`
+	Notes *string                `json:"notes"`
 }
 
 // EditStatusUpdateItem represents a single item in the edit request
