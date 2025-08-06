@@ -1,6 +1,15 @@
 # ⧗ AsyncStatus CLI
 
-A command-line interface for managing async status updates.
+A powerful command-line interface for managing async status updates with an interactive editor experience.
+
+## Features
+
+- **Git-style interactive editing** - `asyncstatus edit` opens your `$EDITOR` like `git rebase -i`
+- **Natural date parsing** - `asyncstatus edit yesterday`, `asyncstatus edit "3 days ago"`
+- **Zero-config editor detection** - Respects your existing `$EDITOR`, `$VISUAL`, or git config
+- **Fast terminal workflow** - Add status updates without leaving your shell
+- **Proper authentication** - JWT tokens, respects `~/.asyncstatus/config.json`
+- **Multiple environments** - Override API endpoint with `ASYNCSTATUS_API_URL`
 
 ## Installation
 
@@ -110,23 +119,256 @@ JWT tokens are stored locally at `~/.asyncstatus/config.json`:
 - `ASYNCSTATUS_API_URL` - Override default API endpoint
 - Default: `https://api.asyncstatus.com`
 
-### Quick status updates
+## Usage Overview
+
+The AsyncStatus CLI provides a powerful yet simple interface for managing your daily status updates. Here's what you can do:
+
+```bash
+# Quick commands for daily use
+asyncstatus                           # Show current status update
+asyncstatus "completed user auth"     # Add a completed task (default)
+asyncstatus blocker "waiting for PR"  # Add a blocker
+asyncstatus progress "working on UI"  # Add progress update
+asyncstatus edit                      # Interactive editor (like git rebase -i)
+asyncstatus edit yesterday           # Edit yesterday's status
+asyncstatus list                      # View recent updates
+asyncstatus undo                      # Remove last item
+```
+
+**Example daily workflow:**
+```bash
+$ asyncstatus
+⧗ no updates found for today
+  run: asyncstatus done "your task" to create one
+
+$ asyncstatus "completed user authentication API"
+⧗ done: completed user authentication API
+  ✓ saved
+
+$ asyncstatus progress "working on dashboard redesign"
+⧗ progress: working on dashboard redesign
+  → saved
+
+$ asyncstatus edit
+# Opens editor with current items, add more details...
+
+$ asyncstatus show
+⧗ Monday, January 15, 2024
+  John Doe (john@example.com)
+  Engineering Team
+
+  ✓ completed
+    completed user authentication API
+  → in progress
+    working on dashboard redesign
+  ✗ blocked
+    blocked on design approval for new components
+  updated 14:32
+```
+
+### Quick Command Reference
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `asyncstatus` | Show current status | `asyncstatus` |
+| `asyncstatus "task"` | Add completed task | `asyncstatus "fixed bug #123"` |
+| `asyncstatus done "task"` | Add completed task (explicit) | `asyncstatus done "deployed to prod"` |
+| `asyncstatus progress "task"` | Add progress item | `asyncstatus progress "working on API"` |
+| `asyncstatus blocker "issue"` | Add blocker | `asyncstatus blocker "waiting for approval"` |
+| `asyncstatus edit` | Interactive editor (today) | `asyncstatus edit` |
+| `asyncstatus edit [date]` | Edit specific date | `asyncstatus edit yesterday` |
+| `asyncstatus show` | Show today's status | `asyncstatus show` |
+| `asyncstatus list [days]` | List recent updates | `asyncstatus list 7` |
+| `asyncstatus undo` | Remove last item | `asyncstatus undo` |
+| `asyncstatus login` | Login to account | `asyncstatus login` |
+| `asyncstatus logout` | Logout and clear token | `asyncstatus logout` |
+
+### Core Features
+
+#### 🚀 Quick Status Updates
+
+Add status updates with simple commands:
 
 ```bash
 # Add a completed task (default behavior)
-asyncstatus "finished the API endpoint"
+$ asyncstatus "finished the API endpoint"
+⧗ done: finished the API endpoint
+  ✓ saved
 
 # Explicitly add a completed task
-asyncstatus done "finished the API endpoint"
+$ asyncstatus done "finished the API endpoint"
+⧗ done: finished the API endpoint
+  ✓ saved
 
 # Add a blocker
-asyncstatus blocker "waiting for API approval"
+$ asyncstatus blocker "waiting for API approval"
+⧗ blocked: waiting for API approval
+  ✗ saved
 
 # Add a progress update
-asyncstatus progress "working on user dashboard"
+$ asyncstatus progress "working on user dashboard"
+⧗ progress: working on user dashboard
+  → saved
+```
 
-# Remove the previous status update
-asyncstatus undo
+#### ✏️ Interactive Editor (Like `git rebase -i`)
+
+Edit your status update interactively in your preferred editor:
+
+```bash
+# Edit today's status update
+$ asyncstatus edit
+
+# Edit yesterday's status update
+$ asyncstatus edit yesterday
+
+# Edit a specific date
+$ asyncstatus edit 2024-01-15
+
+# Edit relative dates
+$ asyncstatus edit "3 days ago"
+$ asyncstatus edit "2 weeks ago"
+$ asyncstatus edit "1 month ago"
+```
+
+**Example editor session:**
+```
+# Editing status update for Monday, January 15, 2024
+#
+# Commands:
+#   done <content>     - Mark as completed
+#   progress <content> - Mark as in progress  
+#   blocker <content>  - Mark as blocker
+#
+# Lines starting with # are ignored
+# Save and close to apply changes
+
+done finished the user authentication flow
+progress working on the dashboard UI
+blocker waiting for design approval on new components
+done fixed critical bug in payment processing
+```
+
+**Output after saving:**
+```
+⧗ status update saved
+```
+
+**If no changes were made:**
+```
+⧗ no changes made
+```
+
+#### 📊 View Status Updates
+
+```bash
+# Show current status update
+$ asyncstatus show
+⧗ Monday, January 15, 2024
+  John Doe (john@example.com)
+  Engineering Team
+
+  ✓ completed
+    finished the API endpoint
+  → in progress
+    working on user dashboard  
+  ✗ blocked
+    waiting for API approval
+  updated 14:32
+
+# Show status without any items
+$ asyncstatus show
+⧗ no updates found for today
+  run: asyncstatus done "your task" to create one
+
+# View recent status updates
+$ asyncstatus list
+⧗ today's updates
+  1 update(s)
+
+  1. Monday, January 15
+     John Doe (john@example.com)
+     Engineering Team
+     ✓3 →1 ✗1
+     • finished the API endpoint
+     • working on user dashboard
+     • waiting for API approval
+     14:32
+
+# List past 7 days
+$ asyncstatus list 7
+⧗ past 7 days
+  3 update(s)
+
+  1. Monday, January 15
+     John Doe (john@example.com)
+     Engineering Team
+     ✓3 →1 ✗1
+     • finished the API endpoint
+     • working on user dashboard
+     • waiting for API approval
+     14:32
+  ────────────────────────────────────
+  2. Sunday, January 14
+     John Doe (john@example.com)
+     Engineering Team
+     ✓2
+     • completed code review
+     • deployed to staging
+     16:45
+```
+
+#### ↩️ Undo Operations
+
+```bash
+# Remove the last status update item
+$ asyncstatus undo
+⧗ undoing last item...
+  ✓ removed last item
+
+# Try to undo when no items exist  
+$ asyncstatus undo
+⧗ failed: no status update items to remove
+  run: asyncstatus login first
+```
+
+#### 🔧 Editor Configuration
+
+The CLI respects your editor preferences in this order:
+
+1. `ASYNCSTATUS_EDITOR` - AsyncStatus-specific editor
+2. `GIT_EDITOR` - Git editor environment variable
+3. `VISUAL` - Visual editor environment variable  
+4. `EDITOR` - Standard editor environment variable
+5. `git config core.editor` - Git configuration (local then global)
+6. `git var GIT_EDITOR` - Git's internal editor detection
+7. System fallbacks: `vi`, `vim`, `nano`
+
+```bash
+# Set AsyncStatus-specific editor
+export ASYNCSTATUS_EDITOR="code --wait"
+
+# Or use your existing Git editor setup
+git config --global core.editor "vim"
+
+# The edit command will automatically use your preferred editor
+$ asyncstatus edit
+# Opens in VS Code, Vim, or whatever you've configured
+```
+
+#### 🌐 Environment Configuration
+
+```bash
+# Use different API environment
+export ASYNCSTATUS_API_URL="https://staging.api.asyncstatus.com"
+asyncstatus login
+
+# Override editor for AsyncStatus only
+export ASYNCSTATUS_EDITOR="nano"
+
+# Use existing environment variables
+export EDITOR="vim"
+export VISUAL="code --wait"
 ```
 
 ## Development

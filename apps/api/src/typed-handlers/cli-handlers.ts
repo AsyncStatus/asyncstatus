@@ -7,6 +7,7 @@ import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import {
   addCliStatusUpdateItemContract,
   editCliStatusUpdateContract,
+  getCliStatusUpdateByDateContract,
   listRecentStatusUpdatesContract,
   showCurrentStatusUpdateContract,
   undoLastCliStatusUpdateItemContract,
@@ -524,6 +525,47 @@ export const editCliStatusUpdateHandler = typedHandler<
     return {
       statusUpdate,
       message: "Status update edited successfully",
+    };
+  },
+);
+
+export const getCliStatusUpdateByDateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof getCliStatusUpdateByDateContract
+>(
+  getCliStatusUpdateByDateContract,
+  requiredJwt,
+  requiredActiveOrganization,
+  async ({ db, organization, member, input }) => {
+    const { date } = input;
+
+    // Parse the target date
+    const targetDate = dayjs.utc(date);
+    const effectiveFromStartOfDay = targetDate.startOf("day").toDate();
+    const effectiveToEndOfDay = targetDate.endOf("day").toDate();
+
+    // Find status update for this member on the target date
+    const statusUpdate = await db.query.statusUpdate.findFirst({
+      where: and(
+        eq(schema.statusUpdate.memberId, member.id),
+        eq(schema.statusUpdate.organizationId, organization.id),
+        gte(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+        lte(schema.statusUpdate.effectiveTo, effectiveToEndOfDay),
+      ),
+      with: {
+        member: { with: { user: true } },
+        team: true,
+        items: {
+          orderBy: (items) => [items.order],
+        },
+      },
+    });
+
+    return {
+      statusUpdate: statusUpdate || null,
+      message: statusUpdate
+        ? "Status update found for date"
+        : "No status update found for the specified date",
     };
   },
 );

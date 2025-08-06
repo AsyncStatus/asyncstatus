@@ -26,6 +26,7 @@ import {
 import {
   addCliStatusUpdateItemHandler,
   editCliStatusUpdateHandler,
+  getCliStatusUpdateByDateHandler,
   listRecentStatusUpdatesHandler,
   showCurrentStatusUpdateHandler,
   undoLastCliStatusUpdateItemHandler,
@@ -363,6 +364,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     generateStatusUpdateHandler,
     addCliStatusUpdateItemHandler,
     editCliStatusUpdateHandler,
+    getCliStatusUpdateByDateHandler,
     undoLastCliStatusUpdateItemHandler,
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,

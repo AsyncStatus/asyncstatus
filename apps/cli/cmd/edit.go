@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -33,8 +35,13 @@ Editor detection (in order of preference):
   7. System fallbacks: vi, vim, nano (if git unavailable)
 
 Examples:
-  asyncstatus edit           # Edit today's status update
-  asyncstatus edit 2024-01-15   # Edit status update for specific date
+  asyncstatus edit                # Edit today's status update
+  asyncstatus edit yesterday      # Edit yesterday's status update
+  asyncstatus edit today          # Edit today's status update (explicit)
+  asyncstatus edit "2 days ago"   # Edit status update from 2 days ago
+  asyncstatus edit "1 week ago"   # Edit status update from 1 week ago
+  asyncstatus edit "3 weeks ago"  # Edit status update from 3 weeks ago
+  asyncstatus edit 2024-01-15     # Edit status update for specific date
   
 Configuration:
   export ASYNCSTATUS_EDITOR=code  # Use VS Code for AsyncStatus only
@@ -78,14 +85,20 @@ type EditStatusUpdateResponse struct {
 
 // handleEditStatus processes editing a status update interactively
 func handleEditStatus(date string) error {
-	// Get current status update
-	statusUpdate, err := getCurrentStatusUpdate()
+	// Parse and normalize the date
+	normalizedDate, err := parseDate(date)
 	if err != nil {
-		return fmt.Errorf("failed to fetch current status update: %v", err)
+		return fmt.Errorf("invalid date format: %v", err)
+	}
+
+	// Get current status update
+	statusUpdate, err := getCurrentStatusUpdateForDate(normalizedDate)
+	if err != nil {
+		return fmt.Errorf("failed to fetch status update: %v", err)
 	}
 
 	// Create temporary file with editable content
-	tempFile, err := createEditableFile(statusUpdate, date)
+	tempFile, err := createEditableFile(statusUpdate, normalizedDate)
 	if err != nil {
 		return fmt.Errorf("failed to create temporary file: %v", err)
 	}
@@ -109,7 +122,7 @@ func handleEditStatus(date string) error {
 	}
 
 	// Send updates to API
-	if err := updateStatusUpdate(editedItems, date); err != nil {
+	if err := updateStatusUpdate(editedItems, normalizedDate); err != nil {
 		return fmt.Errorf("failed to update status: %v", err)
 	}
 
@@ -117,9 +130,84 @@ func handleEditStatus(date string) error {
 	return nil
 }
 
-// getCurrentStatusUpdate fetches the current status update
-func getCurrentStatusUpdate() (*StatusUpdate, error) {
-	endpoint := "/cli/status-updates/current"
+// parseDate parses various date formats into ISO date string
+func parseDate(dateStr string) (string, error) {
+	if dateStr == "" {
+		// Return today's date in ISO format
+		return time.Now().Format("2006-01-02"), nil
+	}
+
+	// Handle relative dates
+	if parsedDate, err := parseRelativeDate(dateStr); err == nil {
+		return parsedDate.Format("2006-01-02"), nil
+	}
+
+	// Handle absolute dates (ISO format YYYY-MM-DD)
+	if matched, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, dateStr); matched {
+		// Validate the date can be parsed
+		if _, err := time.Parse("2006-01-02", dateStr); err != nil {
+			return "", fmt.Errorf("invalid date format: %s", dateStr)
+		}
+		return dateStr, nil
+	}
+
+	return "", fmt.Errorf("unsupported date format: %s. Use YYYY-MM-DD, 'yesterday', or 'N days ago'", dateStr)
+}
+
+// parseRelativeDate parses relative date expressions like "yesterday", "2 days ago"
+func parseRelativeDate(dateStr string) (time.Time, error) {
+	now := time.Now()
+	
+	// Handle "yesterday"
+	if dateStr == "yesterday" {
+		return now.AddDate(0, 0, -1), nil
+	}
+
+	// Handle "today" (for completeness)
+	if dateStr == "today" {
+		return now, nil
+	}
+
+	// Handle patterns like "N days ago", "N weeks ago", etc.
+	patterns := []struct {
+		regex *regexp.Regexp
+		unit  string
+	}{
+		{regexp.MustCompile(`^(\d+)\s+days?\s+ago$`), "days"},
+		{regexp.MustCompile(`^(\d+)\s+weeks?\s+ago$`), "weeks"},
+		{regexp.MustCompile(`^(\d+)\s+months?\s+ago$`), "months"},
+	}
+
+	for _, pattern := range patterns {
+		if matches := pattern.regex.FindStringSubmatch(dateStr); len(matches) == 2 {
+			num, err := strconv.Atoi(matches[1])
+			if err != nil {
+				continue
+			}
+
+			switch pattern.unit {
+			case "days":
+				return now.AddDate(0, 0, -num), nil
+			case "weeks":
+				return now.AddDate(0, 0, -num*7), nil
+			case "months":
+				return now.AddDate(0, -num, 0), nil
+			}
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unrecognized relative date format: %s", dateStr)
+}
+
+// getCurrentStatusUpdateForDate fetches the status update for a specific date
+func getCurrentStatusUpdateForDate(date string) (*StatusUpdate, error) {
+	// Always use the by-date endpoint for consistency
+	return getStatusUpdateByDate(date)
+}
+
+// getStatusUpdateByDate fetches a status update for a specific date using the new API endpoint
+func getStatusUpdateByDate(targetDate string) (*StatusUpdate, error) {
+	endpoint := fmt.Sprintf("/cli/status-updates/by-date?date=%s", targetDate)
 	client, req, err := makeAuthenticatedRequest("GET", endpoint)
 	if err != nil {
 		return nil, err
@@ -145,6 +233,7 @@ func getCurrentStatusUpdate() (*StatusUpdate, error) {
 		return nil, fmt.Errorf("failed to parse response: %v", err)
 	}
 
+	// Return the status update (can be nil if none exists for this date)
 	return response.StatusUpdate, nil
 }
 
@@ -158,11 +247,24 @@ func createEditableFile(statusUpdate *StatusUpdate, date string) (*os.File, erro
 	var content strings.Builder
 	
 	// Add header with instructions
-	targetDate := "today"
+	var targetDate string
 	if date != "" {
-		targetDate = date
+		// Parse the date to show a friendly format
+		if parsedDate, err := time.Parse("2006-01-02", date); err == nil {
+			if parsedDate.Format("2006-01-02") == time.Now().Format("2006-01-02") {
+				targetDate = "today"
+			} else if parsedDate.Format("2006-01-02") == time.Now().AddDate(0, 0, -1).Format("2006-01-02") {
+				targetDate = "yesterday"
+			} else {
+				targetDate = parsedDate.Format("Monday, January 2, 2006")
+			}
+		} else {
+			targetDate = date
+		}
 	} else if statusUpdate != nil {
 		targetDate = statusUpdate.EffectiveFrom.Format("Monday, January 2, 2006")
+	} else {
+		targetDate = "today"
 	}
 	
 	content.WriteString(fmt.Sprintf("# Edit your status update for %s\n", targetDate))

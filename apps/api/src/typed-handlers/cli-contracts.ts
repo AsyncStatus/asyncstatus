@@ -82,3 +82,19 @@ export const editCliStatusUpdateContract = typedContract(
     message: z.string(),
   }),
 );
+
+export const getCliStatusUpdateByDateContract = typedContract(
+  "get /cli/status-updates/by-date",
+  z.strictObject({ date: z.iso.date() }),
+  z.strictObject({
+    statusUpdate: z
+      .strictObject({
+        ...StatusUpdate.shape,
+        team: Team.nullable(),
+        items: z.array(StatusUpdateItem),
+        member: z.strictObject({ ...Member.shape, user: User }),
+      })
+      .nullable(),
+    message: z.string(),
+  }),
+);
