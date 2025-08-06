@@ -131,6 +131,7 @@ asyncstatus blocker "waiting for PR"  # Add a blocker
 asyncstatus progress "working on UI"  # Add progress update
 asyncstatus edit                      # Interactive editor (like git rebase -i)
 asyncstatus edit yesterday           # Edit yesterday's status
+asyncstatus show yesterday           # Show yesterday's status
 asyncstatus list                      # View recent updates
 asyncstatus undo                      # Remove last item
 ```
@@ -182,7 +183,7 @@ $ asyncstatus show
 | `asyncstatus blocker "issue"` | Add blocker | `asyncstatus blocker "waiting for approval"` |
 | `asyncstatus edit` | Interactive editor (today) | `asyncstatus edit` |
 | `asyncstatus edit [date]` | Edit specific date | `asyncstatus edit yesterday` |
-| `asyncstatus show` | Show today's status | `asyncstatus show` |
+| `asyncstatus show [date]` | Show status for date | `asyncstatus show yesterday` |
 | `asyncstatus list [days]` | List recent updates | `asyncstatus list 7` |
 | `asyncstatus undo` | Remove last item | `asyncstatus undo` |
 | `asyncstatus login` | Login to account | `asyncstatus login` |
@@ -306,6 +307,25 @@ $ asyncstatus show
 # Show status without any items
 $ asyncstatus show
 ⧗ no updates found for today
+  run: asyncstatus done "your task" to create one
+
+# Show status for different dates
+$ asyncstatus show yesterday
+⧗ Sunday, January 14, 2024
+  John Doe (john@example.com)
+  Engineering Team
+
+  ✓ completed
+    finished code review
+  ✓ completed  
+    deployed to staging
+
+  mood focused
+
+  updated 16:45
+
+$ asyncstatus show "2 days ago"
+⧗ no updates found for Saturday, January 13, 2024
   run: asyncstatus done "your task" to create one
 
 # View recent status updates

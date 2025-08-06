@@ -55,7 +55,7 @@ Examples:
 			}
 		} else {
 			// Show current status update when no arguments provided
-			if err := handleShowStatus(); err != nil {
+			if err := handleShowStatus(""); err != nil {
 				color.New(color.FgRed).Printf("⧗ failed: %v\n", err)
 				color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus login"), "first")
 			}

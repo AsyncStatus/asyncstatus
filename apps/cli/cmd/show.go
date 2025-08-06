@@ -13,16 +13,26 @@ import (
 
 // showCmd represents the show command
 var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Display the current status update",
-	Long: `Display the current status update for today, showing all progress items, 
-blockers, completed tasks, and a link to view it online.
+	Use:   "show [date]",
+	Short: "Display a status update",
+	Long: `Display a status update for the specified date, showing all progress items, 
+blockers, completed tasks, and mood/notes.
 
 Examples:
-  asyncstatus show`,
-	Args: cobra.NoArgs,
+  asyncstatus show                # Show today's status update
+  asyncstatus show yesterday      # Show yesterday's status update
+  asyncstatus show today          # Show today's status update (explicit)
+  asyncstatus show "2 days ago"   # Show status update from 2 days ago
+  asyncstatus show "1 week ago"   # Show status update from 1 week ago
+  asyncstatus show 2024-01-15     # Show status update for specific date`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := handleShowStatus(); err != nil {
+		var date string
+		if len(args) == 1 {
+			date = args[0]
+		}
+		
+		if err := handleShowStatus(date); err != nil {
 			fmt.Printf("❌ Failed to retrieve status update: %v\n", err)
 			fmt.Println("   Make sure you're logged in: asyncstatus login")
 		}
@@ -95,47 +105,62 @@ type Team struct {
 	Slug           string `json:"slug"`
 }
 
-// handleShowStatus processes retrieving the current status update
-func handleShowStatus() error {
-	endpoint := "/cli/status-updates/current"
-	client, req, err := makeAuthenticatedRequest("GET", endpoint)
+// handleShowStatus processes retrieving a status update for the specified date
+func handleShowStatus(date string) error {
+	// Parse and normalize the date
+	normalizedDate, err := parseDate(date)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid date format: %v", err)
 	}
 
-	// Send request
-	resp, err := client.Do(req)
+	// Get status update for the specified date
+	statusUpdate, err := getStatusUpdateByDate(normalizedDate)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response: %v", err)
-	}
-
-	// Check response status
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("server error (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	// Parse response
-	var response StatusUpdateResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return fmt.Errorf("failed to parse response: %v", err)
+		return fmt.Errorf("failed to fetch status update: %v", err)
 	}
 
 	// Display the status update
-	if response.StatusUpdate == nil {
-		color.New(color.FgHiBlack).Println("⧗ no updates found for today")
+	if statusUpdate == nil {
+		dateDisplay := formatDateForDisplay(normalizedDate)
+		color.New(color.FgHiBlack).Printf("⧗ no updates found for %s\n", dateDisplay)
 		color.New(color.FgHiBlack).Println("  run:", color.New(color.FgWhite).Sprint("asyncstatus done \"your task\""), "to create one")
 		return nil
 	}
 
-	displayStatusUpdate(response.StatusUpdate)
+	displayStatusUpdate(statusUpdate)
 	return nil
+}
+
+// getStatusUpdateByDate fetches a status update for a specific date using the API endpoint
+func getStatusUpdateByDate(targetDate string) (*StatusUpdate, error) {
+	endpoint := fmt.Sprintf("/cli/status-updates/by-date?date=%s", targetDate)
+	client, req, err := makeAuthenticatedRequest("GET", endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %v", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("server error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var response StatusUpdateResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %v", err)
+	}
+
+	// Return the status update (can be nil if none exists for this date)
+	return response.StatusUpdate, nil
 }
 
 // displayStatusUpdate formats and displays a status update

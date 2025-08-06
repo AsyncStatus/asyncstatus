@@ -9,9 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -132,74 +130,7 @@ func handleEditStatus(date string) error {
 	return nil
 }
 
-// parseDate parses various date formats into ISO date string
-func parseDate(dateStr string) (string, error) {
-	if dateStr == "" {
-		// Return today's date in ISO format
-		return time.Now().Format("2006-01-02"), nil
-	}
 
-	// Handle relative dates
-	if parsedDate, err := parseRelativeDate(dateStr); err == nil {
-		return parsedDate.Format("2006-01-02"), nil
-	}
-
-	// Handle absolute dates (ISO format YYYY-MM-DD)
-	if matched, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, dateStr); matched {
-		// Validate the date can be parsed
-		if _, err := time.Parse("2006-01-02", dateStr); err != nil {
-			return "", fmt.Errorf("invalid date format: %s", dateStr)
-		}
-		return dateStr, nil
-	}
-
-	return "", fmt.Errorf("unsupported date format: %s. Use YYYY-MM-DD, 'yesterday', or 'N days ago'", dateStr)
-}
-
-// parseRelativeDate parses relative date expressions like "yesterday", "2 days ago"
-func parseRelativeDate(dateStr string) (time.Time, error) {
-	now := time.Now()
-	
-	// Handle "yesterday"
-	if dateStr == "yesterday" {
-		return now.AddDate(0, 0, -1), nil
-	}
-
-	// Handle "today" (for completeness)
-	if dateStr == "today" {
-		return now, nil
-	}
-
-	// Handle patterns like "N days ago", "N weeks ago", etc.
-	patterns := []struct {
-		regex *regexp.Regexp
-		unit  string
-	}{
-		{regexp.MustCompile(`^(\d+)\s+days?\s+ago$`), "days"},
-		{regexp.MustCompile(`^(\d+)\s+weeks?\s+ago$`), "weeks"},
-		{regexp.MustCompile(`^(\d+)\s+months?\s+ago$`), "months"},
-	}
-
-	for _, pattern := range patterns {
-		if matches := pattern.regex.FindStringSubmatch(dateStr); len(matches) == 2 {
-			num, err := strconv.Atoi(matches[1])
-			if err != nil {
-				continue
-			}
-
-			switch pattern.unit {
-			case "days":
-				return now.AddDate(0, 0, -num), nil
-			case "weeks":
-				return now.AddDate(0, 0, -num*7), nil
-			case "months":
-				return now.AddDate(0, -num, 0), nil
-			}
-		}
-	}
-
-	return time.Time{}, fmt.Errorf("unrecognized relative date format: %s", dateStr)
-}
 
 // getCurrentStatusUpdateForDate fetches the status update for a specific date
 func getCurrentStatusUpdateForDate(date string) (*StatusUpdate, error) {
@@ -207,37 +138,7 @@ func getCurrentStatusUpdateForDate(date string) (*StatusUpdate, error) {
 	return getStatusUpdateByDate(date)
 }
 
-// getStatusUpdateByDate fetches a status update for a specific date using the new API endpoint
-func getStatusUpdateByDate(targetDate string) (*StatusUpdate, error) {
-	endpoint := fmt.Sprintf("/cli/status-updates/by-date?date=%s", targetDate)
-	client, req, err := makeAuthenticatedRequest("GET", endpoint)
-	if err != nil {
-		return nil, err
-	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %v", err)
-	}
-
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("server error (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	var response StatusUpdateResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %v", err)
-	}
-
-	// Return the status update (can be nil if none exists for this date)
-	return response.StatusUpdate, nil
-}
 
 // createEditableFile creates a temporary file with the current status items
 func createEditableFile(statusUpdate *StatusUpdate, date string) (*os.File, error) {
@@ -249,24 +150,9 @@ func createEditableFile(statusUpdate *StatusUpdate, date string) (*os.File, erro
 	var content strings.Builder
 	
 	// Add header with instructions
-	var targetDate string
-	if date != "" {
-		// Parse the date to show a friendly format
-		if parsedDate, err := time.Parse("2006-01-02", date); err == nil {
-			if parsedDate.Format("2006-01-02") == time.Now().Format("2006-01-02") {
-				targetDate = "today"
-			} else if parsedDate.Format("2006-01-02") == time.Now().AddDate(0, 0, -1).Format("2006-01-02") {
-				targetDate = "yesterday"
-			} else {
-				targetDate = parsedDate.Format("Monday, January 2, 2006")
-			}
-		} else {
-			targetDate = date
-		}
-	} else if statusUpdate != nil {
+	targetDate := formatDateForDisplay(date)
+	if targetDate == "today" && statusUpdate != nil {
 		targetDate = statusUpdate.EffectiveFrom.Format("Monday, January 2, 2006")
-	} else {
-		targetDate = "today"
 	}
 	
 	content.WriteString(fmt.Sprintf("# Edit your status update for %s\n", targetDate))
