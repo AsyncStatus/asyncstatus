@@ -25,6 +25,7 @@ import {
 } from "./typed-handlers/ai-usage-handlers";
 import {
   addCliStatusUpdateItemHandler,
+  editCliStatusUpdateHandler,
   listRecentStatusUpdatesHandler,
   showCurrentStatusUpdateHandler,
   undoLastCliStatusUpdateItemHandler,
@@ -361,6 +362,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     deleteStatusUpdateHandler,
     generateStatusUpdateHandler,
     addCliStatusUpdateItemHandler,
+    editCliStatusUpdateHandler,
     undoLastCliStatusUpdateItemHandler,
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,

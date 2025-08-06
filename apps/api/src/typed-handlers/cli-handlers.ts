@@ -6,6 +6,7 @@ import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import {
   addCliStatusUpdateItemContract,
+  editCliStatusUpdateContract,
   listRecentStatusUpdatesContract,
   showCurrentStatusUpdateContract,
   undoLastCliStatusUpdateItemContract,
@@ -370,6 +371,159 @@ export const listRecentStatusUpdatesHandler = typedHandler<
     return {
       statusUpdates,
       message: `Found ${statusUpdates.length} status update(s) from the last ${days} day(s)`,
+    };
+  },
+);
+
+export const editCliStatusUpdateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof editCliStatusUpdateContract
+>(
+  editCliStatusUpdateContract,
+  requiredJwt,
+  requiredActiveOrganization,
+  async ({ db, input, session, organization, member }) => {
+    const { items, date } = input;
+
+    // Parse the target date or use today
+    const targetDate = date ? dayjs.utc(date) : dayjs().utc();
+    const effectiveFromStartOfDay = targetDate.startOf("day").toDate();
+    const effectiveToEndOfDay = targetDate.endOf("day").toDate();
+    const nowDate = dayjs().utc().toDate();
+
+    const statusUpdate = await db.transaction(async (tx) => {
+      // Check if a status update already exists for this member on the target date
+      const existingStatusUpdate = await tx.query.statusUpdate.findFirst({
+        where: and(
+          eq(schema.statusUpdate.memberId, member.id),
+          eq(schema.statusUpdate.organizationId, organization.id),
+          gte(schema.statusUpdate.effectiveFrom, effectiveFromStartOfDay),
+          lte(schema.statusUpdate.effectiveTo, effectiveToEndOfDay),
+        ),
+        with: {
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      let statusUpdateId: string;
+
+      if (existingStatusUpdate) {
+        // Update existing status update
+        statusUpdateId = existingStatusUpdate.id;
+
+        // Delete all existing items
+        await tx
+          .delete(schema.statusUpdateItem)
+          .where(eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId));
+
+        // Update the updatedAt timestamp
+        await tx
+          .update(schema.statusUpdate)
+          .set({ updatedAt: nowDate })
+          .where(eq(schema.statusUpdate.id, statusUpdateId));
+      } else {
+        // Create new status update
+        statusUpdateId = generateId();
+
+        await tx.insert(schema.statusUpdate).values({
+          id: statusUpdateId,
+          memberId: member.id,
+          organizationId: organization.id,
+          teamId: null,
+          editorJson: null,
+          effectiveFrom: effectiveFromStartOfDay,
+          effectiveTo: effectiveToEndOfDay,
+          mood: null,
+          emoji: null,
+          notes: null,
+          isDraft: false,
+          timezone: session.user.timezone || "UTC",
+          createdAt: nowDate,
+          updatedAt: nowDate,
+        });
+      }
+
+      // Insert all new items
+      if (items.length > 0) {
+        await tx.insert(schema.statusUpdateItem).values(
+          items.map((item) => ({
+            id: generateId(),
+            statusUpdateId,
+            content: item.content,
+            isBlocker: item.type === "blocker",
+            isInProgress: item.type === "progress",
+            order: item.order,
+            createdAt: nowDate,
+            updatedAt: nowDate,
+          })),
+        );
+      }
+
+      // Update editorJson with all items
+      const nextEditorJson = {
+        type: "doc",
+        content: [
+          {
+            type: "statusUpdateHeading",
+            attrs: { date: effectiveFromStartOfDay.toISOString() },
+          },
+          {
+            type: "blockableTodoList",
+            content: items.map((item) => ({
+              type: "blockableTodoListItem",
+              attrs: {
+                checked: item.type === "done",
+                blocked: item.type === "blocker",
+              },
+              content: [{ type: "paragraph", content: [{ type: "text", text: item.content }] }],
+            })),
+          },
+          { type: "notesHeading" },
+          {
+            type: "paragraph",
+            content: (existingStatusUpdate?.editorJson as any)?.content?.[3]?.content ?? [],
+          },
+          { type: "moodHeading" },
+          {
+            type: "paragraph",
+            content: (existingStatusUpdate?.editorJson as any)?.content?.[5]?.content ?? [],
+          },
+        ],
+      };
+
+      // Update the status update with the new editorJson
+      await tx
+        .update(schema.statusUpdate)
+        .set({ editorJson: nextEditorJson, updatedAt: nowDate, isDraft: false })
+        .where(eq(schema.statusUpdate.id, statusUpdateId));
+
+      // Return the complete status update with all items
+      const result = await tx.query.statusUpdate.findFirst({
+        where: eq(schema.statusUpdate.id, statusUpdateId),
+        with: {
+          member: { with: { user: true } },
+          team: true,
+          items: {
+            orderBy: (items) => [items.order],
+          },
+        },
+      });
+
+      if (!result) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create or update status update",
+        });
+      }
+
+      return result;
+    });
+
+    return {
+      statusUpdate,
+      message: "Status update edited successfully",
     };
   },
 );

@@ -59,3 +59,26 @@ export const listRecentStatusUpdatesContract = typedContract(
     message: z.string(),
   }),
 );
+
+export const editCliStatusUpdateContract = typedContract(
+  "put /cli/status-updates/edit",
+  z.strictObject({
+    items: z.array(
+      z.strictObject({
+        content: z.string().min(1),
+        type: z.enum(["done", "progress", "blocker"]),
+        order: z.number().int().nonnegative(),
+      }),
+    ),
+    date: z.string().optional(), // ISO date string, defaults to today
+  }),
+  z.strictObject({
+    statusUpdate: z.strictObject({
+      ...StatusUpdate.shape,
+      team: Team.nullable(),
+      items: z.array(StatusUpdateItem),
+      member: z.strictObject({ ...Member.shape, user: User }),
+    }),
+    message: z.string(),
+  }),
+);
