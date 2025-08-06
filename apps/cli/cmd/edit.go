@@ -244,7 +244,17 @@ func openEditor(filename string) error {
 		return fmt.Errorf("no editor found. Please install vi, vim, or nano, or set ASYNCSTATUS_EDITOR/EDITOR/VISUAL/GIT_EDITOR environment variable")
 	}
 
-	cmd := exec.Command(editor, filename)
+	// Parse editor command to handle editors with arguments (e.g., "code -w")
+	parts := strings.Fields(editor)
+	if len(parts) == 0 {
+		return fmt.Errorf("invalid editor command: %s", editor)
+	}
+
+	// First part is the executable, rest are arguments
+	executable := parts[0]
+	args := append(parts[1:], filename)
+
+	cmd := exec.Command(executable, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
