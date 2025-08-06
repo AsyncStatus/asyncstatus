@@ -384,7 +384,7 @@ export const editCliStatusUpdateHandler = typedHandler<
   requiredJwt,
   requiredActiveOrganization,
   async ({ db, input, session, organization, member }) => {
-    const { items, date } = input;
+    const { items, date, mood, notes } = input;
 
     // Parse the target date or use today
     const targetDate = date ? dayjs.utc(date) : dayjs().utc();
@@ -419,10 +419,14 @@ export const editCliStatusUpdateHandler = typedHandler<
           .delete(schema.statusUpdateItem)
           .where(eq(schema.statusUpdateItem.statusUpdateId, statusUpdateId));
 
-        // Update the updatedAt timestamp
+        // Update the updatedAt timestamp, mood, and notes
         await tx
           .update(schema.statusUpdate)
-          .set({ updatedAt: nowDate })
+          .set({
+            updatedAt: nowDate,
+            mood: mood !== undefined ? mood : existingStatusUpdate.mood,
+            notes: notes !== undefined ? notes : existingStatusUpdate.notes,
+          })
           .where(eq(schema.statusUpdate.id, statusUpdateId));
       } else {
         // Create new status update
@@ -436,9 +440,9 @@ export const editCliStatusUpdateHandler = typedHandler<
           editorJson: null,
           effectiveFrom: effectiveFromStartOfDay,
           effectiveTo: effectiveToEndOfDay,
-          mood: null,
+          mood: mood || null,
           emoji: null,
-          notes: null,
+          notes: notes || null,
           isDraft: false,
           timezone: session.user.timezone || "UTC",
           createdAt: nowDate,

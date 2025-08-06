@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -186,6 +187,23 @@ func displayStatusUpdateSummary(statusUpdate *StatusUpdate, index int) {
 
 		fmt.Print("     ")
 		itemColor.Printf("• %s\n", item.Content)
+	}
+
+	// Display mood and notes if present (compact format)
+	if statusUpdate.Mood != nil && *statusUpdate.Mood != "" {
+		moodColor := color.New(color.FgMagenta)
+		// For list view, show multiline mood on one line with | separator
+		mood := strings.ReplaceAll(*statusUpdate.Mood, "\n", " | ")
+		moodColor.Printf("     mood %s\n", mood)
+	}
+	if statusUpdate.Notes != nil && *statusUpdate.Notes != "" {
+		notesColor := color.New(color.FgBlue)
+		// For list view, show multiline notes on one line with | separator and truncate
+		notes := strings.ReplaceAll(*statusUpdate.Notes, "\n", " | ")
+		if len(notes) > 60 {
+			notes = notes[:57] + "..."
+		}
+		notesColor.Printf("     notes %s\n", notes)
 	}
 
 	timeColor := color.New(color.FgHiBlack)

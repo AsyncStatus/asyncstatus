@@ -71,6 +71,8 @@ export const editCliStatusUpdateContract = typedContract(
       }),
     ),
     date: z.string().optional(), // ISO date string, defaults to today
+    mood: z.string().nullable().optional(), // Mood field
+    notes: z.string().nullable().optional(), // Notes field
   }),
   z.strictObject({
     statusUpdate: z.strictObject({

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -209,6 +210,41 @@ func displayStatusUpdate(statusUpdate *StatusUpdate) {
 		fmt.Println()
 	}
 
+	// Display mood if present
+	if statusUpdate.Mood != nil && *statusUpdate.Mood != "" {
+		fmt.Println()
+		moodColor := color.New(color.FgMagenta)
+		moodColor.Print("  mood ")
+		
+		// Handle multiline mood with proper indentation
+		moodLines := strings.Split(*statusUpdate.Mood, "\n")
+		for i, line := range moodLines {
+			if i == 0 {
+				color.New(color.FgWhite).Println(line)
+			} else {
+				color.New(color.FgWhite).Printf("       %s\n", line)
+			}
+		}
+	}
+
+	// Display notes if present
+	if statusUpdate.Notes != nil && *statusUpdate.Notes != "" {
+		fmt.Println()
+		notesColor := color.New(color.FgBlue)
+		notesColor.Print("  notes ")
+		
+		// Handle multiline notes with proper indentation
+		notesLines := strings.Split(*statusUpdate.Notes, "\n")
+		for i, line := range notesLines {
+			if i == 0 {
+				color.New(color.FgWhite).Println(line)
+			} else {
+				color.New(color.FgWhite).Printf("        %s\n", line)
+			}
+		}
+	}
+
+	fmt.Println()
 	timeColor := color.New(color.FgHiBlack)
 	timeColor.Printf("  updated %s\n", statusUpdate.UpdatedAt.Format("15:04"))
 }

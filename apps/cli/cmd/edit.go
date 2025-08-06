@@ -68,6 +68,8 @@ func init() {
 type EditStatusUpdateRequest struct {
 	Items []EditStatusUpdateItem `json:"items"`
 	Date  string                 `json:"date,omitempty"`
+	Mood  *string                `json:"mood,omitempty"`
+	Notes *string                `json:"notes,omitempty"`
 }
 
 // EditStatusUpdateItem represents a single item in the edit request
@@ -110,19 +112,19 @@ func handleEditStatus(date string) error {
 	}
 
 	// Parse edited file
-	editedItems, err := parseEditedFile(tempFile.Name())
+	parsed, err := parseEditedFile(tempFile.Name())
 	if err != nil {
 		return fmt.Errorf("failed to parse edited file: %v", err)
 	}
 
 	// Check if there were any changes
-	if !hasChanges(statusUpdate, editedItems) {
+	if !hasChanges(statusUpdate, parsed) {
 		color.New(color.FgHiBlack).Println("⧗ no changes made")
 		return nil
 	}
 
 	// Send updates to API
-	if err := updateStatusUpdate(editedItems, normalizedDate); err != nil {
+	if err := updateStatusUpdate(parsed, normalizedDate); err != nil {
 		return fmt.Errorf("failed to update status: %v", err)
 	}
 
@@ -268,21 +270,6 @@ func createEditableFile(statusUpdate *StatusUpdate, date string) (*os.File, erro
 	}
 	
 	content.WriteString(fmt.Sprintf("# Edit your status update for %s\n", targetDate))
-	content.WriteString("#\n")
-	content.WriteString("# Commands:\n")
-	content.WriteString("#   done <text>     = completed task\n")
-	content.WriteString("#   progress <text> = work in progress\n")
-	content.WriteString("#   blocker <text>  = blocked task\n")
-	content.WriteString("#\n")
-	content.WriteString("# Lines starting with # are ignored\n")
-	content.WriteString("# You can reorder lines to change the order\n")
-	content.WriteString("# Delete lines to remove items\n")
-	content.WriteString("# Add new lines to add items\n")
-	content.WriteString("#\n")
-	content.WriteString("# Example:\n")
-	content.WriteString("#   done Implemented user authentication\n")
-	content.WriteString("#   progress Working on payment integration\n")
-	content.WriteString("#   blocker Waiting for API keys\n")
 	content.WriteString("\n")
 
 	// Add existing items
@@ -304,6 +291,51 @@ func createEditableFile(statusUpdate *StatusUpdate, date string) (*os.File, erro
 		content.WriteString("# done Example completed task\n")
 		content.WriteString("# progress Example work in progress\n")
 	}
+
+	// Add mood and notes section
+	content.WriteString("\n")
+	if statusUpdate != nil && statusUpdate.Mood != nil && *statusUpdate.Mood != "" {
+		// Split multiline mood into separate mood lines
+		moodLines := strings.Split(*statusUpdate.Mood, "\n")
+		for _, line := range moodLines {
+			if strings.TrimSpace(line) != "" {
+				content.WriteString(fmt.Sprintf("mood %s\n", strings.TrimSpace(line)))
+			}
+		}
+	}
+	if statusUpdate != nil && statusUpdate.Notes != nil && *statusUpdate.Notes != "" {
+		// Split multiline notes into separate notes lines
+		notesLines := strings.Split(*statusUpdate.Notes, "\n")
+		for _, line := range notesLines {
+			if strings.TrimSpace(line) != "" {
+				content.WriteString(fmt.Sprintf("notes %s\n", strings.TrimSpace(line)))
+			}
+		}
+	}
+
+	// Add help section at the bottom
+	content.WriteString("\n")
+	content.WriteString("#\n")
+	content.WriteString("# Commands:\n")
+	content.WriteString("#   done <text>     = completed task\n")
+	content.WriteString("#   progress <text> = work in progress\n")
+	content.WriteString("#   blocker <text>  = blocked task\n")
+	content.WriteString("#\n")
+	content.WriteString("# Special fields:\n")
+	content.WriteString("#   mood <mood>      = your current mood\n")
+	content.WriteString("#   notes <text>    = additional notes\n")
+	content.WriteString("#\n")
+	content.WriteString("# Lines starting with # are ignored\n")
+	content.WriteString("# You can reorder lines to change the order\n")
+	content.WriteString("# Delete lines to remove items\n")
+	content.WriteString("# Add new lines to add items\n")
+	content.WriteString("#\n")
+	content.WriteString("# Example:\n")
+	content.WriteString("#   done Implemented user authentication\n")
+	content.WriteString("#   progress Working on payment integration\n")
+	content.WriteString("#   blocker Waiting for API keys\n")
+	content.WriteString("#   mood productive\n")
+	content.WriteString("#   notes Great progress today, team collaboration was excellent\n")
 
 	if _, err := tempFile.WriteString(content.String()); err != nil {
 		tempFile.Close()
@@ -398,20 +430,31 @@ func getGitVarEditor() string {
 	return editor
 }
 
-// parseEditedFile parses the edited file and returns the status items
-func parseEditedFile(filename string) ([]EditStatusUpdateItem, error) {
+// ParsedStatusUpdate represents the parsed content from the editor
+type ParsedStatusUpdate struct {
+	Items []EditStatusUpdateItem
+	Mood  *string
+	Notes *string
+}
+
+// parseEditedFile parses the edited file and returns the status items with mood and notes
+func parseEditedFile(filename string) (*ParsedStatusUpdate, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var items []EditStatusUpdateItem
+	result := &ParsedStatusUpdate{
+		Items: []EditStatusUpdateItem{},
+	}
 	scanner := bufio.NewScanner(file)
 	order := 1
 
-	// Regex to parse lines like "done some task" or "progress working on something"
-	lineRegex := regexp.MustCompile(`^\s*(done|progress|blocker)\s+(.+)$`)
+	// Regex to parse different line types
+	itemRegex := regexp.MustCompile(`^\s*(done|progress|blocker)\s+(.+)$`)
+	moodRegex := regexp.MustCompile(`^\s*mood\s+(.+)$`)
+	notesRegex := regexp.MustCompile(`^\s*notes\s+(.+)$`)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -421,49 +464,108 @@ func parseEditedFile(filename string) ([]EditStatusUpdateItem, error) {
 			continue
 		}
 
-		matches := lineRegex.FindStringSubmatch(line)
-		if len(matches) != 3 {
-			return nil, fmt.Errorf("invalid line format: %s\nExpected format: 'done|progress|blocker <description>'", line)
+		// Try to match item types (done, progress, blocker)
+		if matches := itemRegex.FindStringSubmatch(line); len(matches) == 3 {
+			itemType := matches[1]
+			content := strings.TrimSpace(matches[2])
+
+			if content == "" {
+				return nil, fmt.Errorf("empty content for item: %s", line)
+			}
+
+			result.Items = append(result.Items, EditStatusUpdateItem{
+				Content: content,
+				Type:    itemType,
+				Order:   order,
+			})
+			order++
+			continue
 		}
 
-		itemType := matches[1]
-		content := strings.TrimSpace(matches[2])
-
-		if content == "" {
-			return nil, fmt.Errorf("empty content for item: %s", line)
+		// Try to match mood
+		if matches := moodRegex.FindStringSubmatch(line); len(matches) == 2 {
+			mood := strings.TrimSpace(matches[1])
+			if mood != "" {
+				if result.Mood == nil {
+					result.Mood = &mood
+				} else {
+					combined := *result.Mood + "\n" + mood
+					result.Mood = &combined
+				}
+			}
+			continue
 		}
 
-		items = append(items, EditStatusUpdateItem{
-			Content: content,
-			Type:    itemType,
-			Order:   order,
-		})
-		order++
+		// Try to match notes
+		if matches := notesRegex.FindStringSubmatch(line); len(matches) == 2 {
+			notes := strings.TrimSpace(matches[1])
+			if notes != "" {
+				if result.Notes == nil {
+					result.Notes = &notes
+				} else {
+					combined := *result.Notes + "\n" + notes
+					result.Notes = &combined
+				}
+			}
+			continue
+		}
+
+		// If no patterns match, return an error
+		return nil, fmt.Errorf("invalid line format: %s\nExpected format: 'done|progress|blocker <description>', 'mood <mood>', or 'notes <text>'", line)
 	}
 
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading file: %v", err)
 	}
 
-	return items, nil
+	return result, nil
 }
 
-// hasChanges checks if the edited items differ from the original
-func hasChanges(statusUpdate *StatusUpdate, editedItems []EditStatusUpdateItem) bool {
+// hasChanges checks if the edited content differs from the original
+func hasChanges(statusUpdate *StatusUpdate, parsed *ParsedStatusUpdate) bool {
+	// Check if there are any items or special fields to save
+	hasContent := len(parsed.Items) > 0 || parsed.Mood != nil || parsed.Notes != nil
+	
 	if statusUpdate == nil || len(statusUpdate.Items) == 0 {
-		return len(editedItems) > 0
+		// Also check if mood or notes are different from nil/empty
+		if statusUpdate != nil {
+			originalMood := ""
+			if statusUpdate.Mood != nil {
+				originalMood = *statusUpdate.Mood
+			}
+			originalNotes := ""
+			if statusUpdate.Notes != nil {
+				originalNotes = *statusUpdate.Notes
+			}
+			
+			newMood := ""
+			if parsed.Mood != nil {
+				newMood = *parsed.Mood
+			}
+			newNotes := ""
+			if parsed.Notes != nil {
+				newNotes = *parsed.Notes
+			}
+			
+			if originalMood != newMood || originalNotes != newNotes {
+				return true
+			}
+		}
+		return hasContent
 	}
 
-	if len(statusUpdate.Items) != len(editedItems) {
+	// Check if item count changed
+	if len(statusUpdate.Items) != len(parsed.Items) {
 		return true
 	}
 
+	// Check if any items changed
 	for i, item := range statusUpdate.Items {
-		if i >= len(editedItems) {
+		if i >= len(parsed.Items) {
 			return true
 		}
 
-		editedItem := editedItems[i]
+		editedItem := parsed.Items[i]
 		
 		var originalType string
 		if item.IsBlocker {
@@ -479,14 +581,42 @@ func hasChanges(statusUpdate *StatusUpdate, editedItems []EditStatusUpdateItem) 
 		}
 	}
 
+	// Check if mood changed
+	originalMood := ""
+	if statusUpdate.Mood != nil {
+		originalMood = *statusUpdate.Mood
+	}
+	newMood := ""
+	if parsed.Mood != nil {
+		newMood = *parsed.Mood
+	}
+	if originalMood != newMood {
+		return true
+	}
+
+	// Check if notes changed
+	originalNotes := ""
+	if statusUpdate.Notes != nil {
+		originalNotes = *statusUpdate.Notes
+	}
+	newNotes := ""
+	if parsed.Notes != nil {
+		newNotes = *parsed.Notes
+	}
+	if originalNotes != newNotes {
+		return true
+	}
+
 	return false
 }
 
-// updateStatusUpdate sends the edited items to the API
-func updateStatusUpdate(items []EditStatusUpdateItem, date string) error {
+// updateStatusUpdate sends the edited content to the API
+func updateStatusUpdate(parsed *ParsedStatusUpdate, date string) error {
 	payload := EditStatusUpdateRequest{
-		Items: items,
+		Items: parsed.Items,
 		Date:  date,
+		Mood:  parsed.Mood,
+		Notes: parsed.Notes,
 	}
 
 	jsonData, err := json.Marshal(payload)

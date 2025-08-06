@@ -1,10 +1,10 @@
 # ⧗ AsyncStatus CLI
 
-A powerful command-line interface for managing async status updates with an interactive editor experience.
+CLI for async status updates.
 
 ## Features
 
-- **Git-style interactive editing** - `asyncstatus edit` opens your `$EDITOR` like `git rebase -i`
+- **Git-style interactive editing** - `asyncstatus edit` opens your `$EDITOR` like `git rebase -i`, supports mood and notes
 - **Natural date parsing** - `asyncstatus edit yesterday`, `asyncstatus edit "3 days ago"`
 - **Zero-config editor detection** - Respects your existing `$EDITOR`, `$VISUAL`, or git config
 - **Fast terminal workflow** - Add status updates without leaving your shell
@@ -163,6 +163,11 @@ $ asyncstatus show
     working on dashboard redesign
   ✗ blocked
     blocked on design approval for new components
+
+  mood productive
+
+  notes Made great progress on the auth flow, team meeting at 3pm
+
   updated 14:32
 ```
 
@@ -233,20 +238,37 @@ $ asyncstatus edit "1 month ago"
 
 **Example editor session:**
 ```
-# Editing status update for Monday, January 15, 2024
-#
-# Commands:
-#   done <content>     - Mark as completed
-#   progress <content> - Mark as in progress  
-#   blocker <content>  - Mark as blocker
-#
-# Lines starting with # are ignored
-# Save and close to apply changes
+# Edit your status update for Monday, January 15, 2024
 
 done finished the user authentication flow
 progress working on the dashboard UI
 blocker waiting for design approval on new components
 done fixed critical bug in payment processing
+
+mood productive
+notes Great progress today, team collaboration was excellent
+
+#
+# Commands:
+#   done <text>     = completed task
+#   progress <text> = work in progress
+#   blocker <text>  = blocked task
+#
+# Special fields:
+#   mood <mood>      = your current mood
+#   notes <text>    = additional notes
+#
+# Lines starting with # are ignored
+# You can reorder lines to change the order
+# Delete lines to remove items
+# Add new lines to add items
+#
+# Example:
+#   done Implemented user authentication
+#   progress Working on payment integration
+#   blocker Waiting for API keys
+#   mood productive
+#   notes Great progress today, team collaboration was excellent
 ```
 
 **Output after saving:**
@@ -274,6 +296,11 @@ $ asyncstatus show
     working on user dashboard  
   ✗ blocked
     waiting for API approval
+
+  mood productive
+
+  notes Great progress today, team collaboration was excellent
+
   updated 14:32
 
 # Show status without any items
@@ -293,6 +320,8 @@ $ asyncstatus list
      • finished the API endpoint
      • working on user dashboard
      • waiting for API approval
+     mood productive
+     notes Great progress today, team collaboration was excellent
      14:32
 
 # List past 7 days
@@ -307,6 +336,8 @@ $ asyncstatus list 7
      • finished the API endpoint
      • working on user dashboard
      • waiting for API approval
+     mood productive
+     notes Great progress today, team collaboration was excellent
      14:32
   ────────────────────────────────────
   2. Sunday, January 14
@@ -315,6 +346,7 @@ $ asyncstatus list 7
      ✓2
      • completed code review
      • deployed to staging
+     mood focused
      16:45
 ```
 
