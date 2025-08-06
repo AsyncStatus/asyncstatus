@@ -148,16 +148,25 @@ func getLatestVersion() (string, error) {
 
 // isVersionCurrent checks if current version is the same as latest
 func isVersionCurrent(current, latest string) bool {
-	// Normalize versions by removing 'v' prefix if present
-	current = strings.TrimPrefix(current, "v")
-	latest = strings.TrimPrefix(latest, "v")
+	// Normalize versions by removing prefixes
+	currentNorm := normalizeVersion(current)
+	latestNorm := normalizeVersion(latest)
 	
 	// For development builds, always consider outdated unless forced
 	if current == "dev" {
 		return false
 	}
 	
-	return current == latest
+	return currentNorm == latestNorm
+}
+
+// normalizeVersion removes common version prefixes
+func normalizeVersion(version string) string {
+	// Remove cli/ prefix if present
+	version = strings.TrimPrefix(version, "cli/")
+	// Remove v prefix if present
+	version = strings.TrimPrefix(version, "v")
+	return version
 }
 
 // performUpgrade downloads and runs the install script
@@ -195,9 +204,11 @@ func performUpgrade(version string) error {
 		return fmt.Errorf("failed to determine install directory: %v", err)
 	}
 	
-	// Run install script with version (suppress output for cleaner experience)
+	// Run install script with version
 	cmd := exec.Command("bash", tmpFile.Name(), "--version", version)
 	cmd.Env = append(os.Environ(), "INSTALL_DIR="+installDir)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("install script failed: %v", err)

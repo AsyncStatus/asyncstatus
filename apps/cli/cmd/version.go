@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -72,14 +71,14 @@ func checkForUpdatesInVersion() {
 
 // showVersionDifference provides helpful context about the version gap
 func showVersionDifference(current, latest string) {
-	// Clean up version strings for comparison
-	currentClean := strings.TrimPrefix(current, "v")
-	latestClean := strings.TrimPrefix(latest, "v")
-	
 	// Skip detailed comparison for dev builds
 	if current == "dev" {
 		return
 	}
+	
+	// Use the same normalization as upgrade command
+	currentClean := normalizeVersion(current)
+	latestClean := normalizeVersion(latest)
 	
 	// Simple comparison message
 	if currentClean != latestClean {
