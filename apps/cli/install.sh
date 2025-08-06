@@ -349,17 +349,11 @@ main() {
     echo ""
     log_success "Installation completed!"
     
-    # Show version info if binary is accessible
-    if command -v "$BINARY_NAME" >/dev/null 2>&1; then
-        echo ""
-        log_info "Verifying installation..."
-        "$BINARY_NAME" --version
-        echo ""
-        log_info "You can now use any of these commands:"
-        log_info "  asyncstatus --help"
-        log_info "  async --help"
-        log_info "  ⧗ --help"
-    fi
+    echo ""
+    log_info "You can now use any of these commands:"
+    log_info "  asyncstatus --help"
+    log_info "  async --help"
+    log_info "  ⧗ --help"
 }
 
 # Run main function
