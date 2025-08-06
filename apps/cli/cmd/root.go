@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -43,8 +42,14 @@ Examples:
   - https://github.com/asyncstatus/asyncstatus
   - https://github.com/asyncstatus/asyncstatus/issues
   - https://github.com/asyncstatus/asyncstatus/releases`,
-	Version: Version,
 	Args:    cobra.MaximumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Handle --version flag by calling our custom version handler
+		if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
+			handleVersion()
+			os.Exit(0)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// If no subcommand is provided but there's an argument,
 		// treat it as a "done" status update
@@ -73,13 +78,7 @@ func Execute() {
 }
 
 func init() {
-	// Set custom version template
-	versionTemplate := fmt.Sprintf(`{{printf "%%s version %%s\n" .Name .Version}}Build time: %s
-Git commit: %s
-`, BuildTime, GitCommit)
-	rootCmd.SetVersionTemplate(versionTemplate)
-	
-	// Custom version flag that shows build info
+	// Custom version flag that shows build info and checks for updates
 	rootCmd.Flags().BoolP("version", "v", false, "version for asyncstatus")
 }
 

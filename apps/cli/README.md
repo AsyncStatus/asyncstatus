@@ -134,6 +134,7 @@ asyncstatus edit yesterday           # Edit yesterday's status
 asyncstatus show yesterday           # Show yesterday's status
 asyncstatus list                      # View recent updates
 asyncstatus undo                      # Remove last item
+asyncstatus upgrade                   # Check for updates and upgrade
 ```
 
 **Example daily workflow:**
@@ -186,6 +187,8 @@ $ asyncstatus show
 | `asyncstatus show [date]` | Show status for date | `asyncstatus show yesterday` |
 | `asyncstatus list [days]` | List recent updates | `asyncstatus list 7` |
 | `asyncstatus undo` | Remove last item | `asyncstatus undo` |
+| `asyncstatus upgrade` | Check for updates and upgrade | `asyncstatus upgrade` |
+| `asyncstatus version` | Show version and check for updates | `asyncstatus version` |
 | `asyncstatus login` | Login to account | `asyncstatus login` |
 | `asyncstatus logout` | Logout and clear token | `asyncstatus logout` |
 
@@ -382,6 +385,68 @@ $ asyncstatus undo
 $ asyncstatus undo
 ⧗ failed: no status update items to remove
   run: asyncstatus login first
+```
+
+#### 🔄 Upgrade Command
+
+Keep your CLI up to date with the built-in upgrade functionality:
+
+```bash
+# Check for updates and upgrade if available
+$ asyncstatus upgrade
+⧗ upgrade to v1.1.0? [y/N]: y
+⧗ upgrading to v1.1.0...
+⧗ upgraded to v1.1.0
+
+# Just check for updates without installing
+$ asyncstatus upgrade --check
+⧗ already on latest version
+
+# When newer version is available
+$ asyncstatus upgrade --check
+⧗ newer version available: v1.1.0
+
+# Force upgrade even if on latest version
+$ asyncstatus upgrade --force
+⧗ upgrading to v1.1.0...
+⧗ upgraded to v1.1.0
+```
+
+**How it works:**
+- ✅ Checks GitHub releases for the latest version
+- ✅ Compares with your current version
+- ✅ Downloads and runs the install script automatically
+- ✅ Preserves your configuration and login state
+- ✅ Verifies the upgrade was successful
+- ✅ Works with all installation methods (user directory, system-wide, etc.)
+
+#### 📋 Version Command
+
+Shows version info and automatically checks for updates:
+
+```bash
+# When update is available
+$ asyncstatus version
+asyncstatus version v1.0.0
+Build time: 2024-01-15T10:30:00Z
+Git commit: abc1234
+
+Checking for updates... done
+→ Newer version available: v1.1.0
+  Run 'asyncstatus upgrade' to update
+
+# When on latest version
+$ asyncstatus version
+asyncstatus version v1.1.0
+Build time: 2024-01-16T14:20:00Z
+Git commit: def5678
+
+Checking for updates... done
+✓ You're running the latest version
+
+# Works with --version and -v flags
+$ asyncstatus --version
+$ asyncstatus -v
 ```
 
 #### 🔧 Editor Configuration
