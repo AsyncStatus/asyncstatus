@@ -501,12 +501,22 @@ export const editCliStatusUpdateHandler = typedHandler<
           { type: "notesHeading" },
           {
             type: "paragraph",
-            content: (existingStatusUpdate?.editorJson as any)?.content?.[3]?.content ?? [],
+            content:
+              notes === null
+                ? []
+                : notes === undefined
+                  ? ((existingStatusUpdate?.editorJson as any)?.content?.[3]?.content ?? [])
+                  : [{ type: "text", text: notes }],
           },
           { type: "moodHeading" },
           {
             type: "paragraph",
-            content: (existingStatusUpdate?.editorJson as any)?.content?.[5]?.content ?? [],
+            content:
+              mood === null
+                ? []
+                : mood === undefined
+                  ? ((existingStatusUpdate?.editorJson as any)?.content?.[5]?.content ?? [])
+                  : [{ type: "text", text: mood }],
           },
         ],
       };
