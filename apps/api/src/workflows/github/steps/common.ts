@@ -12,6 +12,7 @@ export function createReportStatusFn({ db, integrationId }: WithSafeSyncStatusPa
     await db
       .update(schema.githubIntegration)
       .set({
+        syncId: null,
         syncUpdatedAt: new Date(),
         syncError: null,
         syncErrorAt: null,
@@ -22,6 +23,7 @@ export function createReportStatusFn({ db, integrationId }: WithSafeSyncStatusPa
       await db
         .update(schema.githubIntegration)
         .set({
+          syncId: null,
           syncUpdatedAt: new Date(),
           syncError: null,
           syncErrorAt: null,
@@ -31,6 +33,8 @@ export function createReportStatusFn({ db, integrationId }: WithSafeSyncStatusPa
       await db
         .update(schema.githubIntegration)
         .set({
+          syncId: null,
+          syncUpdatedAt: new Date(),
           syncError: error instanceof Error ? error.message : "Unknown error",
           syncErrorAt: new Date(),
         })

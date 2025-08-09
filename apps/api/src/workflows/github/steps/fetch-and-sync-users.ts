@@ -13,10 +13,58 @@ type FetchAndSyncUsersParams = {
 
 export async function fetchAndSyncUsers({ octokit, db, integrationId }: FetchAndSyncUsersParams) {
   const orgs = await db
-    .selectDistinct({ owner: schema.githubRepository.owner })
+    .selectDistinct({ owner: schema.githubRepository.owner, repo: schema.githubRepository.name })
     .from(schema.githubRepository)
     .where(eq(schema.githubRepository.integrationId, integrationId))
     .orderBy(asc(schema.githubRepository.createdAt));
+
+  for (const { owner: org, repo } of orgs) {
+    for await (const contributors of octokit.paginate.iterator(
+      "GET /repos/{owner}/{repo}/contributors",
+      {
+        owner: org,
+        repo,
+        per_page: 100,
+      },
+    )) {
+      const batchUpserts = contributors.data
+        .map((user) => {
+          if (!user.id || user.type !== "User") {
+            return;
+          }
+
+          return db
+            .insert(schema.githubUser)
+            .values({
+              id: nanoid(),
+              integrationId,
+              githubId: user.id.toString(),
+              login: user.login,
+              avatarUrl: user.avatar_url,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              htmlUrl: user.url,
+              email: user.email,
+            } as any)
+            .onConflictDoUpdate({
+              target: schema.githubUser.githubId,
+              setWhere: eq(schema.githubUser.integrationId, integrationId),
+              set: {
+                login: user.login,
+                avatarUrl: user.avatar_url,
+                updatedAt: new Date(),
+                htmlUrl: user.url,
+                email: user.email,
+              },
+            });
+        })
+        .filter((x) => x !== undefined);
+
+      if (isTuple(batchUpserts)) {
+        await db.batch(batchUpserts);
+      }
+    }
+  }
 
   for (const { owner: org } of orgs) {
     for await (const member of octokit.paginate.iterator("GET /orgs/{org}/members", {

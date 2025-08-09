@@ -14,6 +14,12 @@ export const getGithubIntegrationContract = typedContract(
   GithubIntegration.nullable(),
 );
 
+export const resyncGithubIntegrationContract = typedContract(
+  "post /organizations/:idOrSlug/integrations/github/resync",
+  z.strictObject({ idOrSlug: z.string().min(1) }),
+  z.strictObject({ success: z.boolean() }),
+);
+
 export const listGithubRepositoriesContract = typedContract(
   "get /organizations/:idOrSlug/integrations/github/repositories",
   z.strictObject({ idOrSlug: z.string().min(1) }),

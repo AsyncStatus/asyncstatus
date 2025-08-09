@@ -16,6 +16,7 @@ import {
   getGithubIntegrationContract,
   listGithubRepositoriesContract,
   listGithubUsersContract,
+  resyncGithubIntegrationContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
   getMemberContract,
@@ -169,6 +170,17 @@ function RouteComponent() {
 
   const githubIntegrationQuery = useQuery(
     typedQueryOptions(getGithubIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
+  const resyncGithubIntegrationMutation = useMutation(
+    typedMutationOptions(resyncGithubIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getGithubIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
   );
   const slackIntegrationQuery = useQuery(
     typedQueryOptions(getSlackIntegrationContract, { idOrSlug: params.organizationSlug }),
@@ -365,7 +377,7 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Users</h4>
+              <h4 className="font-medium">Users ({githubUsers.data?.length})</h4>
               {githubUsers.data?.length > 0 && (
                 <div className="text-sm text-muted-foreground space-y-2">
                   {githubUsers.data.map((user) => {
@@ -435,7 +447,7 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Repositories</h4>
+              <h4 className="font-medium">Repositories ({githubRepositories.data?.length})</h4>
               {githubRepositories.data?.length > 0 && (
                 <div className="text-sm text-muted-foreground">
                   {githubRepositories.data.map((repository) => (
@@ -449,6 +461,18 @@ function RouteComponent() {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resyncGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+                }}
+              >
+                Resync users and repositories
+              </Button>
             </div>
           </div>
         ),
@@ -543,7 +567,7 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Users</h4>
+              <h4 className="font-medium">Users ({slackUsers.data.length})</h4>
               {slackUsers.data.length > 0 && (
                 <div className="text-sm text-muted-foreground space-y-2">
                   {slackUsers.data.map((user) => {
@@ -617,7 +641,7 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Channels</h4>
+              <h4 className="font-medium">Channels ({slackChannels.data?.length})</h4>
               {slackChannels.data?.length > 0 && (
                 <div className="text-sm text-muted-foreground">
                   {slackChannels.data.map((channel) => (
@@ -744,9 +768,9 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Users</h4>
+              <h4 className="font-medium">Users ({discordUsers.data?.length})</h4>
               {discordUsers.data && discordUsers.data.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-2">
+                <div className="text-sm text-muted-foreground space-y-2 overflow-y-auto max-h-[100px]">
                   {discordUsers.data.map((user) => {
                     const member = organizationMembers.data?.members.find(
                       (member) => member.discordId === user.discordUserId,
@@ -815,9 +839,9 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Servers</h4>
+              <h4 className="font-medium">Servers ({discordServers.data?.length})</h4>
               {discordServers.data && discordServers.data.length > 0 && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground overflow-y-auto max-h-[100px]">
                   {discordServers.data.map((server) => (
                     <div key={server.id} className="flex items-center gap-2">
                       <span>{server.name}</span>
@@ -837,9 +861,9 @@ function RouteComponent() {
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Channels</h4>
+              <h4 className="font-medium">Channels ({discordChannels.data?.length})</h4>
               {discordChannels.data && discordChannels.data.length > 0 && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground overflow-y-auto max-h-[100px]">
                   {discordChannels.data.map((channel) => (
                     <div key={channel.id} className="flex items-center gap-2">
                       <span>
@@ -1101,6 +1125,14 @@ function RouteComponent() {
           </Button>
         </Alert>
       )}
+
+      <Button
+        onClick={() =>
+          resyncGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug })
+        }
+      >
+        Resync GitHub
+      </Button>
 
       <div className="flex items-center gap-2 py-4">
         <Select

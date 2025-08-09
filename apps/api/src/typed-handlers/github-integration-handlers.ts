@@ -9,6 +9,7 @@ import {
   githubIntegrationCallbackContract,
   listGithubRepositoriesContract,
   listGithubUsersContract,
+  resyncGithubIntegrationContract,
 } from "./github-integration-contracts";
 import { requiredOrganization, requiredSession } from "./middleware";
 
@@ -88,6 +89,41 @@ export const githubIntegrationCallbackHandler = typedHandler<
   }
 });
 
+export const resyncGithubIntegrationHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof resyncGithubIntegrationContract
+>(
+  resyncGithubIntegrationContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, workflow }) => {
+    const integration = await db.query.githubIntegration.findFirst({
+      where: eq(schema.githubIntegration.organizationId, organization.id),
+    });
+    if (!integration) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "GitHub integration not found",
+      });
+    }
+    if (integration.syncId) {
+      throw new TypedHandlersError({
+        code: "CONFLICT",
+        message: "GitHub integration is already being synced",
+      });
+    }
+
+    const workflowInstance = await workflow.syncGithub.create({
+      params: { integrationId: integration.id },
+    });
+    await db
+      .update(schema.githubIntegration)
+      .set({ syncId: workflowInstance.id })
+      .where(eq(schema.githubIntegration.id, integration.id));
+
+    return { success: true };
+  },
+);
 export const getGithubIntegrationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof getGithubIntegrationContract

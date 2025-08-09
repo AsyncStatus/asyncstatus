@@ -52,6 +52,7 @@ import {
   githubIntegrationCallbackHandler,
   listGithubRepositoriesHandler,
   listGithubUsersHandler,
+  resyncGithubIntegrationHandler,
 } from "./typed-handlers/github-integration-handlers";
 import {
   acceptInvitationHandler,
@@ -373,6 +374,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listGithubRepositoriesHandler,
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
+    resyncGithubIntegrationHandler,
     slackIntegrationCallbackHandler,
     getSlackIntegrationHandler,
     listSlackChannelsHandler,
