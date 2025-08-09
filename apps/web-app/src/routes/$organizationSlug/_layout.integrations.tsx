@@ -1126,14 +1126,6 @@ function RouteComponent() {
         </Alert>
       )}
 
-      <Button
-        onClick={() =>
-          resyncGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug })
-        }
-      >
-        Resync GitHub
-      </Button>
-
       <div className="flex items-center gap-2 py-4">
         <Select
           value={statusFilter}
