@@ -183,11 +183,19 @@ function StatusUpdateFormUnmemoized({
   );
 
   const save = useCallback(
-    (values: typeof updateStatusUpdateContract.$infer.input) => {
+    (values: typeof updateStatusUpdateContract.$infer.input, navigateToHome = false) => {
       if (updateStatusUpdate.isPending || generateStatusUpdate.isPending) {
         return;
       }
-      updateStatusUpdate.mutate(values);
+      updateStatusUpdate.mutateAsync(values).then(() => {
+        if (navigateToHome) {
+          navigate({
+            to: "/$organizationSlug/status-updates",
+            params: { organizationSlug },
+            replace: true,
+          });
+        }
+      });
     },
     [updateStatusUpdate.isPending, generateStatusUpdate.isPending],
   );
@@ -400,7 +408,7 @@ function StatusUpdateFormUnmemoized({
               disabled={generateStatusUpdate.isPending || updateStatusUpdate.isPending}
               onClick={() => {
                 form.setValue("isDraft", false);
-                form.handleSubmit((values) => save(values))();
+                form.handleSubmit((values) => save(values, true))();
               }}
             >
               <BookCheck className="size-4" />
