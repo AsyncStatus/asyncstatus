@@ -3,22 +3,22 @@ import { generateText } from "ai";
 import type * as schema from "../../../db";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
-import { getDiscordChannelTool } from "../tools/get-discord-channel-tool";
-import { getDiscordEventDetailTool } from "../tools/get-discord-event-detail-tool";
-import { getDiscordIntegrationTool } from "../tools/get-discord-integration-tool";
-import { getDiscordServerTool } from "../tools/get-discord-server-tool";
-import { getDiscordUserTool } from "../tools/get-discord-user-tool";
-import { getExistingStatusUpdateItemsTool } from "../tools/get-existing-status-update-items-tool";
-import { getGithubEventDetailTool } from "../tools/get-github-event-detail-tool";
-import { getGithubRepositoryTool } from "../tools/get-github-repository-tool";
-import { getGithubUserTool } from "../tools/get-github-user-tool";
-import { getMemberDiscordEventsTool } from "../tools/get-member-discord-events-tool";
-import { getMemberGithubEventsTool } from "../tools/get-member-github-events-tool";
-import { getMemberSlackEventsTool } from "../tools/get-member-slack-events-tool";
-import { getSlackChannelTool } from "../tools/get-slack-channel-tool";
-import { getSlackEventDetailTool } from "../tools/get-slack-event-detail-tool";
-import { getSlackIntegrationTool } from "../tools/get-slack-integration-tool";
-import { getSlackUserTool } from "../tools/get-slack-user-tool";
+import { getDiscordChannelTool } from "../../tools/get-discord-channel-tool";
+import { getDiscordEventDetailTool } from "../../tools/get-discord-event-detail-tool";
+import { getDiscordIntegrationTool } from "../../tools/get-discord-integration-tool";
+import { getDiscordServerTool } from "../../tools/get-discord-server-tool";
+import { getDiscordUserTool } from "../../tools/get-discord-user-tool";
+import { getExistingStatusUpdateItemsTool } from "../../tools/get-existing-status-update-items-tool";
+import { getGithubEventDetailTool } from "../../tools/get-github-event-detail-tool";
+import { getGithubRepositoryTool } from "../../tools/get-github-repository-tool";
+import { getGithubUserTool } from "../../tools/get-github-user-tool";
+import { getMemberDiscordEventsTool } from "../../tools/get-member-discord-events-tool";
+import { getMemberGithubEventsTool } from "../../tools/get-member-github-events-tool";
+import { getMemberSlackEventsTool } from "../../tools/get-member-slack-events-tool";
+import { getSlackChannelTool } from "../../tools/get-slack-channel-tool";
+import { getSlackEventDetailTool } from "../../tools/get-slack-event-detail-tool";
+import { getSlackIntegrationTool } from "../../tools/get-slack-integration-tool";
+import { getSlackUserTool } from "../../tools/get-slack-user-tool";
 import { postProcess } from "./post-process";
 import { systemPrompt } from "./system-prompt";
 
@@ -45,7 +45,7 @@ export async function generateStatusUpdate({
   effectiveFrom,
   effectiveTo,
 }: GenerateStatusUpdateOptions) {
-  const model = "openai/gpt-4.1-mini";
+  const model = "openai/gpt-5-mini";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),

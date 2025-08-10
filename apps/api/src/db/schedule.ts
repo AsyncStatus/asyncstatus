@@ -1,10 +1,43 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
+import { DiscordChannel } from "./discord-channel";
+import { DiscordIntegration } from "./discord-integration";
+import { GithubIntegration } from "./github-integration";
 import { Member, member } from "./member";
-import { organization } from "./organization";
+import { Organization, organization } from "./organization";
 import { SlackChannel } from "./slack-channel";
+import { SlackIntegration } from "./slack-integration";
 import { Team } from "./team";
+
+const ScheduleConfigDeliveryMethod = z
+  .discriminatedUnion("type", [
+    z.strictObject({
+      type: z.literal("organization"),
+      value: Organization.shape.slug, // everyone's email
+    }),
+    z.strictObject({
+      type: z.literal("member"),
+      value: Member.shape.id, // member email
+    }),
+    z.strictObject({
+      type: z.literal("team"),
+      value: Team.shape.id, // every team member's email
+    }),
+    z.strictObject({
+      type: z.literal("customEmail"),
+      value: z.string(), // custom email
+    }),
+    z.strictObject({
+      type: z.literal("slack"),
+      value: SlackChannel.shape.channelId, // slack channel
+    }),
+    z.strictObject({
+      type: z.literal("discord"),
+      value: DiscordChannel.shape.channelId, // discord channel
+    }),
+  ])
+  .or(z.undefined());
 
 export const ScheduleConfigRemindToPostUpdates = z.strictObject({
   name: z.literal("remindToPostUpdates"),
@@ -13,15 +46,7 @@ export const ScheduleConfigRemindToPostUpdates = z.strictObject({
   recurrence: z.enum(["daily", "weekly", "monthly"]).default("daily"),
   dayOfWeek: z.number().min(0).max(6).optional(), // 0-6 for weekly (0 = Monday)
   dayOfMonth: z.number().min(1).max(28).optional(), // 1-28 for monthly
-  deliverToEveryone: z.boolean().default(false),
-  deliveryMethods: z.array(
-    z
-      .strictObject({
-        type: z.enum(["member", "slack", "team"]),
-        value: Member.shape.id.or(SlackChannel.shape.channelId).or(Team.shape.id),
-      })
-      .or(z.undefined()),
-  ),
+  deliveryMethods: z.array(ScheduleConfigDeliveryMethod),
 });
 export type ScheduleConfigRemindToPostUpdates = z.infer<typeof ScheduleConfigRemindToPostUpdates>;
 
@@ -32,10 +57,46 @@ export const ScheduleConfigGenerateUpdates = z.strictObject({
   recurrence: z.enum(["daily", "weekly", "monthly"]).default("daily"),
   dayOfWeek: z.number().min(0).max(6).optional(), // 0-6 for weekly (0 = Monday)
   dayOfMonth: z.number().min(1).max(28).optional(), // 1-28 for monthly
-  generateForEveryMember: z.boolean().default(false),
   generateFor: z.array(
     z
-      .strictObject({ type: z.enum(["member", "team"]), value: Member.shape.id.or(Team.shape.id) })
+      .discriminatedUnion("type", [
+        z.strictObject({
+          type: z.literal("organization"),
+          value: Organization.shape.slug, // everyone
+          usingActivityFrom: z
+            .enum(["anyIntegration", "slack", "github", "discord"])
+            .array()
+            .default(["anyIntegration"]),
+        }),
+        z.strictObject({
+          type: z.literal("member"),
+          value: Member.shape.id, // member
+          usingActivityFrom: z
+            .enum(["anyIntegration", "slack", "github", "discord"])
+            .array()
+            .default(["anyIntegration"]),
+        }),
+        z.strictObject({
+          type: z.literal("team"),
+          value: Team.shape.id, // every team member
+          usingActivityFrom: z
+            .enum(["anyIntegration", "slack", "github", "discord"])
+            .array()
+            .default(["anyIntegration"]),
+        }),
+        z.strictObject({
+          type: z.literal("slack"),
+          value: SlackIntegration.shape.id, // any slack activity
+        }),
+        z.strictObject({
+          type: z.literal("github"),
+          value: GithubIntegration.shape.id, // any github activity
+        }),
+        z.strictObject({
+          type: z.literal("discord"),
+          value: DiscordIntegration.shape.id, // any discord activity
+        }),
+      ])
       .or(z.undefined()),
   ),
 });
@@ -48,15 +109,7 @@ export const ScheduleConfigSendSummaries = z.strictObject({
   recurrence: z.enum(["daily", "weekly", "monthly"]).default("daily"),
   dayOfWeek: z.number().min(0).max(6).optional(), // 0-6 for weekly (0 = Monday)
   dayOfMonth: z.number().min(1).max(28).optional(), // 1-28 for monthly
-  deliverToEveryone: z.boolean().default(false),
-  deliveryMethods: z.array(
-    z
-      .strictObject({
-        type: z.enum(["member", "slack", "team"]),
-        value: Member.shape.id.or(SlackChannel.shape.channelId).or(Team.shape.id),
-      })
-      .or(z.undefined()),
-  ),
+  deliveryMethods: z.array(ScheduleConfigDeliveryMethod),
 });
 export type ScheduleConfigSendSummaries = z.infer<typeof ScheduleConfigSendSummaries>;
 

@@ -75,23 +75,11 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <Link
-            to={"/$organizationSlug/schedules"}
+            to={"/$organizationSlug/automations"}
             params={{ organizationSlug: props.organizationSlug }}
           >
             <CalendarDays />
-            <span className="pt-px">Schedules</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <Link
-            to={"/$organizationSlug/users"}
-            params={{ organizationSlug: props.organizationSlug }}
-          >
-            <Users />
-            <span className="pt-px">Users</span>
+            <span className="pt-px">Automations</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -104,6 +92,18 @@ function AppSidebarLinks(props: { organizationSlug: string }) {
           >
             <Plug />
             <span className="pt-px">Integrations</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link
+            to={"/$organizationSlug/users"}
+            params={{ organizationSlug: props.organizationSlug }}
+          >
+            <Users />
+            <span className="pt-px">Users</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

@@ -25,7 +25,7 @@ import { UpdateScheduleForm } from "@/components/update-schedule-form/update-sch
 import { ensureValidOrganization } from "@/routes/-lib/common";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
-export const Route = createFileRoute("/$organizationSlug/_layout/schedules/$scheduleId")({
+export const Route = createFileRoute("/$organizationSlug/_layout/automations/$scheduleId")({
   component: RouteComponent,
   beforeLoad: async ({ params: { organizationSlug }, context: { queryClient } }) => {
     await ensureValidOrganization(queryClient, organizationSlug);
@@ -85,7 +85,7 @@ function RouteComponent() {
             return old.filter((schedule) => schedule.id !== scheduleId);
           },
         );
-        navigate({ to: "/$organizationSlug/schedules" });
+        navigate({ to: "/$organizationSlug/automations" });
         queryClient.invalidateQueries(
           typedQueryOptions(getScheduleContract, { idOrSlug: organizationSlug, scheduleId }),
         );
@@ -103,8 +103,8 @@ function RouteComponent() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/$organizationSlug/schedules" params={{ organizationSlug }}>
-                      Schedules
+                    <Link to="/$organizationSlug/automations" params={{ organizationSlug }}>
+                      Automations
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -112,7 +112,7 @@ function RouteComponent() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link
-                      to="/$organizationSlug/schedules/$scheduleId"
+                      to="/$organizationSlug/automations/$scheduleId"
                       params={{ organizationSlug, scheduleId }}
                     >
                       {schedule.data?.config.name === "generateUpdates"
