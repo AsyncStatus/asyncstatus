@@ -118,8 +118,6 @@ function RouteComponent() {
         <HeroTextarea />
 
         <div className="flex flex-col gap-2 mt-6">
-          <p className="text-sm text-muted-foreground">Existing automations</p>
-
           {schedules.data?.map((schedule) => (
             <div
               key={schedule.id}
