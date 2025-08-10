@@ -1,8 +1,8 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
+import * as schema from "../../db";
+import type { Db } from "../../db/db";
 
 export function getDiscordIntegrationTool(db: Db) {
   return tool({
@@ -18,11 +18,8 @@ export function getDiscordIntegrationTool(db: Db) {
           id: schema.discordIntegration.id,
           organizationId: schema.discordIntegration.organizationId,
           botUserId: schema.discordIntegration.botUserId,
-          teamId: schema.discordIntegration.teamId,
           gatewayDurableObjectId: schema.discordIntegration.gatewayDurableObjectId,
           syncStartedAt: schema.discordIntegration.syncStartedAt,
-          syncCompletedAt: schema.discordIntegration.syncCompletedAt,
-          lastSyncedAt: schema.discordIntegration.lastSyncedAt,
           createdAt: schema.discordIntegration.createdAt,
         })
         .from(schema.discordIntegration)

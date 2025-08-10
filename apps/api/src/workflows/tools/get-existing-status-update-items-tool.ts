@@ -1,8 +1,8 @@
 import { tool } from "ai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
+import * as schema from "../../db";
+import type { Db } from "../../db/db";
 
 export function getExistingStatusUpdateItemsTool(db: Db) {
   return tool({

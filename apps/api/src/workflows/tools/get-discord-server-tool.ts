@@ -1,8 +1,8 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
+import * as schema from "../../db";
+import type { Db } from "../../db/db";
 
 export function getDiscordServerTool(db: Db) {
   return tool({
@@ -17,12 +17,8 @@ export function getDiscordServerTool(db: Db) {
           guildId: schema.discordServer.guildId,
           name: schema.discordServer.name,
           description: schema.discordServer.description,
-          iconUrl: schema.discordServer.iconUrl,
+          icon: schema.discordServer.icon,
           memberCount: schema.discordServer.memberCount,
-          verificationLevel: schema.discordServer.verificationLevel,
-          defaultMessageNotifications: schema.discordServer.defaultMessageNotifications,
-          explicitContentFilter: schema.discordServer.explicitContentFilter,
-          features: schema.discordServer.features,
           premiumTier: schema.discordServer.premiumTier,
         })
         .from(schema.discordServer)

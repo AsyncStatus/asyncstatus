@@ -1,8 +1,8 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
+import * as schema from "../../db";
+import type { Db } from "../../db/db";
 
 export function getDiscordUserTool(db: Db) {
   return tool({
@@ -19,10 +19,10 @@ export function getDiscordUserTool(db: Db) {
           globalName: schema.discordUser.globalName,
           discriminator: schema.discordUser.discriminator,
           email: schema.discordUser.email,
-          avatarUrl: schema.discordUser.avatarUrl,
+          avatarHash: schema.discordUser.avatarHash,
           isBot: schema.discordUser.isBot,
           isSystem: schema.discordUser.isSystem,
-          isVerified: schema.discordUser.isVerified,
+          verified: schema.discordUser.verified,
         })
         .from(schema.discordUser)
         .where(eq(schema.discordUser.discordUserId, params.discordUserId))

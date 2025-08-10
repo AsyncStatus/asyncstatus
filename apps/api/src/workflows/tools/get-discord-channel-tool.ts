@@ -1,8 +1,8 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
+import * as schema from "../../db";
+import type { Db } from "../../db/db";
 
 export function getDiscordChannelTool(db: Db) {
   return tool({
@@ -22,8 +22,6 @@ export function getDiscordChannelTool(db: Db) {
           isArchived: schema.discordChannel.isArchived,
           parentId: schema.discordChannel.parentId,
           position: schema.discordChannel.position,
-          slowModeDelay: schema.discordChannel.slowModeDelay,
-          userLimit: schema.discordChannel.userLimit,
         })
         .from(schema.discordChannel)
         .where(eq(schema.discordChannel.channelId, params.channelId))
