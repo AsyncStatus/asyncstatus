@@ -5,10 +5,12 @@ import { and, asc, eq } from "drizzle-orm";
 import * as schema from "../db";
 import { calculateNextScheduleExecution } from "../lib/calculate-next-schedule-execution";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { generateSchedule } from "../workflows/schedules/generate-schedule/generate-schedule";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createScheduleContract,
   deleteScheduleContract,
+  generateScheduleContract,
   getScheduleContract,
   listSchedulesContract,
   updateScheduleContract,
@@ -302,5 +304,44 @@ export const deleteScheduleHandler = typedHandler<
     }
 
     return { success: true };
+  },
+);
+
+export const generateScheduleHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof generateScheduleContract
+>(
+  generateScheduleContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, openRouterProvider, member }) => {
+    const text = await generateSchedule({
+      db,
+      openRouterProvider,
+      organizationId: organization.id,
+      createdByMemberId: member.id,
+      naturalLanguageRequest: input.naturalLanguageRequest,
+    });
+
+    // Try to extract IDs from tool response if the tool returned a JSON-like line
+    // Our create-organization-schedule tool returns { scheduleId, scheduleRunId }
+    let scheduleId: string | null = null;
+    let scheduleRunId: string | null = null;
+    try {
+      const match = text.match(
+        /\{\s*"scheduleId"\s*:\s*"([^"]*)"\s*,\s*"scheduleRunId"\s*:\s*"?([^"}]*)"?\s*\}/,
+      );
+      if (match) {
+        scheduleId = match[1] || null;
+        scheduleRunId = match[2] || null;
+      }
+    } catch {}
+
+    return {
+      success: true,
+      scheduleId,
+      scheduleRunId,
+      message: text,
+    };
   },
 );

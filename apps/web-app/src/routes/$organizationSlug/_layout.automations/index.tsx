@@ -2,8 +2,7 @@ import { listDiscordChannelsContract } from "@asyncstatus/api/typed-handlers/dis
 import { listGithubRepositoriesContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import {
-  createScheduleContract,
-  getScheduleContract,
+  generateScheduleContract,
   listSchedulesContract,
   updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
@@ -19,7 +18,7 @@ import {
 import { Button } from "@asyncstatus/ui/components/button";
 import { SidebarTrigger, useSidebar } from "@asyncstatus/ui/components/sidebar";
 import { Textarea } from "@asyncstatus/ui/components/textarea";
-import { ArrowUpIcon, PencilIcon, PlusIcon } from "@asyncstatus/ui/icons";
+import { ArrowUpIcon, PencilIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -43,7 +42,6 @@ export const Route = createFileRoute("/$organizationSlug/_layout/automations/")(
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const schedules = useQuery(
     typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug }),
@@ -51,44 +49,11 @@ function RouteComponent() {
   const session = useQuery(sessionBetterAuthQueryOptions());
   const updateSchedule = useMutation(
     typedMutationOptions(updateScheduleContract, {
-      onSuccess: (data) => {
-        queryClient.setQueryData(
-          typedQueryOptions(getScheduleContract, {
-            idOrSlug: organizationSlug,
-            scheduleId: data.id,
-          }).queryKey,
-          data,
-        );
-        queryClient.setQueryData(
-          typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug }).queryKey,
-          (oldData) => {
-            if (!oldData) return oldData;
-            return oldData.map((schedule) => (schedule.id === data.id ? data : schedule));
-          },
-        );
-      },
-    }),
-  );
-  const createSchedule = useMutation(
-    typedMutationOptions(createScheduleContract, {
-      onSuccess: async (data) => {
-        queryClient.setQueryData(
-          typedQueryOptions(getScheduleContract, {
-            idOrSlug: organizationSlug,
-            scheduleId: data.id,
-          }).queryKey,
-          data,
-        );
-        await navigate({
-          to: "/$organizationSlug/automations/$scheduleId",
-          params: { organizationSlug, scheduleId: data.id },
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug })
+            .queryKey,
         });
-        queryClient.setQueryData(
-          typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug }).queryKey,
-          (oldData) => {
-            return [...(oldData ?? []), data];
-          },
-        );
       },
     }),
   );
@@ -117,7 +82,7 @@ function RouteComponent() {
       <div className="py-4">
         <HeroTextarea />
 
-        <div className="flex flex-col gap-2 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
           {schedules.data?.map((schedule) => (
             <div
               key={schedule.id}
@@ -194,6 +159,7 @@ function RouteComponent() {
 
 function HeroTextarea() {
   const { organizationSlug } = Route.useParams();
+  const navigate = Route.useNavigate();
   const sidebar = useSidebar();
   const members = useQuery(typedQueryOptions(listMembersContract, { idOrSlug: organizationSlug }));
   const teams = useQuery(typedQueryOptions(listTeamsContract, { idOrSlug: organizationSlug }));
@@ -207,6 +173,25 @@ function HeroTextarea() {
     typedQueryOptions(listGithubRepositoriesContract, { idOrSlug: organizationSlug }),
   );
   const [prompt, setPrompt] = useState("");
+  const queryClient = useQueryClient();
+  const generateSchedule = useMutation(
+    typedMutationOptions(generateScheduleContract, {
+      onSuccess: async (data) => {
+        // Navigate to the schedule if the backend returned an id
+        if (data.scheduleId) {
+          await navigate({
+            to: "/$organizationSlug/automations/$scheduleId",
+            params: { organizationSlug, scheduleId: data.scheduleId },
+          });
+        }
+        // Refresh schedules list
+        await queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug })
+            .queryKey,
+        });
+      },
+    }),
+  );
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -227,16 +212,28 @@ function HeroTextarea() {
   const firstRepo = github.data?.[0]?.name ?? "our-repo";
 
   const examplePrompts = [
+    // Simple
     `Generate updates for everyone daily at 8:00pm`,
-    `Generate updates for ${firstTeamName} daily at 5pm using Slack activity`,
-    `Generate updates for ${firstMemberName} every weekday at 6pm`,
+    `Remind everyone to post updates daily at 4pm`,
+    `Generate updates for ${firstMemberName} daily at 5pm`,
+    `Generate updates for ${firstTeamName} every weekday at 6pm`,
+    `Send weekly summaries to everyone every Monday at 8am`,
+
+    // Channel and repo based
     `Send a weekly GitHub summary for ${firstRepo} to ${firstSlack} every Monday at 9am`,
     `Send a daily Discord summary to ${firstDiscord} at 10am`,
     `Send a monthly summary to leadership@company.com on the 1st at 9am`,
-    `Remind everyone to post updates daily at 4pm`,
-    `Remind ${firstTeamName} to post updates every Friday at 4:30pm`,
-    `Send weekly summaries to everyone every Monday at 8am`,
+
+    // Using activity sources
     `Generate updates for ${firstTeamName} every Tuesday at 3pm using any integration`,
+    `Generate updates for ${firstTeamName} at 5pm using Slack activity`,
+    `Generate updates for ${firstMemberName} daily at 6pm using GitHub and Slack activity`,
+    `Generate updates for everyone weekdays at 6pm using activity from ${firstSlack} and ${firstDiscord}`,
+
+    // Advanced scheduling and targeting
+    `Send weekly summaries for any GitHub activity to ${firstSlack} every Friday at 4:30pm`,
+    `Generate updates for everyone daily at 9am in Europe/London timezone`,
+    `Send monthly summaries for ${firstRepo} and any Slack activity to ${firstDiscord} on the 15th at 10am`,
   ];
 
   return (
@@ -258,7 +255,7 @@ function HeroTextarea() {
 
       <div className="text-center space-y-4 mb-6 sm:mb-6 z-10 pt-6">
         <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-          Which meeting are we killing first?
+          What do you want to automate?
         </h3>
         <p className="text-muted-foreground text-base sm:text-lg text-balance max-w-prose mx-auto">
           Tell AsyncStatus what to run and we'll make the updates, summaries, and pings happen. No
@@ -278,6 +275,13 @@ function HeroTextarea() {
             size="icon"
             className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 dark:bg-black/80"
             variant="outline"
+            disabled={!prompt || generateSchedule.isPending}
+            onClick={() =>
+              generateSchedule.mutate({
+                idOrSlug: organizationSlug,
+                naturalLanguageRequest: prompt,
+              })
+            }
           >
             <ArrowUpIcon className="size-4" />
           </Button>

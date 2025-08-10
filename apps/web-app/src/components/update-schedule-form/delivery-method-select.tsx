@@ -1,8 +1,10 @@
+import { listDiscordChannelsContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
+import type { ScheduleConfigDeliveryMethod } from "@asyncstatus/api/typed-handlers/schedule";
 import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
-import { SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Button } from "@asyncstatus/ui/components/button";
 import {
@@ -24,11 +26,11 @@ import { FormControl } from "../form";
 
 export type DeliveryMethodSelectProps = {
   organizationSlug: string;
-  type: "everyone" | "member" | "slack" | "team" | undefined;
-  value: string | undefined;
+  type: ScheduleConfigDeliveryMethod["type"] | undefined;
+  value: ScheduleConfigDeliveryMethod["value"] | undefined;
   onSelect: (
-    type: "everyone" | "member" | "slack" | "team" | undefined,
-    value: string | undefined,
+    type: ScheduleConfigDeliveryMethod["type"] | undefined,
+    value: ScheduleConfigDeliveryMethod["value"] | undefined,
   ) => void;
 };
 
@@ -43,10 +45,12 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
   const teams = useQuery(
     typedQueryOptions(listTeamsContract, { idOrSlug: props.organizationSlug }),
   );
-
+  const discordChannels = useQuery(
+    typedQueryOptions(listDiscordChannelsContract, { idOrSlug: props.organizationSlug }),
+  );
   const selectedEveryone = useMemo(() => {
-    return props.type === "everyone" && props.value === undefined;
-  }, [props.type, props.value]);
+    return props.type === "organization" && props.value === props.organizationSlug;
+  }, [props.type, props.value, props.organizationSlug]);
 
   const selectedMember = useMemo(() => {
     return (
@@ -60,9 +64,17 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
 
   const selectedSlackChannel = useMemo(() => {
     return (
-      props.type === "slack" && slackChannels.data?.find((channel) => channel.id === props.value)
+      props.type === "slackChannel" &&
+      slackChannels.data?.find((channel) => channel.id === props.value)
     );
   }, [props.type, props.value, slackChannels.data]);
+
+  const selectedDiscordChannel = useMemo(() => {
+    return (
+      props.type === "discordChannel" &&
+      discordChannels.data?.find((channel) => channel.id === props.value)
+    );
+  }, [props.type, props.value, discordChannels.data]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -141,7 +153,7 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
             <CommandItem
               value="everyone"
               onSelect={() => {
-                props.onSelect("everyone", undefined);
+                props.onSelect("organization", props.organizationSlug);
                 setIsOpen(false);
               }}
             >
@@ -150,14 +162,14 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
               <Check
                 className={cn(
                   "ml-auto h-4 w-4",
-                  props.type === "everyone" && props.value === undefined
+                  props.type === "organization" && props.value === props.organizationSlug
                     ? "opacity-100"
                     : "opacity-0",
                 )}
               />
             </CommandItem>
 
-            <CommandGroup heading="Email">
+            <CommandGroup heading="User's email">
               {members.data?.members.map((member) => {
                 return (
                   <CommandItem
@@ -199,7 +211,7 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
               })}
             </CommandGroup>
 
-            <CommandGroup heading="Teams">
+            <CommandGroup heading="Team's email">
               {teams.data?.length === 0 && <CommandItem disabled>No teams found</CommandItem>}
 
               {teams.data?.map((team) => {
@@ -233,41 +245,73 @@ export function DeliveryMethodSelect(props: DeliveryMethodSelectProps) {
               })}
             </CommandGroup>
 
-            <CommandGroup heading="Slack channels">
-              {slackChannels.data?.length === 0 && (
-                <CommandItem disabled>No Slack channels found</CommandItem>
-              )}
+            {slackChannels.data?.length > 0 && (
+              <CommandGroup heading="Slack channels">
+                {slackChannels.data?.map((channel) => {
+                  return (
+                    <CommandItem
+                      key={channel.id}
+                      value={channel.id}
+                      onSelect={() => {
+                        if (props.type === "slackChannel" && props.value === channel.id) {
+                          props.onSelect(undefined, undefined);
+                          setIsOpen(false);
+                          return;
+                        }
 
-              {slackChannels.data?.map((channel) => {
-                return (
-                  <CommandItem
-                    key={channel.id}
-                    value={channel.id}
-                    onSelect={() => {
-                      if (props.type === "slack" && props.value === channel.id) {
-                        props.onSelect(undefined, undefined);
+                        props.onSelect("slackChannel", channel.id);
                         setIsOpen(false);
-                        return;
-                      }
+                      }}
+                    >
+                      <SiSlack className="size-4" />
+                      <span>{channel.name}</span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          props.type === "slackChannel" && props.value === channel.id
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
 
-                      props.onSelect("slack", channel.id);
-                      setIsOpen(false);
-                    }}
-                  >
-                    <SiSlack className="size-4" />
-                    <span>{channel.name}</span>
-                    <Check
-                      className={cn(
-                        "ml-auto h-4 w-4",
-                        props.type === "slack" && props.value === channel.id
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
+            {discordChannels.data?.length > 0 && (
+              <CommandGroup heading="Discord channels">
+                {discordChannels.data?.map((channel) => {
+                  return (
+                    <CommandItem
+                      key={channel.id}
+                      value={channel.id}
+                      onSelect={() => {
+                        if (props.type === "discordChannel" && props.value === channel.id) {
+                          props.onSelect(undefined, undefined);
+                          setIsOpen(false);
+                          return;
+                        }
+
+                        props.onSelect("discordChannel", channel.id);
+                        setIsOpen(false);
+                      }}
+                    >
+                      <SiDiscord className="size-4" />
+                      <span>{channel.name}</span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          props.type === "discordChannel" && props.value === channel.id
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

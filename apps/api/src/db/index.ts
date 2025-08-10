@@ -58,15 +58,26 @@ export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
   Schedule,
-  ScheduleConfig,
-  ScheduleConfigGenerateUpdates,
-  ScheduleConfigRemindToPostUpdates,
-  ScheduleConfigSendSummaries,
   ScheduleInsert,
-  ScheduleName,
   ScheduleUpdate,
   schedule,
 } from "./schedule";
+export {
+  ScheduleConfig,
+  ScheduleConfigDeliveryMethod,
+  ScheduleConfigGenerateFor,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigGenerateUpdatesV3,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigRemindToPostUpdatesV3,
+  ScheduleConfigSendSummaries,
+  ScheduleConfigSendSummariesV3,
+  ScheduleConfigSummaryFor,
+  ScheduleConfigUsingActivityFrom,
+  ScheduleConfigV3,
+  ScheduleName,
+  ScheduleNameV3,
+} from "./schedule-config-schema";
 export {
   ScheduleRun,
   ScheduleRunInsert,
@@ -144,7 +155,7 @@ import { githubIntegration } from "./github-integration";
 import { githubRepository } from "./github-repository";
 import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
-import { jwks } from "./jwks";
+// removed unused direct import of jwks
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";

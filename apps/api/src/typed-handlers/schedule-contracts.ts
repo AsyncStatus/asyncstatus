@@ -2,6 +2,18 @@ import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
 import { Member, Schedule, ScheduleInsert, ScheduleUpdate, User } from "../db";
 
+export {
+  ScheduleConfig,
+  ScheduleConfigDeliveryMethod,
+  ScheduleConfigGenerateFor,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigSendSummaries,
+  ScheduleConfigSummaryFor,
+  ScheduleConfigUsingActivityFrom,
+  ScheduleName,
+} from "../db/schedule-config-schema";
+
 export const listSchedulesContract = typedContract(
   "get /organizations/:idOrSlug/schedules",
   z.strictObject({ idOrSlug: z.string() }),
@@ -61,4 +73,18 @@ export const deleteScheduleContract = typedContract(
     scheduleId: z.string(),
   }),
   z.strictObject({ success: z.boolean() }),
+);
+
+export const generateScheduleContract = typedContract(
+  "post /organizations/:idOrSlug/schedules/generate",
+  z.strictObject({
+    idOrSlug: z.string(),
+    naturalLanguageRequest: z.string().min(1),
+  }),
+  z.strictObject({
+    success: z.boolean(),
+    scheduleId: z.string().nullable(),
+    scheduleRunId: z.string().nullable(),
+    message: z.string(),
+  }),
 );

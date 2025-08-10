@@ -77,6 +77,7 @@ import {
 import {
   createScheduleHandler,
   deleteScheduleHandler,
+  generateScheduleHandler,
   getScheduleHandler,
   listSchedulesHandler,
   updateScheduleHandler,
@@ -353,6 +354,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     createScheduleHandler,
     updateScheduleHandler,
     deleteScheduleHandler,
+    generateScheduleHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
