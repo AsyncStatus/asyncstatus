@@ -58,15 +58,26 @@ export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
   Schedule,
-  ScheduleConfig,
-  ScheduleConfigGenerateUpdates,
-  ScheduleConfigRemindToPostUpdates,
-  ScheduleConfigSendSummaries,
   ScheduleInsert,
-  ScheduleName,
   ScheduleUpdate,
   schedule,
 } from "./schedule";
+export {
+  ScheduleConfig,
+  ScheduleConfigDeliveryMethod,
+  ScheduleConfigGenerateFor,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigGenerateUpdatesV3,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigRemindToPostUpdatesV3,
+  ScheduleConfigSendSummaries,
+  ScheduleConfigSendSummariesV3,
+  ScheduleConfigSummaryFor,
+  ScheduleConfigUsingActivityFrom,
+  ScheduleConfigV3,
+  ScheduleName,
+  ScheduleNameV3,
+} from "./schedule-config-schema";
 export {
   ScheduleRun,
   ScheduleRunInsert,
@@ -114,7 +125,7 @@ export {
   StatusUpdateItemUpdate,
   statusUpdateItem,
 } from "./status-update-item";
-
+export { Summary, SummaryInsert, SummaryUpdate, summary } from "./summary";
 export { Team, TeamInsert, TeamUpdate, team } from "./team";
 export {
   TeamMembership,
@@ -144,7 +155,7 @@ import { githubIntegration } from "./github-integration";
 import { githubRepository } from "./github-repository";
 import { githubUser } from "./github-user";
 import { invitation } from "./invitation";
-import { jwks } from "./jwks";
+// removed unused direct import of jwks
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";
@@ -158,7 +169,9 @@ import { slackUser } from "./slack-user";
 import { statusGenerationJob } from "./status-generation-job";
 import { statusUpdate } from "./status-update";
 import { statusUpdateItem } from "./status-update-item";
+import { summary } from "./summary";
 import { team } from "./team";
+// imported for side effects to ensure table is included in schema
 import { teamMembership } from "./team-membership";
 import { user } from "./user";
 import { userTimezoneHistory } from "./user-timezone-history";
@@ -169,6 +182,7 @@ export const userRelations = relations(user, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
   timezoneHistory: many(userTimezoneHistory),
+  summaries: many(summary),
 }));
 
 export const userTimezoneHistoryRelations = relations(userTimezoneHistory, ({ one }) => ({
@@ -192,6 +206,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   githubIntegration: one(githubIntegration),
   slackIntegration: one(slackIntegration),
   schedules: many(schedule),
+  summaries: many(summary),
 }));
 
 export const memberRelations = relations(member, ({ one, many }) => ({
@@ -215,6 +230,7 @@ export const teamRelations = relations(team, ({ one, many }) => ({
   }),
   teamMemberships: many(teamMembership),
   statusUpdates: many(statusUpdate),
+  summaries: many(summary),
 }));
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
@@ -436,5 +452,20 @@ export const scheduleRunTaskRelations = relations(scheduleRunTask, ({ one }) => 
   scheduleRun: one(scheduleRun, {
     fields: [scheduleRunTask.scheduleRunId],
     references: [scheduleRun.id],
+  }),
+}));
+
+export const summaryRelations = relations(summary, ({ one }) => ({
+  organization: one(organization, {
+    fields: [summary.organizationId],
+    references: [organization.id],
+  }),
+  team: one(team, {
+    fields: [summary.teamId],
+    references: [team.id],
+  }),
+  user: one(user, {
+    fields: [summary.userId],
+    references: [user.id],
   }),
 }));

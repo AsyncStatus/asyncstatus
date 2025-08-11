@@ -2,7 +2,7 @@ import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
-import { getOrganizationStatusUpdatesTool } from "../tools/get-organization-status-updates-tool";
+import { getOrganizationStatusUpdatesTool } from "../../tools/get-organization-status-updates-tool";
 import { postProcess, type SummaryResult } from "./post-process";
 import { systemPrompt } from "./system-prompt";
 
@@ -27,7 +27,7 @@ export async function summarizeStatusUpdates({
   effectiveFrom,
   effectiveTo,
 }: SummarizeStatusUpdatesOptions): Promise<SummaryResult> {
-  const model = "openai/gpt-4.1-mini";
+  const model = "openai/gpt-5-mini";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),

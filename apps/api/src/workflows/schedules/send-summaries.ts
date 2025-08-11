@@ -1,6 +1,11 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { dayjs } from "@asyncstatus/dayjs";
+import { DiscordActivitySummaryEmail } from "@asyncstatus/email/organization/discord-activity-summary-email";
+import { GithubActivitySummaryEmail } from "@asyncstatus/email/organization/github-activity-summary-email";
+import { SlackActivitySummaryEmail } from "@asyncstatus/email/organization/slack-activity-summary-email";
 import { StatusUpdatesSummaryEmail } from "@asyncstatus/email/organization/status-updates-summary-email";
+import { TeamStatusUpdatesSummaryEmail } from "@asyncstatus/email/organization/team-status-updates-summary-email";
+import { UserStatusUpdatesSummaryEmail } from "@asyncstatus/email/organization/user-status-updates-summary-email";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { WebClient as SlackWebClient } from "@slack/web-api";
 import { generateId } from "better-auth";
@@ -12,7 +17,13 @@ import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 import type { HonoEnv } from "../../lib/env";
 import { getOrganizationPlan } from "../../lib/get-organization-plan";
-import { summarizeStatusUpdates } from "../status-updates/summarize-status-updates/summarize-status-updates";
+import { isTuple } from "../../lib/is-tuple";
+import { summarizeDiscordActivity } from "../summarization/summarize-discord-activity/summarize-discord-activity";
+import { summarizeGithubActivity } from "../summarization/summarize-github-activity/summarize-github-activity";
+import { summarizeOrganizationStatusUpdates } from "../summarization/summarize-organization-status-updates/summarize-organization-status-updates";
+import { summarizeSlackActivity } from "../summarization/summarize-slack-activity/summarize-slack-activity";
+import { summarizeTeamStatusUpdates } from "../summarization/summarize-team-status-updates/summarize-team-status-updates";
+import { summarizeUserStatusUpdates } from "../summarization/summarize-user-status-updates/summarize-user-status-updates";
 
 export type SendSummariesWorkflowParams = {
   scheduleRunId: string;
@@ -20,7 +31,7 @@ export type SendSummariesWorkflowParams = {
 };
 
 interface ResolvedDeliveryTarget {
-  type: "email" | "slack_channel";
+  type: "email" | "slack_channel" | "discord_channel";
   target: string; // email address or channel ID
   displayName: string; // for logging
 }
@@ -85,9 +96,9 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
       };
     });
 
-    // Step 2: Generate team summary
-    const summaryData = await step.do(
-      "generate-summary",
+    // Step 2: Generate summaries according to schedule config and save them
+    const { generatedSummaries, primarySummary } = await step.do(
+      "generate-summaries",
       {
         retries: { limit: 3, delay: 30, backoff: "exponential" },
       },
@@ -135,34 +146,278 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             throw new Error("Organization plan not found");
           }
 
-          const summary = await summarizeStatusUpdates({
-            db,
-            openRouterProvider,
-            organizationId,
-            plan: orgPlan?.plan,
-            kv: this.env.STRIPE_KV,
-            aiLimits: {
-              basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
-              startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
-              enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
-            },
-            effectiveFrom,
-            effectiveTo,
-          });
+          const scheduleConfig = initData.scheduleConfig as schema.ScheduleConfigSendSummaries;
+          const summaryFor =
+            scheduleConfig.summaryFor && scheduleConfig.summaryFor.length > 0
+              ? scheduleConfig.summaryFor
+              : ([{ type: "organization", value: initData.organizationSlug }] as any);
 
-          // Check if we have any content to summarize
-          if (!summary.generalSummary && summary.userSummaries.length === 0) {
-            throw new Error("No status updates found to summarize");
+          const generatedSummaries: Array<{
+            type:
+              | "organization_status_updates"
+              | "team_status_updates"
+              | "user_status_updates"
+              | "github_activity"
+              | "slack_activity"
+              | "discord_activity";
+            teamId?: string;
+            userId?: string;
+            content: any;
+            effectiveFrom: string;
+            effectiveTo: string;
+          }> = [];
+
+          // Preload members to map memberId -> userId for any member summaries
+          const memberIds = summaryFor
+            .filter((s: any) => s?.type === "member")
+            .map((s: any) => s.value as string);
+          const memberMap = new Map<string, { id: string; userId: string }>();
+          if (memberIds.length > 0) {
+            const members = await db.query.member.findMany({
+              where: inArray(schema.member.id, memberIds),
+            });
+            for (const m of members) {
+              if (m?.id && m?.userId) memberMap.set(m.id, { id: m.id, userId: m.userId });
+            }
           }
 
-          return {
-            ...summary,
-            effectiveFrom,
-            effectiveTo,
-            generatedAt: new Date().toISOString(),
-          };
+          for (const target of summaryFor) {
+            if (!target) continue;
+            if (target.type === "organization") {
+              const content = await summarizeOrganizationStatusUpdates({
+                db,
+                openRouterProvider,
+                organizationId,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "organization_status_updates",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (target.type === "team") {
+              const teamId = target.value as string;
+              const content = await summarizeTeamStatusUpdates({
+                db,
+                openRouterProvider,
+                organizationId,
+                teamId,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "team_status_updates",
+                teamId,
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (target.type === "member") {
+              const memberId = target.value as string;
+              const mapped = memberMap.get(memberId);
+              if (!mapped?.userId) continue;
+              const content = await summarizeUserStatusUpdates({
+                db,
+                openRouterProvider,
+                organizationId,
+                userId: mapped.userId,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "user_status_updates",
+                userId: mapped.userId,
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (target.type === "anyGithub" || target.type === "githubRepository") {
+              const repositoryIds =
+                target.type === "githubRepository" ? [target.value as string] : [];
+              const content = await summarizeGithubActivity({
+                db,
+                openRouterProvider,
+                organizationId,
+                repositoryIds,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "github_activity",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (target.type === "anySlack" || target.type === "slackChannel") {
+              const channelIds = target.type === "slackChannel" ? [target.value as string] : [];
+              const content = await summarizeSlackActivity({
+                db,
+                openRouterProvider,
+                organizationId,
+                channelIds,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "slack_activity",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (target.type === "anyDiscord" || target.type === "discordChannel") {
+              const channelIds = target.type === "discordChannel" ? [target.value as string] : [];
+              const content = await summarizeDiscordActivity({
+                db,
+                openRouterProvider,
+                organizationId,
+                channelIds,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "discord_activity",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+            }
+          }
+
+          if (generatedSummaries.length === 0) {
+            throw new Error("No summaries generated based on schedule configuration");
+          }
+
+          const nowDate = new Date();
+          const batchInserts = generatedSummaries.map((s) =>
+            db.insert(schema.summary).values({
+              id: generateId(),
+              organizationId,
+              teamId: s.teamId ?? null,
+              userId: s.userId ?? null,
+              type: s.type as any,
+              effectiveFrom: new Date(s.effectiveFrom),
+              effectiveTo: new Date(s.effectiveTo),
+              content: s.content as any,
+              createdAt: nowDate,
+              updatedAt: nowDate,
+              publishedAt: nowDate,
+            }),
+          );
+          if (isTuple(batchInserts)) {
+            await db.batch(batchInserts);
+          }
+
+          // Pick a primary summary for message delivery
+          const pickByType = (t: string) => generatedSummaries.find((s) => s.type === (t as any));
+          const primary =
+            pickByType("organization_status_updates") ||
+            pickByType("team_status_updates") ||
+            pickByType("user_status_updates") ||
+            pickByType("slack_activity") ||
+            pickByType("github_activity") ||
+            pickByType("discord_activity");
+
+          // Normalize primary summary to shape { generalSummary, userSummaries[] }
+          const primarySummary = (() => {
+            if (!primary) return null as any;
+            const c: any = primary.content;
+            if (
+              primary.type === "organization_status_updates" ||
+              primary.type === "team_status_updates"
+            ) {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: Array.isArray(c.userSummaries) ? c.userSummaries : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            if (primary.type === "user_status_updates") {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: Array.isArray(c.items)
+                  ? c.items.map((i: any) => ({ content: i.content }))
+                  : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            if (primary.type === "github_activity") {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: Array.isArray(c.repoSummaries) ? c.repoSummaries : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            if (primary.type === "slack_activity" || primary.type === "discord_activity") {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: Array.isArray(c.channelSummaries) ? c.channelSummaries : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            return { generalSummary: null, userSummaries: [], effectiveFrom, effectiveTo } as any;
+          })();
+
+          return { generatedSummaries, primarySummary };
         } catch (error) {
-          console.error("Failed to generate summary:", error);
+          console.error("Failed to generate summaries:", error);
           throw error;
         }
       },
@@ -178,10 +433,16 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
         where: eq(schema.slackIntegration.organizationId, organizationId),
       });
 
+      const discordIntegration = await db.query.discordIntegration.findFirst({
+        where: eq(schema.discordIntegration.organizationId, organizationId),
+      });
+
       // Collect all IDs first to avoid N+1 queries
       const memberIds = new Set<string>();
       const teamIds = new Set<string>();
       const slackChannelIds = new Set<string>();
+      const discordChannelIds = new Set<string>();
+      const customEmails = new Set<string>();
 
       // Analyze delivery methods and collect IDs
       for (const deliveryMethod of config.deliveryMethods || []) {
@@ -194,58 +455,73 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
           case "team":
             teamIds.add(deliveryMethod.value);
             break;
-          case "slack":
+          case "slackChannel":
             slackChannelIds.add(deliveryMethod.value);
+            break;
+          case "discordChannel":
+            discordChannelIds.add(deliveryMethod.value);
+            break;
+          case "customEmail":
+            customEmails.add(deliveryMethod.value);
             break;
         }
       }
 
       // Batch query all required data
-      const [members, teams, slackChannels, allMembersForEveryone] = await Promise.all([
-        // Get all required members
-        memberIds.size > 0
-          ? db.query.member.findMany({
-              where: inArray(schema.member.id, [...memberIds]),
-              with: { user: true },
-            })
-          : [],
+      const [members, teams, slackChannels, discordChannels, allMembersForEveryone] =
+        await Promise.all([
+          // Get all required members
+          memberIds.size > 0
+            ? db.query.member.findMany({
+                where: inArray(schema.member.id, [...memberIds]),
+                with: { user: true },
+              })
+            : [],
 
-        // Get all required teams with their memberships
-        teamIds.size > 0
-          ? db.query.team.findMany({
-              where: inArray(schema.team.id, [...teamIds]),
-              with: {
-                teamMemberships: {
-                  with: {
-                    member: {
-                      with: { user: true },
+          // Get all required teams with their memberships
+          teamIds.size > 0
+            ? db.query.team.findMany({
+                where: inArray(schema.team.id, [...teamIds]),
+                with: {
+                  teamMemberships: {
+                    with: {
+                      member: {
+                        with: { user: true },
+                      },
                     },
                   },
                 },
-              },
-            })
-          : [],
+              })
+            : [],
 
-        // Get all Slack channels
-        slackChannelIds.size > 0 && slackIntegration
-          ? db.query.slackChannel.findMany({
-              where: inArray(schema.slackChannel.id, [...slackChannelIds]),
-            })
-          : [],
+          // Get all Slack channels
+          slackChannelIds.size > 0 && slackIntegration
+            ? db.query.slackChannel.findMany({
+                where: inArray(schema.slackChannel.id, [...slackChannelIds]),
+              })
+            : [],
 
-        // Get all organization members if deliverToEveryone is true
-        config.deliverToEveryone
-          ? db.query.member.findMany({
-              where: eq(schema.member.organizationId, organizationId),
-              with: { user: true },
-            })
-          : [],
-      ]);
+          // Get all Discord channels
+          discordChannelIds.size > 0 && discordIntegration
+            ? db.query.discordChannel.findMany({
+                where: inArray(schema.discordChannel.id, [...discordChannelIds]),
+              })
+            : [],
+
+          // Get all organization members if deliverToEveryone is true
+          config.deliveryMethods.some((g) => g?.type === "organization")
+            ? db.query.member.findMany({
+                where: eq(schema.member.organizationId, organizationId),
+                with: { user: true },
+              })
+            : [],
+        ]);
 
       // Create lookup maps for efficient resolution
       const memberMap = new Map(members.map((m) => [m.id, m]));
       const teamMap = new Map(teams.map((t) => [t.id, t]));
       const slackChannelMap = new Map(slackChannels.map((c) => [c.id, c]));
+      const discordChannelMap = new Map(discordChannels.map((c) => [c.id, c]));
 
       // Now resolve delivery targets using the batched data
       for (const deliveryMethod of config.deliveryMethods || []) {
@@ -264,7 +540,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             continue;
           }
 
-          case "slack": {
+          case "slackChannel": {
             if (slackIntegration) {
               const channel = slackChannelMap.get(deliveryMethod.value);
               if (!channel) {
@@ -281,6 +557,30 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               });
             }
             continue;
+          }
+
+          case "discordChannel": {
+            if (discordIntegration) {
+              const channel = discordChannelMap.get(deliveryMethod.value);
+              if (!channel) {
+                console.log(
+                  `Skipping Discord channel ${deliveryMethod.value} because it was not found`,
+                );
+                continue;
+              }
+
+              targets.push({
+                type: "discord_channel",
+                target: channel.channelId,
+                displayName: `#${channel.name}`,
+              });
+            }
+            continue;
+          }
+
+          case "customEmail": {
+            customEmails.add(deliveryMethod.value);
+            break;
           }
 
           case "team": {
@@ -365,47 +665,134 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
         let sent = 0;
         let failed = 0;
 
-        // Create Slack message content
-        const viewUpdatesLink = `${this.env.WEB_APP_URL}/${initData.organizationSlug}`;
-
-        const slackMessage = [
-          `*Status updates for ${initData.organizationName}*`,
-          "",
-          ...(summaryData.generalSummary
-            ? [`🌟 *Team Overview*\n${summaryData.generalSummary}`]
-            : []),
-          "",
-          ...(summaryData.userSummaries.length > 0
-            ? [
-                `👥 *Individual Updates*`,
-                ...summaryData.userSummaries.map((summary) => `• ${summary.content}`),
-              ]
-            : []),
-          "",
-          `📅 *Period:* ${dayjs(summaryData.effectiveFrom).format("MMM D")} - ${dayjs(summaryData.effectiveTo).format("MMM D, YYYY")}`,
-          "",
-          `<${viewUpdatesLink}|View all updates →>`,
-        ].join("\n");
-
         for (const target of slackTargets) {
-          try {
-            await slackClient.chat.postMessage({
-              channel: target.target,
-              text: `Status updates for ${initData.organizationName}`, // Fallback text
-              unfurl_links: false,
-              unfurl_media: false,
-              blocks: [
-                {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: slackMessage,
-                  },
-                },
-              ],
-            });
+          const viewUpdatesLink = `${this.env.WEB_APP_URL}/${initData.organizationSlug}`;
+          let allSent = true;
+          const errors: string[] = [];
 
-            // Update task as completed
+          for (const s of generatedSummaries) {
+            const periodLine = `📅 *Period:* ${dayjs(s.effectiveFrom).format("MMM D")} - ${dayjs(s.effectiveTo).format("MMM D, YYYY")}`;
+
+            let header = `*Summary for ${initData.organizationName}*`;
+            const sections: string[] = [];
+
+            if (s.type === "organization_status_updates") {
+              header = `*Organization status updates — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Team Overview*\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.userSummaries) && s.content.userSummaries.length > 0) {
+                sections.push(
+                  [
+                    `👥 *Individual Updates*`,
+                    ...s.content.userSummaries.map((u: any) => `• ${u.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "team_status_updates") {
+              header = `*Team status updates — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Team Overview*\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.userSummaries) && s.content.userSummaries.length > 0) {
+                sections.push(
+                  [
+                    `👥 *Individual Updates*`,
+                    ...s.content.userSummaries.map((u: any) => `• ${u.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "user_status_updates") {
+              header = `*User status summary — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.items) && s.content.items.length > 0) {
+                sections.push(
+                  [`✅ *Highlights*`, ...s.content.items.map((i: any) => `• ${i.content}`)].join(
+                    "\n",
+                  ),
+                );
+              }
+            } else if (s.type === "github_activity") {
+              header = `*GitHub activity — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.repoSummaries) && s.content.repoSummaries.length > 0) {
+                sections.push(
+                  [
+                    `📦 *Repository Highlights*`,
+                    ...s.content.repoSummaries.map((r: any) => `• ${r.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "slack_activity") {
+              header = `*Slack activity — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.channelSummaries) &&
+                s.content.channelSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `#️⃣ *Channel Highlights*`,
+                    ...s.content.channelSummaries.map((c: any) => `• ${c.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "discord_activity") {
+              header = `*Discord activity — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.channelSummaries) &&
+                s.content.channelSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `#️⃣ *Channel Highlights*`,
+                    ...s.content.channelSummaries.map((c: any) => `• ${c.content}`),
+                  ].join("\n"),
+                );
+              }
+            }
+
+            const slackMessage = [
+              header,
+              "",
+              ...sections,
+              "",
+              periodLine,
+              "",
+              `<${viewUpdatesLink}|View details →>`,
+            ].join("\n");
+
+            try {
+              await slackClient.chat.postMessage({
+                channel: target.target,
+                text: header,
+                unfurl_links: false,
+                unfurl_media: false,
+                blocks: [
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: slackMessage,
+                    },
+                  },
+                ],
+              });
+            } catch (error) {
+              allSent = false;
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              errors.push(errorMessage);
+              console.error(
+                `❌ Failed to send ${s.type} Slack summary to ${target.displayName}:`,
+                error,
+              );
+            }
+          }
+
+          if (allSent) {
             await db
               .update(schema.scheduleRunTask)
               .set({
@@ -423,14 +810,9 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
                 ),
               );
-
             sent++;
-            console.log(`✅ Sent Slack summary to ${target.displayName}`);
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error(`❌ Failed to send Slack summary to ${target.displayName}:`, error);
-
-            // Update task as failed
+            console.log(`✅ Sent all Slack summaries to ${target.displayName}`);
+          } else {
             await db
               .update(schema.scheduleRunTask)
               .set({
@@ -438,7 +820,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                 results: {
                   ...target,
                   success: false,
-                  error: errorMessage,
+                  error: errors.join(" | "),
                   failedAt: new Date().toISOString(),
                 },
                 attempts: 1,
@@ -450,7 +832,6 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
                 ),
               );
-
             failed++;
           }
         }
@@ -459,7 +840,208 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
       },
     );
 
-    // Step 6: Send emails
+    // Step 6: Send Discord messages
+    const discordResults = await step.do(
+      "send-discord-messages",
+      {
+        retries: { limit: 3, delay: 10, backoff: "exponential" },
+      },
+      async () => {
+        const discordTargets = deliveryTargets.filter((t) => t.type.startsWith("discord_"));
+        if (discordTargets.length === 0) return { sent: 0, failed: 0 };
+
+        const discordIntegration = await db.query.discordIntegration.findFirst({
+          where: eq(schema.discordIntegration.organizationId, organizationId),
+        });
+
+        if (!discordIntegration) {
+          console.log("No Discord integration found, skipping Discord messages");
+          return { sent: 0, failed: discordTargets.length };
+        }
+
+        const botToken = discordIntegration.botAccessToken;
+        let sent = 0;
+        let failed = 0;
+
+        for (const target of discordTargets) {
+          const viewUpdatesLink = `${this.env.WEB_APP_URL}/${initData.organizationSlug}`;
+          let allSent = true;
+          const errors: string[] = [];
+
+          for (const s of generatedSummaries) {
+            const periodLine = `📅 Period: ${dayjs(s.effectiveFrom).format("MMM D")} - ${dayjs(s.effectiveTo).format("MMM D, YYYY")}`;
+
+            let header = `Summary for ${initData.organizationName}`;
+            const sections: string[] = [];
+
+            if (s.type === "organization_status_updates") {
+              header = `Organization status updates — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Team Overview\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.userSummaries) && s.content.userSummaries.length > 0) {
+                sections.push(
+                  [
+                    `👥 Individual Updates`,
+                    ...s.content.userSummaries.map((u: any) => `• ${u.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "team_status_updates") {
+              header = `Team status updates — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Team Overview\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.userSummaries) && s.content.userSummaries.length > 0) {
+                sections.push(
+                  [
+                    `👥 Individual Updates`,
+                    ...s.content.userSummaries.map((u: any) => `• ${u.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "user_status_updates") {
+              header = `User status summary — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Overview\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.items) && s.content.items.length > 0) {
+                sections.push(
+                  [`✅ Highlights`, ...s.content.items.map((i: any) => `• ${i.content}`)].join(
+                    "\n",
+                  ),
+                );
+              }
+            } else if (s.type === "github_activity") {
+              header = `GitHub activity — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Overview\n${s.content.generalSummary}`);
+              if (Array.isArray(s.content.repoSummaries) && s.content.repoSummaries.length > 0) {
+                sections.push(
+                  [
+                    `📦 Repository Highlights`,
+                    ...s.content.repoSummaries.map((r: any) => `• ${r.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "slack_activity") {
+              header = `Slack activity — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Overview\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.channelSummaries) &&
+                s.content.channelSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `#️⃣ Channel Highlights`,
+                    ...s.content.channelSummaries.map((c: any) => `• ${c.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "discord_activity") {
+              header = `Discord activity — ${initData.organizationName}`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 Overview\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.channelSummaries) &&
+                s.content.channelSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `#️⃣ Channel Highlights`,
+                    ...s.content.channelSummaries.map((c: any) => `• ${c.content}`),
+                  ].join("\n"),
+                );
+              }
+            }
+
+            const discordMessage = [
+              header,
+              "",
+              ...sections,
+              "",
+              periodLine,
+              "",
+              `View details: ${viewUpdatesLink}`,
+            ].join("\n");
+
+            try {
+              const resp = await fetch(
+                `https://discord.com/api/v10/channels/${target.target}/messages`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bot ${botToken}`,
+                  },
+                  body: JSON.stringify({
+                    content: discordMessage,
+                    allowed_mentions: { parse: [] },
+                  }),
+                },
+              );
+              if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(text || `HTTP ${resp.status}`);
+              }
+            } catch (error) {
+              allSent = false;
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              errors.push(errorMessage);
+              console.error(
+                `❌ Failed to send ${s.type} Discord summary to ${target.displayName}:`,
+                error,
+              );
+            }
+          }
+
+          if (allSent) {
+            await db
+              .update(schema.scheduleRunTask)
+              .set({
+                status: "completed",
+                results: {
+                  ...target,
+                  success: true,
+                  sentAt: new Date().toISOString(),
+                },
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.scheduleRunTask.scheduleRunId, scheduleRunId),
+                  eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
+                ),
+              );
+            sent++;
+            console.log(`✅ Sent all Discord summaries to ${target.displayName}`);
+          } else {
+            await db
+              .update(schema.scheduleRunTask)
+              .set({
+                status: "failed",
+                results: {
+                  ...target,
+                  success: false,
+                  error: errors.join(" | "),
+                  failedAt: new Date().toISOString(),
+                },
+                attempts: 1,
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.scheduleRunTask.scheduleRunId, scheduleRunId),
+                  eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
+                ),
+              );
+            failed++;
+          }
+        }
+
+        return { sent, failed };
+      },
+    );
+
+    // Step 7: Send emails
     const emailResults = await step.do(
       "send-emails",
       {
@@ -474,29 +1056,127 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
         let failed = 0;
 
         for (const target of emailTargets) {
-          try {
-            // Get recipient name from target display name
-            const recipientName = target.displayName.includes("@")
-              ? (target.displayName.split("@")[0] ?? "Team Member")
-              : target.displayName;
+          // Get recipient name from target display name
+          const recipientName = target.displayName.includes("@")
+            ? (target.displayName.split("@")[0] ?? "Team Member")
+            : target.displayName;
 
-            await resend.emails.send({
-              from: "AsyncStatus <updates@asyncstatus.com>",
-              to: target.target,
-              subject: `${initData.organizationName} Status updates`,
-              react: StatusUpdatesSummaryEmail({
-                preview: `Your team status summary for ${initData.organizationName}`,
-                recipientName,
-                organizationName: initData.organizationName,
-                generalSummary: summaryData.generalSummary ?? undefined,
-                userSummaries: summaryData.userSummaries,
-                effectiveFrom: summaryData.effectiveFrom,
-                effectiveTo: summaryData.effectiveTo,
-                viewUpdatesLink: `${this.env.WEB_APP_URL}/${initData.organizationSlug}`,
-              }),
-            });
+          let allSent = true;
+          const errors: string[] = [];
 
-            // Update task as completed
+          for (const s of generatedSummaries) {
+            try {
+              const viewUpdatesLink = `${this.env.WEB_APP_URL}/${initData.organizationSlug}`;
+              // Choose email template by type
+              if (s.type === "organization_status_updates") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} Status updates`,
+                  react: StatusUpdatesSummaryEmail({
+                    preview: `Your team status summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    userSummaries: s.content.userSummaries ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              } else if (s.type === "team_status_updates") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} Team status updates`,
+                  react: TeamStatusUpdatesSummaryEmail({
+                    preview: `Your team status summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    userSummaries: s.content.userSummaries ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              } else if (s.type === "user_status_updates") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} User status summary`,
+                  react: UserStatusUpdatesSummaryEmail({
+                    preview: `Your status summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    items: s.content.items ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              } else if (s.type === "github_activity") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} GitHub activity`,
+                  react: GithubActivitySummaryEmail({
+                    preview: `GitHub activity summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    repoSummaries: s.content.repoSummaries ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              } else if (s.type === "slack_activity") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} Slack activity`,
+                  react: SlackActivitySummaryEmail({
+                    preview: `Slack activity summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    channelSummaries: s.content.channelSummaries ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              } else if (s.type === "discord_activity") {
+                await resend.emails.send({
+                  from: "AsyncStatus <updates@asyncstatus.com>",
+                  to: target.target,
+                  subject: `${initData.organizationName} Discord activity`,
+                  react: DiscordActivitySummaryEmail({
+                    preview: `Discord activity summary for ${initData.organizationName}`,
+                    recipientName,
+                    organizationName: initData.organizationName,
+                    generalSummary: s.content.generalSummary ?? undefined,
+                    channelSummaries: s.content.channelSummaries ?? [],
+                    effectiveFrom: s.effectiveFrom,
+                    effectiveTo: s.effectiveTo,
+                    viewUpdatesLink,
+                  }),
+                });
+              }
+            } catch (error) {
+              allSent = false;
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              errors.push(errorMessage);
+              console.error(
+                `❌ Failed to send ${s.type} email summary to ${target.displayName}:`,
+                error,
+              );
+            }
+          }
+
+          if (allSent) {
             await db
               .update(schema.scheduleRunTask)
               .set({
@@ -514,14 +1194,9 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
                 ),
               );
-
             sent++;
-            console.log(`✅ Sent email summary to ${target.displayName}`);
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error(`❌ Failed to send email summary to ${target.displayName}:`, error);
-
-            // Update task as failed
+            console.log(`✅ Sent all email summaries to ${target.displayName}`);
+          } else {
             await db
               .update(schema.scheduleRunTask)
               .set({
@@ -529,7 +1204,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                 results: {
                   ...target,
                   success: false,
-                  error: errorMessage,
+                  error: errors.join(" | "),
                   failedAt: new Date().toISOString(),
                 },
                 attempts: 1,
@@ -541,7 +1216,6 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   eq(schema.scheduleRunTask.results, target as unknown as Record<string, unknown>),
                 ),
               );
-
             failed++;
           }
         }
@@ -550,10 +1224,10 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
       },
     );
 
-    // Step 7: Finalize execution and schedule next run
+    // Step 8: Finalize execution and schedule next run
     await step.do("finalize-execution", async () => {
-      const totalSent = slackResults.sent + emailResults.sent;
-      const totalFailed = slackResults.failed + emailResults.failed;
+      const totalSent = slackResults.sent + discordResults.sent + emailResults.sent;
+      const totalFailed = slackResults.failed + discordResults.failed + emailResults.failed;
       const totalTargets = deliveryTargets.length;
 
       // Determine final status
@@ -576,10 +1250,13 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             totalTargets,
             slackSent: slackResults.sent,
             slackFailed: slackResults.failed,
+            discordSent: discordResults.sent,
+            discordFailed: discordResults.failed,
             emailSent: emailResults.sent,
             emailFailed: emailResults.failed,
-            summaryGenerated: !!summaryData.generalSummary || summaryData.userSummaries.length > 0,
-            userSummariesCount: summaryData.userSummaries.length,
+            summaryGenerated:
+              !!primarySummary.generalSummary || primarySummary.userSummaries.length > 0,
+            userSummariesCount: primarySummary.userSummaries.length,
             completedAt: new Date().toISOString(),
           },
           lastExecutionError: totalFailed > 0 ? `${totalFailed} deliveries failed` : null,

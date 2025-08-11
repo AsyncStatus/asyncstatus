@@ -129,7 +129,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
           : [],
 
         // Get all organization members if generateForEveryMember is true
-        config.generateForEveryMember
+        config.generateFor.some((g) => g?.type === "organization")
           ? db.query.member.findMany({
               where: eq(schema.member.organizationId, organizationId),
               with: { user: true },

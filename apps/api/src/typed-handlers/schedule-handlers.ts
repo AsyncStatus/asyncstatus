@@ -5,12 +5,15 @@ import { and, asc, eq } from "drizzle-orm";
 import * as schema from "../db";
 import { calculateNextScheduleExecution } from "../lib/calculate-next-schedule-execution";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
+import { generateSchedule } from "../workflows/schedules/generate-schedule/generate-schedule";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createScheduleContract,
   deleteScheduleContract,
+  generateScheduleContract,
   getScheduleContract,
   listSchedulesContract,
+  runScheduleContract,
   updateScheduleContract,
 } from "./schedule-contracts";
 
@@ -302,5 +305,101 @@ export const deleteScheduleHandler = typedHandler<
     }
 
     return { success: true };
+  },
+);
+
+export const generateScheduleHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof generateScheduleContract
+>(
+  generateScheduleContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, openRouterProvider, member }) => {
+    const text = await generateSchedule({
+      db,
+      openRouterProvider,
+      organizationId: organization.id,
+      createdByMemberId: member.id,
+      naturalLanguageRequest: input.naturalLanguageRequest,
+    });
+
+    // Try to extract IDs from tool response if the tool returned a JSON-like line
+    // Our create-organization-schedule tool returns { scheduleId, scheduleRunId }
+    let scheduleId: string | null = null;
+    let scheduleRunId: string | null = null;
+    try {
+      const match = text.match(
+        /\{\s*"scheduleId"\s*:\s*"([^"]*)"\s*,\s*"scheduleRunId"\s*:\s*"?([^"}]*)"?\s*\}/,
+      );
+      if (match) {
+        scheduleId = match[1] || null;
+        scheduleRunId = match[2] || null;
+      }
+    } catch {}
+
+    return {
+      success: true,
+      scheduleId,
+      scheduleRunId,
+      message: text,
+    };
+  },
+);
+
+export const runScheduleHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof runScheduleContract
+>(
+  runScheduleContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, member, workflow }) => {
+    const { scheduleId } = input;
+
+    const schedule = await db.query.schedule.findFirst({
+      where: and(
+        eq(schema.schedule.id, scheduleId),
+        eq(schema.schedule.organizationId, organization.id),
+      ),
+    });
+
+    if (!schedule) {
+      throw new TypedHandlersError({ code: "NOT_FOUND", message: "Schedule not found" });
+    }
+
+    const now = dayjs.utc().toDate();
+    const scheduleRunId = generateId();
+
+    await db.insert(schema.scheduleRun).values({
+      id: scheduleRunId,
+      scheduleId: schedule.id,
+      createdByMemberId: member.id,
+      status: "pending",
+      nextExecutionAt: now,
+      executionCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Trigger appropriate workflow based on schedule name
+    const name = schedule.config.name;
+    if (name === "remindToPostUpdates") {
+      await workflow.pingForUpdates.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else if (name === "generateUpdates") {
+      await workflow.generateStatusUpdates.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else if (name === "sendSummaries") {
+      await workflow.sendSummaries.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else {
+      throw new TypedHandlersError({ code: "BAD_REQUEST", message: "Unsupported schedule type" });
+    }
+
+    return { success: true, scheduleRunId };
   },
 );

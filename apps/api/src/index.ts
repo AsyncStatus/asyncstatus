@@ -77,8 +77,10 @@ import {
 import {
   createScheduleHandler,
   deleteScheduleHandler,
+  generateScheduleHandler,
   getScheduleHandler,
   listSchedulesHandler,
+  runScheduleHandler,
   updateScheduleHandler,
 } from "./typed-handlers/schedule-handlers";
 import {
@@ -353,6 +355,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     createScheduleHandler,
     updateScheduleHandler,
     deleteScheduleHandler,
+    generateScheduleHandler,
     listStatusUpdatesHandler,
     listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
@@ -403,6 +406,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     undoLastCliStatusUpdateItemHandler,
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,
+    runScheduleHandler,
   ],
   {
     getContext: (c) => ({

@@ -1,5 +1,8 @@
 import type {
   getScheduleContract,
+  ScheduleConfigGenerateUpdates,
+  ScheduleConfigRemindToPostUpdates,
+  ScheduleConfigSendSummaries,
   updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -13,7 +16,9 @@ import {
 import { PlusIcon } from "@asyncstatus/ui/icons";
 import { useFormContext } from "react-hook-form";
 import { FormField } from "../form";
-import { MemberOrTeamSelect } from "./member-or-team-select";
+import { GenerateForSelect } from "./generate-for-select";
+import { GenerateForUsingActivityFromSelect } from "./generate-for-using-activity-from";
+import { SummaryForSelect } from "./summary-for-select";
 
 export type ActionFormContentProps = {
   organizationSlug: string;
@@ -24,12 +29,11 @@ export function ActionFormContent(props: ActionFormContentProps) {
   const form = useFormContext<typeof updateScheduleContract.$infer.input>();
   const configName = form.watch("config.name");
   const generateFor = form.watch("config.generateFor");
-  const generateForEveryMember = form.watch("config.generateForEveryMember");
   const isAddingGenerateFor = generateFor?.findIndex((field) => field === undefined) !== -1;
 
   return (
     <div className="flex items-start flex-col gap-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <FormField
           control={form.control}
           name="name"
@@ -42,6 +46,7 @@ export function ActionFormContent(props: ActionFormContentProps) {
                 form.setValue(
                   "config",
                   getDefaultConfigBasedOnName(
+                    props.organizationSlug,
                     value as (typeof getScheduleContract.$infer.output)["name"],
                     previousConfig as any,
                   ),
@@ -60,34 +65,29 @@ export function ActionFormContent(props: ActionFormContentProps) {
           )}
         />
 
-        <p className="text-sm text-muted-foreground">{configName === "generateUpdates" && "for"}</p>
+        <p className="text-sm text-muted-foreground">
+          {configName === "generateUpdates" && "for"}
+          {configName === "sendSummaries" && "based on"}
+        </p>
 
         {configName === "generateUpdates" && generateFor?.length === 0 && (
           <FormField
             control={form.control}
             name="config.generateFor"
             render={({ field }) => (
-              <MemberOrTeamSelect
+              <GenerateForSelect
                 size="default"
                 allowEveryone
-                type={generateForEveryMember ? "everyone" : undefined}
-                placeholder="Select user or team"
+                type={undefined}
+                placeholder="Select who to generate updates for"
                 organizationSlug={props.organizationSlug}
                 value={undefined}
                 onSelect={(type, value) => {
                   if (type === undefined) {
-                    form.setValue("config.generateForEveryMember", false);
                     field.onChange([]);
                     return;
                   }
 
-                  if (type === "everyone") {
-                    form.setValue("config.generateForEveryMember", true);
-                    field.onChange([]);
-                    return;
-                  }
-
-                  form.setValue("config.generateForEveryMember", false);
                   field.onChange([{ type, value }]);
                 }}
               />
@@ -102,35 +102,80 @@ export function ActionFormContent(props: ActionFormContentProps) {
               control={form.control}
               name="config.generateFor"
               render={({ field }) => (
-                <MemberOrTeamSelect
-                  size="default"
-                  allowEveryone
-                  placeholder="Select user or team"
-                  organizationSlug={props.organizationSlug}
-                  type={field.value?.[index]?.type}
-                  value={field.value?.[index]?.value}
-                  onSelect={(type, value) => {
-                    if (type === undefined) {
-                      form.setValue("config.generateForEveryMember", false);
-                      field.onChange(generateFor?.filter((_, i) => i !== index) ?? []);
-                      return;
-                    }
+                <>
+                  <GenerateForSelect
+                    size="default"
+                    allowEveryone
+                    placeholder="Select user or team"
+                    organizationSlug={props.organizationSlug}
+                    type={field.value?.[index]?.type}
+                    value={field.value?.[index]?.value}
+                    onSelect={(type, value) => {
+                      if (type === undefined) {
+                        field.onChange(generateFor?.filter((_, i) => i !== index) ?? []);
+                        return;
+                      }
 
-                    if (type === "everyone") {
-                      form.setValue("config.generateForEveryMember", true);
-                      field.onChange(generateFor?.filter((_, i) => i !== index) ?? []);
-                      return;
-                    }
+                      if (type === "organization" && value === props.organizationSlug) {
+                        field.onChange([{ type, value }]);
+                        return;
+                      }
 
-                    form.setValue("config.generateForEveryMember", false);
-                    field.onChange(
-                      generateFor?.map((field, i) => (i === index ? { type, value } : field)) ?? [],
-                    );
-                  }}
-                />
+                      field.onChange(
+                        generateFor?.map((field, i) =>
+                          i === index
+                            ? {
+                                type,
+                                value,
+                                usingActivityFrom: field?.usingActivityFrom ?? [
+                                  { type: "anyIntegration", value: "anyIntegration" },
+                                ],
+                              }
+                            : field,
+                        ) ?? [],
+                      );
+                    }}
+                  />
+
+                  <p className="text-sm text-muted-foreground">using</p>
+
+                  <GenerateForUsingActivityFromSelect
+                    size="default"
+                    organizationSlug={props.organizationSlug}
+                    values={field.value?.[index]?.usingActivityFrom ?? []}
+                    onSelect={(usingActivityFrom) => {
+                      field.onChange(
+                        generateFor?.map((field, i) =>
+                          i === index ? { ...field, usingActivityFrom } : field,
+                        ) ?? [],
+                      );
+                    }}
+                  />
+
+                  {index < (generateFor?.length ?? 0) - 1 && (
+                    <p className="text-sm text-muted-foreground">and</p>
+                  )}
+                </>
               )}
             />
           ))}
+
+        {configName === "sendSummaries" && (
+          <FormField
+            control={form.control}
+            name="config.summaryFor"
+            render={({ field }) => (
+              <SummaryForSelect
+                size="default"
+                organizationSlug={props.organizationSlug}
+                values={(field.value as any) ?? []}
+                onSelect={(value) => {
+                  field.onChange(value);
+                }}
+              />
+            )}
+          />
+        )}
       </div>
 
       {!isAddingGenerateFor && (
@@ -157,6 +202,7 @@ export function ActionFormContent(props: ActionFormContentProps) {
 }
 
 function getDefaultConfigBasedOnName(
+  organizationSlug: string,
   name: (typeof getScheduleContract.$infer.output)["name"],
   previousConfig?: (typeof getScheduleContract.$infer.output)["config"],
 ) {
@@ -169,15 +215,11 @@ function getDefaultConfigBasedOnName(
         recurrence: previousConfig?.recurrence ?? "daily",
         dayOfWeek: previousConfig?.dayOfWeek ?? undefined,
         dayOfMonth: previousConfig?.dayOfMonth ?? undefined,
-        deliverToEveryone:
-          previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
-            ? previousConfig?.deliverToEveryone
-            : false,
         deliveryMethods:
           previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
             ? previousConfig?.deliveryMethods
-            : [],
-      } as (typeof getScheduleContract.$infer.output)["config"];
+            : [{ type: "organization", value: organizationSlug }],
+      } satisfies ScheduleConfigRemindToPostUpdates;
     case "generateUpdates":
       return {
         name: "generateUpdates",
@@ -186,9 +228,17 @@ function getDefaultConfigBasedOnName(
         recurrence: previousConfig?.recurrence ?? "daily",
         dayOfWeek: previousConfig?.dayOfWeek ?? undefined,
         dayOfMonth: previousConfig?.dayOfMonth ?? undefined,
-        generateFor: [],
-        generateForEveryMember: false,
-      } as (typeof getScheduleContract.$infer.output)["config"];
+        generateFor:
+          previousConfig?.name === "generateUpdates"
+            ? previousConfig?.generateFor
+            : [
+                {
+                  type: "organization",
+                  value: organizationSlug,
+                  usingActivityFrom: [{ type: "anyIntegration", value: "anyIntegration" }],
+                },
+              ],
+      } satisfies ScheduleConfigGenerateUpdates;
     case "sendSummaries":
       return {
         name: "sendSummaries",
@@ -197,14 +247,14 @@ function getDefaultConfigBasedOnName(
         recurrence: previousConfig?.recurrence ?? "daily",
         dayOfWeek: previousConfig?.dayOfWeek ?? undefined,
         dayOfMonth: previousConfig?.dayOfMonth ?? undefined,
-        deliverToEveryone:
-          previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
-            ? previousConfig?.deliverToEveryone
-            : false,
+        summaryFor:
+          previousConfig?.name === "sendSummaries"
+            ? previousConfig?.summaryFor
+            : [{ type: "organization", value: organizationSlug }],
         deliveryMethods:
           previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
             ? previousConfig?.deliveryMethods
-            : [],
-      } as (typeof getScheduleContract.$infer.output)["config"];
+            : [{ type: "organization", value: organizationSlug }],
+      } satisfies ScheduleConfigSendSummaries;
   }
 }

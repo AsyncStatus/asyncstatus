@@ -150,6 +150,18 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
+  --background-image-grid-pattern:
+  repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(75, 85, 99, 0.08) 20px, rgba(75, 85, 99, 0.08) 21px),
+  repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(107, 114, 128, 0.06) 30px, rgba(107, 114, 128, 0.06) 31px),
+  repeating-linear-gradient(60deg, transparent, transparent 40px, rgba(55, 65, 81, 0.05) 40px, rgba(55, 65, 81, 0.05) 41px),
+  repeating-linear-gradient(150deg, transparent, transparent 35px, rgba(31, 41, 55, 0.04) 35px, rgba(31, 41, 55, 0.04) 36px);
+
+  --background-image-grid-pattern-dark:
+  repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255, 255, 255, 0.06) 20px, rgba(255, 255, 255, 0.06) 21px),
+  repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255, 255, 255, 0.04) 30px, rgba(255, 255, 255, 0.04) 31px),
+  repeating-linear-gradient(60deg, transparent, transparent 40px, rgba(255, 255, 255, 0.03) 40px, rgba(255, 255, 255, 0.03) 41px),
+  repeating-linear-gradient(150deg, transparent, transparent 35px, rgba(255, 255, 255, 0.02) 35px, rgba(255, 255, 255, 0.02) 36px);
+
   @keyframes accordion-down {
     from {
       height: 0;
@@ -166,6 +178,16 @@
     to {
       height: 0;
     }
+  }
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: var(--background-image-grid-pattern);
+  }
+
+  .dark .bg-grid-pattern {
+    background-image: var(--background-image-grid-pattern-dark);
   }
 }
 
