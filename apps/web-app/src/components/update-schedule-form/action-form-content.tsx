@@ -29,13 +29,11 @@ export function ActionFormContent(props: ActionFormContentProps) {
   const form = useFormContext<typeof updateScheduleContract.$infer.input>();
   const configName = form.watch("config.name");
   const generateFor = form.watch("config.generateFor");
-  const summaryFor = form.watch("config.summaryFor");
   const isAddingGenerateFor = generateFor?.findIndex((field) => field === undefined) !== -1;
-  const isAddingSummaryFor = summaryFor?.findIndex((field) => field === undefined) !== -1;
 
   return (
     <div className="flex items-start flex-col gap-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <FormField
           control={form.control}
           name="name"
@@ -105,6 +103,8 @@ export function ActionFormContent(props: ActionFormContentProps) {
               name="config.generateFor"
               render={({ field }) => (
                 <>
+                  <p className="text-sm text-muted-foreground">and</p>
+
                   <GenerateForSelect
                     size="default"
                     allowEveryone
@@ -118,9 +118,23 @@ export function ActionFormContent(props: ActionFormContentProps) {
                         return;
                       }
 
+                      if (type === "organization" && value === props.organizationSlug) {
+                        field.onChange([{ type, value }]);
+                        return;
+                      }
+
                       field.onChange(
-                        generateFor?.map((field, i) => (i === index ? { type, value } : field)) ??
-                          [],
+                        generateFor?.map((field, i) =>
+                          i === index
+                            ? {
+                                type,
+                                value,
+                                usingActivityFrom: field?.usingActivityFrom ?? [
+                                  { type: "anyIntegration", value: "anyIntegration" },
+                                ],
+                              }
+                            : field,
+                        ) ?? [],
                       );
                     }}
                   />
@@ -152,7 +166,7 @@ export function ActionFormContent(props: ActionFormContentProps) {
               <SummaryForSelect
                 size="default"
                 organizationSlug={props.organizationSlug}
-                values={field.value ?? []}
+                values={(field.value as any) ?? []}
                 onSelect={(value) => {
                   field.onChange(value);
                 }}
@@ -202,7 +216,7 @@ function getDefaultConfigBasedOnName(
         deliveryMethods:
           previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
             ? previousConfig?.deliveryMethods
-            : [],
+            : [{ type: "organization", value: organizationSlug }],
       } satisfies ScheduleConfigRemindToPostUpdates;
     case "generateUpdates":
       return {
@@ -238,7 +252,7 @@ function getDefaultConfigBasedOnName(
         deliveryMethods:
           previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
             ? previousConfig?.deliveryMethods
-            : [],
+            : [{ type: "organization", value: organizationSlug }],
       } satisfies ScheduleConfigSendSummaries;
   }
 }

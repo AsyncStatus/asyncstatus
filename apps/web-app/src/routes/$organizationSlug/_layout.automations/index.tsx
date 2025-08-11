@@ -88,7 +88,12 @@ function RouteComponent() {
               key={schedule.id}
               className="flex flex-col gap-2 p-4 border border-border rounded-md w-full max-sm:p-2 max-sm:gap-4"
             >
-              <SchedulePrettyDescription organizationSlug={organizationSlug} schedule={schedule} />
+              <div className="h-full">
+                <SchedulePrettyDescription
+                  organizationSlug={organizationSlug}
+                  schedule={schedule}
+                />
+              </div>
 
               <div className="flex items-end gap-2 w-full justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4">
                 <div className="flex items-center gap-4">
@@ -220,20 +225,20 @@ function HeroTextarea() {
     `Send weekly summaries to everyone every Monday at 8am`,
 
     // Channel and repo based
-    `Send a weekly GitHub summary for ${firstRepo} to ${firstSlack} every Monday at 9am`,
-    `Send a daily Discord summary to ${firstDiscord} at 10am`,
+    `Send a weekly GitHub summary for ${firstRepo} repo to ${firstSlack} Slack channel every Monday at 9am`,
+    `Send a daily Discord summary to ${firstDiscord} Discord channel at 10am`,
     `Send a monthly summary to leadership@company.com on the 1st at 9am`,
 
     // Using activity sources
-    `Generate updates for ${firstTeamName} every Tuesday at 3pm using any integration`,
-    `Generate updates for ${firstTeamName} at 5pm using Slack activity`,
+    `Generate updates for ${firstTeamName} team every Tuesday at 3pm using any integration`,
+    `Generate updates for ${firstTeamName} team at 5pm using Slack activity`,
     `Generate updates for ${firstMemberName} daily at 6pm using GitHub and Slack activity`,
-    `Generate updates for everyone weekdays at 6pm using activity from ${firstSlack} and ${firstDiscord}`,
+    `Generate updates for everyone weekdays at 6pm using activity from ${firstSlack} Slack channel and ${firstDiscord} Discord channel`,
 
     // Advanced scheduling and targeting
-    `Send weekly summaries for any GitHub activity to ${firstSlack} every Friday at 4:30pm`,
+    `Send weekly summaries for any GitHub activity to ${firstSlack} Slack channel every Friday at 4:30pm`,
     `Generate updates for everyone daily at 9am in Europe/London timezone`,
-    `Send monthly summaries for ${firstRepo} and any Slack activity to ${firstDiscord} on the 15th at 10am`,
+    `Send monthly summaries for ${firstRepo} repo and any Slack activity to ${firstDiscord} Discord channel on the 15th at 10am`,
   ];
 
   return (
@@ -255,7 +260,7 @@ function HeroTextarea() {
 
       <div className="text-center space-y-4 mb-6 sm:mb-6 z-10 pt-6">
         <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-          What do you want to automate?
+          Which meeting are we killing today?
         </h3>
         <p className="text-muted-foreground text-base sm:text-lg text-balance max-w-prose mx-auto">
           Tell AsyncStatus what to run and we'll make the updates, summaries, and pings happen. No

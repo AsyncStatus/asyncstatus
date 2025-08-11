@@ -37,13 +37,18 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
     defaultValues: {
       idOrSlug: props.organizationSlug,
       scheduleId: props.scheduleId,
-      name: schedule.data?.name ?? "remindToPostUpdates",
+      name: schedule.data?.name ?? "generateUpdates",
       config: schedule.data?.config ?? {
-        name: "remindToPostUpdates",
+        name: "generateUpdates",
         timeOfDay: "09:30",
         timezone: "UTC",
-        remindEveryMember: true,
-        deliveryMethods: [],
+        generateFor: [
+          {
+            type: "organization",
+            value: props.organizationSlug,
+            usingActivityFrom: [{ type: "anyIntegration", value: "anyIntegration" }],
+          },
+        ],
       },
       isActive: schedule.data?.isActive ?? false,
     },
@@ -91,25 +96,25 @@ function UpdateScheduleFormUnmemoized(props: UpdateScheduleFormProps) {
 
   const onSubmit = useCallback(
     (data: typeof updateScheduleContract.$infer.input) => {
-      if (form.formState.isSubmitting || !form.formState.isValid || !form.formState.isDirty) {
+      if (updateSchedule.isPending || !form.formState.isValid || !form.formState.isDirty) {
         return;
       }
       updateSchedule.mutate(data);
     },
-    [updateSchedule, form.formState.isSubmitting, form.formState.isValid, form.formState.isDirty],
+    [updateSchedule.isPending, form.formState.isValid, form.formState.isDirty],
   );
 
   const debouncedSave = useDebouncedCallback(onSubmit, 1000);
   const formValues = form.watch();
   useEffect(() => {
-    if (form.formState.isSubmitting || !form.formState.isValid || !form.formState.isDirty) {
+    if (updateSchedule.isPending || !form.formState.isValid || !form.formState.isDirty) {
       return;
     }
     debouncedSave(formValues);
   }, [
     debouncedSave,
     formValues,
-    form.formState.isSubmitting,
+    updateSchedule.isPending,
     form.formState.isValid,
     form.formState.isDirty,
   ]);

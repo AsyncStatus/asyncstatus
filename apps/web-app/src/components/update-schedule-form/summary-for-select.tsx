@@ -469,7 +469,7 @@ export function SummaryForSelect({
                     setOpen(false);
                   }}
                 >
-                  <Avatar className="size-4">
+                  <Avatar className="size-4 text-[0.65rem]">
                     <AvatarImage
                       src={typedUrl(getFileContract, {
                         idOrSlug: organizationSlug,
