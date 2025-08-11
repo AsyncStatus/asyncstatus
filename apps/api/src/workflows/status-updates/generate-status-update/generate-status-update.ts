@@ -1,6 +1,7 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type * as schema from "../../../db";
+import type { ScheduleConfigUsingActivityFrom } from "../../../db";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getDiscordChannelTool } from "../../tools/get-discord-channel-tool";
@@ -32,6 +33,7 @@ export type GenerateStatusUpdateOptions = {
   aiLimits: { basic: number; startup: number; enterprise: number }; // AI generation limits
   effectiveFrom: string;
   effectiveTo: string;
+  usingActivityFrom?: ScheduleConfigUsingActivityFrom[]; // optional filters for activity sources/resources
 };
 
 export async function generateStatusUpdate({
@@ -44,20 +46,24 @@ export async function generateStatusUpdate({
   aiLimits,
   effectiveFrom,
   effectiveTo,
+  usingActivityFrom = [],
 }: GenerateStatusUpdateOptions) {
   const model = "openai/gpt-5-mini";
 
   const { text, usage } = await generateText({
     model: openRouterProvider(model),
     seed: 123,
-    maxSteps: 50,
+    maxSteps: 100,
     system: systemPrompt,
     messages: [
       {
         role: "user",
         content: `Generate status update bullet points for the member (memberId: ${memberId})
 in the organization (organizationId: ${organizationId}) between the effectiveFrom and effectiveTo dates.
-The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effectiveTo}.`,
+The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effectiveTo}.
+
+Activity filters: ${usingActivityFrom.length === 0 ? "anyIntegration (use any available activity)" : JSON.stringify(usingActivityFrom)}.
+Only use activity sources/resources that match these filters when selecting events to consider.`,
       },
     ],
     toolChoice: "auto",

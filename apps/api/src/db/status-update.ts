@@ -1,4 +1,5 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { z } from "zod/v4";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { member } from "./member";
@@ -9,6 +10,7 @@ export const statusUpdate = sqliteTable(
   "status_update",
   {
     id: text("id").primaryKey(),
+    slug: text("slug").unique(),
     memberId: text("member_id")
       .notNull()
       .references(() => member.id, { onDelete: "cascade" }),
@@ -25,6 +27,7 @@ export const statusUpdate = sqliteTable(
     isDraft: integer("is_draft", { mode: "boolean" }).notNull().default(true),
     timezone: text("timezone").notNull().default("UTC"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    publishedAt: integer("published_at", { mode: "timestamp_ms" }),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => [
@@ -35,6 +38,7 @@ export const statusUpdate = sqliteTable(
     index("status_update_effective_from_index").on(t.effectiveFrom),
     index("status_update_effective_to_index").on(t.effectiveTo),
     index("status_update_is_draft_index").on(t.isDraft),
+    uniqueIndex("status_update_slug_unique").on(t.slug).where(sql`slug IS NOT NULL`),
   ],
 );
 

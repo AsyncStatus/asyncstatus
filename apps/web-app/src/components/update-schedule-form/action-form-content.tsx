@@ -103,8 +103,6 @@ export function ActionFormContent(props: ActionFormContentProps) {
               name="config.generateFor"
               render={({ field }) => (
                 <>
-                  <p className="text-sm text-muted-foreground">and</p>
-
                   <GenerateForSelect
                     size="default"
                     allowEveryone
@@ -153,6 +151,10 @@ export function ActionFormContent(props: ActionFormContentProps) {
                       );
                     }}
                   />
+
+                  {index < (generateFor?.length ?? 0) - 1 && (
+                    <p className="text-sm text-muted-foreground">and</p>
+                  )}
                 </>
               )}
             />

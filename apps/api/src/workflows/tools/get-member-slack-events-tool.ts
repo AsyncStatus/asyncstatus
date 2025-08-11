@@ -1,12 +1,12 @@
 import { tool } from "ai";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import * as schema from "../../db";
 import type { Db } from "../../db/db";
 
 export function getMemberSlackEventsTool(db: Db) {
   return tool({
-    description: `Get the Slack events for the member between the effectiveFrom and effectiveTo dates.`,
+    description: `Get the Slack events for the member between the effectiveFrom and effectiveTo dates. Optionally filter by channelIds (if empty, include all).`,
     parameters: z.object({
       organizationId: z.string(),
       memberId: z.string(),
@@ -16,8 +16,20 @@ export function getMemberSlackEventsTool(db: Db) {
       effectiveTo: z
         .string()
         .describe("The effectiveTo date in ISO 8601 format, e.g. 2025-01-02T00:00:00Z."),
+      channelIds: z.array(z.string()).optional().default([]),
     }),
     execute: async (params) => {
+      const conditions = [
+        eq(schema.slackIntegration.organizationId, params.organizationId),
+        eq(schema.member.id, params.memberId),
+        gte(schema.slackEvent.createdAt, new Date(params.effectiveFrom)),
+        lte(schema.slackEvent.createdAt, new Date(params.effectiveTo)),
+      ];
+
+      if (params.channelIds && params.channelIds.length > 0) {
+        conditions.push(inArray(schema.slackEvent.channelId, params.channelIds));
+      }
+
       const events = await db
         .selectDistinct({
           slackEvent: {
@@ -43,14 +55,7 @@ export function getMemberSlackEventsTool(db: Db) {
           eq(schema.slackEvent.slackUserId, schema.slackUser.slackUserId),
         )
         .innerJoin(schema.member, eq(schema.member.slackId, schema.slackUser.slackUserId))
-        .where(
-          and(
-            eq(schema.slackIntegration.organizationId, params.organizationId),
-            eq(schema.member.id, params.memberId),
-            gte(schema.slackEvent.createdAt, new Date(params.effectiveFrom)),
-            lte(schema.slackEvent.createdAt, new Date(params.effectiveTo)),
-          ),
-        )
+        .where(and(...conditions))
         .orderBy(desc(schema.slackEvent.createdAt));
       return events;
     },

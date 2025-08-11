@@ -88,3 +88,16 @@ export const generateScheduleContract = typedContract(
     message: z.string(),
   }),
 );
+
+export const runScheduleContract = typedContract(
+  "post /organizations/:idOrSlug/schedules/:scheduleId/run",
+  z.strictObject({
+    idOrSlug: z.string(),
+    scheduleId: z.string(),
+  }),
+  z.strictObject({
+    success: z.boolean(),
+    scheduleRunId: z.string(),
+    message: z.string().optional(),
+  }),
+);

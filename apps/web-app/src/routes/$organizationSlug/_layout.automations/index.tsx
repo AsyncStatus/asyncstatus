@@ -4,6 +4,7 @@ import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import {
   generateScheduleContract,
   listSchedulesContract,
+  runScheduleContract,
   updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
 import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
@@ -18,7 +19,7 @@ import {
 import { Button } from "@asyncstatus/ui/components/button";
 import { SidebarTrigger, useSidebar } from "@asyncstatus/ui/components/sidebar";
 import { Textarea } from "@asyncstatus/ui/components/textarea";
-import { ArrowUpIcon, PencilIcon } from "@asyncstatus/ui/icons";
+import { ArrowRightIcon, ArrowUpIcon, Loader2Icon, PencilIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -57,6 +58,7 @@ function RouteComponent() {
       },
     }),
   );
+  const runSchedule = useMutation(typedMutationOptions(runScheduleContract));
 
   return (
     <>
@@ -139,18 +141,21 @@ function RouteComponent() {
                   <Button
                     size="sm"
                     className="flex-1"
-                    variant={schedule.isActive ? "outline" : "default"}
+                    disabled={runSchedule.isPending}
                     onClick={() =>
-                      updateSchedule.mutate({
+                      runSchedule.mutate({
                         idOrSlug: organizationSlug,
                         scheduleId: schedule.id,
-                        name: schedule.name,
-                        config: schedule.config,
-                        isActive: !schedule.isActive,
                       })
                     }
                   >
-                    {schedule.isActive ? "Deactivate" : "Activate"}
+                    {runSchedule.isPending ? (
+                      <Loader2Icon className="size-4 animate-spin" />
+                    ) : (
+                      <>
+                        Run now <ArrowUpIcon className="size-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
   generateScheduleContract,
   getScheduleContract,
   listSchedulesContract,
+  runScheduleContract,
   updateScheduleContract,
 } from "./schedule-contracts";
 
@@ -343,5 +344,62 @@ export const generateScheduleHandler = typedHandler<
       scheduleRunId,
       message: text,
     };
+  },
+);
+
+export const runScheduleHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof runScheduleContract
+>(
+  runScheduleContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input, member, workflow }) => {
+    const { scheduleId } = input;
+
+    const schedule = await db.query.schedule.findFirst({
+      where: and(
+        eq(schema.schedule.id, scheduleId),
+        eq(schema.schedule.organizationId, organization.id),
+      ),
+    });
+
+    if (!schedule) {
+      throw new TypedHandlersError({ code: "NOT_FOUND", message: "Schedule not found" });
+    }
+
+    const now = dayjs.utc().toDate();
+    const scheduleRunId = generateId();
+
+    await db.insert(schema.scheduleRun).values({
+      id: scheduleRunId,
+      scheduleId: schedule.id,
+      createdByMemberId: member.id,
+      status: "pending",
+      nextExecutionAt: now,
+      executionCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Trigger appropriate workflow based on schedule name
+    const name = schedule.config.name;
+    if (name === "remindToPostUpdates") {
+      await workflow.pingForUpdates.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else if (name === "generateUpdates") {
+      await workflow.generateStatusUpdates.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else if (name === "sendSummaries") {
+      await workflow.sendSummaries.create({
+        params: { scheduleRunId, organizationId: organization.id },
+      });
+    } else {
+      throw new TypedHandlersError({ code: "BAD_REQUEST", message: "Unsupported schedule type" });
+    }
+
+    return { success: true, scheduleRunId };
   },
 );

@@ -14,7 +14,7 @@ export type PingForUpdatesWorkflowParams = {
 };
 
 interface ResolvedDeliveryTarget {
-  type: "email" | "slack_channel";
+  type: "email" | "slack_channel" | "discord_channel";
   target: string; // email address, channel ID, or user ID
   displayName: string; // for logging
 }
@@ -81,80 +81,101 @@ export class PingForUpdatesWorkflow extends WorkflowEntrypoint<
       const config = initData.scheduleConfig as schema.ScheduleConfigRemindToPostUpdates;
       const targets: ResolvedDeliveryTarget[] = [];
 
-      // Get Slack integration for this organization
       const slackIntegration = await db.query.slackIntegration.findFirst({
         where: eq(schema.slackIntegration.organizationId, organizationId),
+      });
+
+      const discordIntegration = await db.query.discordIntegration.findFirst({
+        where: eq(schema.discordIntegration.organizationId, organizationId),
       });
 
       // Collect all IDs first to avoid N+1 queries
       const memberIds = new Set<string>();
       const teamIds = new Set<string>();
       const slackChannelIds = new Set<string>();
+      const discordChannelIds = new Set<string>();
+      const customEmails = new Set<string>();
 
       // Analyze delivery methods and collect IDs
       for (const deliveryMethod of config.deliveryMethods || []) {
         if (!deliveryMethod) continue;
 
         switch (deliveryMethod.type) {
+          case "organization":
+            break;
           case "member":
             memberIds.add(deliveryMethod.value);
             break;
           case "team":
             teamIds.add(deliveryMethod.value);
             break;
-          case "slack":
-            // We'll determine if it's a channel or user after querying
+          case "slackChannel":
             slackChannelIds.add(deliveryMethod.value);
+            break;
+          case "discordChannel":
+            discordChannelIds.add(deliveryMethod.value);
+            break;
+          case "customEmail":
+            customEmails.add(deliveryMethod.value);
             break;
         }
       }
 
       // Batch query all required data
-      const [members, teams, slackChannels, allMembersForEveryone] = await Promise.all([
-        // Get all required members
-        memberIds.size > 0
-          ? db.query.member.findMany({
-              where: inArray(schema.member.id, [...memberIds]),
-              with: { user: true },
-            })
-          : [],
+      const [members, teams, slackChannels, discordChannels, allMembersForEveryone] =
+        await Promise.all([
+          // Get all required members
+          memberIds.size > 0
+            ? db.query.member.findMany({
+                where: inArray(schema.member.id, [...memberIds]),
+                with: { user: true },
+              })
+            : [],
 
-        // Get all required teams with their memberships
-        teamIds.size > 0
-          ? db.query.team.findMany({
-              where: inArray(schema.team.id, [...teamIds]),
-              with: {
-                teamMemberships: {
-                  with: {
-                    member: {
-                      with: { user: true },
+          // Get all required teams with their memberships
+          teamIds.size > 0
+            ? db.query.team.findMany({
+                where: inArray(schema.team.id, [...teamIds]),
+                with: {
+                  teamMemberships: {
+                    with: {
+                      member: {
+                        with: { user: true },
+                      },
                     },
                   },
                 },
-              },
-            })
-          : [],
+              })
+            : [],
 
-        // Get all Slack channels
-        slackChannelIds.size > 0 && slackIntegration
-          ? db.query.slackChannel.findMany({
-              where: inArray(schema.slackChannel.id, [...slackChannelIds]),
-            })
-          : [],
+          // Get all Slack channels
+          slackChannelIds.size > 0 && slackIntegration
+            ? db.query.slackChannel.findMany({
+                where: inArray(schema.slackChannel.id, [...slackChannelIds]),
+              })
+            : [],
 
-        // Get all organization members if deliverToEveryone is true
-        config.deliverToEveryone
-          ? db.query.member.findMany({
-              where: eq(schema.member.organizationId, organizationId),
-              with: { user: true },
-            })
-          : [],
-      ]);
+          // Get all Discord channels
+          discordChannelIds.size > 0 && discordIntegration
+            ? db.query.discordChannel.findMany({
+                where: inArray(schema.discordChannel.id, [...discordChannelIds]),
+              })
+            : [],
+
+          // Get all organization members if deliverToEveryone is true
+          config.deliveryMethods.some((g) => g?.type === "organization")
+            ? db.query.member.findMany({
+                where: eq(schema.member.organizationId, organizationId),
+                with: { user: true },
+              })
+            : [],
+        ]);
 
       // Create lookup maps for efficient resolution
       const memberMap = new Map(members.map((m) => [m.id, m]));
       const teamMap = new Map(teams.map((t) => [t.id, t]));
       const slackChannelMap = new Map(slackChannels.map((c) => [c.id, c]));
+      const discordChannelMap = new Map(discordChannels.map((c) => [c.id, c]));
 
       // Now resolve delivery targets using the batched data
       for (const deliveryMethod of config.deliveryMethods || []) {
@@ -173,7 +194,7 @@ export class PingForUpdatesWorkflow extends WorkflowEntrypoint<
             continue;
           }
 
-          case "slack": {
+          case "slackChannel": {
             if (slackIntegration) {
               const channel = slackChannelMap.get(deliveryMethod.value);
               if (!channel) {
@@ -190,6 +211,30 @@ export class PingForUpdatesWorkflow extends WorkflowEntrypoint<
               });
             }
             continue;
+          }
+
+          case "discordChannel": {
+            if (discordIntegration) {
+              const channel = discordChannelMap.get(deliveryMethod.value);
+              if (!channel) {
+                console.log(
+                  `Skipping Discord channel ${deliveryMethod.value} because it was not found`,
+                );
+                continue;
+              }
+
+              targets.push({
+                type: "discord_channel",
+                target: channel.channelId,
+                displayName: `#${channel.name}`,
+              });
+            }
+            continue;
+          }
+
+          case "customEmail": {
+            customEmails.add(deliveryMethod.value);
+            break;
           }
 
           case "team": {
@@ -218,8 +263,6 @@ export class PingForUpdatesWorkflow extends WorkflowEntrypoint<
           displayName: member.user.name || member.user.email,
         });
       }
-
-      console.log(targets);
 
       // Remove duplicates
       const uniqueTargets = targets.filter(
