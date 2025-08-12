@@ -34,6 +34,19 @@ export function loginEmailMutationOptions() {
   });
 }
 
+export function loginSocialMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["loginGithub"],
+    mutationFn: async (input: Parameters<typeof authClient.signIn.social>[0]) => {
+      const { data, error } = await authClient.signIn.social(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
 export function signUpEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["signUpEmail"],

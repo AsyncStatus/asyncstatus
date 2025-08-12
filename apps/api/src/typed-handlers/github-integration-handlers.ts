@@ -1,12 +1,20 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
+import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
+import { Octokit } from "octokit";
 import * as schema from "../db";
-import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
+import type {
+  TypedHandlersContext,
+  TypedHandlersContextWithOrganization,
+  TypedHandlersContextWithSession,
+} from "../lib/env";
 import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
   githubIntegrationCallbackContract,
+  githubUserCallbackContract,
   listGithubRepositoriesContract,
   listGithubUsersContract,
   resyncGithubIntegrationContract,
@@ -124,6 +132,110 @@ export const resyncGithubIntegrationHandler = typedHandler<
     return { success: true };
   },
 );
+
+export const githubUserCallbackHandler = typedHandler<
+  TypedHandlersContextWithSession,
+  typeof githubUserCallbackContract
+>(
+  githubUserCallbackContract,
+  requiredSession,
+  async ({ db, session, input, redirect, webAppUrl }) => {
+    const { redirect: redirectUrl } = input;
+    const account = await db.query.account.findFirst({
+      where: eq(schema.account.userId, session.user.id),
+    });
+    if (!account || account.providerId !== "github" || !account.accessToken) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Account not found or not linked to GitHub",
+      });
+    }
+
+    const octokit = new Octokit({ auth: account.accessToken });
+    const user = await octokit.request("GET /user", {
+      headers: {
+        accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    });
+    const githubId = user.data.id.toString();
+
+    const organizations = await db
+      .select({ organization: schema.organization, member: schema.member })
+      .from(schema.organization)
+      .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+      .where(eq(schema.member.userId, session.user.id))
+      .orderBy(desc(schema.organization.createdAt))
+      .limit(1);
+
+    if (organizations[0]?.organization.slug) {
+      return redirect(
+        `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+      );
+    }
+
+    const results = await db.transaction(async (tx) => {
+      const now = dayjs();
+      const [newOrganization] = await tx
+        .insert(schema.organization)
+        .values({
+          id: generateId(),
+          name: `${session.user.name}'s Org`,
+          slug: `${slugify(session.user.name)}-${generateId(4)}`,
+          metadata: null,
+          stripeCustomerId: null,
+          trialPlan: "basic",
+          trialStartDate: now.toDate(),
+          trialEndDate: now.add(14, "day").toDate(),
+          trialStatus: "active",
+          createdAt: now.toDate(),
+        })
+        .returning();
+
+      if (!newOrganization) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create organization",
+        });
+      }
+
+      const [newMember] = await tx
+        .insert(schema.member)
+        .values({
+          id: generateId(),
+          organizationId: newOrganization.id,
+          userId: session.user.id,
+          role: "owner",
+          createdAt: now.toDate(),
+          githubId,
+        })
+        .returning();
+      if (!newMember) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create member",
+        });
+      }
+
+      await tx
+        .update(schema.user)
+        .set({
+          activeOrganizationSlug: newOrganization.slug,
+          showOnboarding: true,
+          onboardingStep: "first-step",
+          onboardingCompletedAt: null,
+        })
+        .where(eq(schema.user.id, session.user.id));
+
+      return { organization: newOrganization, member: newMember };
+    });
+
+    return redirect(
+      `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+    );
+  },
+);
+
 export const getGithubIntegrationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof getGithubIntegrationContract

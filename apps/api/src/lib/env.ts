@@ -144,6 +144,12 @@ export type Variables = {
       enterprise: number;
     };
   };
+  github: {
+    appId: string;
+    clientId: string;
+    clientSecret: string;
+    privateKey: string;
+  };
 };
 
 export type HonoEnv = {
@@ -196,6 +202,12 @@ export async function createContext(c: Context<HonoEnv>) {
     betterAuthUrl,
     webAppUrl: c.env.WEB_APP_URL,
     authKv: c.env.AS_PROD_AUTH_KV,
+    github: {
+      appId: c.env.GITHUB_APP_ID,
+      clientId: c.env.GITHUB_CLIENT_ID,
+      clientSecret: c.env.GITHUB_CLIENT_SECRET,
+      privateKey: c.env.GITHUB_APP_PRIVATE_KEY,
+    },
     slack: {
       appId: c.env.SLACK_APP_ID,
       clientId: c.env.SLACK_CLIENT_ID,

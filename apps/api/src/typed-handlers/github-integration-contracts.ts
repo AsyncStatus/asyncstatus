@@ -8,6 +8,12 @@ export const githubIntegrationCallbackContract = typedContract(
   z.instanceof(Response),
 );
 
+export const githubUserCallbackContract = typedContract(
+  "get /integrations/github/user-callback",
+  z.object({ redirect: z.string().optional() }),
+  z.instanceof(Response),
+);
+
 export const getGithubIntegrationContract = typedContract(
   "get /organizations/:idOrSlug/integrations/github",
   z.strictObject({ idOrSlug: z.string().min(1) }),

@@ -15,6 +15,9 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     appName: "AsyncStatus",
     url: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
+    socialProviders: {
+      github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
+    },
     emailAndPassword: {
       enabled: true,
       async sendResetPassword(data) {
@@ -95,6 +98,24 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           required: true,
           input: false,
           defaultValue: true,
+        },
+        showOnboarding: {
+          type: "boolean",
+          required: true,
+          input: false,
+          defaultValue: false,
+        },
+        onboardingStep: {
+          type: "string",
+          required: true,
+          input: false,
+          defaultValue: "first-step",
+        },
+        onboardingCompletedAt: {
+          type: "date",
+          required: true,
+          input: false,
+          defaultValue: null,
         },
       },
     },

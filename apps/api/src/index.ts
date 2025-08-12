@@ -50,6 +50,7 @@ import {
   deleteGithubIntegrationHandler,
   getGithubIntegrationHandler,
   githubIntegrationCallbackHandler,
+  githubUserCallbackHandler,
   listGithubRepositoriesHandler,
   listGithubUsersHandler,
   resyncGithubIntegrationHandler,
@@ -67,6 +68,10 @@ import {
   listMembersHandler,
   updateMemberHandler,
 } from "./typed-handlers/member-handlers";
+import {
+  onboardingSelectGithubRepositoriesHandler,
+  updateUserOnboardingHandler,
+} from "./typed-handlers/onboarding-handlers";
 import {
   createOrganizationHandler,
   getOrganizationHandler,
@@ -293,6 +298,7 @@ const app = new Hono<HonoEnv>()
     c.set("stripeClient", context.stripeClient);
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
+    c.set("github", context.github);
     return next();
   })
   .route("/auth", authRouter)
@@ -374,6 +380,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listRecentStatusUpdatesHandler,
     getGithubIntegrationHandler,
     githubIntegrationCallbackHandler,
+    githubUserCallbackHandler,
     listGithubRepositoriesHandler,
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
@@ -407,6 +414,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
+    onboardingSelectGithubRepositoriesHandler,
+    updateUserOnboardingHandler,
   ],
   {
     getContext: (c) => ({
@@ -430,6 +439,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
+      github: c.get("github"),
     }),
   },
 );

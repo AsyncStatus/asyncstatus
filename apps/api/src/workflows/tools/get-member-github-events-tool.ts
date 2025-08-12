@@ -64,6 +64,7 @@ export function getMemberGithubEventsTool(db: Db) {
         .innerJoin(schema.member, eq(schema.member.githubId, schema.githubUser.githubId))
         .where(and(...conditions))
         .orderBy(desc(schema.githubEvent.createdAt));
+
       return events;
     },
   });

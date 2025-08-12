@@ -1,14 +1,19 @@
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
+import { SiGithub } from "@asyncstatus/ui/brand-icons";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";
+import { MailIcon } from "@asyncstatus/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { loginEmailMutationOptions } from "@/better-auth-tanstack-query";
+import {
+  loginEmailMutationOptions,
+  loginSocialMutationOptions,
+} from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
 import { typedQueryOptions } from "@/typed-handlers";
 
@@ -46,6 +51,7 @@ const schema = z.object({
 function RouteComponent() {
   const router = useRouter();
   const search = Route.useSearch();
+  const [showLoginWithEmail, setShowLoginWithEmail] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const invitation = useQuery(
@@ -73,6 +79,15 @@ function RouteComponent() {
     },
   });
 
+  const loginSocial = useMutation({
+    ...loginSocialMutationOptions(),
+    async onSuccess() {
+      await queryClient.resetQueries();
+      await router.invalidate();
+      await navigate({ to: search.redirect ?? "/" });
+    },
+  });
+
   useEffect(() => {
     if (invitation.data?.email) {
       form.setValue("email", invitation.data.email);
@@ -82,7 +97,7 @@ function RouteComponent() {
   return (
     <Form {...form}>
       <form
-        className="mx-auto w-full max-w-xs space-y-24"
+        className="mx-auto w-full max-w-xs"
         onSubmit={form.handleSubmit((data) => {
           loginEmail.mutate({
             ...data,
@@ -101,79 +116,113 @@ function RouteComponent() {
           </h2>
         </div>
 
-        <div className="grid gap-5">
-          <FormField
-            control={form.control}
-            disabled={Boolean(search.invitationEmail) && invitation.data?.hasUser}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="john.doe@example.com" autoComplete="work email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-4 mt-16">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-[#181818]"
+            onClick={() =>
+              loginSocial.mutate({
+                provider: "github",
+                callbackURL: `${import.meta.env.VITE_API_URL}/integrations/github/user-callback?redirect=${search.redirect}`,
+                scopes: ["user:email"],
+              })
+            }
+          >
+            <SiGithub className="size-4" />
+            Continue with GitHub
+          </Button>
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-end justify-between">
-                  <FormLabel>Password</FormLabel>
-                  <Link
-                    // biome-ignore lint/a11y/noPositiveTabindex: better ux
-                    tabIndex={1}
-                    to="/forgot-password"
-                    className="text-muted-foreground text-xs hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="********"
-                    autoComplete="current-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="rememberMe"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-1">
-                <FormControl>
-                  <Checkbox
-                    ref={field.ref}
-                    name={field.name}
-                    onBlur={field.onBlur}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel>Remember me</FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {loginEmail.error && (
-            <div className="text-destructive text-sm text-pretty">{loginEmail.error.message}</div>
-          )}
-
-          <Button type="submit" className="w-full" disabled={loginEmail.isPending}>
-            Login
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowLoginWithEmail((prev) => !prev)}
+          >
+            <MailIcon className="size-4" />
+            Continue with email
           </Button>
         </div>
+
+        {showLoginWithEmail && (
+          <div className="grid gap-5 mt-12">
+            <FormField
+              control={form.control}
+              disabled={Boolean(search.invitationEmail) && invitation.data?.hasUser}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="john.doe@example.com"
+                      autoComplete="work email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-end justify-between">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      // biome-ignore lint/a11y/noPositiveTabindex: better ux
+                      tabIndex={1}
+                      to="/forgot-password"
+                      className="text-muted-foreground text-xs hover:underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="********"
+                      autoComplete="current-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-1">
+                  <FormControl>
+                    <Checkbox
+                      ref={field.ref}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Remember me</FormLabel>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {loginEmail.error && (
+              <div className="text-destructive text-sm text-pretty">{loginEmail.error.message}</div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={loginEmail.isPending}>
+              Login
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );
