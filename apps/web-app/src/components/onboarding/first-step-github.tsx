@@ -150,7 +150,7 @@ export function FirstStepGithub({ organizationSlug }: { organizationSlug: string
       (githubIntegration.data?.syncStartedAt || githubIntegration.data?.syncUpdatedAt) &&
       !githubIntegration.data?.syncFinishedAt
     ) {
-      return "This usually takes 10-30 seconds.";
+      return "This usually takes 5-20 seconds.";
     }
 
     if (statusUpdate.data) {
