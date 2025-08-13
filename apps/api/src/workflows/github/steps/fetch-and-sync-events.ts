@@ -1,21 +1,16 @@
-import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Octokit } from "octokit";
-import type { VoyageAIClient } from "voyageai";
 import * as schema from "../../../db";
 import type { Db } from "../../../db/db";
 import type { AnyGithubWebhookEventDefinition } from "../../../lib/github-event-definition";
 import { isTuple } from "../../../lib/is-tuple";
 import { standardizeGithubEventName } from "../../../lib/standardize-github-event-name";
-import { generateGithubEventSummary } from "./generate-github-event-summary";
 
 type FetchAndSyncEventsParams = {
   octokit: Octokit;
   db: Db;
   integrationId: string;
-  openRouterProvider: OpenRouterProvider;
-  voyageClient: VoyageAIClient;
   minEventCreatedAt: Date;
 };
 
@@ -23,14 +18,13 @@ export async function fetchAndSyncEvents({
   octokit,
   db,
   integrationId,
-  openRouterProvider,
-  voyageClient,
   minEventCreatedAt,
 }: FetchAndSyncEventsParams) {
   const repositories = await db.query.githubRepository.findMany({
     where: eq(schema.githubRepository.integrationId, integrationId),
     columns: { id: true, owner: true, name: true },
   });
+  const processedEventIds = new Set<string>();
 
   for (const repo of repositories) {
     const events = await octokit.paginate(
@@ -62,6 +56,7 @@ export async function fetchAndSyncEvents({
 
     try {
       const batchUpserts = events.map((event) => {
+        processedEventIds.add(event.id.toString());
         return db
           .insert(schema.githubEvent)
           .values({
@@ -95,50 +90,5 @@ export async function fetchAndSyncEvents({
     }
   }
 
-  const events = await db.query.githubEvent.findMany({
-    where: inArray(
-      schema.githubEvent.repositoryId,
-      repositories.map((repo) => repo.id),
-    ),
-    orderBy: desc(schema.githubEvent.createdAt),
-  });
-  const batches = groupBatch(events, 50);
-  for (const batch of batches) {
-    const summarizedEvents = await Promise.all(
-      batch.map(async (event) => {
-        const { summary, embedding } = await generateGithubEventSummary({
-          openRouterProvider,
-          voyageClient,
-          event,
-        });
-        return { id: event.id, summary, embedding };
-      }),
-    );
-
-    const batchUpserts = summarizedEvents.map((eventSummary) => {
-      if (!eventSummary.embedding || !eventSummary.summary) {
-        return null;
-      }
-
-      return db.insert(schema.githubEventVector).values({
-        id: nanoid(),
-        eventId: eventSummary.id,
-        embeddingText: eventSummary.summary,
-        embedding: sql`vector32(${JSON.stringify(eventSummary.embedding)})`,
-        createdAt: new Date(),
-      });
-    });
-
-    if (isTuple(batchUpserts)) {
-      await db.batch(batchUpserts as any);
-    }
-  }
-}
-
-function groupBatch<T>(batch: T[], batchSize: number): T[][] {
-  const result: T[][] = [];
-  for (let i = 0; i < batch.length; i += batchSize) {
-    result.push(batch.slice(i, i + batchSize));
-  }
-  return result;
+  return processedEventIds;
 }

@@ -38,6 +38,7 @@ export type Bindings = {
   GITHUB_CLIENT_SECRET: string;
   GITHUB_APP_ID: string;
   GITHUB_APP_PRIVATE_KEY: string;
+  GITHUB_APP_NAME: string;
   RESEND_API_KEY: string;
   WEB_APP_URL: string;
   PRIVATE_BUCKET: R2Bucket;
@@ -149,6 +150,7 @@ export type Variables = {
     clientId: string;
     clientSecret: string;
     privateKey: string;
+    appName: string;
   };
 };
 
@@ -207,6 +209,7 @@ export async function createContext(c: Context<HonoEnv>) {
       clientId: c.env.GITHUB_CLIENT_ID,
       clientSecret: c.env.GITHUB_CLIENT_SECRET,
       privateKey: c.env.GITHUB_APP_PRIVATE_KEY,
+      appName: c.env.GITHUB_APP_NAME,
     },
     slack: {
       appId: c.env.SLACK_APP_ID,

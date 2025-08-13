@@ -92,7 +92,9 @@ export const onboardingSelectGithubRepositoriesHandler = typedHandler<
         (installation) => installation.app_id === Number(github.appId),
       );
       if (!asyncStatusInstallation) {
-        return redirect(`${webAppUrl}/${organization.slug}`);
+        return redirect(
+          `https://github.com/apps/${github.appName}/installations/new?state=${organization.slug}`,
+        );
       }
 
       const existingIntegration = await db
@@ -132,7 +134,7 @@ export const onboardingSelectGithubRepositoriesHandler = typedHandler<
       }
 
       const workflowInstance = await workflow.syncGithub.create({
-        params: { integrationId, prefetchPastEvents: true },
+        params: { integrationId },
       });
       await db
         .update(schema.githubIntegration)

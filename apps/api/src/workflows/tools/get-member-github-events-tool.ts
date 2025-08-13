@@ -50,7 +50,7 @@ export function getMemberGithubEventsTool(db: Db) {
           schema.githubIntegration,
           eq(schema.githubRepository.integrationId, schema.githubIntegration.id),
         )
-        .innerJoin(
+        .leftJoin(
           schema.githubEventVector,
           eq(schema.githubEvent.id, schema.githubEventVector.eventId),
         )

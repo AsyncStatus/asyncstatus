@@ -120,7 +120,7 @@ function RouteComponent() {
           <Button
             type="button"
             variant="outline"
-            className="w-full bg-[#181818]"
+            className="w-full"
             onClick={() =>
               loginSocial.mutate({
                 provider: "github",
