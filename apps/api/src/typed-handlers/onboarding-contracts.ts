@@ -11,9 +11,3 @@ export const updateUserOnboardingContract = typedContract(
   }),
   User,
 );
-
-export const onboardingSelectGithubRepositoriesContract = typedContract(
-  `get /organizations/:idOrSlug/onboarding/select-github-repositories`,
-  z.strictObject({ idOrSlug: z.string().min(1) }),
-  z.instanceof(Response),
-);

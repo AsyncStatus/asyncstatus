@@ -16,7 +16,39 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     url: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     socialProviders: {
-      github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
+      github: {
+        clientId: env.GITHUB_CLIENT_ID,
+        clientSecret: env.GITHUB_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: true,
+          };
+        },
+      },
+      slack: {
+        clientId: env.SLACK_CLIENT_ID,
+        clientSecret: env.SLACK_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: profile.email_verified,
+          };
+        },
+      },
+      discord: {
+        clientId: env.DISCORD_CLIENT_ID,
+        clientSecret: env.DISCORD_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: profile.verified,
+          };
+        },
+      },
     },
     emailAndPassword: {
       enabled: true,
@@ -49,6 +81,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       "https://app-v2.asyncstatus.com",
       "https://supposedly-simple-mallard.ngrok-free.app",
     ],
+    account: { accountLinking: { enabled: true } },
     emailVerification: {
       autoSignInAfterVerification: true,
       async sendVerificationEmail(data) {

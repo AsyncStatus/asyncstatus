@@ -12,6 +12,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { typedMutationOptions } from "@/typed-handlers";
+import { updateOnboardingOptimistic } from "./update-onboarding-optimistic";
 
 export function ManualUpdatesDialog({
   isOpen,
@@ -28,20 +29,10 @@ export function ManualUpdatesDialog({
           return;
         }
 
-        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
-          if (!sessionData) {
-            return sessionData;
-          }
-          return {
-            ...sessionData,
-            user: {
-              ...sessionData.user,
-              showOnboarding: variables.showOnboarding ?? sessionData.user.showOnboarding,
-              onboardingStep: variables.onboardingStep ?? sessionData.user.onboardingStep,
-              onboardingCompletedAt:
-                variables.onboardingCompletedAt ?? sessionData.user.onboardingCompletedAt,
-            },
-          };
+        updateOnboardingOptimistic(queryClient, {
+          showOnboarding: variables.showOnboarding,
+          onboardingStep: variables.onboardingStep,
+          onboardingCompletedAt: variables.onboardingCompletedAt,
         });
       },
       onSettled() {

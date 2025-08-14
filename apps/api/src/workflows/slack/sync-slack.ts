@@ -1,4 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import { dayjs } from "@asyncstatus/dayjs";
 import { WebClient } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import * as schema from "../../db";
@@ -6,6 +7,7 @@ import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 import { createReportStatusFn } from "./steps/common";
 import { fetchAndSyncChannels } from "./steps/fetch-and-sync-channels";
+import { fetchAndSyncMessages } from "./steps/fetch-and-sync-messages";
 import { fetchAndSyncUsers } from "./steps/fetch-and-sync-users";
 
 export type SyncSlackWorkflowParams = { integrationId: string };
@@ -55,6 +57,21 @@ export class SyncSlackWorkflow extends WorkflowEntrypoint<
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
       await reportStatusFn(() => fetchAndSyncUsers({ slackClient, db, integrationId }));
+
+      await reportStatusFn(async () => {
+        const eventIds = await fetchAndSyncMessages({
+          slackClient,
+          db,
+          integrationId,
+          minEventCreatedAt: dayjs().startOf("week").toDate(),
+        });
+
+        if (eventIds.size > 0) {
+          await this.env.SLACK_PROCESS_EVENTS_QUEUE.sendBatch(
+            Array.from(eventIds).map((id) => ({ body: id, contentType: "text" })),
+          );
+        }
+      });
 
       await db
         .update(schema.slackIntegration)

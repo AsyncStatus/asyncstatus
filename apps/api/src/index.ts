@@ -50,7 +50,6 @@ import {
   deleteGithubIntegrationHandler,
   getGithubIntegrationHandler,
   githubIntegrationCallbackHandler,
-  githubUserCallbackHandler,
   listGithubRepositoriesHandler,
   listGithubUsersHandler,
   resyncGithubIntegrationHandler,
@@ -68,10 +67,7 @@ import {
   listMembersHandler,
   updateMemberHandler,
 } from "./typed-handlers/member-handlers";
-import {
-  onboardingSelectGithubRepositoriesHandler,
-  updateUserOnboardingHandler,
-} from "./typed-handlers/onboarding-handlers";
+import { updateUserOnboardingHandler } from "./typed-handlers/onboarding-handlers";
 import {
   createOrganizationHandler,
   getOrganizationHandler,
@@ -94,6 +90,7 @@ import {
   listSlackChannelsHandler,
   listSlackUsersHandler,
   slackIntegrationCallbackHandler,
+  slackUserIntegrationCallbackHandler,
 } from "./typed-handlers/slack-integration-handlers";
 import {
   createStatusUpdateHandler,
@@ -380,7 +377,6 @@ const typedHandlersApp = typedHandlersHonoServer(
     listRecentStatusUpdatesHandler,
     getGithubIntegrationHandler,
     githubIntegrationCallbackHandler,
-    githubUserCallbackHandler,
     listGithubRepositoriesHandler,
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
@@ -414,8 +410,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
-    onboardingSelectGithubRepositoriesHandler,
     updateUserOnboardingHandler,
+    slackUserIntegrationCallbackHandler,
   ],
   {
     getContext: (c) => ({

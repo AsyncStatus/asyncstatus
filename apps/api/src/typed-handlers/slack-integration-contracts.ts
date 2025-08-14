@@ -4,7 +4,13 @@ import { SlackChannel, SlackIntegration, SlackUser } from "../db";
 
 export const slackIntegrationCallbackContract = typedContract(
   "get /integrations/slack/callback",
-  z.object({ code: z.string(), state: z.string() }),
+  z.object({ redirect: z.string().optional() }),
+  z.instanceof(Response),
+);
+
+export const slackUserIntegrationCallbackContract = typedContract(
+  "get /integrations/slack/user/callback",
+  z.any(),
   z.instanceof(Response),
 );
 

@@ -6,7 +6,6 @@ import { desc, eq } from "drizzle-orm";
 import { Octokit } from "octokit";
 import * as schema from "../db";
 import type {
-  TypedHandlersContext,
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
@@ -14,7 +13,6 @@ import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
   githubIntegrationCallbackContract,
-  githubUserCallbackContract,
   listGithubRepositoriesContract,
   listGithubUsersContract,
   resyncGithubIntegrationContract,
@@ -22,124 +20,12 @@ import {
 import { requiredOrganization, requiredSession } from "./middleware";
 
 export const githubIntegrationCallbackHandler = typedHandler<
-  TypedHandlersContext,
-  typeof githubIntegrationCallbackContract
->(githubIntegrationCallbackContract, async ({ redirect, webAppUrl, db, input, workflow }) => {
-  const { installation_id: installationId, state: organizationSlug } = input;
-
-  if (!installationId || !organizationSlug) {
-    return redirect(
-      `${webAppUrl}/error?error-title=${encodeURIComponent("Missing required parameters")}&error-description=${encodeURIComponent("Missing required parameters.")}`,
-    );
-  }
-
-  try {
-    const organization = await db.query.organization.findFirst({
-      where: eq(schema.organization.slug, organizationSlug),
-    });
-    if (!organization) {
-      return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Organization not found")}&error-description=${encodeURIComponent("Organization not found.")}`,
-      );
-    }
-
-    const existingIntegration = await db
-      .select()
-      .from(schema.githubIntegration)
-      .where(eq(schema.githubIntegration.organizationId, organization.id))
-      .limit(1);
-
-    let integrationId: string | undefined;
-
-    if (existingIntegration[0]) {
-      await db
-        .update(schema.githubIntegration)
-        .set({ installationId, updatedAt: new Date() })
-        .where(eq(schema.githubIntegration.id, existingIntegration[0].id))
-        .returning();
-
-      integrationId = existingIntegration[0].id;
-    } else {
-      const newIntegration = await db
-        .insert(schema.githubIntegration)
-        .values({
-          id: generateId(),
-          organizationId: organization.id,
-          installationId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-
-      integrationId = newIntegration[0]?.id;
-    }
-    if (!integrationId) {
-      return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration.")}`,
-      );
-    }
-
-    const workflowInstance = await workflow.syncGithub.create({
-      params: { integrationId },
-    });
-    await db
-      .update(schema.githubIntegration)
-      .set({ syncId: workflowInstance.id })
-      .where(eq(schema.githubIntegration.id, integrationId));
-
-    return redirect(`${webAppUrl}/${organization.slug}`);
-  } catch {
-    return redirect(
-      `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("GitHub integration error")}&error-description=${encodeURIComponent(
-        `Failed to complete GitHub integration. Please try again.`,
-      )}`,
-    );
-  }
-});
-
-export const resyncGithubIntegrationHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof resyncGithubIntegrationContract
->(
-  resyncGithubIntegrationContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, workflow }) => {
-    const integration = await db.query.githubIntegration.findFirst({
-      where: eq(schema.githubIntegration.organizationId, organization.id),
-    });
-    if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "GitHub integration not found",
-      });
-    }
-    if (integration.syncId) {
-      throw new TypedHandlersError({
-        code: "CONFLICT",
-        message: "GitHub integration is already being synced",
-      });
-    }
-
-    const workflowInstance = await workflow.syncGithub.create({
-      params: { integrationId: integration.id },
-    });
-    await db
-      .update(schema.githubIntegration)
-      .set({ syncId: workflowInstance.id })
-      .where(eq(schema.githubIntegration.id, integration.id));
-
-    return { success: true };
-  },
-);
-
-export const githubUserCallbackHandler = typedHandler<
   TypedHandlersContextWithSession,
-  typeof githubUserCallbackContract
+  typeof githubIntegrationCallbackContract
 >(
-  githubUserCallbackContract,
+  githubIntegrationCallbackContract,
   requiredSession,
-  async ({ db, session, input, redirect, webAppUrl, github, workflow }) => {
+  async ({ redirect, webAppUrl, db, input, workflow, session, github }) => {
     try {
       const { redirect: redirectUrl } = input;
       const account = await db.query.account.findFirst({
@@ -177,12 +63,13 @@ export const githubUserCallbackHandler = typedHandler<
 
       const results = await db.transaction(async (tx) => {
         const now = dayjs();
+        const name = `${session.user.name}'s Org`;
         const [newOrganization] = await tx
           .insert(schema.organization)
           .values({
             id: generateId(),
-            name: `${session.user.name}'s Org`,
-            slug: `${slugify(session.user.name)}-${generateId(4)}`,
+            name,
+            slug: `${slugify(name)}-${generateId(4)}`,
             metadata: null,
             stripeCustomerId: null,
             trialPlan: "basic",
@@ -290,6 +177,42 @@ export const githubUserCallbackHandler = typedHandler<
         )}`,
       );
     }
+  },
+);
+
+export const resyncGithubIntegrationHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof resyncGithubIntegrationContract
+>(
+  resyncGithubIntegrationContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, workflow }) => {
+    const integration = await db.query.githubIntegration.findFirst({
+      where: eq(schema.githubIntegration.organizationId, organization.id),
+    });
+    if (!integration) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "GitHub integration not found",
+      });
+    }
+    if (integration.syncId) {
+      throw new TypedHandlersError({
+        code: "CONFLICT",
+        message: "GitHub integration is already being synced",
+      });
+    }
+
+    const workflowInstance = await workflow.syncGithub.create({
+      params: { integrationId: integration.id },
+    });
+    await db
+      .update(schema.githubIntegration)
+      .set({ syncId: workflowInstance.id })
+      .where(eq(schema.githubIntegration.id, integration.id));
+
+    return { success: true };
   },
 );
 
