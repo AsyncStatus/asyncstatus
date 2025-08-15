@@ -136,7 +136,11 @@ export const githubIntegrationCallbackHandler = typedHandler<
 
         await db
           .update(schema.githubIntegration)
-          .set({ syncId: workflowInstance.id })
+          .set({
+            syncId: workflowInstance.id,
+            syncStartedAt: new Date(),
+            syncUpdatedAt: new Date(),
+          })
           .where(eq(schema.githubIntegration.id, newGithubIntegration.id));
 
         return redirect(
@@ -255,7 +259,11 @@ export const githubIntegrationCallbackHandler = typedHandler<
 
       await db
         .update(schema.githubIntegration)
-        .set({ syncId: workflowInstance.id })
+        .set({
+          syncId: workflowInstance.id,
+          syncStartedAt: new Date(),
+          syncUpdatedAt: new Date(),
+        })
         .where(eq(schema.githubIntegration.id, newGithubIntegration.id));
 
       return redirect(
@@ -300,7 +308,11 @@ export const resyncGithubIntegrationHandler = typedHandler<
     });
     await db
       .update(schema.githubIntegration)
-      .set({ syncId: workflowInstance.id })
+      .set({
+        syncId: workflowInstance.id,
+        syncStartedAt: new Date(),
+        syncUpdatedAt: new Date(),
+      })
       .where(eq(schema.githubIntegration.id, integration.id));
 
     return { success: true };

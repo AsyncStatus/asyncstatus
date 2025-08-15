@@ -6,6 +6,7 @@ import { generateId } from "better-auth";
 import { and, desc, eq } from "drizzle-orm";
 import * as schema from "../db";
 import type {
+  TypedHandlersContext,
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
@@ -16,6 +17,7 @@ import {
   getSlackIntegrationContract,
   listSlackChannelsContract,
   listSlackUsersContract,
+  slackAddIntegrationCallbackContract,
   slackIntegrationCallbackContract,
 } from "./slack-integration-contracts";
 
@@ -24,7 +26,7 @@ export const slackIntegrationCallbackHandler = typedHandler<
   typeof slackIntegrationCallbackContract
 >(
   slackIntegrationCallbackContract,
-  async ({ redirect, webAppUrl, db, input, slack, workflow, session, betterAuthUrl }) => {
+  async ({ redirect, webAppUrl, db, input, slack, session, betterAuthUrl }) => {
     if (!session) {
       return redirect(webAppUrl);
     }
@@ -44,218 +46,115 @@ export const slackIntegrationCallbackHandler = typedHandler<
         });
       }
 
-      // Get Slack user info
-      const slackClient = new WebClient(account.accessToken);
-      const userResponse = await slackClient.auth.test().catch((error) => {
-        console.log(error);
-        return null;
-      });
-
-      if (!userResponse?.ok || !userResponse?.user_id || !userResponse?.team_id) {
-        throw new TypedHandlersError({
-          code: "UNAUTHORIZED",
-          message: "Failed to get Slack user info",
-        });
-      }
-
-      const slackUserId = userResponse.user_id;
-
-      const organizations = await db
-        .select({ organization: schema.organization, member: schema.member })
+      const [org] = await db
+        .select({
+          organization: schema.organization,
+          member: schema.member,
+          slackIntegration: schema.slackIntegration,
+        })
         .from(schema.organization)
         .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .leftJoin(
+          schema.slackIntegration,
+          eq(schema.slackIntegration.organizationId, schema.organization.id),
+        )
         .where(eq(schema.member.userId, session.user.id))
         .orderBy(desc(schema.organization.createdAt))
         .limit(1);
 
-      if (organizations[0]?.organization.slug) {
+      if (!org?.organization.slug) {
+        const results = await db.transaction(async (tx) => {
+          const now = dayjs();
+          const name = `${session.user.name}'s Org`;
+          const [newOrganization] = await tx
+            .insert(schema.organization)
+            .values({
+              id: generateId(),
+              name,
+              slug: `${slugify(name)}-${generateId(4)}`,
+              metadata: null,
+              stripeCustomerId: null,
+              trialPlan: "basic",
+              trialStartDate: now.toDate(),
+              trialEndDate: now.add(14, "day").toDate(),
+              trialStatus: "active",
+              createdAt: now.toDate(),
+            })
+            .returning();
+
+          if (!newOrganization) {
+            throw new TypedHandlersError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create organization",
+            });
+          }
+
+          const [newMember] = await tx
+            .insert(schema.member)
+            .values({
+              id: generateId(),
+              organizationId: newOrganization.id,
+              userId: session.user.id,
+              role: "owner",
+              slackId: account.accountId,
+              createdAt: now.toDate(),
+            })
+            .returning();
+          if (!newMember) {
+            throw new TypedHandlersError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create member",
+            });
+          }
+
+          await tx
+            .update(schema.user)
+            .set({
+              activeOrganizationSlug: newOrganization.slug,
+              showOnboarding: true,
+              onboardingStep: "first-step",
+              onboardingCompletedAt: null,
+            })
+            .where(eq(schema.user.id, session.user.id));
+
+          return { organization: newOrganization, member: newMember };
+        });
+
         const slackIntegration = await db.query.slackIntegration.findFirst({
-          where: eq(schema.slackIntegration.organizationId, organizations[0].organization.id),
+          where: eq(schema.slackIntegration.organizationId, results.organization.id),
         });
-        if (slackIntegration) {
+        if (!slackIntegration || slackIntegration.syncError) {
           return redirect(
-            `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+            getSlackIntegrationConnectUrl({
+              clientId: slack.clientId,
+              redirectUri: `${betterAuthUrl}${slackAddIntegrationCallbackContract.url()}`,
+              organizationSlug: results.organization.slug,
+            }),
           );
         }
 
-        // Get team info
-        const teamResponse = await slackClient.team.info().catch((error) => {
-          console.log(error);
-          return null;
-        });
-        console.log(teamResponse);
-        if (!teamResponse?.ok || !teamResponse?.team) {
-          throw new TypedHandlersError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to get Slack team info",
-          });
-        }
-
-        const team = teamResponse.team;
-
-        const [newSlackIntegration] = await db
-          .insert(schema.slackIntegration)
-          .values({
-            id: generateId(),
-            organizationId: organizations[0].organization.id,
-            teamId: team.id!,
-            teamName: team.name || null,
-            enterpriseId: team.enterprise_id || null,
-            enterpriseName: team.enterprise_name || null,
-            botAccessToken: account.accessToken,
-            botScopes: account.scope || null,
-            botUserId: slackUserId,
-            appId: slack.appId,
-            tokenExpiresAt: account.accessTokenExpiresAt,
-            refreshToken: account.refreshToken,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .returning();
-        if (!newSlackIntegration) {
-          return redirect(
-            `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create Slack integration")}&error-description=${encodeURIComponent("Failed to create Slack integration. Please try again.")}`,
-          );
-        }
-
-        await db
-          .update(schema.member)
-          .set({ slackId: slackUserId })
-          .where(
-            and(
-              eq(schema.member.organizationId, organizations[0].organization.id),
-              eq(schema.member.userId, session?.user.id),
-            ),
-          );
-
-        const workflowInstance = await workflow.syncSlack.create({
-          params: { integrationId: newSlackIntegration.id },
-        });
-
-        await db
-          .update(schema.slackIntegration)
-          .set({ syncId: workflowInstance.id })
-          .where(eq(schema.slackIntegration.id, newSlackIntegration.id));
-
-        return redirect(
-          `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
-        );
-      }
-
-      const results = await db.transaction(async (tx) => {
-        const now = dayjs();
-        const name = `${session?.user.name || "My"} Org`;
-        const [newOrganization] = await tx
-          .insert(schema.organization)
-          .values({
-            id: generateId(),
-            name,
-            slug: `${slugify(name)}-${generateId(4)}`,
-            metadata: null,
-            stripeCustomerId: null,
-            trialPlan: "basic",
-            trialStartDate: now.toDate(),
-            trialEndDate: now.add(14, "day").toDate(),
-            trialStatus: "active",
-            createdAt: now.toDate(),
-          })
-          .returning();
-
-        if (!newOrganization) {
-          throw new TypedHandlersError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create organization",
-          });
-        }
-
-        const [newMember] = await tx
-          .insert(schema.member)
-          .values({
-            id: generateId(),
-            organizationId: newOrganization.id,
-            userId: session?.user.id,
-            role: "owner",
-            createdAt: now.toDate(),
-            slackId: slackUserId,
-          })
-          .returning();
-        if (!newMember) {
-          throw new TypedHandlersError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create member",
-          });
-        }
-
-        await tx
-          .update(schema.user)
-          .set({
-            activeOrganizationSlug: newOrganization.slug,
-            showOnboarding: true,
-            onboardingStep: "first-step",
-            onboardingCompletedAt: null,
-          })
-          .where(eq(schema.user.id, session?.user.id));
-
-        return { organization: newOrganization, member: newMember };
-      });
-
-      const slackIntegration = await db.query.slackIntegration.findFirst({
-        where: eq(schema.slackIntegration.organizationId, results.organization.id),
-      });
-      if (slackIntegration) {
         return redirect(
           `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
         );
       }
 
-      // Get team info
-      const teamResponse = await slackClient.team.info();
-      if (!teamResponse.ok || !teamResponse.team) {
-        throw new TypedHandlersError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to get Slack team info",
-        });
-      }
-
-      const team = teamResponse.team;
-
-      const [newSlackIntegration] = await db
-        .insert(schema.slackIntegration)
-        .values({
-          id: generateId(),
-          organizationId: results.organization.id,
-          teamId: team.id!,
-          teamName: team.name || null,
-          enterpriseId: team.enterprise_id || null,
-          enterpriseName: team.enterprise_name || null,
-          botAccessToken: account.accessToken,
-          botScopes: account.scope || null,
-          botUserId: slackUserId,
-          appId: slack.appId,
-          tokenExpiresAt: account.accessTokenExpiresAt,
-          refreshToken: account.refreshToken,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-      if (!newSlackIntegration) {
+      if (org?.organization.slug && !org.slackIntegration) {
         return redirect(
-          `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create Slack integration")}&error-description=${encodeURIComponent("Failed to create Slack integration. Please try again.")}`,
+          getSlackIntegrationConnectUrl({
+            clientId: slack.clientId,
+            redirectUri: `${betterAuthUrl}${slackAddIntegrationCallbackContract.url()}`,
+            organizationSlug: org.organization.slug,
+          }),
         );
       }
 
-      const workflowInstance = await workflow.syncSlack.create({
-        params: { integrationId: newSlackIntegration.id },
-      });
+      if (org?.organization.slug && org.slackIntegration) {
+        return redirect(
+          `${webAppUrl}/${org.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
 
-      await db
-        .update(schema.slackIntegration)
-        .set({ syncId: workflowInstance.id })
-        .where(eq(schema.slackIntegration.id, newSlackIntegration.id));
-
-      return redirect(
-        `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
-      );
+      return redirect(webAppUrl);
     } catch (error) {
       const message =
         error instanceof TypedHandlersError
@@ -265,7 +164,209 @@ export const slackIntegrationCallbackHandler = typedHandler<
             : "Failed to complete Slack integration. Please try again.";
       return redirect(
         `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete Slack integration")}&error-description=${encodeURIComponent(
-          message,
+          `${message}. Please try again.`,
+        )}`,
+      );
+    }
+  },
+);
+
+export const slackAddIntegrationCallbackHandler = typedHandler<
+  TypedHandlersContextWithSession,
+  typeof slackAddIntegrationCallbackContract
+>(
+  slackAddIntegrationCallbackContract,
+  async ({ redirect, webAppUrl, db, input, slack, workflow, betterAuthUrl, session }) => {
+    try {
+      const { code, state: organizationSlug } = input;
+      if (!code || !organizationSlug) {
+        throw new TypedHandlersError({
+          code: "BAD_REQUEST",
+          message: "Missing required parameters",
+        });
+      }
+
+      const organization = await db.query.organization.findFirst({
+        where: eq(schema.organization.slug, organizationSlug),
+      });
+
+      if (!organization) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Organization not found",
+        });
+      }
+
+      const slackClient = new WebClient();
+      const response = await slackClient.oauth.v2.access({
+        client_id: slack.clientId,
+        client_secret: slack.clientSecret,
+        code,
+        redirect_uri: `${betterAuthUrl}${slackAddIntegrationCallbackContract.url()}`,
+      });
+
+      if (!response.ok || !response.access_token || !response.team?.id) {
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to exchange code for access token",
+        });
+      }
+
+      if (response.is_enterprise_install) {
+        throw new TypedHandlersError({
+          code: "BAD_REQUEST",
+          message: "Enterprise installations are not supported",
+        });
+      }
+
+      const result = await db.transaction(async (tx) => {
+        const now = new Date();
+
+        const team = response.team!;
+
+        const existingIntegration = await tx
+          .select()
+          .from(schema.slackIntegration)
+          .where(eq(schema.slackIntegration.organizationId, organization.id))
+          .limit(1);
+
+        let integrationId: string | undefined;
+
+        if (existingIntegration[0]) {
+          await tx
+            .update(schema.slackIntegration)
+            .set({
+              teamId: team.id,
+              teamName: team.name,
+              enterpriseId: response.enterprise?.id,
+              enterpriseName: response.enterprise?.name,
+              botAccessToken: response.access_token,
+              botScopes: response.scope,
+              botUserId: response.bot_user_id,
+              appId: response.app_id,
+              tokenExpiresAt: response.expires_in
+                ? new Date(Date.now() + response.expires_in * 1000)
+                : null,
+              refreshToken: response.refresh_token,
+              updatedAt: now,
+              syncId: null,
+              syncUpdatedAt: null,
+              syncStartedAt: null,
+              syncFinishedAt: null,
+              syncError: null,
+              syncErrorAt: null,
+              deleteId: null,
+              deleteError: null,
+            })
+            .where(eq(schema.slackIntegration.id, existingIntegration[0].id));
+
+          integrationId = existingIntegration[0].id;
+        } else {
+          const newIntegration = await tx
+            .insert(schema.slackIntegration)
+            .values({
+              id: generateId(),
+              organizationId: organization.id,
+              teamId: team.id,
+              teamName: team.name,
+              enterpriseId: response.enterprise?.id,
+              enterpriseName: response.enterprise?.name,
+              botAccessToken: response.access_token,
+              botScopes: response.scope,
+              botUserId: response.bot_user_id,
+              appId: response.app_id,
+              tokenExpiresAt: response.expires_in
+                ? new Date(Date.now() + response.expires_in * 1000)
+                : null,
+              refreshToken: response.refresh_token,
+              createdAt: now,
+              updatedAt: now,
+            } as any)
+            .returning();
+
+          integrationId = newIntegration[0]?.id;
+        }
+
+        if (!integrationId) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create Slack integration",
+          });
+        }
+
+        // Store user token if user granted additional scopes
+        if (response.authed_user?.access_token && response.authed_user?.id) {
+          // Check if user already exists
+          const existingUser = await tx
+            .select()
+            .from(schema.slackUser)
+            .where(eq(schema.slackUser.slackUserId, response.authed_user.id))
+            .limit(1);
+
+          if (existingUser[0]) {
+            // Update existing user
+            await tx
+              .update(schema.slackUser)
+              .set({
+                integrationId: integrationId,
+                accessToken: response.authed_user.access_token,
+                scopes: response.authed_user.scope || null,
+                tokenExpiresAt: response.authed_user.expires_in
+                  ? new Date(Date.now() + response.authed_user.expires_in * 1000)
+                  : null,
+                refreshToken: response.authed_user.refresh_token || null,
+                updatedAt: now,
+              })
+              .where(eq(schema.slackUser.id, existingUser[0].id));
+          } else {
+            // Create new user
+            await tx.insert(schema.slackUser).values({
+              id: generateId(),
+              integrationId: integrationId,
+              slackUserId: response.authed_user.id,
+              accessToken: response.authed_user.access_token,
+              scopes: response.authed_user.scope || null,
+              tokenExpiresAt: response.authed_user.expires_in
+                ? new Date(Date.now() + response.authed_user.expires_in * 1000)
+                : null,
+              refreshToken: response.authed_user.refresh_token || null,
+              isInstaller: true,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
+        }
+
+        return { integrationId };
+      });
+
+      const workflowInstance = await workflow.syncSlack.create({
+        params: {
+          integrationId: result.integrationId,
+          createdByUserId: session?.user.id,
+        },
+      });
+
+      await db
+        .update(schema.slackIntegration)
+        .set({
+          syncId: workflowInstance.id,
+          syncStartedAt: new Date(),
+          syncUpdatedAt: new Date(),
+        })
+        .where(eq(schema.slackIntegration.id, result.integrationId));
+
+      return redirect(`${webAppUrl}/${organization.slug}/integrations`);
+    } catch (error) {
+      const message =
+        error instanceof TypedHandlersError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Failed to complete Slack integration. Please try again.";
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete Slack integration")}&error-description=${encodeURIComponent(
+          `${message}. Please try again.`,
         )}`,
       );
     }

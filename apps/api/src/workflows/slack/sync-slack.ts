@@ -1,7 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { dayjs } from "@asyncstatus/dayjs";
 import { WebClient } from "@slack/web-api";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
@@ -10,7 +10,10 @@ import { fetchAndSyncChannels } from "./steps/fetch-and-sync-channels";
 import { fetchAndSyncMessages } from "./steps/fetch-and-sync-messages";
 import { fetchAndSyncUsers } from "./steps/fetch-and-sync-users";
 
-export type SyncSlackWorkflowParams = { integrationId: string };
+export type SyncSlackWorkflowParams = {
+  integrationId: string;
+  createdByUserId?: schema.User["id"];
+};
 
 export class SyncSlackWorkflow extends WorkflowEntrypoint<
   HonoEnv["Bindings"],
@@ -65,11 +68,20 @@ export class SyncSlackWorkflow extends WorkflowEntrypoint<
         where: eq(schema.slackIntegration.id, integrationId),
         with: { organization: true },
       });
-
       if (!integration) {
         throw new Error("Integration not found");
       }
-      const slackClient = new WebClient(integration.botAccessToken);
+      let userSlackAccessToken: string | null = null;
+      if (event.payload.createdByUserId) {
+        const account = await db.query.account.findFirst({
+          where: and(
+            eq(schema.account.providerId, "slack"),
+            eq(schema.account.userId, event.payload.createdByUserId),
+          ),
+        });
+        userSlackAccessToken = account?.accessToken ?? null;
+      }
+      const slackClient = new WebClient(userSlackAccessToken ?? integration.botAccessToken);
 
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 

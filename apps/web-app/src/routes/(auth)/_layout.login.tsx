@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import {
   loginEmailMutationOptions,
+  loginOauth2MutationOptions,
   loginSocialMutationOptions,
 } from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
@@ -83,6 +84,15 @@ function RouteComponent() {
 
   const loginSocial = useMutation({
     ...loginSocialMutationOptions(),
+    async onSuccess() {
+      await queryClient.resetQueries();
+      await router.invalidate();
+      await navigate({ to: search.redirect ?? "/" });
+    },
+  });
+
+  const loginOauth2 = useMutation({
+    ...loginOauth2MutationOptions(),
     async onSuccess() {
       await queryClient.resetQueries();
       await router.invalidate();

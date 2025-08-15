@@ -40,7 +40,7 @@ import { updateOnboardingOptimistic } from "./update-onboarding-optimistic";
 export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
   const router = useRouter();
   const navigate = useNavigate();
-  const search = useSearch({ from: "/$organizationSlug/_layout/" });
+  const search = useSearch({ from: "/$organizationSlug" });
   const now = useMemo(() => dayjs.utc(), []);
   const nowEndOfDayString = useMemo(() => now.endOf("day").format("YYYY-MM-DD"), [now]);
   const nowStartOfWeekString = useMemo(

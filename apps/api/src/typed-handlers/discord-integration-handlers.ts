@@ -26,8 +26,6 @@ export const discordIntegrationCallbackHandler = typedHandler<
   discordIntegrationCallbackContract,
   requiredSession,
   async ({ redirect, webAppUrl, db, input, session, workflow, discord, betterAuthUrl }) => {
-    console.log(input);
-
     try {
       const { redirect: redirectUrl } = input;
       const account = await db.query.account.findFirst({
@@ -148,7 +146,11 @@ export const discordIntegrationCallbackHandler = typedHandler<
 
         await db
           .update(schema.discordIntegration)
-          .set({ syncId: workflowInstance.id })
+          .set({
+            syncId: workflowInstance.id,
+            syncStartedAt: new Date(),
+            syncUpdatedAt: new Date(),
+          })
           .where(eq(schema.discordIntegration.id, newDiscordIntegration.id));
 
         return redirect(
@@ -286,7 +288,11 @@ export const discordIntegrationCallbackHandler = typedHandler<
 
       await db
         .update(schema.discordIntegration)
-        .set({ syncId: workflowInstance.id })
+        .set({
+          syncId: workflowInstance.id,
+          syncStartedAt: new Date(),
+          syncUpdatedAt: new Date(),
+        })
         .where(eq(schema.discordIntegration.id, newDiscordIntegration.id));
 
       return redirect(
