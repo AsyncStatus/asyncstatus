@@ -8,12 +8,6 @@ export const slackIntegrationCallbackContract = typedContract(
   z.instanceof(Response),
 );
 
-export const slackUserIntegrationCallbackContract = typedContract(
-  "get /integrations/slack/user/callback",
-  z.any(),
-  z.instanceof(Response),
-);
-
 export const getSlackIntegrationContract = typedContract(
   "get /organizations/:idOrSlug/integrations/slack",
   z.strictObject({ idOrSlug: z.string().min(1) }),

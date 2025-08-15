@@ -1,3 +1,4 @@
+import { discordIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { githubIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
 import { slackIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/slack-integration";
@@ -144,7 +145,7 @@ function RouteComponent() {
               loginSocial.mutate({
                 provider: "slack",
                 // scopes: slackScopes,
-                scopes: slackUserScopes,
+                // scopes: slackUserScopes,
                 callbackURL: typedUrl(slackIntegrationCallbackContract, {
                   redirect: search.redirect,
                 }),
@@ -162,10 +163,10 @@ function RouteComponent() {
             onClick={() =>
               loginSocial.mutate({
                 provider: "discord",
-                scopes: ["user:email"],
-                // callbackURL: typedUrl(slackIntegrationCallbackContract, {
-                //   redirect: search.redirect,
-                // }),
+                // scopes: ["user:email"],
+                callbackURL: typedUrl(discordIntegrationCallbackContract, {
+                  redirect: search.redirect,
+                }),
               })
             }
           >
@@ -303,4 +304,26 @@ const slackScopes = [
   "groups:write",
 ];
 
-const slackUserScopes: string[] = [];
+const slackUserScopes: string[] = [
+  "channels:history",
+  "channels:read",
+  "dnd:read",
+  "emoji:read",
+  "files:read",
+  "groups:history",
+  "groups:read",
+  "im:history",
+  "im:read",
+  "mpim:history",
+  "mpim:read",
+  "pins:read",
+  "reactions:read",
+  "team:read",
+  "users:read",
+  "users.profile:read",
+  "users:read.email",
+  "calls:read",
+  "reminders:read",
+  "reminders:write",
+  "stars:read",
+];

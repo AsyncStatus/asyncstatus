@@ -47,6 +47,19 @@ export function loginSocialMutationOptions() {
   });
 }
 
+export function linkSocialMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["linkSocial"],
+    mutationFn: async (input: Parameters<typeof authClient.linkSocial>[0]) => {
+      const { data, error } = await authClient.linkSocial(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
 export function signUpEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["signUpEmail"],

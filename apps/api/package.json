@@ -6,6 +6,7 @@
     "./auth": {
       "types": "./src/lib/auth.tsx"
     },
+    "./integrations-connect-url": "./src/lib/integrations-connect-url.ts",
     "./typed-handlers/file": "./src/typed-handlers/file-contracts.ts",
     "./typed-handlers/github-integration": "./src/typed-handlers/github-integration-contracts.ts",
     "./typed-handlers/invitation": "./src/typed-handlers/invitation-contracts.ts",

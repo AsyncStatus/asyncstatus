@@ -37,10 +37,11 @@ export function SecondStep() {
     <>
       <AlertDialogHeader>
         <AlertDialogTitle className="text-2xl font-bold text-center text-pretty">
-          Second step
+          We've set up recommended automations for you
         </AlertDialogTitle>
         <AlertDialogDescription className="text-muted-foreground font-bold text-base text-pretty text-center">
-          Second step description
+          You don't have to join another 9:30am meeting ever again. You can always edit automataions
+          or add new automations later.
         </AlertDialogDescription>
       </AlertDialogHeader>
 

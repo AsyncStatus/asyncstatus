@@ -92,12 +92,14 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
           minEventCreatedAt: dayjs().startOf("week").toDate(),
         });
 
-        await this.env.GITHUB_PROCESS_EVENTS_QUEUE.sendBatch(
-          Array.from(eventIds).map((id) => ({
-            body: id,
-            contentType: "text",
-          })),
-        );
+        if (eventIds.size > 0) {
+          await this.env.GITHUB_PROCESS_EVENTS_QUEUE.sendBatch(
+            Array.from(eventIds).map((id) => ({
+              body: id,
+              contentType: "text",
+            })),
+          );
+        }
       });
 
       await db

@@ -57,6 +57,21 @@ export class SyncSlackWorkflow extends WorkflowEntrypoint<
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
       await reportStatusFn(() => fetchAndSyncUsers({ slackClient, db, integrationId }));
+    });
+
+    await step.do("fetch-and-sync-messages", async () => {
+      const db = createDb(this.env);
+      const integration = await db.query.slackIntegration.findFirst({
+        where: eq(schema.slackIntegration.id, integrationId),
+        with: { organization: true },
+      });
+
+      if (!integration) {
+        throw new Error("Integration not found");
+      }
+      const slackClient = new WebClient(integration.botAccessToken);
+
+      const reportStatusFn = createReportStatusFn({ db, integrationId });
 
       await reportStatusFn(async () => {
         const eventIds = await fetchAndSyncMessages({

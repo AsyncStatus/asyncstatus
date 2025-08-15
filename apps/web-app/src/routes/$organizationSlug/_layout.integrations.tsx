@@ -1,10 +1,16 @@
 import {
+  getDiscordIntegrationConnectUrl,
+  getGithubIntegrationConnectUrl,
+  getSlackIntegrationConnectUrl,
+} from "@asyncstatus/api/integrations-connect-url";
+import {
   getDiscordGatewayStatusContract,
   startDiscordGatewayContract,
   stopDiscordGatewayContract,
 } from "@asyncstatus/api/typed-handlers/discord-gateway";
 import {
   deleteDiscordIntegrationContract,
+  discordIntegrationCallbackContract,
   fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
@@ -14,6 +20,7 @@ import {
 import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
+  githubIntegrationCallbackContract,
   listGithubRepositoriesContract,
   listGithubUsersContract,
   resyncGithubIntegrationContract,
@@ -29,6 +36,7 @@ import {
   getSlackIntegrationContract,
   listSlackChannelsContract,
   listSlackUsersContract,
+  slackIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   NotSiMicrosoftTeams,
@@ -83,7 +91,7 @@ import {
   IntegrationSettingsItem,
   IntegrationSuggestionItem,
 } from "@/components/integration-settings";
-import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
 
 export const Route = createFileRoute("/$organizationSlug/_layout/integrations")({
@@ -366,7 +374,11 @@ function RouteComponent() {
             : githubIntegrationQuery.data?.syncStartedAt
               ? "connecting"
               : "disconnected",
-        connectLink: `https://github.com/apps/${import.meta.env.VITE_GITHUB_INTEGRATION_APP_NAME}/installations/new?state=${params.organizationSlug}`,
+        connectLink: getGithubIntegrationConnectUrl({
+          clientId: import.meta.env.VITE_GITHUB_INTEGRATION_APP_NAME,
+          redirectUri: typedUrl(githubIntegrationCallbackContract, {}),
+          organizationSlug: params.organizationSlug,
+        }),
         onDisconnect: () => {
           deleteGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
         },
@@ -556,7 +568,11 @@ function RouteComponent() {
             : slackIntegrationQuery.data?.syncStartedAt
               ? "connecting"
               : "disconnected",
-        connectLink: `https://slack.com/oauth/v2/authorize?state=${params.organizationSlug}&client_id=${import.meta.env.VITE_SLACK_INTEGRATION_APP_CLIENT_ID}&scope=app_mentions:read,channels:history,channels:join,channels:read,chat:write,chat:write.public,commands,emoji:read,files:read,groups:history,groups:read,im:history,im:read,incoming-webhook,mpim:history,mpim:read,pins:read,reactions:read,team:read,users:read,users.profile:read,users:read.email,calls:read,reminders:read,reminders:write,channels:manage,chat:write.customize,im:write,links:read,metadata.message:read,mpim:write,pins:write,reactions:write,dnd:read,usergroups:read,usergroups:write,users:write,remote_files:read,remote_files:write,files:write,groups:write&user_scope=channels:history,channels:read,dnd:read,emoji:read,files:read,groups:history,groups:read,im:history,im:read,mpim:history,mpim:read,pins:read,reactions:read,team:read,users:read,users.profile:read,users:read.email,calls:read,reminders:read,reminders:write,stars:read`,
+        connectLink: getSlackIntegrationConnectUrl({
+          clientId: import.meta.env.VITE_SLACK_INTEGRATION_APP_CLIENT_ID,
+          redirectUri: typedUrl(slackIntegrationCallbackContract, {}),
+          organizationSlug: params.organizationSlug,
+        }),
         onDisconnect: () => {
           deleteSlackIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
         },
@@ -757,7 +773,11 @@ function RouteComponent() {
             : discordIntegrationQuery.data?.syncStartedAt
               ? "connecting"
               : "disconnected",
-        connectLink: `https://discord.com/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID}&permissions=8&scope=bot+identify+email+guilds+guilds.members.read+messages.read&response_type=code&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_API_URL}/integrations/discord/callback`)}&state=${params.organizationSlug}`,
+        connectLink: getDiscordIntegrationConnectUrl({
+          clientId: import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID,
+          redirectUri: typedUrl(discordIntegrationCallbackContract, {}),
+          organizationSlug: params.organizationSlug,
+        }),
         onDisconnect: () => {
           deleteDiscordIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
         },

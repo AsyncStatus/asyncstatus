@@ -90,7 +90,6 @@ import {
   listSlackChannelsHandler,
   listSlackUsersHandler,
   slackIntegrationCallbackHandler,
-  slackUserIntegrationCallbackHandler,
 } from "./typed-handlers/slack-integration-handlers";
 import {
   createStatusUpdateHandler,
@@ -411,7 +410,6 @@ const typedHandlersApp = typedHandlersHonoServer(
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
     updateUserOnboardingHandler,
-    slackUserIntegrationCallbackHandler,
   ],
   {
     getContext: (c) => ({

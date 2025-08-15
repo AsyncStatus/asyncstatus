@@ -287,7 +287,7 @@ const markdownComponents = {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-sm underline"
+      className="text-sm underline break-all"
       onClick={(e) => e.stopPropagation()}
     >
       {children}

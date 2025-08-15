@@ -2,13 +2,14 @@ import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { Octokit } from "octokit";
 import * as schema from "../db";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
+import { getGithubIntegrationConnectUrl } from "../lib/integrations-connect-url";
 import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
@@ -25,13 +26,17 @@ export const githubIntegrationCallbackHandler = typedHandler<
 >(
   githubIntegrationCallbackContract,
   requiredSession,
-  async ({ redirect, webAppUrl, db, input, workflow, session, github }) => {
+  async ({ redirect, webAppUrl, db, input, workflow, session, github, bucket, betterAuthUrl }) => {
+    console.log(input);
     try {
       const { redirect: redirectUrl } = input;
       const account = await db.query.account.findFirst({
-        where: eq(schema.account.userId, session.user.id),
+        where: and(
+          eq(schema.account.userId, session.user.id),
+          eq(schema.account.providerId, "github"),
+        ),
       });
-      if (!account || account.providerId !== "github" || !account.accessToken) {
+      if (!account || !account.accessToken) {
         throw new TypedHandlersError({
           code: "NOT_FOUND",
           message: "Account not found or not linked to GitHub",
@@ -56,10 +61,91 @@ export const githubIntegrationCallbackHandler = typedHandler<
         .limit(1);
 
       if (organizations[0]?.organization.slug) {
+        const githubIntegration = await db.query.githubIntegration.findFirst({
+          where: eq(schema.githubIntegration.organizationId, organizations[0].organization.id),
+        });
+        if (githubIntegration) {
+          return redirect(
+            `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+          );
+        }
+
+        const installations = await octokit.request("GET /user/installations", {
+          headers: {
+            accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        });
+        const asyncStatusInstallation = installations.data.installations.find(
+          (installation) => installation.app_id === Number(github.appId),
+        );
+        if (!asyncStatusInstallation) {
+          return redirect(
+            getGithubIntegrationConnectUrl({
+              clientId: github.appName,
+              redirectUri: `${betterAuthUrl}${githubIntegrationCallbackContract.url()}`,
+              organizationSlug: organizations[0].organization.slug,
+            }),
+          );
+        }
+
+        if (!session.user.image) {
+          const userGithubAvatar = await fetch(user.data.avatar_url).then((res) =>
+            res.arrayBuffer(),
+          );
+          const image = await bucket.private.put(generateId(), userGithubAvatar);
+          if (image) {
+            await db
+              .update(schema.user)
+              .set({ image: image.key })
+              .where(eq(schema.user.id, session.user.id));
+          }
+        }
+
+        if (!organizations[0].member.githubId) {
+          await db
+            .update(schema.member)
+            .set({ githubId })
+            .where(
+              and(
+                eq(schema.member.organizationId, organizations[0].organization.id),
+                eq(schema.member.userId, session.user.id),
+              ),
+            );
+        }
+
+        const [newGithubIntegration] = await db
+          .insert(schema.githubIntegration)
+          .values({
+            id: generateId(),
+            organizationId: organizations[0].organization.id,
+            installationId: asyncStatusInstallation.id.toString(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+        if (!newGithubIntegration) {
+          return redirect(
+            `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration. Please try again.")}`,
+          );
+        }
+
+        const workflowInstance = await workflow.syncGithub.create({
+          params: { integrationId: newGithubIntegration.id },
+        });
+
+        await db
+          .update(schema.githubIntegration)
+          .set({ syncId: workflowInstance.id })
+          .where(eq(schema.githubIntegration.id, newGithubIntegration.id));
+
         return redirect(
           `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
         );
       }
+
+      const userGithubAvatar = await fetch(user.data.avatar_url).then((res) => res.arrayBuffer());
+      const image = await bucket.private.put(generateId(), userGithubAvatar);
 
       const results = await db.transaction(async (tx) => {
         const now = dayjs();
@@ -108,6 +194,7 @@ export const githubIntegrationCallbackHandler = typedHandler<
         await tx
           .update(schema.user)
           .set({
+            image: image?.key || null,
             activeOrganizationSlug: newOrganization.slug,
             showOnboarding: true,
             onboardingStep: "first-step",
@@ -138,7 +225,11 @@ export const githubIntegrationCallbackHandler = typedHandler<
       );
       if (!asyncStatusInstallation) {
         return redirect(
-          `https://github.com/apps/${github.appName}/installations/new?state=${results.organization.slug}`,
+          getGithubIntegrationConnectUrl({
+            clientId: github.appName,
+            redirectUri: `${betterAuthUrl}${githubIntegrationCallbackContract.url()}`,
+            organizationSlug: results.organization.slug,
+          }),
         );
       }
 

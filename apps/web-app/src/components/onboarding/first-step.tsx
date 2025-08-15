@@ -1,10 +1,16 @@
-import { getDiscordIntegrationContract } from "@asyncstatus/api/typed-handlers/discord-integration";
+import {
+  discordIntegrationCallbackContract,
+  getDiscordIntegrationContract,
+} from "@asyncstatus/api/typed-handlers/discord-integration";
 import {
   getGithubIntegrationContract,
   githubIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import { updateUserOnboardingContract } from "@asyncstatus/api/typed-handlers/onboarding";
-import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
+import {
+  getSlackIntegrationContract,
+  slackIntegrationCallbackContract,
+} from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   generateStatusUpdateContract,
   getStatusUpdateContract,
@@ -16,28 +22,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@asyncstatus/ui/components/alert-dialog";
-import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import { ArrowRight, Loader2 } from "@asyncstatus/ui/icons";
+import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
+import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+  linkSocialMutationOptions,
+  sessionBetterAuthQueryOptions,
+} from "@/better-auth-tanstack-query";
 import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 import { StatusUpdateCard, StatusUpdateCardSkeleton } from "../status-update-card";
 import { StepSkeleton } from "./step-skeleton";
 import { updateOnboardingOptimistic } from "./update-onboarding-optimistic";
 
 export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
-  const now = dayjs.utc();
-  const nowStartOfWeek = now.startOf("week").startOf("day");
+  const router = useRouter();
+  const navigate = useNavigate();
+  const search = useSearch({ from: "/$organizationSlug/_layout/" });
+  const now = useMemo(() => dayjs.utc(), []);
+  const nowEndOfDayString = useMemo(() => now.endOf("day").format("YYYY-MM-DD"), [now]);
+  const nowStartOfWeekString = useMemo(
+    () => now.startOf("week").startOf("day").format("YYYY-MM-DD"),
+    [now],
+  );
   const queryClient = useQueryClient();
   const statusUpdate = useQuery(
     typedQueryOptions(
       getStatusUpdateContract,
-      {
-        idOrSlug: organizationSlug,
-        statusUpdateIdOrDate: nowStartOfWeek.format("YYYY-MM-DD"),
-      },
+      { idOrSlug: organizationSlug, statusUpdateIdOrDate: nowStartOfWeekString },
       { throwOnError: false },
     ),
   );
@@ -59,13 +73,21 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       },
     }),
   );
+  const linkSocial = useMutation({
+    ...linkSocialMutationOptions(),
+    async onSuccess() {
+      await queryClient.resetQueries();
+      await router.invalidate();
+      await navigate({ to: search.redirect ?? "/" });
+    },
+  });
   const generateStatusUpdate = useMutation(
     typedMutationOptions(generateStatusUpdateContract, {
       onSuccess(data) {
         queryClient.setQueryData(
           typedQueryOptions(getStatusUpdateContract, {
             idOrSlug: organizationSlug,
-            statusUpdateIdOrDate: nowStartOfWeek.format("YYYY-MM-DD"),
+            statusUpdateIdOrDate: nowStartOfWeekString,
           }).queryKey,
           data,
         );
@@ -89,11 +111,11 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         refetchOnReconnect: true,
         refetchInterval(query) {
           if (
-            query.state.data?.syncStartedAt &&
+            query.state.data?.syncUpdatedAt &&
             !query.state.data?.syncFinishedAt &&
             !query.state.data?.syncError
           ) {
-            return 1000;
+            return 500;
           }
 
           return false;
@@ -111,11 +133,11 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         refetchOnReconnect: true,
         refetchInterval(query) {
           if (
-            query.state.data?.syncStartedAt &&
+            query.state.data?.syncUpdatedAt &&
             !query.state.data?.syncFinishedAt &&
             !query.state.data?.syncError
           ) {
-            return 1000;
+            return 500;
           }
 
           return false;
@@ -133,11 +155,11 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         refetchOnReconnect: true,
         refetchInterval(query) {
           if (
-            query.state.data?.syncStartedAt &&
+            query.state.data?.syncUpdatedAt &&
             !query.state.data?.syncFinishedAt &&
             !query.state.data?.syncError
           ) {
-            return 1000;
+            return 500;
           }
 
           return false;
@@ -145,32 +167,100 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       },
     ),
   );
-  const hasGithubIntegration =
-    !githubIntegration.isPending && githubIntegration.data?.syncFinishedAt;
-  const hasSlackIntegration = !slackIntegration.isPending && slackIntegration.data?.syncFinishedAt;
-  const hasDiscordIntegration =
-    !discordIntegration.isPending && discordIntegration.data?.syncFinishedAt;
-  const hasAnyIntegration = hasGithubIntegration || hasSlackIntegration || hasDiscordIntegration;
+  const hasGithubIntegration = githubIntegration.data?.syncFinishedAt;
+  const hasSlackIntegration = slackIntegration.data?.syncFinishedAt;
+  const hasDiscordIntegration = discordIntegration.data?.syncFinishedAt;
+  const connectedIntegrationsCount = useMemo(() => {
+    let count = 0;
+    if (hasGithubIntegration) count++;
+    if (hasSlackIntegration) count++;
+    if (hasDiscordIntegration) count++;
+    return count;
+  }, [hasGithubIntegration, hasSlackIntegration, hasDiscordIntegration]);
+
+  // Persist last finished timestamps per org to detect transitions across page navigations
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      githubIntegration.isPending ||
+      slackIntegration.isPending ||
+      discordIntegration.isPending
+    ) {
+      return;
+    }
+
+    const storageKey = `onboarding:integrationFinishedAt:${organizationSlug}`;
+    type Snapshot = { github: string | null; slack: string | null; discord: string | null };
+    let prev: Snapshot | null = null;
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      prev = raw ? (JSON.parse(raw) as Snapshot) : null;
+    } catch {}
+
+    const current: Snapshot = {
+      github: githubIntegration.data?.syncFinishedAt
+        ? String(githubIntegration.data.syncFinishedAt)
+        : null,
+      slack: slackIntegration.data?.syncFinishedAt
+        ? String(slackIntegration.data.syncFinishedAt)
+        : null,
+      discord: discordIntegration.data?.syncFinishedAt
+        ? String(discordIntegration.data.syncFinishedAt)
+        : null,
+    };
+
+    const transitioned =
+      !!prev &&
+      ((prev.github !== current.github && !!current.github) ||
+        (prev.slack !== current.slack && !!current.slack) ||
+        (prev.discord !== current.discord && !!current.discord));
+
+    if (transitioned && !generateStatusUpdate.isPending) {
+      generateStatusUpdate.mutate({
+        idOrSlug: organizationSlug,
+        effectiveFrom: nowStartOfWeekString,
+        effectiveTo: nowEndOfDayString,
+      });
+    }
+
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(current));
+    } catch {}
+  }, [
+    organizationSlug,
+    githubIntegration.isPending,
+    slackIntegration.isPending,
+    discordIntegration.isPending,
+    githubIntegration.data?.syncFinishedAt,
+    slackIntegration.data?.syncFinishedAt,
+    discordIntegration.data?.syncFinishedAt,
+    nowStartOfWeekString,
+    nowEndOfDayString,
+    generateStatusUpdate.isPending,
+  ]);
 
   useEffect(() => {
     if (
-      hasAnyIntegration &&
+      connectedIntegrationsCount > 0 &&
       !statusUpdate.isPending &&
-      !statusUpdate.data &&
-      !generateStatusUpdate.isPending
+      !generateStatusUpdate.isPending &&
+      !statusUpdate.data
     ) {
       generateStatusUpdate.mutate({
         idOrSlug: organizationSlug,
-        effectiveFrom: nowStartOfWeek.format("YYYY-MM-DD"),
-        effectiveTo: now.endOf("day").format("YYYY-MM-DD"),
+        effectiveFrom: nowStartOfWeekString,
+        effectiveTo: nowEndOfDayString,
       });
       return;
     }
   }, [
-    hasAnyIntegration,
+    connectedIntegrationsCount,
     statusUpdate.data,
     generateStatusUpdate.isPending,
     statusUpdate.isPending,
+    statusUpdate.data,
+    nowStartOfWeekString,
+    nowEndOfDayString,
   ]);
 
   function Title() {
@@ -255,38 +345,72 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           </div>
         )}
 
-        {statusUpdate.data && (
+        {statusUpdate.data && !generateStatusUpdate.isPending && (
           <StatusUpdateCard organizationSlug={organizationSlug} statusUpdate={statusUpdate.data} />
         )}
 
-        {!githubIntegration.data && !statusUpdate.data && !generateStatusUpdate.isPending && (
-          <Button asChild size="lg">
-            <a href={typedUrl(githubIntegrationCallbackContract, {})}>
-              <SiGithub className="size-4" />
-              Select GitHub repositories
-            </a>
+        {statusUpdate.data && !generateStatusUpdate.isPending && (
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={Boolean(githubIntegration.data || githubIntegration.isPending)}
+            onClick={() =>
+              linkSocial.mutate({
+                provider: "github",
+                scopes: ["user:email"],
+                callbackURL: typedUrl(githubIntegrationCallbackContract, {}),
+              })
+            }
+          >
+            <div
+              className={cn("size-2 rounded-full", githubIntegration.data && "bg-green-500")}
+            ></div>
+            <SiGithub className="size-4" />
+            {githubIntegration.data ? "Using context from GitHub" : "Add context from GitHub"}
           </Button>
         )}
 
-        {!slackIntegration.data && !statusUpdate.data && !generateStatusUpdate.isPending && (
-          <Button asChild size="lg">
-            <a href="/#">
-              <SiSlack className="size-4" />
-              Select Slack channels
-            </a>
+        {statusUpdate.data && !generateStatusUpdate.isPending && (
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={Boolean(slackIntegration.data || slackIntegration.isPending)}
+            onClick={() =>
+              linkSocial.mutate({
+                provider: "slack",
+                callbackURL: typedUrl(slackIntegrationCallbackContract, {}),
+              })
+            }
+          >
+            <div
+              className={cn("size-2 rounded-full", slackIntegration.data && "bg-green-500")}
+            ></div>
+            <SiSlack className="size-4" />
+            {slackIntegration.data ? "Using context from Slack" : "Add context from Slack"}
           </Button>
         )}
 
-        {!discordIntegration.data && !statusUpdate.data && !generateStatusUpdate.isPending && (
-          <Button asChild size="lg">
-            <a href="/#">
-              <SiDiscord className="size-4" />
-              Select Discord channels
-            </a>
+        {statusUpdate.data && !generateStatusUpdate.isPending && (
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={Boolean(discordIntegration.data || discordIntegration.isPending)}
+            onClick={() =>
+              linkSocial.mutate({
+                provider: "discord",
+                callbackURL: typedUrl(discordIntegrationCallbackContract, {}),
+              })
+            }
+          >
+            <div
+              className={cn("size-2 rounded-full", discordIntegration.data && "bg-green-500")}
+            ></div>
+            <SiDiscord className="size-4" />
+            {discordIntegration.data ? "Using context from Discord" : "Add context from Discord"}
           </Button>
         )}
 
-        {statusUpdate.data && (
+        {statusUpdate.data && connectedIntegrationsCount > 0 && !generateStatusUpdate.isPending && (
           <Button
             className="mt-12"
             onClick={() =>

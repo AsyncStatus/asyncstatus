@@ -1,42 +1,13 @@
-import { typedHandler } from "@asyncstatus/typed-handlers";
+import { dayjs } from "@asyncstatus/dayjs";
+import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
+import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import * as schema from "../db";
-import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
-import { requiredOrganization, requiredSession } from "./middleware";
-
-interface DiscordTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_token?: string;
-  scope: string;
-}
-
-interface DiscordGuild {
-  id: string;
-  name: string;
-  icon: string | null;
-  description: string | null;
-  owner_id: string;
-  member_count?: number;
-  premium_tier: number;
-  preferred_locale: string;
-}
-
-interface DiscordUser {
-  id: string;
-  username: string;
-  discriminator: string;
-  avatar: string | null;
-  bot?: boolean;
-  system?: boolean;
-  locale?: string;
-  verified?: boolean;
-  mfa_enabled?: boolean;
-  premium_type?: number;
-}
-
+import type {
+  TypedHandlersContextWithOrganization,
+  TypedHandlersContextWithSession,
+} from "../lib/env";
 import {
   deleteDiscordIntegrationContract,
   discordIntegrationCallbackContract,
@@ -46,196 +17,290 @@ import {
   listDiscordServersContract,
   listDiscordUsersContract,
 } from "./discord-integration-contracts";
+import { requiredOrganization, requiredSession } from "./middleware";
 
 export const discordIntegrationCallbackHandler = typedHandler<
-  TypedHandlersContext,
+  TypedHandlersContextWithSession,
   typeof discordIntegrationCallbackContract
 >(
   discordIntegrationCallbackContract,
-  async ({ redirect, webAppUrl, betterAuthUrl, db, input, discord, workflow }) => {
-    const { code, state: organizationSlug, guild_id: guildId, permissions } = input;
-
-    if (!code || !organizationSlug || !guildId || !permissions) {
-      return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Missing parameters")}&error-description=${encodeURIComponent("Missing required parameters.")}`,
-      );
-    }
+  requiredSession,
+  async ({ redirect, webAppUrl, db, input, session, workflow, discord, betterAuthUrl }) => {
+    console.log(input);
 
     try {
-      const organization = await db.query.organization.findFirst({
-        where: eq(schema.organization.slug, organizationSlug),
+      const { redirect: redirectUrl } = input;
+      const account = await db.query.account.findFirst({
+        where: and(
+          eq(schema.account.userId, session.user.id),
+          eq(schema.account.providerId, "discord"),
+        ),
       });
-
-      if (!organization) {
-        return redirect(
-          `${webAppUrl}/error?error-title=${encodeURIComponent("Organization not found")}&error-description=${encodeURIComponent("Organization not found.")}`,
-        );
+      if (!account || !account.accessToken) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Account not found or not linked to Discord",
+        });
       }
 
-      // Exchange code for access token using Discord OAuth2
-      const tokenResponse = await fetch("https://discord.com/api/v10/oauth2/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          client_id: discord.clientId,
-          client_secret: discord.clientSecret,
-          grant_type: "authorization_code",
-          code,
-          redirect_uri: `${betterAuthUrl}/integrations/discord/callback`,
-        }),
+      const userResponse = await fetch("https://discord.com/api/v10/users/@me", {
+        headers: { Authorization: `Bearer ${account.accessToken}` },
       });
-
-      if (!tokenResponse.ok) {
-        const error = await tokenResponse.text();
-        console.error("Discord OAuth error:", error);
-        return redirect(
-          `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Discord integration error")}&error-description=${encodeURIComponent("Failed to exchange code for access token.")}`,
-        );
+      if (!userResponse.ok) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "Failed to get Discord user info",
+        });
       }
+      const userData = (await userResponse.json()) as { id: string };
+      const discordUserId = userData.id;
 
-      const tokenData = (await tokenResponse.json()) as DiscordTokenResponse;
-      const { refresh_token, expires_in, scope } = tokenData;
+      const organizations = await db
+        .select({ organization: schema.organization, member: schema.member })
+        .from(schema.organization)
+        .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, session.user.id))
+        .orderBy(desc(schema.organization.createdAt))
+        .limit(1);
 
-      // Get guild information
-      const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
-        headers: {
-          Authorization: `Bot ${discord.botToken}`,
-        },
-      });
-
-      if (!guildResponse.ok) {
-        return redirect(
-          `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Discord integration error")}&error-description=${encodeURIComponent("Failed to fetch guild information.")}`,
-        );
-      }
-
-      const guildData = (await guildResponse.json()) as DiscordGuild;
-
-      // Get bot user information
-      const botResponse = await fetch("https://discord.com/api/v10/users/@me", {
-        headers: {
-          Authorization: `Bot ${discord.botToken}`,
-        },
-      });
-
-      const botData = botResponse.ok ? ((await botResponse.json()) as DiscordUser) : null;
-
-      const result = await db.transaction(async (tx) => {
-        const now = new Date();
-
-        // Check if integration already exists
-        const existingIntegration = await tx
-          .select()
-          .from(schema.discordIntegration)
-          .where(eq(schema.discordIntegration.guildId, guildId))
-          .limit(1);
-
-        let integrationId: string;
-
-        if (existingIntegration[0]) {
-          // Update existing integration
-          await tx
-            .update(schema.discordIntegration)
-            .set({
-              guildName: guildData.name,
-              botAccessToken: discord.botToken, // We use the bot token from env
-              botScopes: scope,
-              botUserId: botData?.id || null,
-              applicationId: discord.appId,
-              tokenExpiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
-              refreshToken: refresh_token || null,
-              updatedAt: now,
-            })
-            .where(eq(schema.discordIntegration.id, existingIntegration[0].id));
-
-          integrationId = existingIntegration[0].id;
-        } else {
-          // Create new integration
-          const newIntegration = await tx
-            .insert(schema.discordIntegration)
-            .values({
-              id: generateId(),
-              organizationId: organization.id,
-              guildId,
-              guildName: guildData.name,
-              botAccessToken: discord.botToken,
-              botScopes: scope,
-              botUserId: botData?.id || null,
-              applicationId: discord.appId,
-              tokenExpiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
-              refreshToken: refresh_token || null,
-              createdAt: now,
-              updatedAt: now,
-            })
-            .returning();
-
-          integrationId = newIntegration[0]?.id || "";
+      if (organizations[0]?.organization.slug) {
+        const existing = await db.query.discordIntegration.findFirst({
+          where: eq(schema.discordIntegration.organizationId, organizations[0].organization.id),
+        });
+        if (existing) {
+          return redirect(
+            `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+          );
         }
 
-        if (!integrationId) {
-          throw new Error("Failed to create Discord integration");
+        // Find a guild the user belongs to where our bot is installed
+        const guildsResp = await fetch("https://discord.com/api/v10/users/@me/guilds", {
+          headers: { Authorization: `Bearer ${account.accessToken}` },
+        });
+        if (!guildsResp.ok) {
+          throw new TypedHandlersError({
+            code: "UNAUTHORIZED",
+            message: "Failed to list Discord guilds",
+          });
+        }
+        const guilds = (await guildsResp.json()) as Array<{ id: string; name?: string }>;
+        let installedGuild: { id: string; name?: string } | undefined;
+        for (const g of guilds) {
+          const gResp = await fetch(`https://discord.com/api/v10/guilds/${g.id}`, {
+            headers: { Authorization: `Bot ${discord.botToken}` },
+          });
+          if (gResp.ok) {
+            installedGuild = g;
+            break;
+          }
         }
 
-        // Generate a Durable Object ID for Discord Gateway
-        const gatewayDurableObjectId = crypto.randomUUID();
+        if (!installedGuild) {
+          return redirect(
+            `https://discord.com/oauth2/authorize?client_id=${discord.clientId}&permissions=8&scope=bot+identify+email+guilds+guilds.members.read+messages.read&response_type=code&redirect_uri=${encodeURIComponent(
+              `${betterAuthUrl}/integrations/discord/callback`,
+            )}&state=${organizations[0].organization.slug}`,
+          );
+        }
 
-        // Update the integration with the Durable Object ID
-        await tx
-          .update(schema.discordIntegration)
-          .set({ gatewayDurableObjectId })
-          .where(eq(schema.discordIntegration.id, integrationId));
+        // Optional: fetch bot user
+        const botMeResp = await fetch("https://discord.com/api/v10/users/@me", {
+          headers: { Authorization: `Bot ${discord.botToken}` },
+        });
+        const botMe = botMeResp.ok ? ((await botMeResp.json()) as { id?: string }) : null;
 
-        // Store the guild/server information
-        await tx
-          .insert(schema.discordServer)
+        const [newDiscordIntegration] = await db
+          .insert(schema.discordIntegration)
           .values({
             id: generateId(),
-            integrationId,
-            guildId,
-            name: guildData.name,
-            icon: guildData.icon,
-            description: guildData.description,
-            ownerId: guildData.owner_id,
-            memberCount: guildData.member_count,
-            premiumTier: guildData.premium_tier,
-            preferredLocale: guildData.preferred_locale,
-            createdAt: now,
-            updatedAt: now,
+            organizationId: organizations[0].organization.id,
+            guildId: installedGuild.id,
+            guildName: installedGuild.name || null,
+            botAccessToken: discord.botToken,
+            botScopes: account.scope || null,
+            botUserId: botMe?.id || null,
+            applicationId: discord.appId,
+            tokenExpiresAt: null,
+            refreshToken: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           })
-          .onConflictDoUpdate({
-            target: schema.discordServer.guildId,
-            set: {
-              name: guildData.name,
-              icon: guildData.icon,
-              description: guildData.description,
-              ownerId: guildData.owner_id,
-              memberCount: guildData.member_count,
-              premiumTier: guildData.premium_tier,
-              preferredLocale: guildData.preferred_locale,
-              updatedAt: now,
-            },
-          });
+          .returning();
+        if (!newDiscordIntegration) {
+          return redirect(
+            `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create Discord integration")}&error-description=${encodeURIComponent("Failed to create Discord integration. Please try again.")}`,
+          );
+        }
 
-        return { integrationId };
+        await db
+          .update(schema.member)
+          .set({ discordId: discordUserId })
+          .where(
+            and(
+              eq(schema.member.organizationId, organizations[0].organization.id),
+              eq(schema.member.userId, session.user.id),
+            ),
+          );
+
+        const workflowInstance = await workflow.syncDiscord.create({
+          params: { integrationId: newDiscordIntegration.id },
+        });
+
+        await db
+          .update(schema.discordIntegration)
+          .set({ syncId: workflowInstance.id })
+          .where(eq(schema.discordIntegration.id, newDiscordIntegration.id));
+
+        return redirect(
+          `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
+
+      const results = await db.transaction(async (tx) => {
+        const now = dayjs();
+        const name = `${session.user.name}'s Org`;
+        const [newOrganization] = await tx
+          .insert(schema.organization)
+          .values({
+            id: generateId(),
+            name,
+            slug: `${slugify(name)}-${generateId(4)}`,
+            metadata: null,
+            stripeCustomerId: null,
+            trialPlan: "basic",
+            trialStartDate: now.toDate(),
+            trialEndDate: now.add(14, "day").toDate(),
+            trialStatus: "active",
+            createdAt: now.toDate(),
+          })
+          .returning();
+
+        if (!newOrganization) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create organization",
+          });
+        }
+
+        const [newMember] = await tx
+          .insert(schema.member)
+          .values({
+            id: generateId(),
+            organizationId: newOrganization.id,
+            userId: session.user.id,
+            role: "owner",
+            createdAt: now.toDate(),
+            discordId: discordUserId,
+          })
+          .returning();
+        if (!newMember) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create member",
+          });
+        }
+
+        await tx
+          .update(schema.user)
+          .set({
+            activeOrganizationSlug: newOrganization.slug,
+            showOnboarding: true,
+            onboardingStep: "first-step",
+            onboardingCompletedAt: null,
+          })
+          .where(eq(schema.user.id, session.user.id));
+
+        return { organization: newOrganization, member: newMember };
       });
 
-      // Trigger sync workflow
+      const existing = await db.query.discordIntegration.findFirst({
+        where: eq(schema.discordIntegration.organizationId, results.organization.id),
+      });
+      if (existing) {
+        return redirect(
+          `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
+
+      // Find a guild the user belongs to where our bot is installed
+      const guildsResp = await fetch("https://discord.com/api/v10/users/@me/guilds", {
+        headers: { Authorization: `Bearer ${account.accessToken}` },
+      });
+      if (!guildsResp.ok) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "Failed to list Discord guilds",
+        });
+      }
+      const guilds = (await guildsResp.json()) as Array<{ id: string; name?: string }>;
+      let installedGuild: { id: string; name?: string } | undefined;
+      for (const g of guilds) {
+        const gResp = await fetch(`https://discord.com/api/v10/guilds/${g.id}`, {
+          headers: { Authorization: `Bot ${discord.botToken}` },
+        });
+        if (gResp.ok) {
+          installedGuild = g;
+          break;
+        }
+      }
+
+      if (!installedGuild) {
+        return redirect(
+          `https://discord.com/oauth2/authorize?client_id=${discord.clientId}&permissions=8&scope=bot+identify+email+guilds+guilds.members.read+messages.read&response_type=code&redirect_uri=${encodeURIComponent(
+            `${betterAuthUrl}/integrations/discord/callback`,
+          )}&state=${results.organization.slug}`,
+        );
+      }
+
+      const botMeResp = await fetch("https://discord.com/api/v10/users/@me", {
+        headers: { Authorization: `Bot ${discord.botToken}` },
+      });
+      const botMe = botMeResp.ok ? ((await botMeResp.json()) as { id?: string }) : null;
+
+      const [newDiscordIntegration] = await db
+        .insert(schema.discordIntegration)
+        .values({
+          id: generateId(),
+          organizationId: results.organization.id,
+          guildId: installedGuild.id,
+          guildName: installedGuild.name || null,
+          botAccessToken: discord.botToken,
+          botScopes: account.scope || null,
+          botUserId: botMe?.id || null,
+          applicationId: discord.appId,
+          tokenExpiresAt: null,
+          refreshToken: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      if (!newDiscordIntegration) {
+        return redirect(
+          `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create Discord integration")}&error-description=${encodeURIComponent("Failed to create Discord integration. Please try again.")}`,
+        );
+      }
+
       const workflowInstance = await workflow.syncDiscord.create({
-        params: { integrationId: result.integrationId },
+        params: { integrationId: newDiscordIntegration.id },
       });
 
       await db
         .update(schema.discordIntegration)
         .set({ syncId: workflowInstance.id })
-        .where(eq(schema.discordIntegration.id, result.integrationId));
+        .where(eq(schema.discordIntegration.id, newDiscordIntegration.id));
 
-      return redirect(`${webAppUrl}/${organization.slug}/integrations`);
-    } catch (error) {
-      console.error("Discord integration error:", error);
       return redirect(
-        `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("Discord integration error")}&error-description=${encodeURIComponent("An unexpected error occurred.")}`,
+        `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof TypedHandlersError
+          ? error.message
+          : "Failed to complete Discord integration";
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete Discord integration")}&error-description=${encodeURIComponent(
+          message,
+        )}`,
       );
     }
   },
