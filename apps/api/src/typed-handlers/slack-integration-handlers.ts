@@ -60,6 +60,14 @@ export const slackIntegrationCallbackHandler = typedHandler<
 
       const slackUserId = userResponse.user_id;
 
+      const organizations = await db
+        .select({ organization: schema.organization, member: schema.member })
+        .from(schema.organization)
+        .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, session.user.id))
+        .orderBy(desc(schema.organization.createdAt))
+        .limit(1);
+
       if (organizations[0]?.organization.slug) {
         const slackIntegration = await db.query.slackIntegration.findFirst({
           where: eq(schema.slackIntegration.organizationId, organizations[0].organization.id),
