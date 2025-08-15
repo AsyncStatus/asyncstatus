@@ -67,6 +67,7 @@ import {
   listMembersHandler,
   updateMemberHandler,
 } from "./typed-handlers/member-handlers";
+import { updateUserOnboardingHandler } from "./typed-handlers/onboarding-handlers";
 import {
   createOrganizationHandler,
   getOrganizationHandler,
@@ -88,6 +89,7 @@ import {
   getSlackIntegrationHandler,
   listSlackChannelsHandler,
   listSlackUsersHandler,
+  slackAddIntegrationCallbackHandler,
   slackIntegrationCallbackHandler,
 } from "./typed-handlers/slack-integration-handlers";
 import {
@@ -293,6 +295,7 @@ const app = new Hono<HonoEnv>()
     c.set("stripeClient", context.stripeClient);
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
+    c.set("github", context.github);
     return next();
   })
   .route("/auth", authRouter)
@@ -407,6 +410,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
+    updateUserOnboardingHandler,
+    slackAddIntegrationCallbackHandler,
   ],
   {
     getContext: (c) => ({
@@ -430,6 +435,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
+      github: c.get("github"),
     }),
   },
 );

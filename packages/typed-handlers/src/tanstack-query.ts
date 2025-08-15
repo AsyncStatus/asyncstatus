@@ -31,7 +31,7 @@ export function typedQueryOptionsFactory(fetch: TypedContractFetch) {
     contract: TC,
     input: TC["$infer"]["input"] | SkipToken,
     options?: Partial<
-      UseQueryOptions<TC["$infer"]["input"], TypedHandlersError, TC["$infer"]["output"], never>
+      UseQueryOptions<TC["$infer"]["output"], TypedHandlersError, TC["$infer"]["output"], never>
     >,
   ) => {
     const throwOnError =

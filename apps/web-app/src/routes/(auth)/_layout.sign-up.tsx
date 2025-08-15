@@ -1,6 +1,9 @@
+import { githubIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
+import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
+import { Separator } from "@asyncstatus/ui/components/separator";
 import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,11 +12,12 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import {
+  loginSocialMutationOptions,
   sendVerificationEmailMutationOptions,
   signUpEmailMutationOptions,
 } from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/(auth)/_layout/sign-up")({
   component: RouteComponent,
@@ -65,6 +69,14 @@ function RouteComponent() {
       { throwOnError: false },
     ),
   );
+  const loginSocial = useMutation({
+    ...loginSocialMutationOptions(),
+    async onSuccess() {
+      await queryClient.resetQueries();
+      await router.invalidate();
+      await navigate({ to: search.redirect ?? "/" });
+    },
+  });
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -99,7 +111,7 @@ function RouteComponent() {
   return (
     <Form {...form}>
       <form
-        className="mx-auto w-full max-w-xs space-y-24"
+        className="mx-auto w-full max-w-xs"
         onSubmit={form.handleSubmit(async (data) => {
           await signUpEmail.mutateAsync({
             email: data.email ?? invitation.data?.email,
@@ -129,7 +141,70 @@ function RouteComponent() {
           </h2>
         </div>
 
-        <div className="grid gap-5">
+        <div className="space-y-4 mt-16">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() =>
+              loginSocial.mutate({
+                provider: "github",
+                scopes: ["user:email"],
+                callbackURL: typedUrl(githubIntegrationCallbackContract, {
+                  redirect: search.redirect,
+                }),
+              })
+            }
+          >
+            <SiGithub className="size-4" />
+            Continue with GitHub
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() =>
+              loginSocial.mutate({
+                provider: "slack",
+                scopes: ["user:email"],
+                // callbackURL: typedUrl(slackIntegrationCallbackContract, {
+                //   redirect: search.redirect,
+                // }),
+              })
+            }
+          >
+            <SiSlack className="size-4" />
+            Continue with Slack
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() =>
+              loginSocial.mutate({
+                provider: "discord",
+                scopes: ["user:email"],
+                // callbackURL: typedUrl(slackIntegrationCallbackContract, {
+                //   redirect: search.redirect,
+                // }),
+              })
+            }
+          >
+            <SiDiscord className="size-4" />
+            Continue with Discord
+          </Button>
+        </div>
+
+        <div className="relative my-12">
+          <Separator />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-2 text-center text-sm text-muted-foreground bg-background">
+            or
+          </div>
+        </div>
+
+        <div className="grid gap-5 mt-12">
           <div className="grid grid-cols-2 gap-5">
             <FormField
               control={form.control}

@@ -15,6 +15,41 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
     appName: "AsyncStatus",
     url: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
+    socialProviders: {
+      github: {
+        clientId: env.GITHUB_CLIENT_ID,
+        clientSecret: env.GITHUB_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: true,
+          };
+        },
+      },
+      slack: {
+        clientId: env.SLACK_CLIENT_ID,
+        clientSecret: env.SLACK_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: profile.email_verified,
+          };
+        },
+      },
+      discord: {
+        clientId: env.DISCORD_CLIENT_ID,
+        clientSecret: env.DISCORD_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name,
+            emailVerified: profile.verified,
+          };
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       async sendResetPassword(data) {
@@ -46,6 +81,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       "https://app-v2.asyncstatus.com",
       "https://supposedly-simple-mallard.ngrok-free.app",
     ],
+    account: { accountLinking: { enabled: true } },
     emailVerification: {
       autoSignInAfterVerification: true,
       async sendVerificationEmail(data) {
@@ -95,6 +131,24 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           required: true,
           input: false,
           defaultValue: true,
+        },
+        showOnboarding: {
+          type: "boolean",
+          required: true,
+          input: false,
+          defaultValue: false,
+        },
+        onboardingStep: {
+          type: "string",
+          required: true,
+          input: false,
+          defaultValue: "first-step",
+        },
+        onboardingCompletedAt: {
+          type: "date",
+          required: true,
+          input: false,
+          defaultValue: null,
         },
       },
     },

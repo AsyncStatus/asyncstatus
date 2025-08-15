@@ -4,7 +4,7 @@ import { GithubIntegration, GithubRepository, GithubUser } from "../db";
 
 export const githubIntegrationCallbackContract = typedContract(
   "get /integrations/github/callback",
-  z.object({ installation_id: z.string(), state: z.string() }),
+  z.object({ redirect: z.string().optional() }),
   z.instanceof(Response),
 );
 

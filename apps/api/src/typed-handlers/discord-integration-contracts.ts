@@ -4,7 +4,7 @@ import { DiscordChannel, DiscordIntegration, DiscordServer, DiscordUser } from "
 
 export const discordIntegrationCallbackContract = typedContract(
   "get /integrations/discord/callback",
-  z.object({ code: z.string(), state: z.string(), guild_id: z.string(), permissions: z.string() }),
+  z.object({ redirect: z.string().optional() }),
   z.instanceof(Response),
 );
 

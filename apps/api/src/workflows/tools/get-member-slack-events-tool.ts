@@ -46,7 +46,7 @@ export function getMemberSlackEventsTool(db: Db) {
           schema.slackIntegration,
           eq(schema.slackEvent.slackTeamId, schema.slackIntegration.teamId),
         )
-        .innerJoin(
+        .leftJoin(
           schema.slackEventVector,
           eq(schema.slackEvent.id, schema.slackEventVector.eventId),
         )

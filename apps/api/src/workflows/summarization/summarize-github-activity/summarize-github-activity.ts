@@ -54,9 +54,6 @@ export async function summarizeGithubActivity({
     },
   });
 
-  console.log(repositoryIds);
-  console.log("github activity summary", text);
-
   const usageResult = await trackAiUsage(
     kv,
     organizationId,

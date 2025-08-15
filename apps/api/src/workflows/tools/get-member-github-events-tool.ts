@@ -50,7 +50,7 @@ export function getMemberGithubEventsTool(db: Db) {
           schema.githubIntegration,
           eq(schema.githubRepository.integrationId, schema.githubIntegration.id),
         )
-        .innerJoin(
+        .leftJoin(
           schema.githubEventVector,
           eq(schema.githubEvent.id, schema.githubEventVector.eventId),
         )
@@ -64,6 +64,7 @@ export function getMemberGithubEventsTool(db: Db) {
         .innerJoin(schema.member, eq(schema.member.githubId, schema.githubUser.githubId))
         .where(and(...conditions))
         .orderBy(desc(schema.githubEvent.createdAt));
+
       return events;
     },
   });

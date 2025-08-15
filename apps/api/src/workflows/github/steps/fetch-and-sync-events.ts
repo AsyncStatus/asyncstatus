@@ -11,19 +11,20 @@ type FetchAndSyncEventsParams = {
   octokit: Octokit;
   db: Db;
   integrationId: string;
-  maxEventDate: Date;
+  minEventCreatedAt: Date;
 };
 
 export async function fetchAndSyncEvents({
   octokit,
   db,
   integrationId,
-  maxEventDate,
+  minEventCreatedAt,
 }: FetchAndSyncEventsParams) {
   const repositories = await db.query.githubRepository.findMany({
     where: eq(schema.githubRepository.integrationId, integrationId),
     columns: { id: true, owner: true, name: true },
   });
+  const processedEventIds = new Set<string>();
 
   for (const repo of repositories) {
     const events = await octokit.paginate(
@@ -39,7 +40,7 @@ export async function fetchAndSyncEvents({
           if (!event.created_at) {
             return true;
           }
-          return new Date(event.created_at) > maxEventDate;
+          return new Date(event.created_at) > minEventCreatedAt;
         });
         if (filteredEvents.length !== response.data.length) {
           done();
@@ -55,6 +56,7 @@ export async function fetchAndSyncEvents({
 
     try {
       const batchUpserts = events.map((event) => {
+        processedEventIds.add(event.id.toString());
         return db
           .insert(schema.githubEvent)
           .values({
@@ -87,4 +89,6 @@ export async function fetchAndSyncEvents({
       console.error(error);
     }
   }
+
+  return processedEventIds;
 }

@@ -17,7 +17,7 @@ export async function generateSlackEventSummary({
   const payload = event.payload;
   const data = JSON.stringify(payload, null, 2);
   const { text } = await generateText({
-    model: openRouterProvider("anthropic/claude-3.7-sonnet"),
+    model: openRouterProvider("openai/gpt-5-nano"),
     system: `You are an expert technical summarizer for Slack events.
 Given Slack event data payload, write a concise summary of the changes made in the event.
 The event might be a message event, a reaction event or any other Slack event.
