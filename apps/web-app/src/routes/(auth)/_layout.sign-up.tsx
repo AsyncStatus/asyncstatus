@@ -1,6 +1,9 @@
+import { discordIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { githubIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
+import { slackIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { Separator } from "@asyncstatus/ui/components/separator";
@@ -8,7 +11,7 @@ import { toast } from "@asyncstatus/ui/components/sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import {
@@ -69,6 +72,13 @@ function RouteComponent() {
       { throwOnError: false },
     ),
   );
+  const [lastUsedProvider, setLastUsedProvider] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("lastLoginProvider");
+    } catch {
+      return null;
+    }
+  });
   const loginSocial = useMutation({
     ...loginSocialMutationOptions(),
     async onSuccess() {
@@ -145,55 +155,98 @@ function RouteComponent() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full relative"
             onClick={() =>
-              loginSocial.mutate({
-                provider: "github",
-                scopes: ["user:email"],
-                callbackURL: typedUrl(githubIntegrationCallbackContract, {
-                  redirect: search.redirect,
-                }),
-              })
+              loginSocial
+                .mutateAsync({
+                  provider: "github",
+                  scopes: ["user:email"],
+                  callbackURL: typedUrl(githubIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "github");
+                    setLastUsedProvider("github");
+                  } catch {}
+                })
             }
           >
             <SiGithub className="size-4" />
             Continue with GitHub
+            {lastUsedProvider === "github" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
           </Button>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full relative"
             onClick={() =>
-              loginSocial.mutate({
-                provider: "slack",
-                scopes: ["user:email"],
-                // callbackURL: typedUrl(slackIntegrationCallbackContract, {
-                //   redirect: search.redirect,
-                // }),
-              })
+              loginSocial
+                .mutateAsync({
+                  provider: "slack",
+                  callbackURL: typedUrl(slackIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "slack");
+                    setLastUsedProvider("slack");
+                  } catch {}
+                })
             }
           >
             <SiSlack className="size-4" />
             Continue with Slack
+            {lastUsedProvider === "slack" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
           </Button>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full relative"
             onClick={() =>
-              loginSocial.mutate({
-                provider: "discord",
-                scopes: ["user:email"],
-                // callbackURL: typedUrl(slackIntegrationCallbackContract, {
-                //   redirect: search.redirect,
-                // }),
-              })
+              loginSocial
+                .mutateAsync({
+                  provider: "discord",
+                  callbackURL: typedUrl(discordIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "discord");
+                    setLastUsedProvider("discord");
+                  } catch {}
+                })
             }
           >
             <SiDiscord className="size-4" />
             Continue with Discord
+            {lastUsedProvider === "discord" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
           </Button>
         </div>
 
