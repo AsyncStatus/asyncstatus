@@ -728,7 +728,7 @@ export const generateStatusUpdateHandler = typedHandler<
         // Update the updatedAt timestamp
         await tx
           .update(schema.statusUpdate)
-          .set({ editorJson: nextEditorJson, updatedAt: nowDate })
+          .set({ editorJson: nextEditorJson, updatedAt: nowDate, isDraft: false })
           .where(eq(schema.statusUpdate.id, statusUpdateId));
       } else {
         // Create new status update
@@ -745,7 +745,7 @@ export const generateStatusUpdateHandler = typedHandler<
           mood: null,
           emoji: null,
           notes: null,
-          isDraft: true,
+          isDraft: false,
           timezone: userTimezone,
           createdAt: nowDate,
           updatedAt: nowDate,
