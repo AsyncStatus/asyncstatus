@@ -6,7 +6,11 @@ import {
   getGithubIntegrationContract,
   githubIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
-import { updateUserOnboardingContract } from "@asyncstatus/api/typed-handlers/onboarding";
+import {
+  createOnboardingRecommendedAutomationsContract,
+  updateUserOnboardingContract,
+} from "@asyncstatus/api/typed-handlers/onboarding";
+import { listSchedulesContract } from "@asyncstatus/api/typed-handlers/schedule";
 import {
   getSlackIntegrationContract,
   slackIntegrationCallbackContract,
@@ -163,6 +167,18 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         },
       },
     ),
+  );
+  const createRecommendedAutomations = useMutation(
+    typedMutationOptions(createOnboardingRecommendedAutomationsContract, {
+      onSuccess(data) {
+        queryClient.setQueryData(
+          typedQueryOptions(listSchedulesContract, {
+            idOrSlug: organizationSlug,
+          }).queryKey,
+          data,
+        );
+      },
+    }),
   );
   const hasGithubIntegration = githubIntegration.data?.syncFinishedAt;
   const hasSlackIntegration = slackIntegration.data?.syncFinishedAt;
@@ -410,13 +426,16 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         {statusUpdate.data && connectedIntegrationsCount > 0 && !generateStatusUpdate.isPending && (
           <Button
             className="mt-12"
-            onClick={() =>
+            onClick={() => {
               updateUserOnboarding.mutate({
                 showOnboarding: true,
                 onboardingStep: "second-step",
                 onboardingCompletedAt: null,
-              })
-            }
+              });
+              createRecommendedAutomations.mutate({
+                idOrSlug: organizationSlug,
+              });
+            }}
           >
             Your automations
             <ArrowRight className="size-4" />

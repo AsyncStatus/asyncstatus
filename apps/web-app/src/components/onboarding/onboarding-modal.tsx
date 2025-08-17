@@ -51,7 +51,9 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
               <FirstStep organizationSlug={organizationSlug} />
             )}
 
-            {session.data?.user.onboardingStep === "second-step" && <SecondStep />}
+            {session.data?.user.onboardingStep === "second-step" && (
+              <SecondStep organizationSlug={organizationSlug} />
+            )}
 
             <div className="flex flex-col gap-2">
               {!hasGithubIntegration && !hasSlackIntegration && !hasDiscordIntegration && (

@@ -68,7 +68,10 @@ import {
   listMembersHandler,
   updateMemberHandler,
 } from "./typed-handlers/member-handlers";
-import { updateUserOnboardingHandler } from "./typed-handlers/onboarding-handlers";
+import {
+  createOnboardingRecommendedAutomationsHandler,
+  updateUserOnboardingHandler,
+} from "./typed-handlers/onboarding-handlers";
 import {
   createOrganizationHandler,
   getOrganizationHandler,
@@ -412,6 +415,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
     updateUserOnboardingHandler,
+    createOnboardingRecommendedAutomationsHandler,
     slackAddIntegrationCallbackHandler,
     discordAddIntegrationCallbackHandler,
   ],
