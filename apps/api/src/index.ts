@@ -38,6 +38,7 @@ import {
 } from "./typed-handlers/discord-gateway-handlers";
 import {
   deleteDiscordIntegrationHandler,
+  discordAddIntegrationCallbackHandler,
   discordIntegrationCallbackHandler,
   fetchDiscordMessagesHandler,
   getDiscordIntegrationHandler,
@@ -412,6 +413,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     runScheduleHandler,
     updateUserOnboardingHandler,
     slackAddIntegrationCallbackHandler,
+    discordAddIntegrationCallbackHandler,
   ],
   {
     getContext: (c) => ({

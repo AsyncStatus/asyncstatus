@@ -8,6 +8,12 @@ export const discordIntegrationCallbackContract = typedContract(
   z.instanceof(Response),
 );
 
+export const discordAddIntegrationCallbackContract = typedContract(
+  "get /integrations/discord/callback/add",
+  z.object({ code: z.string(), state: z.string(), guild_id: z.string(), permissions: z.string() }),
+  z.instanceof(Response),
+);
+
 export const getDiscordIntegrationContract = typedContract(
   "get /organizations/:idOrSlug/integrations/discord",
   z.strictObject({ idOrSlug: z.string().min(1) }),

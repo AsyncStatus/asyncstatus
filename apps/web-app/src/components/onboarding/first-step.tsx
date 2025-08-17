@@ -42,16 +42,13 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
   const navigate = useNavigate();
   const search = useSearch({ from: "/$organizationSlug" });
   const now = useMemo(() => dayjs.utc(), []);
-  const nowEndOfDayString = useMemo(() => now.endOf("day").format("YYYY-MM-DD"), [now]);
-  const nowStartOfWeekString = useMemo(
-    () => now.startOf("week").startOf("day").format("YYYY-MM-DD"),
-    [now],
-  );
+  const nowEndOfDay = useMemo(() => now.endOf("day"), [now]);
+  const nowStartOfWeek = useMemo(() => now.startOf("week").startOf("day"), [now]);
   const queryClient = useQueryClient();
   const statusUpdate = useQuery(
     typedQueryOptions(
       getStatusUpdateContract,
-      { idOrSlug: organizationSlug, statusUpdateIdOrDate: nowStartOfWeekString },
+      { idOrSlug: organizationSlug, statusUpdateIdOrDate: nowStartOfWeek.format("YYYY-MM-DD") },
       { throwOnError: false },
     ),
   );
@@ -87,7 +84,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         queryClient.setQueryData(
           typedQueryOptions(getStatusUpdateContract, {
             idOrSlug: organizationSlug,
-            statusUpdateIdOrDate: nowStartOfWeekString,
+            statusUpdateIdOrDate: nowStartOfWeek.format("YYYY-MM-DD"),
           }).queryKey,
           data,
         );
@@ -218,8 +215,8 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     if (transitioned && !generateStatusUpdate.isPending) {
       generateStatusUpdate.mutate({
         idOrSlug: organizationSlug,
-        effectiveFrom: nowStartOfWeekString,
-        effectiveTo: nowEndOfDayString,
+        effectiveFrom: nowStartOfWeek.toISOString(),
+        effectiveTo: nowEndOfDay.toISOString(),
       });
     }
 
@@ -234,8 +231,8 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     githubIntegration.data?.syncFinishedAt,
     slackIntegration.data?.syncFinishedAt,
     discordIntegration.data?.syncFinishedAt,
-    nowStartOfWeekString,
-    nowEndOfDayString,
+    nowStartOfWeek,
+    nowEndOfDay,
     generateStatusUpdate.isPending,
   ]);
 
@@ -248,8 +245,8 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     ) {
       generateStatusUpdate.mutate({
         idOrSlug: organizationSlug,
-        effectiveFrom: nowStartOfWeekString,
-        effectiveTo: nowEndOfDayString,
+        effectiveFrom: nowStartOfWeek.toISOString(),
+        effectiveTo: nowEndOfDay.toISOString(),
       });
       return;
     }
@@ -259,8 +256,8 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     generateStatusUpdate.isPending,
     statusUpdate.isPending,
     statusUpdate.data,
-    nowStartOfWeekString,
-    nowEndOfDayString,
+    nowStartOfWeek,
+    nowEndOfDay,
   ]);
 
   function Title() {
@@ -349,7 +346,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           <StatusUpdateCard organizationSlug={organizationSlug} statusUpdate={statusUpdate.data} />
         )}
 
-        {statusUpdate.data && !generateStatusUpdate.isPending && (
+        {!generateStatusUpdate.isPending && (
           <Button
             variant="outline"
             size="lg"
@@ -370,7 +367,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           </Button>
         )}
 
-        {statusUpdate.data && !generateStatusUpdate.isPending && (
+        {!generateStatusUpdate.isPending && (
           <Button
             variant="outline"
             size="lg"
@@ -390,7 +387,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           </Button>
         )}
 
-        {statusUpdate.data && !generateStatusUpdate.isPending && (
+        {!generateStatusUpdate.isPending && (
           <Button
             variant="outline"
             size="lg"
