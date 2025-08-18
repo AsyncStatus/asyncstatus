@@ -12,13 +12,19 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
+    "@asyncstatus/api": "workspace:*",
+    "@asyncstatus/dayjs": "workspace:*",
     "@asyncstatus/ui": "workspace:*",
-    "@opennextjs/cloudflare": "1.6.0",
+    "@asyncstatus/typed-handlers": "workspace:*",
+    "@opennextjs/cloudflare": "1.6.5",
     "framer-motion": "12.23.7",
-    "next": "15.3.4",
+    "next": "15.4.6",
     "posthog-js": "1.257.2",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@asyncstatus/typescript-config": "workspace:*",

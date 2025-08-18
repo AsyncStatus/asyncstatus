@@ -1,20 +1,26 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
-import type { listStatusUpdatesByDateContract } from "@asyncstatus/api/typed-handlers/status-update";
+import {
+  getStatusUpdateContract,
+  listStatusUpdatesByDateContract,
+  shareStatusUpdateContract,
+} from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Separator } from "@asyncstatus/ui/components/separator";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
+import { toast } from "@asyncstatus/ui/components/sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@asyncstatus/ui/components/tooltip";
-import { AlertTriangle } from "@asyncstatus/ui/icons";
+import { AlertTriangle, ShareIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
+import { useCopyToClipboard } from "@/lib/use-copy-to-clipboard";
 import { getInitials } from "@/lib/utils";
-import { typedUrl } from "@/typed-handlers";
+import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export type StatusUpdateCardProps = {
   organizationSlug: string;
@@ -27,6 +33,7 @@ const formatter = new Intl.ListFormat("en", {
 });
 
 export function StatusUpdateCard(props: StatusUpdateCardProps) {
+  const queryClient = useQueryClient();
   const name = useMemo(
     () => props.statusUpdate.member.user.name.split(" ")[0] ?? props.statusUpdate.member.user.name,
     [props.statusUpdate.member.user.name],
@@ -39,27 +46,102 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
     () => getUpdateStatusItemsText(props.statusUpdate.items),
     [props.statusUpdate.items],
   );
+  const shareStatusUpdateMutation = useMutation(
+    typedMutationOptions(shareStatusUpdateContract, {
+      onSuccess: (data) => {
+        queryClient.setQueryData(
+          typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: props.organizationSlug,
+            date: dayjs(props.statusUpdate.createdAt).format("YYYY-MM-DD"),
+          }).queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
+
+            return old.map((statusUpdate: any) =>
+              statusUpdate.id === props.statusUpdate.id
+                ? { ...statusUpdate, slug: data.slug }
+                : statusUpdate,
+            );
+          },
+        );
+        queryClient.setQueryData(
+          typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: props.organizationSlug,
+            statusUpdateIdOrDate: props.statusUpdate.id,
+          }).queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
+
+            return { ...old, slug: data.slug };
+          },
+        );
+      },
+    }),
+  );
+
+  const [copiedLink, copyLinkToClipboard] = useCopyToClipboard();
 
   return (
     <div className="flex flex-col border border-border rounded-lg">
       <header className="p-3.5">
-        {hasAnyBlockers && (
-          <Link
-            to="/$organizationSlug/status-updates/$statusUpdateId"
-            params={{
-              organizationSlug: props.organizationSlug,
-              statusUpdateId: props.statusUpdate.id,
+        <div className="flex items-center justify-between mb-1 gap-0.5">
+          {hasAnyBlockers && (
+            <Link
+              className="w-full"
+              to="/$organizationSlug/status-updates/$statusUpdateId"
+              params={{
+                organizationSlug: props.organizationSlug,
+                statusUpdateId: props.statusUpdate.id,
+              }}
+            >
+              <button
+                type="button"
+                className="flex items-center gap-2 bg-destructive/10 hover:bg-destructive/20 p-1 rounded-sm w-full cursor-pointer"
+              >
+                <AlertTriangle className="size-3 text-destructive" />
+                <p className="text-xs text-destructive">This update has blockers</p>
+              </button>
+            </Link>
+          )}
+
+          <button
+            type="button"
+            className="flex items-center gap-2 bg-background hover:bg-muted p-1 rounded-sm cursor-pointer"
+            onClick={() => {
+              if (!props.statusUpdate.slug) {
+                shareStatusUpdateMutation
+                  .mutateAsync({
+                    idOrSlug: props.organizationSlug,
+                    statusUpdateId: props.statusUpdate.id,
+                  })
+                  .then((data) => {
+                    copyLinkToClipboard(
+                      `${import.meta.env.VITE_MARKETING_APP_URL}/s/${data.slug}`,
+                    ).then(() => {
+                      toast.success("Status update link copied to clipboard", {
+                        position: "top-center",
+                      });
+                    });
+                  });
+              } else {
+                copyLinkToClipboard(
+                  `${import.meta.env.VITE_MARKETING_APP_URL}/s/${props.statusUpdate.slug}`,
+                ).then(() => {
+                  toast.success("Status update link copied to clipboard", {
+                    position: "top-center",
+                  });
+                });
+              }
             }}
           >
-            <button
-              type="button"
-              className="flex items-center gap-2 mb-1 bg-destructive/10 hover:bg-destructive/20 p-1 rounded-sm w-full cursor-pointer"
-            >
-              <AlertTriangle className="size-3 text-destructive" />
-              <p className="text-xs text-destructive">This update has blockers</p>
-            </button>
-          </Link>
-        )}
+            <ShareIcon className="size-3" />
+            <p className="text-xs">Share</p>
+          </button>
+        </div>
 
         <div>
           <p className="text-xs text-muted-foreground">{updateStatusItemsText}</p>

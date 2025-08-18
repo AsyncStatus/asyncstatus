@@ -79,6 +79,7 @@ import {
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import { getPublicStatusUpdateHandler } from "./typed-handlers/public-status-update-handlers";
 import {
   createScheduleHandler,
   deleteScheduleHandler,
@@ -106,6 +107,7 @@ import {
   listStatusUpdatesByMemberHandler,
   listStatusUpdatesByTeamHandler,
   listStatusUpdatesHandler,
+  shareStatusUpdateHandler,
   updateStatusUpdateHandler,
 } from "./typed-handlers/status-update-handlers";
 import {
@@ -418,6 +420,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     createOnboardingRecommendedAutomationsHandler,
     slackAddIntegrationCallbackHandler,
     discordAddIntegrationCallbackHandler,
+    getPublicStatusUpdateHandler,
+    shareStatusUpdateHandler,
   ],
   {
     getContext: (c) => ({

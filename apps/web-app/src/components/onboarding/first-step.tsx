@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
 } from "@asyncstatus/ui/components/alert-dialog";
 import { Button } from "@asyncstatus/ui/components/button";
+import { Input } from "@asyncstatus/ui/components/input";
+import { toast } from "@asyncstatus/ui/components/sonner";
 import { ArrowRight, Loader2 } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -324,7 +326,11 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         hasDiscordIntegration ? "Discord" : "",
       ].filter(Boolean);
       return (
-        <p>We've summarized a week of your {formatter.format(basedOnText)} activity for you.</p>
+        <p>
+          We've summarized a week of your {formatter.format(basedOnText)} activity for you.
+          <br />
+          Share it with your team to keep everyone in the loop.
+        </p>
       );
     }
 
@@ -351,7 +357,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      <div className="flex flex-col gap-2 mt-12">
+      <div className="flex flex-col gap-2 mt-6">
         {generateStatusUpdate.isPending && (
           <div className="w-full">
             <StatusUpdateCardSkeleton count={1} />
@@ -359,7 +365,28 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         )}
 
         {statusUpdate.data && !generateStatusUpdate.isPending && (
-          <StatusUpdateCard organizationSlug={organizationSlug} statusUpdate={statusUpdate.data} />
+          <div className="w-full">
+            <Input
+              className="text-muted-foreground font-bold text-base text-pretty text-center mb-2"
+              value={`${import.meta.env.VITE_MARKETING_APP_URL}/s/${statusUpdate.data.slug}`}
+              readOnly
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(
+                    `${import.meta.env.VITE_MARKETING_APP_URL}/s/${statusUpdate.data.slug}`,
+                  )
+                  .then(() => {
+                    toast.success("Status update link copied to clipboard", {
+                      position: "top-center",
+                    });
+                  });
+              }}
+            />
+            <StatusUpdateCard
+              organizationSlug={organizationSlug}
+              statusUpdate={statusUpdate.data}
+            />
+          </div>
         )}
 
         {!generateStatusUpdate.isPending && (

@@ -130,9 +130,9 @@ export default async function Page(props: {
             <img
               src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=999509&theme=neutral&t=1754045157676"
               alt="AsyncStatus - Don&#0039;t&#0032;join&#0032;another&#0032;9&#0058;30am&#0032;standup&#0032;meeting&#0032;ever&#0032;again&#0046; | Product Hunt"
-              style={{ width: "250px", height: "54px" }}
-              width="250"
-              height="54"
+              style={{ width: "187.5px", height: "40.5px" }}
+              width="187.5"
+              height="40.5"
             />
           </a>
         </div>
