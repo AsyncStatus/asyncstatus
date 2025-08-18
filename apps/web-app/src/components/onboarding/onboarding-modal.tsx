@@ -1,5 +1,9 @@
 import { getDiscordIntegrationContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  getOrganizationContract,
+  getOrganizationUserContract,
+} from "@asyncstatus/api/typed-handlers/organization";
 import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   AlertDialog,
@@ -7,8 +11,8 @@ import {
 } from "@asyncstatus/ui/components/alert-dialog";
 import { Button } from "@asyncstatus/ui/components/button";
 import { cn } from "@asyncstatus/ui/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import { typedQueryOptions } from "@/typed-handlers";
 import { FirstStep } from "./first-step";
@@ -17,7 +21,19 @@ import { SecondStep } from "./second-step";
 import { ThirdStep } from "./third-step";
 
 export function OnboardingModal({ organizationSlug }: { organizationSlug: string }) {
+  const queryClient = useQueryClient();
   const session = useQuery(sessionBetterAuthQueryOptions());
+  const user = useQuery(
+    typedQueryOptions(
+      getOrganizationUserContract,
+      !session.data?.user.id
+        ? skipToken
+        : {
+            idOrSlug: organizationSlug,
+            userId: session.data?.user.id,
+          },
+    ),
+  );
   const [manualUpdatesDialogOpen, setManualUpdatesDialogOpen] = useState(false);
   const githubIntegration = useQuery(
     typedQueryOptions(getGithubIntegrationContract, { idOrSlug: organizationSlug }),
@@ -40,6 +56,19 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
     discordIntegration.data?.syncFinishedAt ||
     discordIntegration.data?.syncStartedAt ||
     discordIntegration.data?.syncUpdatedAt;
+
+  // session is cached so we'd just use the user from getOrganizationUserContract
+  useEffect(() => {
+    if (user.data) {
+      queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (old: any) => ({
+        ...old,
+        user: {
+          ...old.user,
+          ...user.data,
+        },
+      }));
+    }
+  }, [user.data]);
 
   return (
     <>

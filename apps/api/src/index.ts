@@ -75,6 +75,7 @@ import {
 import {
   createOrganizationHandler,
   getOrganizationHandler,
+  getOrganizationUserHandler,
   listMemberOrganizationsHandler,
   setActiveOrganizationHandler,
   updateOrganizationHandler,
@@ -422,6 +423,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     discordAddIntegrationCallbackHandler,
     getPublicStatusUpdateHandler,
     shareStatusUpdateHandler,
+    getOrganizationUserHandler,
   ],
   {
     getContext: (c) => ({
