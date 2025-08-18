@@ -1,14 +1,19 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import { dayjs } from "@asyncstatus/dayjs";
 import { WebClient } from "@slack/web-api";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 import { createReportStatusFn } from "./steps/common";
 import { fetchAndSyncChannels } from "./steps/fetch-and-sync-channels";
+import { fetchAndSyncMessages } from "./steps/fetch-and-sync-messages";
 import { fetchAndSyncUsers } from "./steps/fetch-and-sync-users";
 
-export type SyncSlackWorkflowParams = { integrationId: string };
+export type SyncSlackWorkflowParams = {
+  integrationId: string;
+  createdByUserId?: schema.User["id"];
+};
 
 export class SyncSlackWorkflow extends WorkflowEntrypoint<
   HonoEnv["Bindings"],
@@ -55,6 +60,45 @@ export class SyncSlackWorkflow extends WorkflowEntrypoint<
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
       await reportStatusFn(() => fetchAndSyncUsers({ slackClient, db, integrationId }));
+    });
+
+    await step.do("fetch-and-sync-messages", async () => {
+      const db = createDb(this.env);
+      const integration = await db.query.slackIntegration.findFirst({
+        where: eq(schema.slackIntegration.id, integrationId),
+        with: { organization: true },
+      });
+      if (!integration) {
+        throw new Error("Integration not found");
+      }
+      let userSlackAccessToken: string | null = null;
+      if (event.payload.createdByUserId) {
+        const account = await db.query.account.findFirst({
+          where: and(
+            eq(schema.account.providerId, "slack"),
+            eq(schema.account.userId, event.payload.createdByUserId),
+          ),
+        });
+        userSlackAccessToken = account?.accessToken ?? null;
+      }
+      const slackClient = new WebClient(userSlackAccessToken ?? integration.botAccessToken);
+
+      const reportStatusFn = createReportStatusFn({ db, integrationId });
+
+      await reportStatusFn(async () => {
+        const eventIds = await fetchAndSyncMessages({
+          slackClient,
+          db,
+          integrationId,
+          minEventCreatedAt: dayjs().startOf("week").toDate(),
+        });
+
+        if (eventIds.size > 0) {
+          await this.env.SLACK_PROCESS_EVENTS_QUEUE.sendBatch(
+            Array.from(eventIds).map((id) => ({ body: id, contentType: "text" })),
+          );
+        }
+      });
 
       await db
         .update(schema.slackIntegration)

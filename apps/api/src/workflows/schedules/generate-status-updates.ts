@@ -76,6 +76,8 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
         organizationName: scheduleRun.schedule.organization.name,
         scheduleRunExecutionCount: scheduleRun.executionCount,
         scheduleRunCreatedByMemberId: scheduleRun.createdByMemberId,
+        scheduleRunLastExecutionAt: scheduleRun.lastExecutionAt,
+        scheduleRunNextExecutionAt: scheduleRun.nextExecutionAt,
       };
     });
 
@@ -240,9 +242,23 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
           throw new Error("Organization plan not found");
         }
 
-        // Calculate time range for status update (typically yesterday to today)
-        const effectiveFrom = now.subtract(1, "day").startOf("day").toISOString();
-        const effectiveTo = now.startOf("day").toISOString();
+        // Calculate time range for status update similar to send-summaries logic
+        // Prefer last execution time; otherwise derive from schedule recurrence
+        const scheduleConfig = initData.scheduleConfig as schema.ScheduleConfig;
+        let effectiveFrom: string;
+        if (initData.scheduleRunLastExecutionAt) {
+          effectiveFrom = dayjs.utc(initData.scheduleRunLastExecutionAt).toISOString();
+        } else if (scheduleConfig?.recurrence === "daily") {
+          effectiveFrom = now.subtract(1, "day").startOf("day").toISOString();
+        } else if (scheduleConfig?.recurrence === "weekly") {
+          effectiveFrom = now.subtract(1, "week").startOf("day").toISOString();
+        } else if (scheduleConfig?.recurrence === "monthly") {
+          effectiveFrom = now.subtract(1, "month").startOf("day").toISOString();
+        } else {
+          // Fallback
+          effectiveFrom = now.subtract(1, "day").startOf("day").toISOString();
+        }
+        const effectiveTo = now.endOf("day").toISOString();
 
         let generated = 0;
         let failed = 0;

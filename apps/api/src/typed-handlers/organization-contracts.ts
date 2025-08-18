@@ -1,6 +1,6 @@
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { Member, Organization, OrganizationUpdate, Team, TeamMembership } from "../db";
+import { Member, Organization, OrganizationUpdate, User } from "../db";
 
 export const listMemberOrganizationsContract = typedContract(
   "get /organizations/member",
@@ -12,6 +12,12 @@ export const getOrganizationContract = typedContract(
   "get /organizations/:idOrSlug",
   z.strictObject({ idOrSlug: z.string().min(1) }),
   z.strictObject({ organization: Organization, member: Member }),
+);
+
+export const getOrganizationUserContract = typedContract(
+  "get /organizations/:idOrSlug/user/:userId",
+  z.strictObject({ idOrSlug: z.string().min(1), userId: z.string().min(1) }),
+  z.strictObject({ ...User.shape }),
 );
 
 export const setActiveOrganizationContract = typedContract(

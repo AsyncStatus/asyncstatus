@@ -1,16 +1,25 @@
+import { discordIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/discord-integration";
+import { githubIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/github-integration";
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
+import { slackIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/slack-integration";
+import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Checkbox } from "@asyncstatus/ui/components/checkbox";
 import { Input } from "@asyncstatus/ui/components/input";
+import { Separator } from "@asyncstatus/ui/components/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { loginEmailMutationOptions } from "@/better-auth-tanstack-query";
+import {
+  loginEmailMutationOptions,
+  loginSocialMutationOptions,
+} from "@/better-auth-tanstack-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/form";
-import { typedQueryOptions } from "@/typed-handlers";
+import { typedQueryOptions, typedUrl } from "@/typed-handlers";
 
 export const Route = createFileRoute("/(auth)/_layout/login")({
   component: RouteComponent,
@@ -55,6 +64,13 @@ function RouteComponent() {
       { throwOnError: false },
     ),
   );
+  const [lastUsedProvider, setLastUsedProvider] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("lastLoginProvider");
+    } catch {
+      return null;
+    }
+  });
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -73,6 +89,15 @@ function RouteComponent() {
     },
   });
 
+  const loginSocial = useMutation({
+    ...loginSocialMutationOptions(),
+    async onSuccess() {
+      await queryClient.resetQueries();
+      await router.invalidate();
+      await navigate({ to: search.redirect ?? "/" });
+    },
+  });
+
   useEffect(() => {
     if (invitation.data?.email) {
       form.setValue("email", invitation.data.email);
@@ -82,7 +107,7 @@ function RouteComponent() {
   return (
     <Form {...form}>
       <form
-        className="mx-auto w-full max-w-xs space-y-24"
+        className="mx-auto w-full max-w-xs"
         onSubmit={form.handleSubmit((data) => {
           loginEmail.mutate({
             ...data,
@@ -101,7 +126,118 @@ function RouteComponent() {
           </h2>
         </div>
 
-        <div className="grid gap-5">
+        <div className="space-y-4 mt-16">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full relative"
+            onClick={() => {
+              loginSocial
+                .mutateAsync({
+                  provider: "github",
+                  scopes: ["user:email"],
+                  callbackURL: typedUrl(githubIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "github");
+                    setLastUsedProvider("github");
+                  } catch {}
+                });
+            }}
+          >
+            <SiGithub className="size-4" />
+            Continue with GitHub
+            {lastUsedProvider === "github" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full relative"
+            onClick={() => {
+              loginSocial
+                .mutateAsync({
+                  provider: "slack",
+                  callbackURL: typedUrl(slackIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "slack");
+                    setLastUsedProvider("slack");
+                  } catch {
+                    // ignore
+                  }
+                });
+            }}
+          >
+            <SiSlack className="size-4" />
+            Continue with Slack
+            {lastUsedProvider === "slack" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full relative"
+            onClick={() => {
+              loginSocial
+                .mutateAsync({
+                  provider: "discord",
+                  // scopes: ["user:email"],
+                  callbackURL: typedUrl(discordIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  }),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "discord");
+                    setLastUsedProvider("discord");
+                  } catch {
+                    // ignore
+                  }
+                });
+            }}
+          >
+            <SiDiscord className="size-4" />
+            Continue with Discord
+            {lastUsedProvider === "discord" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
+          </Button>
+        </div>
+
+        <div className="relative my-12">
+          <Separator />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-2 text-center text-sm text-muted-foreground bg-background">
+            or
+          </div>
+        </div>
+
+        <div className="grid gap-5 mt-12">
           <FormField
             control={form.control}
             disabled={Boolean(search.invitationEmail) && invitation.data?.hasUser}
@@ -178,3 +314,71 @@ function RouteComponent() {
     </Form>
   );
 }
+
+const slackScopes = [
+  "app_mentions:read",
+  "channels:history",
+  "channels:join",
+  "channels:read",
+  "chat:write",
+  "chat:write.public",
+  "commands",
+  "emoji:read",
+  "files:read",
+  "groups:history",
+  "groups:read",
+  "im:history",
+  "im:read",
+  "incoming-webhook",
+  "mpim:history",
+  "mpim:read",
+  "pins:read",
+  "reactions:read",
+  "team:read",
+  "users:read",
+  "users.profile:read",
+  "users:read.email",
+  "calls:read",
+  "reminders:read",
+  "reminders:write",
+  "channels:manage",
+  "chat:write.customize",
+  "im:write",
+  "links:read",
+  "metadata.message:read",
+  "mpim:write",
+  "pins:write",
+  "reactions:write",
+  "dnd:read",
+  "usergroups:read",
+  "usergroups:write",
+  "users:write",
+  "remote_files:read",
+  "remote_files:write",
+  "files:write",
+  "groups:write",
+];
+
+const slackUserScopes: string[] = [
+  "channels:history",
+  "channels:read",
+  "dnd:read",
+  "emoji:read",
+  "files:read",
+  "groups:history",
+  "groups:read",
+  "im:history",
+  "im:read",
+  "mpim:history",
+  "mpim:read",
+  "pins:read",
+  "reactions:read",
+  "team:read",
+  "users:read",
+  "users.profile:read",
+  "users:read.email",
+  "calls:read",
+  "reminders:read",
+  "reminders:write",
+  "stars:read",
+];

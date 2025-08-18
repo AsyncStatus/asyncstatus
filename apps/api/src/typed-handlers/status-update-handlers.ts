@@ -17,6 +17,7 @@ import {
   listStatusUpdatesByMemberContract,
   listStatusUpdatesByTeamContract,
   listStatusUpdatesContract,
+  shareStatusUpdateContract,
   updateStatusUpdateContract,
 } from "./status-update-contracts";
 
@@ -41,6 +42,47 @@ export const listStatusUpdatesHandler = typedHandler<
     });
 
     return statusUpdates;
+  },
+);
+
+export const shareStatusUpdateHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof shareStatusUpdateContract
+>(
+  shareStatusUpdateContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input }) => {
+    const { statusUpdateId } = input;
+
+    const statusUpdate = await db.query.statusUpdate.findFirst({
+      where: and(
+        eq(schema.statusUpdate.id, statusUpdateId),
+        eq(schema.statusUpdate.organizationId, organization.id),
+      ),
+      with: {
+        member: { with: { user: true } },
+        team: true,
+        items: {
+          orderBy: (items) => [items.order],
+        },
+      },
+      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
+    });
+    if (!statusUpdate) {
+      throw new TypedHandlersError({
+        code: "NOT_FOUND",
+        message: "Status update not found",
+      });
+    }
+
+    const slug = generateId();
+    await db
+      .update(schema.statusUpdate)
+      .set({ slug })
+      .where(eq(schema.statusUpdate.id, statusUpdateId));
+
+    return { ...statusUpdate, slug };
   },
 );
 
@@ -728,7 +770,12 @@ export const generateStatusUpdateHandler = typedHandler<
         // Update the updatedAt timestamp
         await tx
           .update(schema.statusUpdate)
-          .set({ editorJson: nextEditorJson, updatedAt: nowDate })
+          .set({
+            editorJson: nextEditorJson,
+            updatedAt: nowDate,
+            isDraft: false,
+            slug: existingStatusUpdate.slug ?? generateId(),
+          })
           .where(eq(schema.statusUpdate.id, statusUpdateId));
       } else {
         // Create new status update
@@ -736,6 +783,7 @@ export const generateStatusUpdateHandler = typedHandler<
 
         await tx.insert(schema.statusUpdate).values({
           id: statusUpdateId,
+          slug: generateId(),
           memberId: member.id,
           organizationId: organization.id,
           teamId: null,
@@ -745,7 +793,7 @@ export const generateStatusUpdateHandler = typedHandler<
           mood: null,
           emoji: null,
           notes: null,
-          isDraft: true,
+          isDraft: false,
           timezone: userTimezone,
           createdAt: nowDate,
           updatedAt: nowDate,

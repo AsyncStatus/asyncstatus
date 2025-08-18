@@ -1,44 +1,17 @@
-import { typedHandler } from "@asyncstatus/typed-handlers";
+import { dayjs } from "@asyncstatus/dayjs";
+import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
+import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import * as schema from "../db";
-import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
-import { requiredOrganization, requiredSession } from "./middleware";
-
-interface DiscordTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_token?: string;
-  scope: string;
-}
-
-interface DiscordGuild {
-  id: string;
-  name: string;
-  icon: string | null;
-  description: string | null;
-  owner_id: string;
-  member_count?: number;
-  premium_tier: number;
-  preferred_locale: string;
-}
-
-interface DiscordUser {
-  id: string;
-  username: string;
-  discriminator: string;
-  avatar: string | null;
-  bot?: boolean;
-  system?: boolean;
-  locale?: string;
-  verified?: boolean;
-  mfa_enabled?: boolean;
-  premium_type?: number;
-}
-
+import type {
+  TypedHandlersContextWithOrganization,
+  TypedHandlersContextWithSession,
+} from "../lib/env";
+import { getDiscordIntegrationConnectUrl } from "../lib/integrations-connect-url";
 import {
   deleteDiscordIntegrationContract,
+  discordAddIntegrationCallbackContract,
   discordIntegrationCallbackContract,
   fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
@@ -46,12 +19,162 @@ import {
   listDiscordServersContract,
   listDiscordUsersContract,
 } from "./discord-integration-contracts";
+import { requiredOrganization, requiredSession } from "./middleware";
 
 export const discordIntegrationCallbackHandler = typedHandler<
-  TypedHandlersContext,
+  TypedHandlersContextWithSession,
   typeof discordIntegrationCallbackContract
 >(
   discordIntegrationCallbackContract,
+  requiredSession,
+  async ({ redirect, webAppUrl, db, input, session, workflow, discord, betterAuthUrl }) => {
+    try {
+      const { redirect: redirectUrl } = input;
+      const account = await db.query.account.findFirst({
+        where: and(
+          eq(schema.account.userId, session.user.id),
+          eq(schema.account.providerId, "discord"),
+        ),
+      });
+      if (!account || !account.accessToken) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Account not found or not linked to Discord",
+        });
+      }
+
+      const userResponse = await fetch("https://discord.com/api/v10/users/@me", {
+        headers: { Authorization: `Bearer ${account.accessToken}` },
+      });
+      if (!userResponse.ok) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "Failed to get Discord user info",
+        });
+      }
+      const userData = (await userResponse.json()) as { id: string };
+      const discordUserId = userData.id;
+
+      const organizations = await db
+        .select({ organization: schema.organization, member: schema.member })
+        .from(schema.organization)
+        .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, session.user.id))
+        .orderBy(desc(schema.organization.createdAt))
+        .limit(1);
+
+      if (organizations[0]?.organization.slug) {
+        const existing = await db.query.discordIntegration.findFirst({
+          where: eq(schema.discordIntegration.organizationId, organizations[0].organization.id),
+        });
+        if (existing) {
+          return redirect(
+            `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+          );
+        }
+
+        return redirect(
+          getDiscordIntegrationConnectUrl({
+            clientId: discord.clientId,
+            redirectUri: `${betterAuthUrl}${discordAddIntegrationCallbackContract.url()}`,
+            organizationSlug: organizations[0].organization.slug,
+          }),
+        );
+      }
+
+      const results = await db.transaction(async (tx) => {
+        const now = dayjs();
+        const name = `${session.user.name}'s Org`;
+        const [newOrganization] = await tx
+          .insert(schema.organization)
+          .values({
+            id: generateId(),
+            name,
+            slug: `${slugify(name)}-${generateId(4)}`,
+            metadata: null,
+            stripeCustomerId: null,
+            trialPlan: "basic",
+            trialStartDate: now.toDate(),
+            trialEndDate: now.add(14, "day").toDate(),
+            trialStatus: "active",
+            createdAt: now.toDate(),
+          })
+          .returning();
+
+        if (!newOrganization) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create organization",
+          });
+        }
+
+        const [newMember] = await tx
+          .insert(schema.member)
+          .values({
+            id: generateId(),
+            organizationId: newOrganization.id,
+            userId: session.user.id,
+            role: "owner",
+            createdAt: now.toDate(),
+            discordId: discordUserId,
+          })
+          .returning();
+        if (!newMember) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create member",
+          });
+        }
+
+        await tx
+          .update(schema.user)
+          .set({
+            activeOrganizationSlug: newOrganization.slug,
+            showOnboarding: true,
+            onboardingStep: "first-step",
+            onboardingCompletedAt: null,
+          })
+          .where(eq(schema.user.id, session.user.id));
+
+        return { organization: newOrganization, member: newMember };
+      });
+
+      const existing = await db.query.discordIntegration.findFirst({
+        where: eq(schema.discordIntegration.organizationId, results.organization.id),
+      });
+      if (existing) {
+        return redirect(
+          `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
+
+      return redirect(
+        getDiscordIntegrationConnectUrl({
+          clientId: discord.clientId,
+          redirectUri: `${betterAuthUrl}${discordAddIntegrationCallbackContract.url()}`,
+          organizationSlug: results.organization.slug,
+        }),
+      );
+    } catch (error) {
+      const message =
+        error instanceof TypedHandlersError
+          ? error.message
+          : "Failed to complete Discord integration";
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete Discord integration")}&error-description=${encodeURIComponent(
+          message,
+        )}`,
+      );
+    }
+  },
+);
+
+export const discordAddIntegrationCallbackHandler = typedHandler<
+  TypedHandlersContextWithSession,
+  typeof discordAddIntegrationCallbackContract
+>(
+  discordAddIntegrationCallbackContract,
+  requiredSession,
   async ({ redirect, webAppUrl, betterAuthUrl, db, input, discord, workflow }) => {
     const { code, state: organizationSlug, guild_id: guildId, permissions } = input;
 
@@ -83,7 +206,7 @@ export const discordIntegrationCallbackHandler = typedHandler<
           client_secret: discord.clientSecret,
           grant_type: "authorization_code",
           code,
-          redirect_uri: `${betterAuthUrl}/integrations/discord/callback`,
+          redirect_uri: `${betterAuthUrl}${discordAddIntegrationCallbackContract.url()}`,
         }),
       });
 
@@ -95,7 +218,11 @@ export const discordIntegrationCallbackHandler = typedHandler<
         );
       }
 
-      const tokenData = (await tokenResponse.json()) as DiscordTokenResponse;
+      const tokenData = (await tokenResponse.json()) as {
+        refresh_token: string;
+        expires_in: number;
+        scope: string;
+      };
       const { refresh_token, expires_in, scope } = tokenData;
 
       // Get guild information
@@ -111,7 +238,15 @@ export const discordIntegrationCallbackHandler = typedHandler<
         );
       }
 
-      const guildData = (await guildResponse.json()) as DiscordGuild;
+      const guildData = (await guildResponse.json()) as {
+        name: string;
+        icon: string;
+        description: string;
+        owner_id: string;
+        member_count: number;
+        premium_tier: number;
+        preferred_locale: string;
+      };
 
       // Get bot user information
       const botResponse = await fetch("https://discord.com/api/v10/users/@me", {
@@ -120,7 +255,7 @@ export const discordIntegrationCallbackHandler = typedHandler<
         },
       });
 
-      const botData = botResponse.ok ? ((await botResponse.json()) as DiscordUser) : null;
+      const botData = botResponse.ok ? ((await botResponse.json()) as { id?: string }) : null;
 
       const result = await db.transaction(async (tx) => {
         const now = new Date();

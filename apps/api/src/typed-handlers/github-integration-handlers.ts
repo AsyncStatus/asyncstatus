@@ -1,8 +1,15 @@
+import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
+import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+import { Octokit } from "octokit";
 import * as schema from "../db";
-import type { TypedHandlersContext, TypedHandlersContextWithOrganization } from "../lib/env";
+import type {
+  TypedHandlersContextWithOrganization,
+  TypedHandlersContextWithSession,
+} from "../lib/env";
+import { getGithubIntegrationConnectUrl } from "../lib/integrations-connect-url";
 import {
   deleteGithubIntegrationContract,
   getGithubIntegrationContract,
@@ -14,80 +21,263 @@ import {
 import { requiredOrganization, requiredSession } from "./middleware";
 
 export const githubIntegrationCallbackHandler = typedHandler<
-  TypedHandlersContext,
+  TypedHandlersContextWithSession,
   typeof githubIntegrationCallbackContract
->(githubIntegrationCallbackContract, async ({ redirect, webAppUrl, db, input, workflow }) => {
-  const { installation_id: installationId, state: organizationSlug } = input;
+>(
+  githubIntegrationCallbackContract,
+  requiredSession,
+  async ({ redirect, webAppUrl, db, input, workflow, session, github, bucket, betterAuthUrl }) => {
+    console.log(input);
+    try {
+      const { redirect: redirectUrl } = input;
+      const account = await db.query.account.findFirst({
+        where: and(
+          eq(schema.account.userId, session.user.id),
+          eq(schema.account.providerId, "github"),
+        ),
+      });
+      if (!account || !account.accessToken) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Account not found or not linked to GitHub",
+        });
+      }
 
-  if (!installationId || !organizationSlug) {
-    return redirect(
-      `${webAppUrl}/error?error-title=${encodeURIComponent("Missing required parameters")}&error-description=${encodeURIComponent("Missing required parameters.")}`,
-    );
-  }
+      const octokit = new Octokit({ auth: account.accessToken });
+      const user = await octokit.request("GET /user", {
+        headers: {
+          accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      });
+      const githubId = user.data.id.toString();
 
-  try {
-    const organization = await db.query.organization.findFirst({
-      where: eq(schema.organization.slug, organizationSlug),
-    });
-    if (!organization) {
-      return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Organization not found")}&error-description=${encodeURIComponent("Organization not found.")}`,
+      const organizations = await db
+        .select({ organization: schema.organization, member: schema.member })
+        .from(schema.organization)
+        .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, session.user.id))
+        .orderBy(desc(schema.organization.createdAt))
+        .limit(1);
+
+      if (organizations[0]?.organization.slug) {
+        const githubIntegration = await db.query.githubIntegration.findFirst({
+          where: eq(schema.githubIntegration.organizationId, organizations[0].organization.id),
+        });
+        if (githubIntegration) {
+          return redirect(
+            `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+          );
+        }
+
+        const installations = await octokit.request("GET /user/installations", {
+          headers: {
+            accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        });
+        const asyncStatusInstallation = installations.data.installations.find(
+          (installation) => installation.app_id === Number(github.appId),
+        );
+        if (!asyncStatusInstallation) {
+          return redirect(
+            getGithubIntegrationConnectUrl({
+              clientId: github.appName,
+              redirectUri: `${betterAuthUrl}${githubIntegrationCallbackContract.url()}`,
+              organizationSlug: organizations[0].organization.slug,
+            }),
+          );
+        }
+
+        if (!session.user.image) {
+          const userGithubAvatar = await fetch(user.data.avatar_url).then((res) =>
+            res.arrayBuffer(),
+          );
+          const image = await bucket.private.put(generateId(), userGithubAvatar);
+          if (image) {
+            await db
+              .update(schema.user)
+              .set({ image: image.key })
+              .where(eq(schema.user.id, session.user.id));
+          }
+        }
+
+        if (!organizations[0].member.githubId) {
+          await db
+            .update(schema.member)
+            .set({ githubId })
+            .where(
+              and(
+                eq(schema.member.organizationId, organizations[0].organization.id),
+                eq(schema.member.userId, session.user.id),
+              ),
+            );
+        }
+
+        const [newGithubIntegration] = await db
+          .insert(schema.githubIntegration)
+          .values({
+            id: generateId(),
+            organizationId: organizations[0].organization.id,
+            installationId: asyncStatusInstallation.id.toString(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
+        if (!newGithubIntegration) {
+          return redirect(
+            `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration. Please try again.")}`,
+          );
+        }
+
+        const workflowInstance = await workflow.syncGithub.create({
+          params: { integrationId: newGithubIntegration.id },
+        });
+
+        await db
+          .update(schema.githubIntegration)
+          .set({
+            syncId: workflowInstance.id,
+            syncStartedAt: new Date(),
+            syncUpdatedAt: new Date(),
+          })
+          .where(eq(schema.githubIntegration.id, newGithubIntegration.id));
+
+        return redirect(
+          `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
+
+      const userGithubAvatar = await fetch(user.data.avatar_url).then((res) => res.arrayBuffer());
+      const image = await bucket.private.put(generateId(), userGithubAvatar);
+
+      const results = await db.transaction(async (tx) => {
+        const now = dayjs();
+        const name = `${session.user.name}'s Org`;
+        const [newOrganization] = await tx
+          .insert(schema.organization)
+          .values({
+            id: generateId(),
+            name,
+            slug: `${slugify(name)}-${generateId(4)}`,
+            metadata: null,
+            stripeCustomerId: null,
+            trialPlan: "basic",
+            trialStartDate: now.toDate(),
+            trialEndDate: now.add(14, "day").toDate(),
+            trialStatus: "active",
+            createdAt: now.toDate(),
+          })
+          .returning();
+
+        if (!newOrganization) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create organization",
+          });
+        }
+
+        const [newMember] = await tx
+          .insert(schema.member)
+          .values({
+            id: generateId(),
+            organizationId: newOrganization.id,
+            userId: session.user.id,
+            role: "owner",
+            createdAt: now.toDate(),
+            githubId,
+          })
+          .returning();
+        if (!newMember) {
+          throw new TypedHandlersError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create member",
+          });
+        }
+
+        await tx
+          .update(schema.user)
+          .set({
+            image: image?.key || null,
+            activeOrganizationSlug: newOrganization.slug,
+            showOnboarding: true,
+            onboardingStep: "first-step",
+            onboardingCompletedAt: null,
+          })
+          .where(eq(schema.user.id, session.user.id));
+
+        return { organization: newOrganization, member: newMember };
+      });
+
+      const githubIntegration = await db.query.githubIntegration.findFirst({
+        where: eq(schema.githubIntegration.organizationId, results.organization.id),
+      });
+      if (githubIntegration) {
+        return redirect(
+          `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        );
+      }
+
+      const installations = await octokit.request("GET /user/installations", {
+        headers: {
+          accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      });
+      const asyncStatusInstallation = installations.data.installations.find(
+        (installation) => installation.app_id === Number(github.appId),
       );
-    }
+      if (!asyncStatusInstallation) {
+        return redirect(
+          getGithubIntegrationConnectUrl({
+            clientId: github.appName,
+            redirectUri: `${betterAuthUrl}${githubIntegrationCallbackContract.url()}`,
+            organizationSlug: results.organization.slug,
+          }),
+        );
+      }
 
-    const existingIntegration = await db
-      .select()
-      .from(schema.githubIntegration)
-      .where(eq(schema.githubIntegration.organizationId, organization.id))
-      .limit(1);
-
-    let integrationId: string | undefined;
-
-    if (existingIntegration[0]) {
-      await db
-        .update(schema.githubIntegration)
-        .set({ installationId, updatedAt: new Date() })
-        .where(eq(schema.githubIntegration.id, existingIntegration[0].id))
-        .returning();
-
-      integrationId = existingIntegration[0].id;
-    } else {
-      const newIntegration = await db
+      const [newGithubIntegration] = await db
         .insert(schema.githubIntegration)
         .values({
           id: generateId(),
-          organizationId: organization.id,
-          installationId,
+          organizationId: results.organization.id,
+          installationId: asyncStatusInstallation.id.toString(),
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
+      if (!newGithubIntegration) {
+        return redirect(
+          `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration. Please try again.")}`,
+        );
+      }
 
-      integrationId = newIntegration[0]?.id;
-    }
-    if (!integrationId) {
+      const workflowInstance = await workflow.syncGithub.create({
+        params: { integrationId: newGithubIntegration.id },
+      });
+
+      await db
+        .update(schema.githubIntegration)
+        .set({
+          syncId: workflowInstance.id,
+          syncStartedAt: new Date(),
+          syncUpdatedAt: new Date(),
+        })
+        .where(eq(schema.githubIntegration.id, newGithubIntegration.id));
+
       return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitHub integration")}&error-description=${encodeURIComponent("Failed to create GitHub integration.")}`,
+        `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+      );
+    } catch {
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete GitHub integration")}&error-description=${encodeURIComponent(
+          `Failed to complete GitHub integration. Please try again.`,
+        )}`,
       );
     }
-
-    const workflowInstance = await workflow.syncGithub.create({
-      params: { integrationId },
-    });
-    await db
-      .update(schema.githubIntegration)
-      .set({ syncId: workflowInstance.id })
-      .where(eq(schema.githubIntegration.id, integrationId));
-
-    return redirect(`${webAppUrl}/${organization.slug}/integrations`);
-  } catch {
-    return redirect(
-      `${webAppUrl}/${organizationSlug}/integrations?error-title=${encodeURIComponent("GitHub integration error")}&error-description=${encodeURIComponent(
-        `Failed to complete GitHub integration. Please try again.`,
-      )}`,
-    );
-  }
-});
+  },
+);
 
 export const resyncGithubIntegrationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
@@ -118,12 +308,17 @@ export const resyncGithubIntegrationHandler = typedHandler<
     });
     await db
       .update(schema.githubIntegration)
-      .set({ syncId: workflowInstance.id })
+      .set({
+        syncId: workflowInstance.id,
+        syncStartedAt: new Date(),
+        syncUpdatedAt: new Date(),
+      })
       .where(eq(schema.githubIntegration.id, integration.id));
 
     return { success: true };
   },
 );
+
 export const getGithubIntegrationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof getGithubIntegrationContract

@@ -52,18 +52,18 @@ export function getMemberDiscordEventsTool(db: Db) {
           schema.discordIntegration,
           eq(schema.discordServer.integrationId, schema.discordIntegration.id),
         )
-        .innerJoin(
+        .leftJoin(
           schema.discordEventVector,
           eq(schema.discordEvent.id, schema.discordEventVector.eventId),
         )
-        .innerJoin(
+        .innerJoin(schema.member, eq(schema.member.discordId, schema.discordEvent.discordUserId))
+        .leftJoin(
           schema.discordUser,
           and(
             eq(schema.discordUser.discordUserId, schema.discordEvent.discordUserId),
             eq(schema.discordUser.integrationId, schema.discordIntegration.id),
           ),
         )
-        .innerJoin(schema.member, eq(schema.member.discordId, schema.discordUser.discordUserId))
         .where(and(...conditions))
         .orderBy(desc(schema.discordEvent.createdAt));
       return events;

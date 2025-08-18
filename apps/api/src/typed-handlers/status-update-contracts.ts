@@ -15,6 +15,17 @@ export const listStatusUpdatesContract = typedContract(
   ),
 );
 
+export const shareStatusUpdateContract = typedContract(
+  "post /organizations/:idOrSlug/status-updates/:statusUpdateId/share",
+  z.strictObject({ idOrSlug: z.string(), statusUpdateId: z.string() }),
+  z.strictObject({
+    ...StatusUpdate.shape,
+    team: Team.nullable(),
+    items: z.array(StatusUpdateItem),
+    member: z.strictObject({ ...Member.shape, user: User }),
+  }),
+);
+
 export const listStatusUpdatesByDateContract = typedContract(
   "get /organizations/:idOrSlug/status-updates/date/:date",
   z.strictObject({

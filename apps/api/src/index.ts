@@ -38,6 +38,7 @@ import {
 } from "./typed-handlers/discord-gateway-handlers";
 import {
   deleteDiscordIntegrationHandler,
+  discordAddIntegrationCallbackHandler,
   discordIntegrationCallbackHandler,
   fetchDiscordMessagesHandler,
   getDiscordIntegrationHandler,
@@ -68,12 +69,18 @@ import {
   updateMemberHandler,
 } from "./typed-handlers/member-handlers";
 import {
+  createOnboardingRecommendedAutomationsHandler,
+  updateUserOnboardingHandler,
+} from "./typed-handlers/onboarding-handlers";
+import {
   createOrganizationHandler,
   getOrganizationHandler,
+  getOrganizationUserHandler,
   listMemberOrganizationsHandler,
   setActiveOrganizationHandler,
   updateOrganizationHandler,
 } from "./typed-handlers/organization-handlers";
+import { getPublicStatusUpdateHandler } from "./typed-handlers/public-status-update-handlers";
 import {
   createScheduleHandler,
   deleteScheduleHandler,
@@ -88,6 +95,7 @@ import {
   getSlackIntegrationHandler,
   listSlackChannelsHandler,
   listSlackUsersHandler,
+  slackAddIntegrationCallbackHandler,
   slackIntegrationCallbackHandler,
 } from "./typed-handlers/slack-integration-handlers";
 import {
@@ -100,6 +108,7 @@ import {
   listStatusUpdatesByMemberHandler,
   listStatusUpdatesByTeamHandler,
   listStatusUpdatesHandler,
+  shareStatusUpdateHandler,
   updateStatusUpdateHandler,
 } from "./typed-handlers/status-update-handlers";
 import {
@@ -293,6 +302,7 @@ const app = new Hono<HonoEnv>()
     c.set("stripeClient", context.stripeClient);
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
+    c.set("github", context.github);
     return next();
   })
   .route("/auth", authRouter)
@@ -407,6 +417,13 @@ const typedHandlersApp = typedHandlersHonoServer(
     showCurrentStatusUpdateHandler,
     listRecentStatusUpdatesHandler,
     runScheduleHandler,
+    updateUserOnboardingHandler,
+    createOnboardingRecommendedAutomationsHandler,
+    slackAddIntegrationCallbackHandler,
+    discordAddIntegrationCallbackHandler,
+    getPublicStatusUpdateHandler,
+    shareStatusUpdateHandler,
+    getOrganizationUserHandler,
   ],
   {
     getContext: (c) => ({
@@ -430,6 +447,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       webAppUrl: c.env.WEB_APP_URL,
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
+      github: c.get("github"),
     }),
   },
 );

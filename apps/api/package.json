@@ -6,6 +6,7 @@
     "./auth": {
       "types": "./src/lib/auth.tsx"
     },
+    "./integrations-connect-url": "./src/lib/integrations-connect-url.ts",
     "./typed-handlers/file": "./src/typed-handlers/file-contracts.ts",
     "./typed-handlers/github-integration": "./src/typed-handlers/github-integration-contracts.ts",
     "./typed-handlers/invitation": "./src/typed-handlers/invitation-contracts.ts",
@@ -22,7 +23,9 @@
     "./typed-handlers/team": "./src/typed-handlers/team-contracts.ts",
     "./typed-handlers/stripe": "./src/typed-handlers/stripe-contracts.ts",
     "./typed-handlers/waitlist": "./src/typed-handlers/waitlist-contracts.ts",
-    "./typed-handlers/ai-usage": "./src/typed-handlers/ai-usage-contracts.ts"
+    "./typed-handlers/ai-usage": "./src/typed-handlers/ai-usage-contracts.ts",
+    "./typed-handlers/onboarding": "./src/typed-handlers/onboarding-contracts.ts",
+    "./typed-handlers/public-status-update": "./src/typed-handlers/public-status-update-contracts.ts"
   },
   "scripts": {
     "dev": "TZ=UTC wrangler dev --test-scheduled",
@@ -52,6 +55,7 @@
     "@octokit/webhooks": "14.1.1",
     "@openrouter/ai-sdk-provider": "0.7.2",
     "@slack/web-api": "7.9.3",
+    "@sindresorhus/slugify": "catalog:",
     "ai": "4.3.18",
     "better-auth": "catalog:",
     "drizzle-orm": "0.44.3",

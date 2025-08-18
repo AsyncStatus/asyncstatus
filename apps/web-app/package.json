@@ -22,7 +22,7 @@
     "@asyncstatus/typed-handlers": "workspace:*",
     "@asyncstatus/ui": "workspace:*",
     "@hookform/resolvers": "catalog:",
-    "@sindresorhus/slugify": "2.2.1",
+    "@sindresorhus/slugify": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "1.129.8",
     "@tanstack/react-router-with-query": "1.129.8",

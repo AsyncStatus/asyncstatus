@@ -4,6 +4,12 @@ import { DiscordChannel, DiscordIntegration, DiscordServer, DiscordUser } from "
 
 export const discordIntegrationCallbackContract = typedContract(
   "get /integrations/discord/callback",
+  z.object({ redirect: z.string().optional() }),
+  z.instanceof(Response),
+);
+
+export const discordAddIntegrationCallbackContract = typedContract(
+  "get /integrations/discord/callback/add",
   z.object({ code: z.string(), state: z.string(), guild_id: z.string(), permissions: z.string() }),
   z.instanceof(Response),
 );

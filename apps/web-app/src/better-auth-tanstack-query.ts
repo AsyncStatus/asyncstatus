@@ -34,6 +34,45 @@ export function loginEmailMutationOptions() {
   });
 }
 
+export function loginSocialMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["loginGithub"],
+    mutationFn: async (input: Parameters<typeof authClient.signIn.social>[0]) => {
+      const { data, error } = await authClient.signIn.social(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
+export function loginOauth2MutationOptions() {
+  return mutationOptions({
+    mutationKey: ["loginOauth2"],
+    mutationFn: async (input: Parameters<typeof authClient.signIn.oauth2>[0]) => {
+      const { data, error } = await authClient.signIn.oauth2(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
+export function linkSocialMutationOptions() {
+  return mutationOptions({
+    mutationKey: ["linkSocial"],
+    mutationFn: async (input: Parameters<typeof authClient.linkSocial>[0]) => {
+      const { data, error } = await authClient.linkSocial(input);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    },
+  });
+}
+
 export function signUpEmailMutationOptions() {
   return mutationOptions({
     mutationKey: ["signUpEmail"],

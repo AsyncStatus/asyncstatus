@@ -1,6 +1,6 @@
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import * as schema from "../db";
 import type { Session } from "../lib/auth";
 import type {
@@ -12,6 +12,7 @@ import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createOrganizationContract,
   getOrganizationContract,
+  getOrganizationUserContract,
   listMemberOrganizationsContract,
   setActiveOrganizationContract,
   updateOrganizationContract,
@@ -41,6 +42,28 @@ export const getOrganizationHandler = typedHandler<
   requiredOrganization,
   async ({ organization, member }) => {
     return { organization, member };
+  },
+);
+
+export const getOrganizationUserHandler = typedHandler<
+  TypedHandlersContextWithOrganization,
+  typeof getOrganizationUserContract
+>(
+  getOrganizationUserContract,
+  requiredSession,
+  requiredOrganization,
+  async ({ db, input, organization }) => {
+    const { userId } = input;
+    const user = await db.query.user.findFirst({
+      where: and(
+        eq(schema.user.id, userId),
+        eq(schema.user.activeOrganizationSlug, organization.slug),
+      ),
+    });
+    if (!user) {
+      throw new TypedHandlersError({ code: "NOT_FOUND", message: "User not found" });
+    }
+    return user;
   },
 );
 

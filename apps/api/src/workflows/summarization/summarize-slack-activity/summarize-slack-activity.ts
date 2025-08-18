@@ -54,8 +54,6 @@ export async function summarizeSlackActivity({
     },
   });
 
-  console.log("slack activity summary", text);
-
   const usageResult = await trackAiUsage(
     kv,
     organizationId,
