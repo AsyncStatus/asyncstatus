@@ -14,6 +14,7 @@ import { typedQueryOptions } from "@/typed-handlers";
 import { FirstStep } from "./first-step";
 import { ManualUpdatesDialog } from "./manual-updates-dialog";
 import { SecondStep } from "./second-step";
+import { ThirdStep } from "./third-step";
 
 export function OnboardingModal({ organizationSlug }: { organizationSlug: string }) {
   const session = useQuery(sessionBetterAuthQueryOptions());
@@ -53,6 +54,10 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
 
             {session.data?.user.onboardingStep === "second-step" && (
               <SecondStep organizationSlug={organizationSlug} />
+            )}
+
+            {session.data?.user.onboardingStep === "third-step" && (
+              <ThirdStep organizationSlug={organizationSlug} />
             )}
 
             <div className="flex flex-col gap-2">

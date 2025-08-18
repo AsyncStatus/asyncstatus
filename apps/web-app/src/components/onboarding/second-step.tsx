@@ -1,6 +1,5 @@
 import { updateUserOnboardingContract } from "@asyncstatus/api/typed-handlers/onboarding";
 import { listSchedulesContract } from "@asyncstatus/api/typed-handlers/schedule";
-import { dayjs } from "@asyncstatus/dayjs";
 import {
   AlertDialogDescription,
   AlertDialogHeader,
@@ -83,13 +82,13 @@ export function SecondStep({ organizationSlug }: { organizationSlug: string }) {
           className="flex-1"
           onClick={() => {
             updateUserOnboarding.mutate({
-              showOnboarding: false,
-              onboardingStep: null,
-              onboardingCompletedAt: dayjs.utc().toISOString(),
+              showOnboarding: true,
+              onboardingStep: "third-step",
+              onboardingCompletedAt: null,
             });
           }}
         >
-          Finish
+          Summary
           <ArrowRight className="size-4" />
         </Button>
       </div>
