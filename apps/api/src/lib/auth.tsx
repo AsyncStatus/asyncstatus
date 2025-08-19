@@ -134,7 +134,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         },
         showOnboarding: {
           type: "boolean",
-          required: true,
+          required: false,
           input: false,
           defaultValue: false,
         },
@@ -146,7 +146,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
         },
         onboardingCompletedAt: {
           type: "date",
-          required: true,
+          required: false,
           input: false,
           defaultValue: null,
         },
