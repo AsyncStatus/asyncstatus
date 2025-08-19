@@ -27,7 +27,6 @@ export const githubIntegrationCallbackHandler = typedHandler<
   githubIntegrationCallbackContract,
   requiredSession,
   async ({ redirect, webAppUrl, db, input, workflow, session, github, bucket, betterAuthUrl }) => {
-    console.log(input);
     try {
       const { redirect: redirectUrl } = input;
       const account = await db.query.account.findFirst({
