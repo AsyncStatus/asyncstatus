@@ -35,7 +35,9 @@ import { Route as OrganizationSlugLayoutAutomationsIndexRouteImport } from './ro
 import { Route as OrganizationSlugLayoutUsersUserIdRouteImport } from './routes/$organizationSlug/_layout.users/$userId'
 import { Route as OrganizationSlugLayoutTeamsTeamIdRouteImport } from './routes/$organizationSlug/_layout.teams/$teamId'
 import { Route as OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRouteImport } from './routes/$organizationSlug/_layout.status-updates/$statusUpdateId'
-import { Route as OrganizationSlugLayoutAutomationsScheduleIdRouteImport } from './routes/$organizationSlug/_layout.automations/$scheduleId'
+import { Route as OrganizationSlugLayoutAutomationsScheduleIdIndexRouteImport } from './routes/$organizationSlug/_layout.automations/$scheduleId/index'
+import { Route as OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRouteImport } from './routes/$organizationSlug/_layout.automations/$scheduleId/runs/index'
+import { Route as OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRouteImport } from './routes/$organizationSlug/_layout.automations/$scheduleId/runs/$scheduleRunId'
 
 const InvitationsRouteImport = createFileRoute('/invitations')()
 const CreateOrganizationRouteImport = createFileRoute('/create-organization')()
@@ -190,12 +192,26 @@ const OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute =
     path: '/status-updates/$statusUpdateId',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
-const OrganizationSlugLayoutAutomationsScheduleIdRoute =
-  OrganizationSlugLayoutAutomationsScheduleIdRouteImport.update({
-    id: '/automations/$scheduleId',
-    path: '/automations/$scheduleId',
+const OrganizationSlugLayoutAutomationsScheduleIdIndexRoute =
+  OrganizationSlugLayoutAutomationsScheduleIdIndexRouteImport.update({
+    id: '/automations/$scheduleId/',
+    path: '/automations/$scheduleId/',
     getParentRoute: () => OrganizationSlugLayoutRoute,
   } as any)
+const OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute =
+  OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRouteImport.update({
+    id: '/automations/$scheduleId/runs/',
+    path: '/automations/$scheduleId/runs/',
+    getParentRoute: () => OrganizationSlugLayoutRoute,
+  } as any)
+const OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute =
+  OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRouteImport.update(
+    {
+      id: '/automations/$scheduleId/runs/$scheduleRunId',
+      path: '/automations/$scheduleId/runs/$scheduleRunId',
+      getParentRoute: () => OrganizationSlugLayoutRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/$organizationSlug': typeof OrganizationSlugLayoutRouteWithChildren
@@ -213,7 +229,6 @@ export interface FileRoutesByFullPath {
   '/$organizationSlug/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/': typeof CreateOrganizationLayoutIndexRoute
   '/invitations/': typeof InvitationsLayoutIndexRoute
-  '/$organizationSlug/automations/$scheduleId': typeof OrganizationSlugLayoutAutomationsScheduleIdRoute
   '/$organizationSlug/status-updates/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute
   '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -221,6 +236,9 @@ export interface FileRoutesByFullPath {
   '/$organizationSlug/status-updates': typeof OrganizationSlugLayoutStatusUpdatesIndexRoute
   '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
+  '/$organizationSlug/automations/$scheduleId': typeof OrganizationSlugLayoutAutomationsScheduleIdIndexRoute
+  '/$organizationSlug/automations/$scheduleId/runs/$scheduleRunId': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute
+  '/$organizationSlug/automations/$scheduleId/runs': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute
 }
 export interface FileRoutesByTo {
   '/$organizationSlug': typeof OrganizationSlugLayoutIndexRoute
@@ -235,7 +253,6 @@ export interface FileRoutesByTo {
   '/login': typeof authLayoutLoginRoute
   '/reset-password': typeof authLayoutResetPasswordRoute
   '/sign-up': typeof authLayoutSignUpRoute
-  '/$organizationSlug/automations/$scheduleId': typeof OrganizationSlugLayoutAutomationsScheduleIdRoute
   '/$organizationSlug/status-updates/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute
   '/$organizationSlug/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -243,6 +260,9 @@ export interface FileRoutesByTo {
   '/$organizationSlug/status-updates': typeof OrganizationSlugLayoutStatusUpdatesIndexRoute
   '/$organizationSlug/teams': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/users': typeof OrganizationSlugLayoutUsersIndexRoute
+  '/$organizationSlug/automations/$scheduleId': typeof OrganizationSlugLayoutAutomationsScheduleIdIndexRoute
+  '/$organizationSlug/automations/$scheduleId/runs/$scheduleRunId': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute
+  '/$organizationSlug/automations/$scheduleId/runs': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -267,7 +287,6 @@ export interface FileRoutesById {
   '/$organizationSlug/_layout/': typeof OrganizationSlugLayoutIndexRoute
   '/create-organization/_layout/': typeof CreateOrganizationLayoutIndexRoute
   '/invitations/_layout/': typeof InvitationsLayoutIndexRoute
-  '/$organizationSlug/_layout/automations/$scheduleId': typeof OrganizationSlugLayoutAutomationsScheduleIdRoute
   '/$organizationSlug/_layout/status-updates/$statusUpdateId': typeof OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute
   '/$organizationSlug/_layout/teams/$teamId': typeof OrganizationSlugLayoutTeamsTeamIdRoute
   '/$organizationSlug/_layout/users/$userId': typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -275,6 +294,9 @@ export interface FileRoutesById {
   '/$organizationSlug/_layout/status-updates/': typeof OrganizationSlugLayoutStatusUpdatesIndexRoute
   '/$organizationSlug/_layout/teams/': typeof OrganizationSlugLayoutTeamsIndexRoute
   '/$organizationSlug/_layout/users/': typeof OrganizationSlugLayoutUsersIndexRoute
+  '/$organizationSlug/_layout/automations/$scheduleId/': typeof OrganizationSlugLayoutAutomationsScheduleIdIndexRoute
+  '/$organizationSlug/_layout/automations/$scheduleId/runs/$scheduleRunId': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute
+  '/$organizationSlug/_layout/automations/$scheduleId/runs/': typeof OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -294,7 +316,6 @@ export interface FileRouteTypes {
     | '/$organizationSlug/'
     | '/create-organization/'
     | '/invitations/'
-    | '/$organizationSlug/automations/$scheduleId'
     | '/$organizationSlug/status-updates/$statusUpdateId'
     | '/$organizationSlug/teams/$teamId'
     | '/$organizationSlug/users/$userId'
@@ -302,6 +323,9 @@ export interface FileRouteTypes {
     | '/$organizationSlug/status-updates'
     | '/$organizationSlug/teams'
     | '/$organizationSlug/users'
+    | '/$organizationSlug/automations/$scheduleId'
+    | '/$organizationSlug/automations/$scheduleId/runs/$scheduleRunId'
+    | '/$organizationSlug/automations/$scheduleId/runs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$organizationSlug'
@@ -316,7 +340,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/sign-up'
-    | '/$organizationSlug/automations/$scheduleId'
     | '/$organizationSlug/status-updates/$statusUpdateId'
     | '/$organizationSlug/teams/$teamId'
     | '/$organizationSlug/users/$userId'
@@ -324,6 +347,9 @@ export interface FileRouteTypes {
     | '/$organizationSlug/status-updates'
     | '/$organizationSlug/teams'
     | '/$organizationSlug/users'
+    | '/$organizationSlug/automations/$scheduleId'
+    | '/$organizationSlug/automations/$scheduleId/runs/$scheduleRunId'
+    | '/$organizationSlug/automations/$scheduleId/runs'
   id:
     | '__root__'
     | '/_layout'
@@ -347,7 +373,6 @@ export interface FileRouteTypes {
     | '/$organizationSlug/_layout/'
     | '/create-organization/_layout/'
     | '/invitations/_layout/'
-    | '/$organizationSlug/_layout/automations/$scheduleId'
     | '/$organizationSlug/_layout/status-updates/$statusUpdateId'
     | '/$organizationSlug/_layout/teams/$teamId'
     | '/$organizationSlug/_layout/users/$userId'
@@ -355,6 +380,9 @@ export interface FileRouteTypes {
     | '/$organizationSlug/_layout/status-updates/'
     | '/$organizationSlug/_layout/teams/'
     | '/$organizationSlug/_layout/users/'
+    | '/$organizationSlug/_layout/automations/$scheduleId/'
+    | '/$organizationSlug/_layout/automations/$scheduleId/runs/$scheduleRunId'
+    | '/$organizationSlug/_layout/automations/$scheduleId/runs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -564,11 +592,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRouteImport
       parentRoute: typeof OrganizationSlugLayoutRoute
     }
-    '/$organizationSlug/_layout/automations/$scheduleId': {
-      id: '/$organizationSlug/_layout/automations/$scheduleId'
+    '/$organizationSlug/_layout/automations/$scheduleId/': {
+      id: '/$organizationSlug/_layout/automations/$scheduleId/'
       path: '/automations/$scheduleId'
       fullPath: '/$organizationSlug/automations/$scheduleId'
-      preLoaderRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRouteImport
+      preLoaderRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/automations/$scheduleId/runs/': {
+      id: '/$organizationSlug/_layout/automations/$scheduleId/runs/'
+      path: '/automations/$scheduleId/runs'
+      fullPath: '/$organizationSlug/automations/$scheduleId/runs'
+      preLoaderRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRouteImport
+      parentRoute: typeof OrganizationSlugLayoutRoute
+    }
+    '/$organizationSlug/_layout/automations/$scheduleId/runs/$scheduleRunId': {
+      id: '/$organizationSlug/_layout/automations/$scheduleId/runs/$scheduleRunId'
+      path: '/automations/$scheduleId/runs/$scheduleRunId'
+      fullPath: '/$organizationSlug/automations/$scheduleId/runs/$scheduleRunId'
+      preLoaderRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRouteImport
       parentRoute: typeof OrganizationSlugLayoutRoute
     }
   }
@@ -590,7 +632,6 @@ interface OrganizationSlugLayoutRouteChildren {
   OrganizationSlugLayoutIntegrationsRoute: typeof OrganizationSlugLayoutIntegrationsRoute
   OrganizationSlugLayoutSettingsRoute: typeof OrganizationSlugLayoutSettingsRoute
   OrganizationSlugLayoutIndexRoute: typeof OrganizationSlugLayoutIndexRoute
-  OrganizationSlugLayoutAutomationsScheduleIdRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRoute
   OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute: typeof OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute
   OrganizationSlugLayoutTeamsTeamIdRoute: typeof OrganizationSlugLayoutTeamsTeamIdRoute
   OrganizationSlugLayoutUsersUserIdRoute: typeof OrganizationSlugLayoutUsersUserIdRoute
@@ -598,6 +639,9 @@ interface OrganizationSlugLayoutRouteChildren {
   OrganizationSlugLayoutStatusUpdatesIndexRoute: typeof OrganizationSlugLayoutStatusUpdatesIndexRoute
   OrganizationSlugLayoutTeamsIndexRoute: typeof OrganizationSlugLayoutTeamsIndexRoute
   OrganizationSlugLayoutUsersIndexRoute: typeof OrganizationSlugLayoutUsersIndexRoute
+  OrganizationSlugLayoutAutomationsScheduleIdIndexRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdIndexRoute
+  OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute
+  OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute: typeof OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute
 }
 
 const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
@@ -607,8 +651,6 @@ const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
       OrganizationSlugLayoutIntegrationsRoute,
     OrganizationSlugLayoutSettingsRoute: OrganizationSlugLayoutSettingsRoute,
     OrganizationSlugLayoutIndexRoute: OrganizationSlugLayoutIndexRoute,
-    OrganizationSlugLayoutAutomationsScheduleIdRoute:
-      OrganizationSlugLayoutAutomationsScheduleIdRoute,
     OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute:
       OrganizationSlugLayoutStatusUpdatesStatusUpdateIdRoute,
     OrganizationSlugLayoutTeamsTeamIdRoute:
@@ -623,6 +665,12 @@ const OrganizationSlugLayoutRouteChildren: OrganizationSlugLayoutRouteChildren =
       OrganizationSlugLayoutTeamsIndexRoute,
     OrganizationSlugLayoutUsersIndexRoute:
       OrganizationSlugLayoutUsersIndexRoute,
+    OrganizationSlugLayoutAutomationsScheduleIdIndexRoute:
+      OrganizationSlugLayoutAutomationsScheduleIdIndexRoute,
+    OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute:
+      OrganizationSlugLayoutAutomationsScheduleIdRunsScheduleRunIdRoute,
+    OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute:
+      OrganizationSlugLayoutAutomationsScheduleIdRunsIndexRoute,
   }
 
 const OrganizationSlugLayoutRouteWithChildren =

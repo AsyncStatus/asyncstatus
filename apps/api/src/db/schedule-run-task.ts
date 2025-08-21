@@ -20,7 +20,7 @@ export const scheduleRunTask = sqliteTable(
       .notNull()
       .references(() => scheduleRun.id, { onDelete: "cascade" }),
     status: text("status").notNull().$type<ScheduleRunTaskStatus>().default("pending"),
-    results: text("results", { mode: "json" }).$type<Record<string, unknown>>(),
+    results: text("results", { mode: "json" }).$type<Record<string, unknown> | null>(),
     attempts: integer("attempts").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull().default(3),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -34,18 +34,18 @@ export const scheduleRunTask = sqliteTable(
 
 export const ScheduleRunTask = createSelectSchema(scheduleRunTask, {
   status: ScheduleRunTaskStatus,
-  results: z.record(z.string(), z.unknown()),
+  results: z.record(z.string(), z.unknown()).nullable(),
 });
 export type ScheduleRunTask = z.output<typeof ScheduleRunTask>;
 
 export const ScheduleRunTaskInsert = createInsertSchema(scheduleRunTask, {
   status: ScheduleRunTaskStatus,
-  results: z.record(z.string(), z.unknown()),
+  results: z.record(z.string(), z.unknown()).nullable(),
 });
 export type ScheduleRunTaskInsert = z.output<typeof ScheduleRunTaskInsert>;
 
 export const ScheduleRunTaskUpdate = createUpdateSchema(scheduleRunTask, {
   status: ScheduleRunTaskStatus,
-  results: z.record(z.string(), z.unknown()),
+  results: z.record(z.string(), z.unknown()).nullable(),
 });
 export type ScheduleRunTaskUpdate = z.output<typeof ScheduleRunTaskUpdate>;

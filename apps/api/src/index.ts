@@ -91,6 +91,10 @@ import {
   updateScheduleHandler,
 } from "./typed-handlers/schedule-handlers";
 import {
+  getScheduleRunHandler,
+  listScheduleRunsHandler,
+} from "./typed-handlers/schedule-run-handlers";
+import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
   listSlackChannelsHandler,
@@ -424,6 +428,8 @@ const typedHandlersApp = typedHandlersHonoServer(
     getPublicStatusUpdateHandler,
     shareStatusUpdateHandler,
     getOrganizationUserHandler,
+    listScheduleRunsHandler,
+    getScheduleRunHandler,
   ],
   {
     getContext: (c) => ({

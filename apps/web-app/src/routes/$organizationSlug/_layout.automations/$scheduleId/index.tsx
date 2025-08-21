@@ -16,7 +16,7 @@ import {
 import { Button } from "@asyncstatus/ui/components/button";
 import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
 import { Skeleton } from "@asyncstatus/ui/components/skeleton";
-import { TrashIcon } from "@asyncstatus/ui/icons";
+import { LogsIcon, TrashIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -25,7 +25,7 @@ import { UpdateScheduleForm } from "@/components/update-schedule-form/update-sch
 import { ensureValidOrganization } from "@/routes/-lib/common";
 import { typedMutationOptions, typedQueryOptions } from "@/typed-handlers";
 
-export const Route = createFileRoute("/$organizationSlug/_layout/automations/$scheduleId")({
+export const Route = createFileRoute("/$organizationSlug/_layout/automations/$scheduleId/")({
   component: RouteComponent,
   beforeLoad: async ({ params: { organizationSlug }, context: { queryClient } }) => {
     await ensureValidOrganization(queryClient, organizationSlug);
@@ -137,6 +137,17 @@ function RouteComponent() {
               <TrashIcon />
               Delete
             </Button>
+
+            <Button size="sm" variant="outline" asChild>
+              <Link
+                to="/$organizationSlug/automations/$scheduleId/runs"
+                params={{ organizationSlug, scheduleId }}
+              >
+                <LogsIcon />
+                View logs
+              </Link>
+            </Button>
+
             <Button
               size="sm"
               variant={schedule.data?.isActive ? "outline" : "default"}
