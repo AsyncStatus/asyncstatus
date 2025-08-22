@@ -17,6 +17,8 @@ import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-f
 import type { SendSummariesWorkflowParams } from "../workflows/schedules/send-summaries";
 import type { DeleteSlackIntegrationWorkflowParams } from "../workflows/slack/delete-slack-integration";
 import type { SyncSlackWorkflowParams } from "../workflows/slack/sync-slack";
+import type { DeleteFigmaIntegrationWorkflowParams } from "../workflows/figma/delete-figma-integration";
+import type { SyncFigmaWorkflowParams } from "../workflows/figma/sync-figma";
 import type { Auth, Session } from "./auth";
 import { createAuth } from "./auth";
 import type { AnyGithubWebhookEventDefinition } from "./github-event-definition";
@@ -71,6 +73,13 @@ export type Bindings = {
   SYNC_DISCORD_WORKFLOW: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
   DELETE_DISCORD_INTEGRATION_WORKFLOW: Workflow<any>; // TODO: Add DeleteDiscordIntegrationWorkflowParams
   FETCH_DISCORD_MESSAGES_WORKFLOW: Workflow<any>; // TODO: Add FetchDiscordMessagesWorkflowParams
+  FIGMA_CLIENT_ID: string;
+  FIGMA_CLIENT_SECRET: string;
+  FIGMA_WEBHOOK_SECRET: string;
+  FIGMA_WEBHOOK_EVENTS_QUEUE: Queue<any>; // FigmaWebhookEvent
+  FIGMA_PROCESS_EVENTS_QUEUE: Queue<string>;
+  SYNC_FIGMA_WORKFLOW: Workflow<SyncFigmaWorkflowParams>;
+  DELETE_FIGMA_INTEGRATION_WORKFLOW: Workflow<DeleteFigmaIntegrationWorkflowParams>;
   PING_FOR_UPDATES_WORKFLOW: Workflow<PingForUpdatesWorkflowParams>;
   GENERATE_STATUS_UPDATES_WORKFLOW: Workflow<GenerateStatusUpdatesWorkflowParams>;
   SEND_SUMMARIES_WORKFLOW: Workflow<SendSummariesWorkflowParams>;
@@ -108,6 +117,8 @@ export type Variables = {
     syncDiscord: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
     deleteDiscordIntegration: Workflow<any>; // TODO: Add DeleteDiscordIntegrationWorkflowParams
     fetchDiscordMessages: Workflow<any>; // TODO: Add FetchDiscordMessagesWorkflowParams
+    syncFigma: Workflow<SyncFigmaWorkflowParams>;
+    deleteFigmaIntegration: Workflow<DeleteFigmaIntegrationWorkflowParams>;
     pingForUpdates: Workflow<PingForUpdatesWorkflowParams>;
     generateStatusUpdates: Workflow<GenerateStatusUpdatesWorkflowParams>;
     sendSummaries: Workflow<SendSummariesWorkflowParams>;
@@ -151,6 +162,11 @@ export type Variables = {
     clientSecret: string;
     privateKey: string;
     appName: string;
+  };
+  figma: {
+    clientId: string;
+    clientSecret: string;
+    webhookSecret: string;
   };
 };
 
@@ -228,6 +244,11 @@ export async function createContext(c: Context<HonoEnv>) {
       processEventsQueue: c.env.DISCORD_PROCESS_EVENTS_QUEUE,
       gatewayDo: c.env.DISCORD_GATEWAY_DO,
     },
+    figma: {
+      clientId: c.env.FIGMA_CLIENT_ID,
+      clientSecret: c.env.FIGMA_CLIENT_SECRET,
+      webhookSecret: c.env.FIGMA_WEBHOOK_SECRET,
+    },
     stripeClient: createStripe(c.env.STRIPE_SECRET_KEY),
     stripeConfig: {
       secretKey: c.env.STRIPE_SECRET_KEY,
@@ -259,6 +280,8 @@ export async function createContext(c: Context<HonoEnv>) {
       syncDiscord: c.env.SYNC_DISCORD_WORKFLOW,
       deleteDiscordIntegration: c.env.DELETE_DISCORD_INTEGRATION_WORKFLOW,
       fetchDiscordMessages: c.env.FETCH_DISCORD_MESSAGES_WORKFLOW,
+      syncFigma: c.env.SYNC_FIGMA_WORKFLOW,
+      deleteFigmaIntegration: c.env.DELETE_FIGMA_INTEGRATION_WORKFLOW,
       pingForUpdates: c.env.PING_FOR_UPDATES_WORKFLOW,
       generateStatusUpdates: c.env.GENERATE_STATUS_UPDATES_WORKFLOW,
       sendSummaries: c.env.SEND_SUMMARIES_WORKFLOW,
@@ -266,6 +289,7 @@ export async function createContext(c: Context<HonoEnv>) {
     bucket: {
       private: c.env.PRIVATE_BUCKET,
     },
+    env: c.env,
   };
 }
 

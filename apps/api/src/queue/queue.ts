@@ -8,6 +8,13 @@ import {
   discordWebhookEventsQueue,
 } from "./discord-webhook-events-queue";
 import {
+  type FigmaWebhookEvent,
+  handleFigmaWebhookEvent,
+} from "./figma-webhook-events-queue";
+import {
+  handleFigmaProcessEvent,
+} from "./figma-process-events-queue";
+import {
   type GithubProcessEventsQueueMessage,
   githubProcessEventsQueue,
 } from "./github-process-events-queue";
@@ -30,7 +37,9 @@ type QueueMessage =
   | SlackWebhookEventsQueueMessage
   | SlackProcessEventsQueueMessage
   | DiscordWebhookEventsQueueMessage
-  | DiscordProcessEventsQueueMessage;
+  | DiscordProcessEventsQueueMessage
+  | FigmaWebhookEvent
+  | string;
 
 export async function queue(
   batch: MessageBatch<QueueMessage>,
@@ -74,6 +83,20 @@ export async function queue(
       batch as MessageBatch<DiscordProcessEventsQueueMessage>,
       env,
       ctx,
+    );
+  }
+
+  if (batch.queue === "figma-webhook-events") {
+    return handleFigmaWebhookEvent(
+      batch as MessageBatch<FigmaWebhookEvent>,
+      env,
+    );
+  }
+
+  if (batch.queue === "figma-process-events") {
+    return handleFigmaProcessEvent(
+      batch as MessageBatch<string>,
+      env,
     );
   }
 

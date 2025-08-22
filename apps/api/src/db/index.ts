@@ -32,6 +32,23 @@ export {
   discordServer,
 } from "./discord-server";
 export { DiscordUser, DiscordUserInsert, DiscordUserUpdate, discordUser } from "./discord-user";
+export { FigmaEvent, FigmaEventInsert, FigmaEventUpdate, figmaEvent } from "./figma-event";
+export {
+  FigmaEventVector,
+  FigmaEventVectorInsert,
+  FigmaEventVectorUpdate,
+  figmaEventVector,
+} from "./figma-event-vector";
+export { FigmaFile, FigmaFileInsert, FigmaFileUpdate, figmaFile } from "./figma-file";
+export {
+  FigmaIntegration,
+  FigmaIntegrationInsert,
+  FigmaIntegrationUpdate,
+  figmaIntegration,
+} from "./figma-integration";
+export { FigmaProject, FigmaProjectInsert, FigmaProjectUpdate, figmaProject } from "./figma-project";
+export { FigmaTeam, FigmaTeamInsert, FigmaTeamUpdate, figmaTeam } from "./figma-team";
+export { FigmaUser, FigmaUserInsert, FigmaUserUpdate, figmaUser } from "./figma-user";
 export { GithubEvent, GithubEventInsert, GithubEventUpdate, githubEvent } from "./github-event";
 export {
   GithubEventVector,
@@ -149,6 +166,13 @@ import { discordEvent } from "./discord-event";
 import { discordIntegration } from "./discord-integration";
 import { discordServer } from "./discord-server";
 import { discordUser } from "./discord-user";
+import { figmaEvent } from "./figma-event";
+import { figmaEventVector } from "./figma-event-vector";
+import { figmaFile } from "./figma-file";
+import { figmaIntegration } from "./figma-integration";
+import { figmaProject } from "./figma-project";
+import { figmaTeam } from "./figma-team";
+import { figmaUser } from "./figma-user";
 import { githubEvent } from "./github-event";
 import { githubEventVector } from "./github-event-vector";
 import { githubIntegration } from "./github-integration";
@@ -205,6 +229,8 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   invitations: many(invitation),
   githubIntegration: one(githubIntegration),
   slackIntegration: one(slackIntegration),
+  discordIntegration: one(discordIntegration),
+  figmaIntegration: one(figmaIntegration),
   schedules: many(schedule),
   summaries: many(summary),
 }));
@@ -378,6 +404,61 @@ export const discordEventRelations = relations(discordEvent, ({ one }) => ({
   channel: one(discordChannel, {
     fields: [discordEvent.channelId],
     references: [discordChannel.channelId],
+  }),
+}));
+
+export const figmaIntegrationRelations = relations(figmaIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [figmaIntegration.organizationId],
+    references: [organization.id],
+  }),
+  teams: many(figmaTeam),
+  users: many(figmaUser),
+}));
+
+export const figmaTeamRelations = relations(figmaTeam, ({ one, many }) => ({
+  integration: one(figmaIntegration, {
+    fields: [figmaTeam.integrationId],
+    references: [figmaIntegration.id],
+  }),
+  projects: many(figmaProject),
+}));
+
+export const figmaProjectRelations = relations(figmaProject, ({ one, many }) => ({
+  team: one(figmaTeam, {
+    fields: [figmaProject.teamId],
+    references: [figmaTeam.id],
+  }),
+  files: many(figmaFile),
+}));
+
+export const figmaFileRelations = relations(figmaFile, ({ one, many }) => ({
+  project: one(figmaProject, {
+    fields: [figmaFile.projectId],
+    references: [figmaProject.id],
+  }),
+  events: many(figmaEvent),
+}));
+
+export const figmaUserRelations = relations(figmaUser, ({ one }) => ({
+  integration: one(figmaIntegration, {
+    fields: [figmaUser.integrationId],
+    references: [figmaIntegration.id],
+  }),
+}));
+
+export const figmaEventRelations = relations(figmaEvent, ({ one, many }) => ({
+  file: one(figmaFile, {
+    fields: [figmaEvent.fileId],
+    references: [figmaFile.id],
+  }),
+  vectors: many(figmaEventVector),
+}));
+
+export const figmaEventVectorRelations = relations(figmaEventVector, ({ one }) => ({
+  event: one(figmaEvent, {
+    fields: [figmaEventVector.eventId],
+    references: [figmaEvent.id],
   }),
 }));
 
