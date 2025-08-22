@@ -30,13 +30,17 @@ export function GmailNotification() {
           : "translate-x-full max-sm:translate-x-0 max-sm:-translate-y-full opacity-0"
       }`}
     >
-      {/* macOS notification container - glass effect */}
-      <div className="bg-black/40 backdrop-blur-3xl rounded-2xl shadow-2xl w-96 max-sm:w-full overflow-hidden border border-white/10 ring-1 ring-black/5">
+      {/* macOS notification container - glass effect with Apple-inspired squircle */}
+      <div className="bg-white/20 dark:bg-black/40 backdrop-blur-3xl shadow-2xl w-96 max-sm:w-full overflow-hidden border border-white/20 dark:border-white/10 ring-1 ring-black/5" style={{ 
+        borderRadius: '28px 28px 28px 28px / 20px 20px 20px 20px'
+      }}>
         {/* Main content */}
         <div className="px-4 pb-3 pt-3">
           <div className="flex items-center gap-3">
-            {/* Gmail logo */}
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+            {/* Gmail logo with Apple-inspired squircle */}
+            <div className="w-12 h-12 bg-white dark:bg-gray-800 flex items-center justify-center flex-shrink-0 shadow-sm" style={{ 
+              borderRadius: '16px 16px 16px 16px / 12px 12px 12px 12px'
+            }}>
               <img 
                 src="/gmail-icon.png" 
                 alt="Gmail"
@@ -47,10 +51,10 @@ export function GmailNotification() {
             {/* Email content */}
             <div className="flex-1 min-w-0">
               <div className="mb-0.5">
-                <span className="text-white font-medium text-sm">What have you done this week?</span>
+                <span className="text-black dark:text-white font-medium text-sm">What have you done this week?</span>
               </div>
               
-              <p className="text-white/80 text-sm leading-snug">
+              <p className="text-black/80 dark:text-white/80 text-sm leading-snug">
               Manager here. It's time for the annoying progress status questions, or avoid this shit and use AsyncStatus.
               </p>
             </div>
