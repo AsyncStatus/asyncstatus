@@ -48,6 +48,17 @@ import {
 } from "./typed-handlers/discord-integration-handlers";
 import { getFileHandler } from "./typed-handlers/file-handlers";
 import {
+  deleteFigmaIntegrationHandler,
+  figmaIntegrationCallbackHandler,
+  figmaWebhookHandler,
+  getFigmaIntegrationHandler,
+  listFigmaFilesHandler,
+  listFigmaProjectsHandler,
+  listFigmaTeamsHandler,
+  listFigmaUsersHandler,
+  resyncFigmaIntegrationHandler,
+} from "./typed-handlers/figma-integration-handlers";
+import {
   deleteGithubIntegrationHandler,
   getGithubIntegrationHandler,
   githubIntegrationCallbackHandler,
@@ -233,6 +244,13 @@ const discordWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) =>
   return c.json({ error: "Unknown webhook type" }, 400);
 });
 
+const figmaWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const body = await c.req.json();
+  const queue = c.env.FIGMA_WEBHOOK_EVENTS_QUEUE;
+  await queue.send(body, { contentType: "json" });
+  return c.json({ success: true }, 200);
+});
+
 const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
   const body = await c.req.raw.text();
   const signature = c.req.header("Stripe-Signature");
@@ -303,12 +321,14 @@ const app = new Hono<HonoEnv>()
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
     c.set("github", context.github);
+    c.set("figma" as any, context.figma);
     return next();
   })
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
   .route("/integrations/discord/webhooks", discordWebhooksRouter)
+  .route("/integrations/figma/webhooks", figmaWebhooksRouter)
   .route("/integrations/stripe/webhooks", stripeWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -403,6 +423,15 @@ const typedHandlersApp = typedHandlersHonoServer(
     startDiscordGatewayHandler,
     stopDiscordGatewayHandler,
     getDiscordGatewayStatusHandler,
+    figmaIntegrationCallbackHandler,
+    getFigmaIntegrationHandler,
+    listFigmaTeamsHandler,
+    listFigmaProjectsHandler,
+    listFigmaFilesHandler,
+    listFigmaUsersHandler,
+    deleteFigmaIntegrationHandler,
+    resyncFigmaIntegrationHandler,
+    figmaWebhookHandler,
     generateStripeCheckoutHandler,
     stripeSuccessHandler,
     getSubscriptionHandler,
@@ -448,6 +477,8 @@ const typedHandlersApp = typedHandlersHonoServer(
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
       github: c.get("github"),
+      figma: c.get("figma" as any),
+      env: c.env,
     }),
   },
 );
@@ -469,3 +500,5 @@ export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
 export { SendSummariesWorkflow } from "./workflows/schedules/send-summaries";
 export { DeleteSlackIntegrationWorkflow } from "./workflows/slack/delete-slack-integration";
 export { SyncSlackWorkflow } from "./workflows/slack/sync-slack";
+export { DeleteFigmaIntegrationWorkflow } from "./workflows/figma/delete-figma-integration";
+export { SyncFigmaWorkflow } from "./workflows/figma/sync-figma";
