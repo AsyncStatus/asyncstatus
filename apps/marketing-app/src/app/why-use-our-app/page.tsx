@@ -1,5 +1,41 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Why Replace Standups - ROI Calculator & Benefits",
+  description: "Calculate how much your team saves by replacing daily standups with AsyncStatus. See why 90% of standup time is wasted and how to get 2-3 hours back per developer per week.",
+  keywords: [
+    "standup meeting problems",
+    "daily standup replacement",
+    "remote team productivity",
+    "meeting cost calculator",
+    "async communication benefits",
+    "standup ROI calculator",
+    "development team efficiency"
+  ],
+  openGraph: {
+    title: "Why Replace Daily Standups? - AsyncStatus ROI Calculator",
+    description: "Calculate how much your team saves by replacing daily standups. Get 2-3 hours back per developer per week with automated status updates.",
+    url: "https://asyncstatus.com/why-use-our-app",
+    images: [
+      {
+        url: "/opengraph-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Calculate standup meeting costs and see why teams are switching to async updates",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Why Replace Daily Standups? - AsyncStatus ROI Calculator",
+    description: "Calculate how much your team saves by replacing daily standups. Get 2-3 hours back per developer per week.",
+  },
+  alternates: {
+    canonical: "https://asyncstatus.com/why-use-our-app",
+  },
+};
 
 import { Footer } from "../components/footer";
 import { MobileMenu } from "../components/mobile-menu";

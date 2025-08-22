@@ -1,6 +1,33 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: "Replace daily standup meetings with automated status updates. AsyncStatus saves your team 2-3 hours per week by generating updates from Git, Jira, and Slack activity automatically.",
+  openGraph: {
+    title: "AsyncStatus - Automated Status Updates for Remote Teams",
+    description: "Replace daily standup meetings with automated status updates. Save 2-3 hours per developer per week.",
+    url: "https://asyncstatus.com",
+    images: [
+      {
+        url: "/opengraph-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "AsyncStatus - No more daily standups, just automated status updates",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AsyncStatus - Automated Status Updates for Remote Teams", 
+    description: "Replace daily standup meetings with automated status updates. Save 2-3 hours per developer per week.",
+  },
+  alternates: {
+    canonical: "https://asyncstatus.com",
+  },
+};
 import { BetaMessage } from "../components/beta-message";
 import { ConnectCard } from "../components/connect-card";
 import { CtaSection } from "../components/cta-section";
@@ -16,6 +43,7 @@ import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
+import { StructuredData, organizationSchema, productSchema, websiteSchema, faqSchema } from "../structured-data";
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -48,7 +76,7 @@ export default async function Page(props: {
           <div className="flex flex-col">
             <Link href="/" className="flex items-center gap-2">
               <AsyncStatusLogo className="h-3.5 w-auto" />
-              <h1 className="text-lg font-medium max-sm:text-base">AsyncStatus</h1>
+              <span className="text-lg font-medium max-sm:text-base">AsyncStatus</span>
             </Link>
           </div>
 
@@ -137,21 +165,21 @@ export default async function Page(props: {
           </a>
         </div>
 
-        <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
+        <h1 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
             <span>Standup meetings suck</span>
           </span>
           <span aria-hidden="true">Standup meetings suck</span>
-        </h2>
-        <h2 className="hidden text-center text-5xl font-bold max-sm:block">
+        </h1>
+        <h1 className="hidden text-center text-5xl font-bold max-sm:block">
           Standup meetings suck
-        </h2>
+        </h1>
 
-        <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
+        <p className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
           Your team already pushed code, closed tickets, replied in threads, fixed small things no
           one asked them to. We turn it into an update. Or you can write it yourself. Either way, no
           one has to talk about it at 9:30 a.m.
-        </h3>
+        </p>
 
         <div className="mt-14 flex flex-col items-center justify-center max-sm:mt-6">
           <Button size="lg" asChild>
@@ -265,9 +293,9 @@ export default async function Page(props: {
           </div>
         </div>
 
-        <h3 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
+        <h2 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
           How it works
-        </h3>
+        </h2>
         <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
           <ConnectCard />
           <TrackCard />
@@ -301,13 +329,13 @@ export default async function Page(props: {
 
         <section id="calculator" className="mt-36">
           <div className="mb-12 text-center">
-            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+            <h2 className="text-center text-6xl font-bold max-sm:text-5xl">
               Calculate your savings
-            </h3>
-            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+            </h2>
+            <p className="text-muted-foreground mt-6 text-xl text-pretty">
               See how much time and money your team can save by replacing synchronous standups with
               AsyncStatus.
-            </h3>
+            </p>
           </div>
           <SavingsCalculator />
 
@@ -345,6 +373,12 @@ export default async function Page(props: {
       </main>
 
       <Footer />
+      
+      {/* Structured Data */}
+      <StructuredData data={organizationSchema} />
+      <StructuredData data={productSchema} />
+      <StructuredData data={websiteSchema} />
+      <StructuredData data={faqSchema} />
     </>
   );
 }

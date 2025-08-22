@@ -22,9 +22,72 @@ const noto = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Async status updates for remote startups",
-  description: "Made for high-agency teams that value their time.",
+  title: {
+    default: "AsyncStatus - Replace Daily Standups with Automated Status Updates",
+    template: "%s | AsyncStatus"
+  },
+  description: "Stop wasting time in daily standups. AsyncStatus automatically generates status updates from your Git commits, Jira tickets, and Slack activity. Save 2-3 hours per developer per week.",
+  keywords: [
+    "async status updates",
+    "remote team management",
+    "standup replacement",
+    "team productivity",
+    "remote work tools",
+    "automated status reports",
+    "software development tools",
+    "team communication",
+    "agile without meetings",
+    "distributed teams"
+  ],
+  authors: [{ name: "AsyncStatus Team" }],
+  creator: "AsyncStatus",
+  publisher: "AsyncStatus",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   metadataBase: new URL("https://asyncstatus.com"),
+  alternates: {
+    canonical: "https://asyncstatus.com",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://asyncstatus.com",
+    title: "AsyncStatus - Replace Daily Standups with Automated Status Updates",
+    description: "Stop wasting time in daily standups. AsyncStatus automatically generates status updates from your Git commits, Jira tickets, and Slack activity. Save 2-3 hours per developer per week.",
+    siteName: "AsyncStatus",
+    images: [
+      {
+        url: "/opengraph-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "AsyncStatus - Automated status updates for remote teams",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AsyncStatus - Replace Daily Standups with Automated Status Updates",
+    description: "Stop wasting time in daily standups. AsyncStatus automatically generates status updates from your Git commits, Jira tickets, and Slack activity.",
+    images: ["/opengraph-image.jpg"],
+    creator: "@asyncstatus",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "your-google-verification-code", // Replace with actual verification code
+  },
   icons: [
     {
       url: "/favicon.ico",
@@ -46,6 +109,16 @@ export const metadata: Metadata = {
       url: "/apple-touch-icon-dark.png",
       href: "/apple-touch-icon-dark.png",
       media: "(prefers-color-scheme: dark)",
+    },
+    {
+      url: "/icon-192.png",
+      sizes: "192x192",
+      type: "image/png",
+    },
+    {
+      url: "/icon-512.png",
+      sizes: "512x512",
+      type: "image/png",
     },
   ],
 };
