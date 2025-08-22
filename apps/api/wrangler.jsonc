@@ -100,6 +100,14 @@
       {
         "queue": "discord-process-events",
         "binding": "DISCORD_PROCESS_EVENTS_QUEUE"
+      },
+      {
+        "queue": "teams-webhook-events",
+        "binding": "TEAMS_WEBHOOK_EVENTS_QUEUE"
+      },
+      {
+        "queue": "teams-process-events",
+        "binding": "TEAMS_PROCESS_EVENTS_QUEUE"
       }
     ]
   },
@@ -153,6 +161,16 @@
       "name": "fetch-discord-messages",
       "binding": "FETCH_DISCORD_MESSAGES_WORKFLOW",
       "class_name": "FetchDiscordMessagesWorkflow"
+    },
+    {
+      "name": "sync-teams",
+      "binding": "SYNC_TEAMS_WORKFLOW",
+      "class_name": "SyncTeamsWorkflow"
+    },
+    {
+      "name": "delete-teams-integration",
+      "binding": "DELETE_TEAMS_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteTeamsIntegrationWorkflow"
     }
   ],
   "kv_namespaces": [

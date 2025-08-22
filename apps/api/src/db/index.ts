@@ -112,6 +112,26 @@ export {
   slackIntegration,
 } from "./slack-integration";
 export { SlackUser, SlackUserInsert, SlackUserUpdate, slackUser } from "./slack-user";
+export {
+  TeamsChannel,
+  TeamsChannelInsert,
+  TeamsChannelUpdate,
+  teamsChannel,
+} from "./teams-channel";
+export { TeamsEvent, TeamsEventInsert, TeamsEventUpdate, teamsEvent } from "./teams-event";
+export {
+  TeamsEventVector,
+  TeamsEventVectorInsert,
+  TeamsEventVectorUpdate,
+  teamsEventVector,
+} from "./teams-event-vector";
+export {
+  TeamsIntegration,
+  TeamsIntegrationInsert,
+  TeamsIntegrationUpdate,
+  teamsIntegration,
+} from "./teams-integration";
+export { TeamsUser, TeamsUserInsert, TeamsUserUpdate, teamsUser } from "./teams-user";
 export { statusGenerationJob } from "./status-generation-job";
 export {
   StatusUpdate,
@@ -167,6 +187,11 @@ import { slackEventVector } from "./slack-event-vector";
 import { slackIntegration } from "./slack-integration";
 import { slackUser } from "./slack-user";
 import { statusGenerationJob } from "./status-generation-job";
+import { teamsChannel } from "./teams-channel";
+import { teamsEvent } from "./teams-event";
+import { teamsEventVector } from "./teams-event-vector";
+import { teamsIntegration } from "./teams-integration";
+import { teamsUser } from "./teams-user";
 import { statusUpdate } from "./status-update";
 import { statusUpdateItem } from "./status-update-item";
 import { summary } from "./summary";
@@ -385,6 +410,61 @@ export const slackEventVectorRelations = relations(slackEventVector, ({ one }) =
   event: one(slackEvent, {
     fields: [slackEventVector.eventId],
     references: [slackEvent.id],
+  }),
+}));
+
+export const teamsIntegrationRelations = relations(teamsIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [teamsIntegration.organizationId],
+    references: [organization.id],
+  }),
+  users: many(teamsUser),
+  channels: many(teamsChannel),
+  events: many(teamsEvent),
+}));
+
+export const teamsUserRelations = relations(teamsUser, ({ one }) => ({
+  integration: one(teamsIntegration, {
+    fields: [teamsUser.integrationId],
+    references: [teamsIntegration.id],
+  }),
+}));
+
+export const teamsChannelRelations = relations(teamsChannel, ({ one, many }) => ({
+  integration: one(teamsIntegration, {
+    fields: [teamsChannel.integrationId],
+    references: [teamsIntegration.id],
+  }),
+  events: many(teamsEvent),
+}));
+
+export const teamsEventRelations = relations(teamsEvent, ({ one, many }) => ({
+  integration: one(teamsIntegration, {
+    fields: [teamsEvent.integrationId],
+    references: [teamsIntegration.id],
+  }),
+  channel: one(teamsChannel, {
+    fields: [teamsEvent.channelId],
+    references: [teamsChannel.id],
+  }),
+  user: one(teamsUser, {
+    fields: [teamsEvent.userId],
+    references: [teamsUser.id],
+  }),
+  member: one(member, {
+    fields: [teamsEvent.memberId],
+    references: [member.id],
+  }),
+  vector: one(teamsEventVector, {
+    fields: [teamsEvent.id],
+    references: [teamsEventVector.eventId],
+  }),
+}));
+
+export const teamsEventVectorRelations = relations(teamsEventVector, ({ one }) => ({
+  event: one(teamsEvent, {
+    fields: [teamsEventVector.eventId],
+    references: [teamsEvent.id],
   }),
 }));
 

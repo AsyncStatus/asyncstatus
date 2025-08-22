@@ -71,6 +71,12 @@ export type Bindings = {
   SYNC_DISCORD_WORKFLOW: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
   DELETE_DISCORD_INTEGRATION_WORKFLOW: Workflow<any>; // TODO: Add DeleteDiscordIntegrationWorkflowParams
   FETCH_DISCORD_MESSAGES_WORKFLOW: Workflow<any>; // TODO: Add FetchDiscordMessagesWorkflowParams
+  TEAMS_CLIENT_ID: string;
+  TEAMS_CLIENT_SECRET: string;
+  TEAMS_WEBHOOK_EVENTS_QUEUE: Queue<any>;
+  TEAMS_PROCESS_EVENTS_QUEUE: Queue<string>;
+  SYNC_TEAMS_WORKFLOW: Workflow<any>; // TODO: Add SyncTeamsWorkflowParams
+  DELETE_TEAMS_INTEGRATION_WORKFLOW: Workflow<any>; // TODO: Add DeleteTeamsIntegrationWorkflowParams
   PING_FOR_UPDATES_WORKFLOW: Workflow<PingForUpdatesWorkflowParams>;
   GENERATE_STATUS_UPDATES_WORKFLOW: Workflow<GenerateStatusUpdatesWorkflowParams>;
   SEND_SUMMARIES_WORKFLOW: Workflow<SendSummariesWorkflowParams>;
@@ -107,6 +113,8 @@ export type Variables = {
     deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
     syncDiscord: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
     deleteDiscordIntegration: Workflow<any>; // TODO: Add DeleteDiscordIntegrationWorkflowParams
+    syncTeams: Workflow<any>; // TODO: Add SyncTeamsWorkflowParams
+    deleteTeamsIntegration: Workflow<any>; // TODO: Add DeleteTeamsIntegrationWorkflowParams
     fetchDiscordMessages: Workflow<any>; // TODO: Add FetchDiscordMessagesWorkflowParams
     pingForUpdates: Workflow<PingForUpdatesWorkflowParams>;
     generateStatusUpdates: Workflow<GenerateStatusUpdatesWorkflowParams>;
@@ -259,6 +267,8 @@ export async function createContext(c: Context<HonoEnv>) {
       syncDiscord: c.env.SYNC_DISCORD_WORKFLOW,
       deleteDiscordIntegration: c.env.DELETE_DISCORD_INTEGRATION_WORKFLOW,
       fetchDiscordMessages: c.env.FETCH_DISCORD_MESSAGES_WORKFLOW,
+      syncTeams: c.env.SYNC_TEAMS_WORKFLOW,
+      deleteTeamsIntegration: c.env.DELETE_TEAMS_INTEGRATION_WORKFLOW,
       pingForUpdates: c.env.PING_FOR_UPDATES_WORKFLOW,
       generateStatusUpdates: c.env.GENERATE_STATUS_UPDATES_WORKFLOW,
       sendSummaries: c.env.SEND_SUMMARIES_WORKFLOW,
