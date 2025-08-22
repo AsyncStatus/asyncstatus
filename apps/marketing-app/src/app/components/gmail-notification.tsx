@@ -32,14 +32,14 @@ export function GmailNotification() {
     >
       {/* macOS notification container - glass effect with Apple-inspired squircle */}
       <div className="bg-white/20 dark:bg-black/40 backdrop-blur-3xl shadow-2xl w-96 max-sm:w-full overflow-hidden border border-white/20 dark:border-white/10 ring-1 ring-black/5" style={{ 
-        borderRadius: '28px 28px 28px 28px / 20px 20px 20px 20px'
+        borderRadius: '24px'
       }}>
         {/* Main content */}
         <div className="px-4 pb-3 pt-3">
           <div className="flex items-center gap-3">
             {/* Gmail logo with Apple-inspired squircle */}
             <div className="w-12 h-12 bg-white dark:bg-gray-800 flex items-center justify-center flex-shrink-0 shadow-sm" style={{ 
-              borderRadius: '16px 16px 16px 16px / 12px 12px 12px 12px'
+              borderRadius: '14px'
             }}>
               <img 
                 src="/gmail-icon.png" 
