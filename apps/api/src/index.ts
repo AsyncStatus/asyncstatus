@@ -56,6 +56,16 @@ import {
   resyncGithubIntegrationHandler,
 } from "./typed-handlers/github-integration-handlers";
 import {
+  deleteLinearIntegrationHandler,
+  getLinearIntegrationHandler,
+  linearIntegrationCallbackHandler,
+  listLinearIssuesHandler,
+  listLinearProjectsHandler,
+  listLinearTeamsHandler,
+  listLinearUsersHandler,
+  resyncLinearIntegrationHandler,
+} from "./typed-handlers/linear-integration-handlers";
+import {
   acceptInvitationHandler,
   cancelInvitationHandler,
   getInvitationHandler,
@@ -233,6 +243,39 @@ const discordWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) =>
   return c.json({ error: "Unknown webhook type" }, 400);
 });
 
+const linearWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const rawBody = await c.req.raw.text();
+  const signature = c.req.header("Linear-Signature");
+
+  if (!signature) {
+    return c.json({ error: "Missing signature" }, 400);
+  }
+
+  // Verify Linear webhook signature
+  const { verifyLinearWebhookSignature } = await import("./lib/linear-client");
+  const isValid = await verifyLinearWebhookSignature({
+    body: rawBody,
+    signature,
+    secret: c.env.LINEAR_WEBHOOK_SECRET,
+  });
+
+  if (!isValid) {
+    console.warn("Invalid Linear webhook signature");
+    return c.json({ error: "Invalid signature" }, 401);
+  }
+
+  let body: any;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return c.json({ error: "Invalid JSON payload" }, 400);
+  }
+
+  const queue = c.env.LINEAR_WEBHOOK_EVENTS_QUEUE;
+  await queue.send(body, { contentType: "json" });
+  return c.json({ ok: true }, 200);
+});
+
 const stripeWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
   const body = await c.req.raw.text();
   const signature = c.req.header("Stripe-Signature");
@@ -303,12 +346,14 @@ const app = new Hono<HonoEnv>()
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
     c.set("github", context.github);
+    c.set("linear", context.linear);
     return next();
   })
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
   .route("/integrations/discord/webhooks", discordWebhooksRouter)
+  .route("/integrations/linear/webhooks", linearWebhooksRouter)
   .route("/integrations/stripe/webhooks", stripeWebhooksRouter)
   .onError((err, c) => {
     console.error(err);
@@ -388,6 +433,14 @@ const typedHandlersApp = typedHandlersHonoServer(
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
     resyncGithubIntegrationHandler,
+    linearIntegrationCallbackHandler,
+    getLinearIntegrationHandler,
+    listLinearTeamsHandler,
+    listLinearUsersHandler,
+    listLinearIssuesHandler,
+    listLinearProjectsHandler,
+    deleteLinearIntegrationHandler,
+    resyncLinearIntegrationHandler,
     slackIntegrationCallbackHandler,
     getSlackIntegrationHandler,
     listSlackChannelsHandler,
@@ -448,6 +501,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
       github: c.get("github"),
+      linear: c.get("linear"),
     }),
   },
 );
@@ -464,6 +518,8 @@ export { FetchDiscordMessagesWorkflow } from "./workflows/discord/fetch-discord-
 export { SyncDiscordWorkflow } from "./workflows/discord/sync-discord";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github";
+export { DeleteLinearIntegrationWorkflow } from "./workflows/linear/delete-linear-integration";
+export { SyncLinearWorkflow } from "./workflows/linear/sync-linear";
 export { GenerateStatusUpdatesWorkflow } from "./workflows/schedules/generate-status-updates";
 export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
 export { SendSummariesWorkflow } from "./workflows/schedules/send-summaries";

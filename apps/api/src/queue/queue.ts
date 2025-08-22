@@ -15,6 +15,9 @@ import {
   type GithubWebhookEventsQueueMessage,
   githubWebhookEventsQueue,
 } from "./github-webhook-events-queue";
+import { linearProcessEventsQueue } from "./linear-process-events-queue";
+import type { LinearWebhookPayload } from "../lib/linear-client";
+import { linearWebhookEventsQueue } from "./linear-webhook-events-queue";
 import {
   type SlackProcessEventsQueueMessage,
   slackProcessEventsQueue,
@@ -30,12 +33,14 @@ type QueueMessage =
   | SlackWebhookEventsQueueMessage
   | SlackProcessEventsQueueMessage
   | DiscordWebhookEventsQueueMessage
-  | DiscordProcessEventsQueueMessage;
+  | DiscordProcessEventsQueueMessage
+  | LinearWebhookPayload
+  | string;
 
 export async function queue(
   batch: MessageBatch<QueueMessage>,
   env: Bindings,
-  ctx: ExecutionContext,
+  ctx?: ExecutionContext,
 ) {
   if (batch.queue === "github-webhook-events") {
     return githubWebhookEventsQueue(
@@ -75,6 +80,14 @@ export async function queue(
       env,
       ctx,
     );
+  }
+
+  if (batch.queue === "linear-webhook-events") {
+    return linearWebhookEventsQueue(batch as MessageBatch<LinearWebhookPayload>, env);
+  }
+
+  if (batch.queue === "linear-process-events") {
+    return linearProcessEventsQueue(batch as MessageBatch<string>, env);
   }
 
   throw new Error(`Unknown queue: ${batch.queue}`);

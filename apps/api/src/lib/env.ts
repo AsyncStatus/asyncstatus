@@ -12,6 +12,8 @@ import { createDb } from "../db/db";
 import type { DiscordGatewayDurableObject } from "../durable-objects/discord-gateway";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github";
+import type { DeleteLinearIntegrationWorkflowParams } from "../workflows/linear/delete-linear-integration";
+import type { SyncLinearWorkflowParams } from "../workflows/linear/sync-linear";
 import type { GenerateStatusUpdatesWorkflowParams } from "../workflows/schedules/generate-status-updates";
 import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-for-updates";
 import type { SendSummariesWorkflowParams } from "../workflows/schedules/send-summaries";
@@ -61,6 +63,13 @@ export type Bindings = {
   SLACK_PROCESS_EVENTS_QUEUE: Queue<string>;
   SYNC_SLACK_WORKFLOW: Workflow<SyncSlackWorkflowParams>;
   DELETE_SLACK_INTEGRATION_WORKFLOW: Workflow<DeleteSlackIntegrationWorkflowParams>;
+  LINEAR_CLIENT_ID: string;
+  LINEAR_CLIENT_SECRET: string;
+  LINEAR_WEBHOOK_SECRET: string;
+  LINEAR_WEBHOOK_EVENTS_QUEUE: Queue<any>;
+  LINEAR_PROCESS_EVENTS_QUEUE: Queue<string>;
+  SYNC_LINEAR_WORKFLOW: Workflow<SyncLinearWorkflowParams>;
+  DELETE_LINEAR_INTEGRATION_WORKFLOW: Workflow<DeleteLinearIntegrationWorkflowParams>;
   DISCORD_APP_ID: string;
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
@@ -105,6 +114,8 @@ export type Variables = {
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
     syncSlack: Workflow<SyncSlackWorkflowParams>;
     deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
+    syncLinear: Workflow<SyncLinearWorkflowParams>;
+    deleteLinearIntegration: Workflow<DeleteLinearIntegrationWorkflowParams>;
     syncDiscord: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
     deleteDiscordIntegration: Workflow<any>; // TODO: Add DeleteDiscordIntegrationWorkflowParams
     fetchDiscordMessages: Workflow<any>; // TODO: Add FetchDiscordMessagesWorkflowParams
@@ -151,6 +162,11 @@ export type Variables = {
     clientSecret: string;
     privateKey: string;
     appName: string;
+  };
+  linear: {
+    clientId: string;
+    clientSecret: string;
+    webhookSecret: string;
   };
 };
 
@@ -211,6 +227,11 @@ export async function createContext(c: Context<HonoEnv>) {
       privateKey: c.env.GITHUB_APP_PRIVATE_KEY,
       appName: c.env.GITHUB_APP_NAME,
     },
+    linear: {
+      clientId: c.env.LINEAR_CLIENT_ID,
+      clientSecret: c.env.LINEAR_CLIENT_SECRET,
+      webhookSecret: c.env.LINEAR_WEBHOOK_SECRET,
+    },
     slack: {
       appId: c.env.SLACK_APP_ID,
       clientId: c.env.SLACK_CLIENT_ID,
@@ -256,6 +277,8 @@ export async function createContext(c: Context<HonoEnv>) {
       deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
       syncSlack: c.env.SYNC_SLACK_WORKFLOW,
       deleteSlackIntegration: c.env.DELETE_SLACK_INTEGRATION_WORKFLOW,
+      syncLinear: c.env.SYNC_LINEAR_WORKFLOW,
+      deleteLinearIntegration: c.env.DELETE_LINEAR_INTEGRATION_WORKFLOW,
       syncDiscord: c.env.SYNC_DISCORD_WORKFLOW,
       deleteDiscordIntegration: c.env.DELETE_DISCORD_INTEGRATION_WORKFLOW,
       fetchDiscordMessages: c.env.FETCH_DISCORD_MESSAGES_WORKFLOW,
