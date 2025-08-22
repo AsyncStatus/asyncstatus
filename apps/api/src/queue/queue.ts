@@ -23,6 +23,8 @@ import {
   type SlackWebhookEventsQueueMessage,
   slackWebhookEventsQueue,
 } from "./slack-webhook-events-queue";
+import { teamsProcessEventsQueue } from "./teams-process-events-queue";
+import { teamsWebhookEventsQueue } from "./teams-webhook-events-queue";
 
 type QueueMessage =
   | GithubWebhookEventsQueueMessage
@@ -30,7 +32,8 @@ type QueueMessage =
   | SlackWebhookEventsQueueMessage
   | SlackProcessEventsQueueMessage
   | DiscordWebhookEventsQueueMessage
-  | DiscordProcessEventsQueueMessage;
+  | DiscordProcessEventsQueueMessage
+  | string;
 
 export async function queue(
   batch: MessageBatch<QueueMessage>,
@@ -75,6 +78,14 @@ export async function queue(
       env,
       ctx,
     );
+  }
+
+  if (batch.queue === "teams-webhook-events") {
+    return teamsWebhookEventsQueue(batch as MessageBatch<any>, env);
+  }
+
+  if (batch.queue === "teams-process-events") {
+    return teamsProcessEventsQueue(batch as MessageBatch<string>, env);
   }
 
   throw new Error(`Unknown queue: ${batch.queue}`);
