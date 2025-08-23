@@ -514,6 +514,8 @@ export { FetchDiscordMessagesWorkflow } from "./workflows/discord/fetch-discord-
 export { SyncDiscordWorkflow } from "./workflows/discord/sync-discord";
 export { DeleteGithubIntegrationWorkflow } from "./workflows/github/delete-github-integration";
 export { SyncGithubWorkflow } from "./workflows/github/sync-github";
+export { SyncGitlabWorkflow } from "./workflows/gitlab/sync-gitlab";
+export { DeleteGitlabIntegrationWorkflow } from "./workflows/gitlab/delete-gitlab-integration";
 export { GenerateStatusUpdatesWorkflow } from "./workflows/schedules/generate-status-updates";
 export { PingForUpdatesWorkflow } from "./workflows/schedules/ping-for-updates";
 export { SendSummariesWorkflow } from "./workflows/schedules/send-summaries";
