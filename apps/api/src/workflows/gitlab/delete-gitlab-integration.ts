@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
+import { listGitlabProjectWebhooks, deleteGitlabProjectWebhook } from "../../lib/gitlab-webhook";
+import { getGitlabWebhookUrl } from "../../lib/integrations-connect-url";
 
 export type DeleteGitlabIntegrationWorkflowParams = {
   integrationId: string;
@@ -25,6 +27,63 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
       }
 
       return integration;
+    });
+
+    await step.do("cleanup-webhooks", async () => {
+      // Clean up webhooks from GitLab projects before deleting data
+      if (integration.accessToken) {
+        try {
+          const projects = await db.query.gitlabProject.findMany({
+            where: eq(schema.gitlabProject.integrationId, integrationId),
+          });
+
+          for (const project of projects) {
+            try {
+              // List existing webhooks for this project
+              const webhooks = await listGitlabProjectWebhooks(
+                integration.accessToken!,
+                integration.gitlabInstanceUrl,
+                project.projectId
+              );
+
+              // Delete webhooks that point to our webhook URL
+              const webhookUrl = getGitlabWebhookUrl(this.env.BETTER_AUTH_URL, integrationId);
+              for (const webhook of webhooks) {
+                if (webhook.url === webhookUrl) {
+                  await deleteGitlabProjectWebhook(
+                    integration.accessToken!,
+                    integration.gitlabInstanceUrl,
+                    project.projectId,
+                    webhook.id
+                  );
+                }
+              }
+            } catch (error) {
+              // Log detailed error information for webhook cleanup
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              console.warn(
+                `Failed to clean up webhooks for GitLab project ${project.pathWithNamespace}:`,
+                {
+                  projectId: project.projectId,
+                  error: errorMessage,
+                  integrationId,
+                  instanceUrl: integration.gitlabInstanceUrl
+                }
+              );
+              // Continue with other projects as this is non-critical
+            }
+          }
+        } catch (error) {
+          // Log the overall webhook cleanup failure
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.warn("Failed to clean up GitLab webhooks:", {
+            error: errorMessage,
+            integrationId,
+            instanceUrl: integration.gitlabInstanceUrl
+          });
+          // Continue with deletion as webhook cleanup failure shouldn't block integration removal
+        }
+      }
     });
 
     await step.do("delete-integration-data", async () => {

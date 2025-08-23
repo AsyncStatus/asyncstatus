@@ -6,8 +6,10 @@ import type { Bindings } from "../lib/env";
 import type { AnyGitlabWebhookEventDefinition } from "../lib/gitlab-event-definition";
 import { isTuple } from "../lib/is-tuple";
 
-export type GitlabWebhookEventsQueueMessage = AnyGitlabWebhookEventDefinition & {
-  gitlab_event?: string; // Added by webhook router
+export type GitlabWebhookEventsQueueMessage = {
+  id: string;
+  name: string;
+  payload: AnyGitlabWebhookEventDefinition;
 };
 
 export async function gitlabWebhookEventsQueue(
@@ -20,12 +22,11 @@ export async function gitlabWebhookEventsQueue(
   const batchUpserts = [];
 
   for (const message of batch.messages) {
-    const event = message.body;
-    console.log(`Processing GitLab ${event.gitlab_event || event.object_kind} event`);
-    
+    console.log(`Processing ${message.body.name} event`);
+    processedEventIds.add(message.body.id);
     message.ack();
 
-    // Skip events without project info
+    const event = message.body.payload;
     if (!event.project?.id) {
       console.log("No project found in GitLab event.");
       continue;
@@ -48,19 +49,15 @@ export async function gitlabWebhookEventsQueue(
       continue;
     }
 
-    // Generate unique event ID (GitLab doesn't provide one in webhooks)
-    const eventId = generateGitlabWebhookEventId(event);
-    processedEventIds.add(eventId);
-
     batchUpserts.push(
       db
         .insert(schema.gitlabEvent)
         .values({
           id: nanoid(),
-          gitlabId: eventId,
+          gitlabId: message.body.id,
           gitlabActorId: event.user.id.toString(),
           projectId: project.id,
-          type: mapGitlabWebhookEventType(event.gitlab_event || event.object_kind),
+          type: message.body.name,
           action: getEventAction(event),
           payload: event,
           createdAt: getEventCreatedAt(event),
@@ -68,7 +65,7 @@ export async function gitlabWebhookEventsQueue(
         })
         .onConflictDoUpdate({
           target: schema.gitlabEvent.gitlabId,
-          setWhere: eq(schema.gitlabEvent.gitlabId, eventId),
+          setWhere: eq(schema.gitlabEvent.gitlabId, message.body.id),
           set: {
             insertedAt: new Date(),
             payload: event,
@@ -82,22 +79,19 @@ export async function gitlabWebhookEventsQueue(
   }
 
   // Send to processing queue for AI analysis
-  await env.GITLAB_PROCESS_EVENTS_QUEUE.sendBatch(
-    Array.from(processedEventIds).map((id) => ({
-      body: id,
-      contentType: "text",
-    })),
-  );
+  if (processedEventIds.size > 0) {
+    await env.GITLAB_PROCESS_EVENTS_QUEUE.sendBatch(
+      Array.from(processedEventIds).map((id) => ({
+        body: id,
+        contentType: "text",
+      })),
+    );
+  } else {
+    console.log("No events processed, skipping sendBatch.");
+  }
 }
 
-function generateGitlabWebhookEventId(event: GitlabWebhookEventsQueueMessage): string {
-  // Generate a unique ID for GitLab webhook events
-  const timestamp = getEventCreatedAt(event).getTime();
-  const key = `${event.project?.id}_${event.gitlab_event || event.object_kind}_${event.user?.id}_${timestamp}`;
-  return Buffer.from(key).toString('base64').replace(/[+/=]/g, '').substring(0, 32);
-}
-
-function getEventCreatedAt(event: GitlabWebhookEventsQueueMessage): Date {
+function getEventCreatedAt(event: AnyGitlabWebhookEventDefinition): Date {
   // Try different fields where GitLab might store the creation date
   if ('created_at' in event && event.created_at) {
     return new Date(event.created_at as string);
@@ -111,57 +105,61 @@ function getEventCreatedAt(event: GitlabWebhookEventsQueueMessage): Date {
   return new Date();
 }
 
-function getEventAction(event: GitlabWebhookEventsQueueMessage): string | null {
+function getEventAction(event: AnyGitlabWebhookEventDefinition): string | null {
   // Extract action from different GitLab event types
-  if ('object_attributes' in event && event.object_attributes && typeof event.object_attributes === 'object' && event.object_attributes !== null && 'action' in event.object_attributes) {
-    return event.object_attributes.action as string;
+  if ('object_attributes' in event && event.object_attributes && typeof event.object_attributes === 'object' && event.object_attributes !== null) {
+    const objAttrs = event.object_attributes as any;
+    
+    // Check for action field
+    if (objAttrs.action) {
+      return objAttrs.action as string;
+    }
+    
+    // Check for state field
+    if (objAttrs.state) {
+      return objAttrs.state as string;
+    }
+    
+    // Check for status field
+    if (objAttrs.status) {
+      return objAttrs.status as string;
+    }
   }
 
-  if ('object_attributes' in event && event.object_attributes && typeof event.object_attributes === 'object' && event.object_attributes !== null && 'state' in event.object_attributes) {
-    return event.object_attributes.state as string;
-  }
-
-  // For push events, determine if it's a create, delete, or update
-  if (event.object_kind === 'push') {
-    const pushEvent = event as any;
-    if (pushEvent.before === '0000000000000000000000000000000000000000') {
+  // For push events
+  if ('before' in event && 'after' in event) {
+    if (event.before === '0000000000000000000000000000000000000000') {
       return 'created';
     }
-    if (pushEvent.after === '0000000000000000000000000000000000000000') {
+    if (event.after === '0000000000000000000000000000000000000000') {
       return 'deleted';
     }
     return 'updated';
   }
+  
+  // For pipeline events
+  if ('object_kind' in event && event.object_kind === 'pipeline') {
+    const pipelineEvent = event as any;
+    if (pipelineEvent.object_attributes?.status) {
+      return pipelineEvent.object_attributes.status;
+    }
+  }
+  
+  // For job events
+  if ('object_kind' in event && event.object_kind === 'job') {
+    const jobEvent = event as any;
+    if (jobEvent.build_status) {
+      return jobEvent.build_status;
+    }
+  }
+  
+  // For deployment events
+  if ('object_kind' in event && event.object_kind === 'deployment') {
+    const deploymentEvent = event as any;
+    if (deploymentEvent.object_attributes?.status) {
+      return deploymentEvent.object_attributes.status;
+    }
+  }
 
   return null;
-}
-
-function mapGitlabWebhookEventType(eventType: string | undefined): string {
-  if (!eventType) return 'unknown';
-  
-  // Map GitLab webhook event types to our standardized types
-  const eventTypeMap: Record<string, string> = {
-    'push': 'push',
-    'issues': 'issues', 
-    'merge_request': 'merge_request',
-    'wiki_page': 'wiki_page',
-    'deployment': 'deployment',
-    'job': 'job',
-    'pipeline': 'pipeline',
-    'tag_push': 'tag_push',
-    'note': 'note',
-    'confidential_issues': 'confidential_issues',
-    'confidential_note': 'confidential_note',
-    'release': 'release',
-    'subgroup': 'subgroup',
-    'feature_flag': 'feature_flag',
-    'emoji': 'emoji',
-    'resource_access_token': 'resource_access_token',
-    'member': 'member',
-    'push_rule': 'push_rule',
-    'archive': 'archive',
-    'system_hook': 'system_hook'
-  };
-  
-  return eventTypeMap[eventType] || 'unknown';
 }

@@ -144,3 +144,41 @@ To enable GitHub integration, you need to create a GitHub App and configure it p
    ```
 
 After installation, your GitHub integration will allow users to connect their GitHub organizations to AsyncStatus, providing access to repository data and team information.
+
+## GitLab Integration
+
+To enable GitLab integration, you need to create a GitLab OAuth application and configure it properly:
+
+1. Go to your GitLab profile settings > Applications
+2. Click "New application"
+3. Fill in the following details:
+   - Name: AsyncStatus (or your preferred name)
+   - Redirect URI: `https://your-api-domain.com/integrations/gitlab/callback`
+   - Scopes: `read_user read_repository read_api read_merge_request read_issue read_note read_pipeline`
+4. Note the Application ID and Secret
+5. Update your environment variables:
+   ```
+   GITLAB_CLIENT_ID=your_application_id
+   GITLAB_CLIENT_SECRET=your_application_secret
+   GITLAB_INSTANCE_URL=https://gitlab.com (or your GitLab instance URL)
+   GITLAB_WEBHOOK_SECRET=your_webhook_secret
+   ```
+
+### Webhook Configuration
+
+The GitLab integration automatically sets up webhooks for all projects when syncing. Webhooks are configured to send the following events:
+
+- **Push events**: Code pushes, branch creation/deletion
+- **Issue events**: Issue creation, updates, comments
+- **Merge request events**: MR creation, updates, comments
+- **Pipeline events**: CI/CD pipeline status changes
+- **Job events**: Build job status changes
+- **Deployment events**: Deployment status changes
+- **Wiki events**: Wiki page changes
+- **Release events**: Release creation/updates
+
+### Webhook Security
+
+Webhooks are secured using a shared secret token. The `GITLAB_WEBHOOK_SECRET` environment variable should be a strong, random string that matches what's configured in GitLab.
+
+After installation, your GitLab integration will allow users to connect their GitLab organizations to AsyncStatus, providing access to repository data, team information, and real-time activity updates through webhooks.

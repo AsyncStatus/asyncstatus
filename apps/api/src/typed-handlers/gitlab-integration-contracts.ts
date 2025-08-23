@@ -41,3 +41,13 @@ export const deleteGitlabIntegrationContract = typedContract(
   z.strictObject({ idOrSlug: z.string().min(1) }),
   z.strictObject({ success: z.boolean() }),
 );
+
+export const setupGitlabWebhooksContract = typedContract(
+  "post /organizations/:idOrSlug/integrations/gitlab/setup-webhooks", 
+  z.strictObject({ idOrSlug: z.string().min(1) }),
+  z.strictObject({ 
+    success: z.boolean(),
+    webhooksCreated: z.number(),
+    errors: z.array(z.string()).optional(),
+  }),
+);

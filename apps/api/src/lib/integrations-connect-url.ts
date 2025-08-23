@@ -37,5 +37,15 @@ type GitlabIntegrationConnectUrlParams = {
 
 export function getGitlabIntegrationConnectUrl(params: GitlabIntegrationConnectUrlParams) {
   const instanceUrl = params.instanceUrl || "https://gitlab.com";
-  return `${instanceUrl}/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&state=${params.organizationSlug}&scope=read_user+read_repository+read_api`;
+  return `${instanceUrl}/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&state=${params.organizationSlug}&scope=read_user+read_repository+read_api+api`;
+}
+
+export function getGitlabWebhookUrl(apiUrl: string, integrationId: string): string {
+  return `${apiUrl}/integrations/gitlab/webhooks`;
+}
+
+export function getGitlabWebhookSecret(): string {
+  // This should be a unique secret for each integration
+  // For now, we'll use the environment variable, but ideally each integration should have its own secret
+  return process.env.GITLAB_WEBHOOK_SECRET || '';
 }
