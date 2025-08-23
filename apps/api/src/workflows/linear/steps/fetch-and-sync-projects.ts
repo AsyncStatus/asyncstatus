@@ -19,6 +19,7 @@ export async function fetchAndSyncProjects({
   const projects = await linearClient.projects({
     includeArchived: false,
   });
+  console.log("projects", projects);
 
   if (projects.nodes.length === 0) {
     return;
@@ -26,8 +27,8 @@ export async function fetchAndSyncProjects({
 
   const batchUpserts = await Promise.all(
     projects.nodes.map(async (project) => {
-      const team = await project.team;
-      
+      const team = await project.teams;
+
       return db
         .insert(schema.linearProject)
         .values({

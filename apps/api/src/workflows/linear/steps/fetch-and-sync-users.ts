@@ -20,6 +20,8 @@ export async function fetchAndSyncUsers({
     includeArchived: false,
   });
 
+  console.log("users", users);
+
   if (users.nodes.length === 0) {
     return;
   }

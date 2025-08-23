@@ -26,7 +26,7 @@ export type LinearOAuthTokenResponse = {
   access_token: string;
   token_type: string;
   expires_in: number;
-  scope: string[];
+  scope: string;
 };
 
 type CreateLinearClientParams = {
@@ -67,7 +67,7 @@ export async function exchangeLinearCodeForToken({
     throw new Error(`Failed to exchange Linear code for token: ${error}`);
   }
 
-  const data = await response.json() as LinearOAuthTokenResponse;
+  const data = (await response.json()) as LinearOAuthTokenResponse;
   return data;
 }
 
@@ -98,7 +98,7 @@ export async function refreshLinearToken({
     throw new Error(`Failed to refresh Linear token: ${error}`);
   }
 
-  const data = await response.json() as LinearOAuthTokenResponse;
+  const data = (await response.json()) as LinearOAuthTokenResponse;
   return data;
 }
 

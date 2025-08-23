@@ -7,6 +7,10 @@ import {
   githubIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
+  getLinearIntegrationContract,
+  linearIntegrationCallbackContract,
+} from "@asyncstatus/api/typed-handlers/linear-integration";
+import {
   createOnboardingRecommendedAutomationsContract,
   updateUserOnboardingContract,
 } from "@asyncstatus/api/typed-handlers/onboarding";
@@ -15,10 +19,6 @@ import {
   getSlackIntegrationContract,
   slackIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
-import {
-  getLinearIntegrationContract,
-  linearIntegrationCallbackContract,
-} from "@asyncstatus/api/typed-handlers/linear-integration";
 import {
   generateStatusUpdateContract,
   getStatusUpdateContract,
@@ -234,7 +234,12 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     }
 
     const storageKey = `onboarding:integrationFinishedAt:${organizationSlug}`;
-    type Snapshot = { github: string | null; slack: string | null; discord: string | null; linear: string | null };
+    type Snapshot = {
+      github: string | null;
+      slack: string | null;
+      discord: string | null;
+      linear: string | null;
+    };
     let prev: Snapshot | null = null;
     try {
       const raw = window.localStorage.getItem(storageKey);

@@ -1125,24 +1125,22 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
-            {linearUsers.data?.users?.length === 0 && (
+            {linearUsers.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Users ({linearUsers.data?.users?.length || 0})</h4>
-              {linearUsers.data?.users && linearUsers.data.users.length > 0 && (
+              <h4 className="font-medium">Users ({linearUsers.data?.length || 0})</h4>
+              {linearUsers.data && linearUsers.data.length > 0 && (
                 <div className="text-sm text-muted-foreground space-y-2">
-                  {linearUsers.data.users.map((user) => {
+                  {linearUsers.data.map((user) => {
                     const member = organizationMembers.data?.members.find(
-                      (member) => member.linearId === user.userId,
+                      (member) => member.linearUserId === user.userId,
                     );
 
                     return (
                       <div key={user.id} className="flex items-center gap-2">
-                        <span>
-                          {user.name || user.displayName || user.email || user.userId}
-                        </span>
+                        <span>{user.name || user.displayName || user.email || user.userId}</span>
                         <ArrowRight className="size-4" />
                         <Select
                           value={member?.id}
@@ -1193,17 +1191,19 @@ function RouteComponent() {
               )}
             </div>
 
-            {linearTeams.data?.teams?.length === 0 && (
+            {linearTeams.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No teams found.</div>
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Teams ({linearTeams.data?.teams?.length || 0})</h4>
-              {linearTeams.data?.teams && linearTeams.data.teams.length > 0 && (
+              <h4 className="font-medium">Teams ({linearTeams.data?.length || 0})</h4>
+              {linearTeams.data && linearTeams.data.length > 0 && (
                 <div className="text-sm text-muted-foreground">
-                  {linearTeams.data.teams.map((team) => (
+                  {linearTeams.data.map((team) => (
                     <div key={team.id} className="flex items-center gap-2">
-                      <span>{team.name} ({team.key})</span>
+                      <span>
+                        {team.name} ({team.key})
+                      </span>
                       {team.issueCount !== null && (
                         <span className="text-xs text-muted-foreground">
                           ({team.issueCount} issues)
@@ -1215,15 +1215,15 @@ function RouteComponent() {
               )}
             </div>
 
-            {linearProjects.data?.projects?.length === 0 && (
+            {linearProjects.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No projects found.</div>
             )}
 
             <div className="space-y-2">
-              <h4 className="font-medium">Projects ({linearProjects.data?.projects?.length || 0})</h4>
-              {linearProjects.data?.projects && linearProjects.data.projects.length > 0 && (
+              <h4 className="font-medium">Projects ({linearProjects.data?.length || 0})</h4>
+              {linearProjects.data && linearProjects.data.length > 0 && (
                 <div className="text-sm text-muted-foreground">
-                  {linearProjects.data.projects.map((project) => (
+                  {linearProjects.data.map((project) => (
                     <div key={project.id} className="flex items-center gap-2">
                       <span>{project.name}</span>
                       {project.state && (
@@ -1254,7 +1254,9 @@ function RouteComponent() {
               <h4 className="font-medium">What this integration does</h4>
               <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
                 <li>Automatically tracks your Linear activity in real-time.</li>
-                <li>Generates meaningful status updates from your issue progress and project work.</li>
+                <li>
+                  Generates meaningful status updates from your issue progress and project work.
+                </li>
                 <li>Links AsyncStatus profiles to your Linear accounts.</li>
               </ul>
             </div>
@@ -1266,7 +1268,8 @@ function RouteComponent() {
                 <li>Actions are performed by the AsyncStatus app, not individual users.</li>
                 <li>Data is encrypted in transit and at rest.</li>
                 <li>
-                  Data is used only for status update generation. We don't store sensitive project data.
+                  Data is used only for status update generation. We don't store sensitive project
+                  data.
                 </li>
               </ul>
             </div>
@@ -1278,8 +1281,8 @@ function RouteComponent() {
               </p>
               <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
                 <li>
-                  <strong>Issues & Tasks:</strong> Track issue creation, updates, status changes, and
-                  completion.
+                  <strong>Issues & Tasks:</strong> Track issue creation, updates, status changes,
+                  and completion.
                 </li>
                 <li>
                   <strong>Projects & Milestones:</strong> Monitor project progress, milestones, and

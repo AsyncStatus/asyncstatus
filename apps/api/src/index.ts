@@ -56,6 +56,13 @@ import {
   resyncGithubIntegrationHandler,
 } from "./typed-handlers/github-integration-handlers";
 import {
+  acceptInvitationHandler,
+  cancelInvitationHandler,
+  getInvitationHandler,
+  listUserInvitationsHandler,
+  rejectInvitationHandler,
+} from "./typed-handlers/invitation-handlers";
+import {
   deleteLinearIntegrationHandler,
   getLinearIntegrationHandler,
   linearIntegrationCallbackHandler,
@@ -65,13 +72,6 @@ import {
   listLinearUsersHandler,
   resyncLinearIntegrationHandler,
 } from "./typed-handlers/linear-integration-handlers";
-import {
-  acceptInvitationHandler,
-  cancelInvitationHandler,
-  getInvitationHandler,
-  listUserInvitationsHandler,
-  rejectInvitationHandler,
-} from "./typed-handlers/invitation-handlers";
 import {
   getMemberHandler,
   inviteMemberHandler,

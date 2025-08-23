@@ -1,11 +1,8 @@
 import { getDiscordIntegrationContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
-import {
-  getOrganizationContract,
-  getOrganizationUserContract,
-} from "@asyncstatus/api/typed-handlers/organization";
-import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { getLinearIntegrationContract } from "@asyncstatus/api/typed-handlers/linear-integration";
+import { getOrganizationUserContract } from "@asyncstatus/api/typed-handlers/organization";
+import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   AlertDialog,
   AlertDialogContentBlurredOverlay,
@@ -80,7 +77,7 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
 
   return (
     <>
-      <AlertDialog open={session.data?.user.showOnboarding} onOpenChange={() => {}}>
+      <AlertDialog open={Boolean(session.data?.user.showOnboarding)} onOpenChange={() => {}}>
         <AlertDialogContentBlurredOverlay
           className={cn("p-12 pb-2 sm:max-w-2xl transition-all gap-0 ring-0 outline-none")}
         >
@@ -98,16 +95,19 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
             )}
 
             <div className="flex flex-col gap-2">
-              {!hasGithubIntegration && !hasSlackIntegration && !hasDiscordIntegration && !hasLinearIntegration && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-muted-foreground mt-12 text-xs"
-                  onClick={() => setManualUpdatesDialogOpen(true)}
-                >
-                  I prefer manual updates
-                </Button>
-              )}
+              {!hasGithubIntegration &&
+                !hasSlackIntegration &&
+                !hasDiscordIntegration &&
+                !hasLinearIntegration && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground mt-12 text-xs"
+                    onClick={() => setManualUpdatesDialogOpen(true)}
+                  >
+                    I prefer manual updates
+                  </Button>
+                )}
             </div>
           </div>
         </AlertDialogContentBlurredOverlay>

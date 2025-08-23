@@ -13,14 +13,15 @@ export async function linearWebhookEventsQueue(
 
   for (const message of batch.messages) {
     try {
-      const payload = message.body;
+      const payload = message.body as any;
+      console.log("payload", payload);
 
       const integration = await db.query.linearIntegration.findFirst({
-        where: eq(schema.linearIntegration.teamId, payload.data.organizationId ?? ""),
+        where: eq(schema.linearIntegration.teamId, payload.organizationId ?? ""),
       });
 
       if (!integration) {
-        console.warn(`No Linear integration found for team ${payload.data.organizationId}`);
+        console.warn(`No Linear integration found for team ${payload.organizationId}`);
         message.ack();
         continue;
       }
@@ -31,21 +32,21 @@ export async function linearWebhookEventsQueue(
       let teamId: string | null = null;
       let userId: string | null = null;
 
-      if (payload.type === "Issue" && "id" in payload.data) {
-        issueId = payload.data.id;
-        issueIdentifier = (payload.data as any).identifier ?? null;
-        teamId = (payload.data as any).teamId ?? null;
-        projectId = (payload.data as any).projectId ?? null;
-        userId = (payload.data as any).creatorId ?? payload.actor?.id ?? null;
-      } else if (payload.type === "Project" && "id" in payload.data) {
-        projectId = payload.data.id;
-        teamId = (payload.data as any).teamId ?? null;
+      if (payload.type === "Issue" && "id" in payload) {
+        issueId = payload.id;
+        issueIdentifier = (payload as any).identifier ?? null;
+        teamId = (payload as any).teamId ?? null;
+        projectId = (payload as any).projectId ?? null;
+        userId = (payload as any).creatorId ?? payload.actor?.id ?? null;
+      } else if (payload.type === "Project" && "id" in payload) {
+        projectId = payload.id;
+        teamId = (payload as any).teamId ?? null;
         userId = payload.actor?.id ?? null;
-      } else if (payload.type === "Comment" && "id" in payload.data) {
-        issueId = (payload.data as any).issueId ?? null;
-        userId = (payload.data as any).userId ?? payload.actor?.id ?? null;
-      } else if (payload.type === "IssueLabel" && "id" in payload.data) {
-        issueId = (payload.data as any).issueId ?? null;
+      } else if (payload.type === "Comment" && "id" in payload) {
+        issueId = (payload as any).issueId ?? null;
+        userId = (payload as any).userId ?? payload.actor?.id ?? null;
+      } else if (payload.type === "IssueLabel" && "id" in payload) {
+        issueId = (payload as any).issueId ?? null;
         userId = payload.actor?.id ?? null;
       }
 

@@ -1,16 +1,13 @@
 import { dayjs } from "@asyncstatus/dayjs";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
-import { generateId } from "better-auth";
 import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as schema from "../db";
 import type {
-  TypedHandlersContext,
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
 import { createLinearClient, exchangeLinearCodeForToken } from "../lib/linear-client";
-import { requiredOrganization, requiredSession } from "./middleware";
 import {
   deleteLinearIntegrationContract,
   getLinearIntegrationContract,
@@ -21,6 +18,7 @@ import {
   listLinearUsersContract,
   resyncLinearIntegrationContract,
 } from "./linear-integration-contracts";
+import { requiredOrganization, requiredSession } from "./middleware";
 
 export const linearIntegrationCallbackHandler = typedHandler<
   TypedHandlersContextWithSession,
@@ -53,8 +51,8 @@ export const linearIntegrationCallbackHandler = typedHandler<
 
       const linearClient = createLinearClient({ accessToken: tokenResponse.access_token });
 
-      const viewer = await linearClient.viewer;
-      const organization = await linearClient.organization;
+      const linearViewer = await linearClient.viewer;
+      const linearOrganization = await linearClient.organization;
 
       const org = await db.query.organization.findFirst({
         where: eq(schema.organization.slug, organizationSlug),
@@ -92,17 +90,17 @@ export const linearIntegrationCallbackHandler = typedHandler<
         await db
           .update(schema.linearIntegration)
           .set({
-            teamId: organization.id,
-            teamName: organization.name,
-            teamKey: organization.key,
+            teamId: linearOrganization.id,
+            teamName: linearOrganization.name,
+            teamKey: linearOrganization.urlKey,
             accessToken: tokenResponse.access_token,
             refreshToken: null,
             tokenExpiresAt: tokenResponse.expires_in
               ? now.add(tokenResponse.expires_in, "second").toDate()
               : null,
-            userId: viewer.id,
-            userEmail: viewer.email,
-            scope: tokenResponse.scope.join(" "),
+            userId: linearViewer.id,
+            userEmail: linearViewer.email,
+            scope: tokenResponse.scope,
             updatedAt: now.toDate(),
             syncError: null,
             syncErrorAt: null,
@@ -112,17 +110,17 @@ export const linearIntegrationCallbackHandler = typedHandler<
         await db.insert(schema.linearIntegration).values({
           id: integrationId,
           organizationId: org.id,
-          teamId: organization.id,
-          teamName: organization.name,
-          teamKey: organization.key,
+          teamId: linearOrganization.id,
+          teamName: linearOrganization.name,
+          teamKey: linearOrganization.urlKey,
           accessToken: tokenResponse.access_token,
           refreshToken: null,
           tokenExpiresAt: tokenResponse.expires_in
             ? now.add(tokenResponse.expires_in, "second").toDate()
             : null,
-          userId: viewer.id,
-          userEmail: viewer.email,
-          scope: tokenResponse.scope.join(" "),
+          userId: linearViewer.id,
+          userEmail: linearViewer.email,
+          scope: tokenResponse.scope,
           createdAt: now.toDate(),
           updatedAt: now.toDate(),
         });
@@ -141,18 +139,28 @@ export const linearIntegrationCallbackHandler = typedHandler<
         id: workflowId,
         params: { integrationId },
       });
-      await workflowInstance.run();
 
-      return redirect(`${webAppUrl}/${organizationSlug}/settings/integrations`);
+      await db
+        .update(schema.linearIntegration)
+        .set({ syncId: workflowInstance.id, syncStartedAt: now.toDate() })
+        .where(eq(schema.linearIntegration.id, integrationId));
+
+      return redirect(webAppUrl);
     } catch (error) {
       console.error("Linear integration callback error:", error);
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Failed to connect Linear integration",
-      });
+      const message =
+        error instanceof TypedHandlersError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Failed to connect Linear integration";
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete Slack integration")}&error-description=${encodeURIComponent(
+          `${message}. Please try again.`,
+        )}`,
+      );
     }
   },
-  [requiredSession],
 );
 
 export const resyncLinearIntegrationHandler = typedHandler<
@@ -160,7 +168,9 @@ export const resyncLinearIntegrationHandler = typedHandler<
   typeof resyncLinearIntegrationContract
 >(
   resyncLinearIntegrationContract,
-  async ({ json, db, organization, member, workflow }) => {
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, member, workflow }) => {
     if (member.role !== "owner" && member.role !== "admin") {
       throw new TypedHandlersError({
         code: "FORBIDDEN",
@@ -188,18 +198,16 @@ export const resyncLinearIntegrationHandler = typedHandler<
       })
       .where(eq(schema.linearIntegration.id, integration.id));
 
-    const workflowInstance = await workflow.syncLinear.create({
+    await workflow.syncLinear.create({
       id: workflowId,
       params: { integrationId: integration.id },
     });
-    await workflowInstance.run();
 
-    return json({
+    return {
       success: true,
       workflowId,
-    });
+    };
   },
-  [requiredSession, requiredOrganization],
 );
 
 export const getLinearIntegrationHandler = typedHandler<
@@ -207,161 +215,87 @@ export const getLinearIntegrationHandler = typedHandler<
   typeof getLinearIntegrationContract
 >(
   getLinearIntegrationContract,
-  async ({ json, db, organization }) => {
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization }) => {
     const integration = await db.query.linearIntegration.findFirst({
       where: eq(schema.linearIntegration.organizationId, organization.id),
     });
 
-    return json({
-      integration: integration
-        ? {
-            id: integration.id,
-            organizationId: integration.organizationId,
-            teamId: integration.teamId,
-            teamName: integration.teamName,
-            syncStartedAt: integration.syncStartedAt,
-            syncFinishedAt: integration.syncFinishedAt,
-            syncError: integration.syncError,
-            syncErrorAt: integration.syncErrorAt,
-            createdAt: integration.createdAt,
-            updatedAt: integration.updatedAt,
-          }
-        : null,
-    });
+    return integration ?? null;
   },
-  [requiredSession, requiredOrganization],
 );
 
 export const listLinearTeamsHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof listLinearTeamsContract
->(
-  listLinearTeamsContract,
-  async ({ json, db, organization }) => {
-    const integration = await db.query.linearIntegration.findFirst({
-      where: eq(schema.linearIntegration.organizationId, organization.id),
-    });
+>(listLinearTeamsContract, requiredSession, requiredOrganization, async ({ db, organization }) => {
+  const integration = await db.query.linearIntegration.findFirst({
+    where: eq(schema.linearIntegration.organizationId, organization.id),
+  });
 
-    if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Linear integration not found",
-      });
-    }
+  if (!integration) {
+    return [];
+  }
 
-    const teams = await db.query.linearTeam.findMany({
-      where: eq(schema.linearTeam.integrationId, integration.id),
-      orderBy: [desc(schema.linearTeam.createdAt)],
-    });
+  const teams = await db.query.linearTeam.findMany({
+    where: eq(schema.linearTeam.integrationId, integration.id),
+    orderBy: [desc(schema.linearTeam.createdAt)],
+  });
 
-    return json({
-      teams: teams.map((team) => ({
-        id: team.id,
-        teamId: team.teamId,
-        name: team.name,
-        key: team.key,
-        description: team.description,
-        private: team.private,
-        issueCount: team.issueCount,
-        createdAt: team.createdAt,
-        updatedAt: team.updatedAt,
-      })),
-    });
-  },
-  [requiredSession, requiredOrganization],
-);
+  return teams;
+});
 
 export const listLinearUsersHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof listLinearUsersContract
->(
-  listLinearUsersContract,
-  async ({ json, db, organization }) => {
-    const integration = await db.query.linearIntegration.findFirst({
-      where: eq(schema.linearIntegration.organizationId, organization.id),
-    });
+>(listLinearUsersContract, requiredSession, requiredOrganization, async ({ db, organization }) => {
+  const integration = await db.query.linearIntegration.findFirst({
+    where: eq(schema.linearIntegration.organizationId, organization.id),
+  });
 
-    if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Linear integration not found",
-      });
-    }
+  if (!integration) {
+    return [];
+  }
 
-    const users = await db.query.linearUser.findMany({
-      where: eq(schema.linearUser.integrationId, integration.id),
-      orderBy: [desc(schema.linearUser.createdAt)],
-    });
+  const users = await db.query.linearUser.findMany({
+    where: eq(schema.linearUser.integrationId, integration.id),
+    orderBy: [desc(schema.linearUser.createdAt)],
+  });
 
-    return json({
-      users: users.map((user) => ({
-        id: user.id,
-        userId: user.userId,
-        email: user.email,
-        name: user.name,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        admin: user.admin,
-        active: user.active,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      })),
-    });
-  },
-  [requiredSession, requiredOrganization],
-);
+  return users;
+});
 
 export const listLinearIssuesHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof listLinearIssuesContract
 >(
   listLinearIssuesContract,
-  async ({ json, db, organization, input }) => {
-    const { limit, offset } = input;
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, input }) => {
+    const limit = input.limit ?? 50;
+    const offset = input.offset ?? 0;
 
     const integration = await db.query.linearIntegration.findFirst({
       where: eq(schema.linearIntegration.organizationId, organization.id),
     });
 
     if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Linear integration not found",
-      });
+      return [];
     }
 
-    const [issues, [{ count }]] = await Promise.all([
+    const [issues] = await Promise.all([
       db.query.linearIssue.findMany({
         where: eq(schema.linearIssue.integrationId, integration.id),
         orderBy: [desc(schema.linearIssue.createdAt)],
-        limit,
-        offset,
+        limit: limit as number,
+        offset: offset as number,
       }),
-      db
-        .select({ count: db.$count(schema.linearIssue) })
-        .from(schema.linearIssue)
-        .where(eq(schema.linearIssue.integrationId, integration.id)),
     ]);
 
-    return json({
-      issues: issues.map((issue) => ({
-        id: issue.id,
-        issueId: issue.issueId,
-        identifier: issue.identifier,
-        title: issue.title,
-        description: issue.description,
-        state: issue.state,
-        stateType: issue.stateType,
-        priority: issue.priority,
-        priorityLabel: issue.priorityLabel,
-        assigneeId: issue.assigneeId,
-        createdAt: issue.createdAt,
-        updatedAt: issue.updatedAt,
-      })),
-      total: count,
-    });
+    return issues;
   },
-  [requiredSession, requiredOrganization],
 );
 
 export const listLinearProjectsHandler = typedHandler<
@@ -369,7 +303,9 @@ export const listLinearProjectsHandler = typedHandler<
   typeof listLinearProjectsContract
 >(
   listLinearProjectsContract,
-  async ({ json, db, organization }) => {
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization }) => {
     const integration = await db.query.linearIntegration.findFirst({
       where: eq(schema.linearIntegration.organizationId, organization.id),
     });
@@ -386,22 +322,8 @@ export const listLinearProjectsHandler = typedHandler<
       orderBy: [desc(schema.linearProject.createdAt)],
     });
 
-    return json({
-      projects: projects.map((project) => ({
-        id: project.id,
-        projectId: project.projectId,
-        name: project.name,
-        key: project.key,
-        description: project.description,
-        state: project.state,
-        issueCount: project.issueCount,
-        completedIssueCount: project.completedIssueCount,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-      })),
-    });
+    return projects;
   },
-  [requiredSession, requiredOrganization],
 );
 
 export const deleteLinearIntegrationHandler = typedHandler<
@@ -409,7 +331,9 @@ export const deleteLinearIntegrationHandler = typedHandler<
   typeof deleteLinearIntegrationContract
 >(
   deleteLinearIntegrationContract,
-  async ({ json, db, organization, member, workflow }) => {
+  requiredSession,
+  requiredOrganization,
+  async ({ db, organization, member, workflow }) => {
     if (member.role !== "owner") {
       throw new TypedHandlersError({
         code: "FORBIDDEN",
@@ -436,16 +360,14 @@ export const deleteLinearIntegrationHandler = typedHandler<
       })
       .where(eq(schema.linearIntegration.id, integration.id));
 
-    const workflowInstance = await workflow.deleteLinearIntegration.create({
+    await workflow.deleteLinearIntegration.create({
       id: workflowId,
       params: { integrationId: integration.id },
     });
-    await workflowInstance.run();
 
-    return json({
+    return {
       success: true,
       workflowId,
-    });
+    };
   },
-  [requiredSession, requiredOrganization],
 );
