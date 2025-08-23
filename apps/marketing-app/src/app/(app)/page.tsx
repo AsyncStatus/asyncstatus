@@ -66,6 +66,9 @@ export default async function Page(props: {
             <Link href="#pricing" className="hover:text-foreground">
               Pricing
             </Link>
+            <Link href="#faq" className="hover:text-foreground">
+              FAQ
+            </Link>
           </div>
         </div>
 

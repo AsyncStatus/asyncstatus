@@ -22,6 +22,16 @@ const faqData = [
       "AsyncStatus currently integrates with GitHub for code activity tracking, Slack for team communication insights, and Discord for community updates. These integrations allow the platform to automatically gather context about your team's work and generate comprehensive status updates without manual input.",
   },
   {
+    question: "How do I run AsyncStatus locally for development?",
+    answer:
+      "To run AsyncStatus locally, you'll need to start both the database and applications. First, start the database with 'bun dev:turso' in the apps/api directory, then run 'bun run dev' in the same directory for the API. For the web application, navigate to apps/web-app and run 'bun run dev'. The platform uses a monorepo structure with separate applications for the API, web app, and marketing site.",
+  },
+  {
+    question: "How do database migrations work in AsyncStatus?",
+    answer:
+      "AsyncStatus uses Drizzle ORM with SQLite/Turso for database management. To create migrations: first update the schema in apps/api/src/db/schema.ts, then generate the migration with 'bun run migrate:generate', and finally apply it with 'bun run migrate'. The system automatically creates SQL migration files that can be version controlled and applied consistently across environments.",
+  },
+  {
     question: "How much time can our team save with AsyncStatus?",
     answer:
       "Remote teams using AsyncStatus typically save hundreds of hours annually by eliminating daily standups, weekly status meetings, and manual status report writing. A 10-person team spending 30 minutes daily on status updates can save over 1,300 hours per year - time that can be redirected to actual product development.",
@@ -60,30 +70,40 @@ const faqData = [
 
 export function FaqSection() {
   return (
-    <section className="mt-48">
+    <section className="mt-48" id="faq">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-balance sm:text-5xl">
             Frequently Asked Questions
           </h2>
           <p className="text-muted-foreground mt-6 text-lg text-balance sm:text-xl">
-            Everything you need to know about AsyncStatus and async status updates.
+            Everything you need to know about AsyncStatus, from getting started to technical implementation.
           </p>
         </div>
 
         <div className="mx-auto max-w-4xl">
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible className="w-full space-y-2">
             {faqData.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left text-base font-medium">
+              <AccordionItem 
+                key={index} 
+                value={`item-${index}`}
+                className="border rounded-lg px-6 py-2 bg-background/50 backdrop-blur-sm"
+              >
+                <AccordionTrigger className="text-left text-base font-medium hover:no-underline py-6">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                <AccordionContent className="text-muted-foreground text-base leading-relaxed pb-6">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+
+        <div className="text-center mt-12">
+          <p className="text-muted-foreground text-base">
+            Have more questions? Feel free to reach out to our team for additional support.
+          </p>
         </div>
       </div>
     </section>
