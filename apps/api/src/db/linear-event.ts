@@ -10,7 +10,7 @@ export const linearEvent = sqliteTable(
     integrationId: text("integration_id")
       .notNull()
       .references(() => linearIntegration.id, { onDelete: "cascade" }),
-    externalId: text("external_id").notNull(),
+    externalId: text("external_id").notNull().unique(),
     type: text("type").notNull(),
     action: text("action"),
     issueId: text("issue_id"),

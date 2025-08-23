@@ -1,5 +1,7 @@
-import { eq } from "drizzle-orm";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { VoyageAIClient } from "voyageai";
 import * as schema from "../db";
 import { createDb } from "../db/db";
 import type { HonoEnv } from "../lib/env";
@@ -30,38 +32,22 @@ export async function linearProcessEventsQueue(
         continue;
       }
 
-      const summary = await generateLinearEventSummary({
+      const openRouterProvider = createOpenRouter({ apiKey: env.OPENROUTER_API_KEY });
+      const voyageClient = new VoyageAIClient({ apiKey: env.VOYAGE_API_KEY });
+
+      const { summary, embedding } = await generateLinearEventSummary({
         event,
-        anthropicClient: new (await import("@anthropic-ai/sdk")).default({
-          apiKey: env.ANTHROPIC_API_KEY,
-        }),
+        openRouterProvider,
+        voyageClient,
       });
 
-      if (summary) {
-        const vectorId = nanoid();
-        const voyageClient = new (await import("voyageai")).VoyageAIClient({
-          apiKey: env.VOYAGE_API_KEY,
-        });
-
-        const embeddingResponse = await voyageClient.embed({
-          input: summary,
-          model: "voyage-3",
-        });
-
+      if (summary && embedding) {
         await db.insert(schema.linearEventVector).values({
-          id: vectorId,
+          id: nanoid(),
           eventId: event.id,
-          embedding: embeddingResponse.data?.[0]?.embedding ?? [],
-          content: summary,
-          metadata: {
-            type: event.type,
-            action: event.action,
-            issueId: event.issueId,
-            projectId: event.projectId,
-            userId: event.userId,
-          },
+          embeddingText: summary,
+          embedding: sql`vector32(${JSON.stringify(embedding)})`,
           createdAt: new Date(),
-          updatedAt: new Date(),
         });
       }
 

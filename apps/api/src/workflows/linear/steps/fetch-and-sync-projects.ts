@@ -16,28 +16,28 @@ export async function fetchAndSyncProjects({
   db,
   integrationId,
 }: FetchAndSyncProjectsParams) {
-  const projects = await linearClient.projects({
-    includeArchived: false,
-  });
-  console.log("projects", projects);
+  const projects = await linearClient.projects({ includeArchived: false, first: 200 });
+  let maxIterations = 10;
 
   if (projects.nodes.length === 0) {
     return;
   }
 
-  const batchUpserts = await Promise.all(
-    projects.nodes.map(async (project) => {
-      const team = await project.teams;
+  let processed = 0;
+  while (maxIterations > 0) {
+    const current = projects.nodes.slice(processed);
+    processed = projects.nodes.length;
 
+    const batchUpserts = current.map((project) => {
       return db
         .insert(schema.linearProject)
         .values({
           id: nanoid(),
           integrationId,
           projectId: project.id,
-          teamId: team?.id ?? null,
+          teamId: null,
           name: project.name,
-          key: project.key ?? null,
+          key: project.slugId ?? null,
           description: project.description ?? null,
           state: project.state,
           startDate: project.startDate ? new Date(project.startDate) : null,
@@ -48,10 +48,10 @@ export async function fetchAndSyncProjects({
           color: project.color ?? null,
           icon: project.icon ?? null,
           progress: project.progress?.toString() ?? null,
-          issueCount: project.issueCount ?? null,
-          completedIssueCount: project.completedIssueCount ?? null,
-          scopeChangeCount: project.scopeChangeCount ?? null,
-          completedScopeChangeCount: project.completedScopeChangeCount ?? null,
+          issueCount: null,
+          completedIssueCount: null,
+          scopeChangeCount: null,
+          completedScopeChangeCount: null,
           slackNewIssue: project.slackNewIssue ?? false,
           slackIssueComments: project.slackIssueComments ?? false,
           slackIssueStatuses: project.slackIssueStatuses ?? false,
@@ -62,9 +62,9 @@ export async function fetchAndSyncProjects({
           target: schema.linearProject.projectId,
           setWhere: eq(schema.linearProject.integrationId, integrationId),
           set: {
-            teamId: team?.id ?? null,
+            teamId: null,
             name: project.name,
-            key: project.key ?? null,
+            key: project.slugId ?? null,
             description: project.description ?? null,
             state: project.state,
             startDate: project.startDate ? new Date(project.startDate) : null,
@@ -75,20 +75,26 @@ export async function fetchAndSyncProjects({
             color: project.color ?? null,
             icon: project.icon ?? null,
             progress: project.progress?.toString() ?? null,
-            issueCount: project.issueCount ?? null,
-            completedIssueCount: project.completedIssueCount ?? null,
-            scopeChangeCount: project.scopeChangeCount ?? null,
-            completedScopeChangeCount: project.completedScopeChangeCount ?? null,
+            issueCount: null,
+            completedIssueCount: null,
+            scopeChangeCount: null,
+            completedScopeChangeCount: null,
             slackNewIssue: project.slackNewIssue ?? false,
             slackIssueComments: project.slackIssueComments ?? false,
             slackIssueStatuses: project.slackIssueStatuses ?? false,
             updatedAt: new Date(),
           },
         });
-    }),
-  );
+    });
 
-  if (isTuple(batchUpserts)) {
-    await db.batch(batchUpserts);
+    if (isTuple(batchUpserts)) {
+      await db.batch(batchUpserts);
+    }
+
+    if (!projects.pageInfo.hasNextPage) {
+      break;
+    }
+    await projects.fetchNext();
+    maxIterations--;
   }
 }

@@ -10,7 +10,7 @@ export const linearProject = sqliteTable(
     integrationId: text("integration_id")
       .notNull()
       .references(() => linearIntegration.id, { onDelete: "cascade" }),
-    projectId: text("project_id").notNull(),
+    projectId: text("project_id").notNull().unique(),
     teamId: text("team_id"),
     name: text("name").notNull(),
     key: text("key"),
