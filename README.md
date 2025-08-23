@@ -1,10 +1,10 @@
-# ⧗ AsyncStatus
+# AsyncStatus
 
 > **Modern status updates for async teams**
 
 AsyncStatus is a lightweight, developer-friendly platform that helps distributed teams stay synchronized without the overhead of constant meetings or status check-ins. Track progress, identify blockers, and share updates across multiple interfaces - CLI, web app, and Slack.
 
-## 🚀 Why AsyncStatus?
+## Why AsyncStatus?
 
 **The Problem:** Remote and async teams struggle with visibility. Daily standups interrupt flow, Slack updates get lost, and managers lack insight into team progress and blockers.
 
@@ -15,17 +15,17 @@ AsyncStatus is a lightweight, developer-friendly platform that helps distributed
 - **Managers** see real-time team health and can unblock work faster
 - **Everyone** stays informed without notification overload
 
-## ✨ Key Features
+## Key Features
 
-- **🖥️ CLI-First:** Git-style interface for developers (`asyncstatus edit` works like `git rebase -i`)
-- **🌐 Web Dashboard:** Rich editor with team views and analytics
-- **💬 Slack Integration:** Native slash commands and channel notifications
-- **📊 Progress Tracking:** Track completed tasks, work in progress, and blockers
-- **😊 Mood & Context:** Optional mood tracking and detailed notes
-- **📅 Time-Aware:** Natural date parsing ("yesterday", "3 days ago")
-- **🔐 Team-Ready:** Multi-team support with proper authentication
+- **CLI-First:** Git-style interface for developers (`asyncstatus edit` works like `git rebase -i`)
+- **Web Dashboard:** Rich editor with team views and analytics
+- **Slack Integration:** Native slash commands and channel notifications
+- **Progress Tracking:** Track completed tasks, work in progress, and blockers
+- **Mood & Context:** Optional mood tracking and detailed notes
+- **Time-Aware:** Natural date parsing ("yesterday", "3 days ago")
+- **Team-Ready:** Multi-team support with proper authentication
 
-## 🏗️ Architecture
+## Architecture
 
 This is a **TypeScript monorepo** built with modern tooling:
 
@@ -52,7 +52,7 @@ asyncstatus/
 - **CLI:** Go with Cobra
 - **Deployment:** Cloudflare Workers + Pages
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - [Bun](https://bun.sh) >= 1.2
@@ -81,13 +81,19 @@ bun run dev
 
 The web app will be available at `http://localhost:3000`
 
-### 4. Try the CLI (Optional)
+### 4. Start the Marketing App (Optional)
+```bash
+cd apps/marketing-app
+bun run dev
+```
+
+### 5. Try the CLI (Optional)
 ```bash
 cd apps/cli
 go run main.go version
 ```
 
-## 📖 Usage Examples
+## Usage Examples
 
 ### CLI Quick Start
 ```bash
@@ -122,21 +128,101 @@ asyncstatus show
 - Historical views and progress tracking
 - Export capabilities for reports
 
-## 🔧 Development
+## Development
 
-### Database Migrations
-When modifying the database schema:
+### Database Setup and Migrations
+
+AsyncStatus uses [Drizzle ORM](https://orm.drizzle.team/) for database management with SQLite/Turso. When making changes to the database schema, you need to create and apply migrations.
+
+#### Understanding the Migration Process
+
+1. **Schema Definition**: Database tables are defined in `apps/api/src/db/schema.ts`
+2. **Migration Generation**: After changing the schema, you generate SQL migration files
+3. **Migration Application**: Apply the migrations to update the database structure
+
+#### Steps to Create and Apply Migrations
+
+**1. Update the Schema**
+
+Edit `apps/api/src/db/schema.ts` to make your schema changes. For example, to add a new field to a table:
+
+```typescript
+export const member = sqliteTable(
+  "member",
+  {
+    id: text("id").primaryKey(),
+    // ... existing fields
+
+    // Add a new field
+    newField: text("new_field"),
+  }
+  // ... indexes
+);
+```
+
+**2. Generate the Migration**
+
+Run the migration generation script from the API directory:
 
 ```bash
 cd apps/api
-
-# 1. Update schema in src/db/schema.ts
-# 2. Generate migration
 bun run migrate:generate
+```
 
-# 3. Apply migration
+This will create a new SQL migration file in the `apps/api/drizzle` directory (e.g., `0006_new_migration.sql`).
+
+**3. Apply the Migration**
+
+Apply the migration to update the database:
+
+```bash
+cd apps/api
 bun run migrate
 ```
+
+#### Example: Adding a Slack Username Field
+
+Here's an example of how we added the `slackUsername` field to the `member` table:
+
+1. **Updated the schema** in `apps/api/src/db/schema.ts`:
+
+   ```typescript
+   export const member = sqliteTable(
+     "member",
+     {
+       // ... existing fields
+       // Optional Slack username - nullable by default
+       slackUsername: text("slack_username"),
+       // ... other fields
+     }
+     // ... indexes
+   );
+   ```
+
+2. **Generated the migration**:
+
+   ```bash
+   cd apps/api
+   bun run migrate:generate
+   ```
+
+   This created `apps/api/drizzle/0005_flashy_polaris.sql` with:
+
+   ```sql
+   ALTER TABLE `member` ADD `slack_username` text;
+   ```
+
+3. **Applied the migration**:
+   ```bash
+   cd apps/api
+   bun run migrate
+   ```
+
+#### Troubleshooting
+
+- **Migration not applying**: Make sure your local database is running (`bun dev:turso`)
+- **Schema errors**: Check the Drizzle ORM documentation for correct type definitions
+- **Conflict errors**: If you have conflicts between local and remote databases, you may need to reset your local database or use `drizzle-kit push --force`
 
 ### Running Tests
 ```bash
@@ -158,7 +244,7 @@ bun run lint
 bun run typecheck
 ```
 
-## 🚢 Deployment
+## Deployment
 
 ### API (Cloudflare Workers)
 ```bash
@@ -180,7 +266,7 @@ bun run deploy
 ### CLI Releases
 CLI binaries are built and released automatically via GitHub Actions.
 
-## 🏢 For Teams
+## For Teams
 
 AsyncStatus is designed for teams who value:
 
@@ -195,20 +281,118 @@ AsyncStatus is designed for teams who value:
 - Agencies managing multiple client projects
 - Any team practicing async-first communication
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! This section provides everything you need to get started with local development.
+
+### Prerequisites
+
+- [Bun](https://bun.sh) >= 1.2
+- [Go](https://golang.org) >= 1.21 (for CLI development)
+- [Git](https://git-scm.com)
+
+### Local Development Setup
+
+1. **Fork and Clone**
+   ```bash
+   git clone https://github.com/yourusername/asyncstatus.git
+   cd asyncstatus
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Set up Environment Variables**
+   ```bash
+   cd apps/api
+   cp .dev.vars.example .dev.vars
+   # Edit .dev.vars with your configuration
+   ```
+
+4. **Start the Database**
+   ```bash
+   cd apps/api
+   bun dev:turso
+   ```
+
+5. **Run Database Migrations**
+   ```bash
+   # In a new terminal, from apps/api directory
+   bun run migrate
+   ```
+
+6. **Start the API Server**
+   ```bash
+   # From apps/api directory
+   bun run dev
+   ```
+
+7. **Start the Web App**
+   ```bash
+   # In a new terminal
+   cd apps/web-app
+   bun run dev
+   ```
+
+8. **Start the Marketing App (Optional)**
+   ```bash
+   # In a new terminal
+   cd apps/marketing-app
+   bun run dev
+   ```
 
 ### Project Structure
+
 - Each `apps/*` directory has its own README with specific setup instructions
 - Shared code lives in `packages/*`
 - Use [Conventional Commits](https://conventionalcommits.org/) for commit messages
+- Follow the existing code style and patterns
 
-## 📜 License
+### Making Changes
+
+1. **Create a Feature Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make Your Changes**
+   - Follow the existing code patterns
+   - Add tests for new functionality
+   - Update documentation as needed
+
+3. **Test Your Changes**
+   ```bash
+   bun test
+   bun run typecheck
+   bun run lint
+   ```
+
+4. **Commit and Push**
+   ```bash
+   git add .
+   git commit -m "feat: add your feature description"
+   git push origin feature/your-feature-name
+   ```
+
+5. **Create a Pull Request**
+   - Describe your changes clearly
+   - Reference any related issues
+   - Ensure all CI checks pass
+
+### Development Tips
+
+- **Hot Reloading**: All development servers support hot reloading
+- **Database**: Use `bun dev:turso` for a local SQLite database that matches production
+- **CLI Testing**: Build the CLI with `go build` in the `apps/cli` directory
+- **Debugging**: Each app has debug configurations for popular IDEs
+
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## 🔗 Links
+## Links
 
 - **Website:** [asyncstatus.com](https://asyncstatus.com)
 - **Documentation:** [docs.asyncstatus.com](https://docs.asyncstatus.com)
@@ -217,4 +401,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-Built with ❤️ by the AsyncStatus team
+Built with love by the AsyncStatus team
