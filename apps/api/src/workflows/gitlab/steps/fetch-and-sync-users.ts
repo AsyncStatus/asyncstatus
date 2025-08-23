@@ -18,8 +18,8 @@ export async function fetchAndSyncGitlabUsers({
   integrationId,
 }: FetchAndSyncGitlabUsersParams) {
   const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'Accept': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "application/json",
   };
 
   // Get all projects for this integration first
@@ -29,23 +29,26 @@ export async function fetchAndSyncGitlabUsers({
   });
 
   const userIds = new Set<string>();
-  
+
   // Fetch users from all projects
   for (const project of projects) {
     let page = 1;
     const perPage = 100;
-    
-    while (true) {
+    let maxIterations = 10;
+
+    while (maxIterations > 0) {
       const url = `${instanceUrl}/api/v4/projects/${project.projectId}/members/all?per_page=${perPage}&page=${page}`;
       const response = await fetch(url, { headers });
-      
+
       if (!response.ok) {
-        console.warn(`Failed to fetch members for project ${project.projectId}: ${response.status}`);
+        console.warn(
+          `Failed to fetch members for project ${project.projectId}: ${response.status}`,
+        );
         break;
       }
-      
+
       const members = await response.json();
-      
+
       if (!Array.isArray(members) || members.length === 0) {
         break;
       }
@@ -58,28 +61,29 @@ export async function fetchAndSyncGitlabUsers({
       }
 
       // Check if there are more pages
-      const totalPages = response.headers.get('X-Total-Pages');
+      const totalPages = response.headers.get("X-Total-Pages");
       if (totalPages && page >= parseInt(totalPages)) {
         break;
       }
-      
+
       page++;
+      maxIterations--;
     }
   }
 
   // Now fetch detailed user information for each unique user
   const batchUpserts = [];
-  
+
   for (const userId of userIds) {
     try {
       const userResponse = await fetch(`${instanceUrl}/api/v4/users/${userId}`, { headers });
-      
+
       if (!userResponse.ok) {
         console.warn(`Failed to fetch user ${userId}: ${userResponse.status}`);
         continue;
       }
-      
-      const user = await userResponse.json() as {
+
+      const user = (await userResponse.json()) as {
         id: number;
         username: string;
         name?: string;
@@ -87,7 +91,7 @@ export async function fetchAndSyncGitlabUsers({
         avatar_url?: string;
         web_url: string;
       };
-      
+
       batchUpserts.push(
         db
           .insert(schema.gitlabUser)
@@ -114,7 +118,7 @@ export async function fetchAndSyncGitlabUsers({
               webUrl: user.web_url,
               updatedAt: new Date(),
             },
-          })
+          }),
       );
     } catch (error) {
       console.warn(`Error fetching user ${userId}:`, error);

@@ -15,67 +15,79 @@ export type GitlabWebhookEventsQueueMessage = {
 export async function gitlabWebhookEventsQueue(
   batch: MessageBatch<GitlabWebhookEventsQueueMessage>,
   env: Bindings,
-  ctx: ExecutionContext,
+  _ctx: ExecutionContext,
 ) {
   const db = createDb(env);
   const processedEventIds = new Set<string>();
   const batchUpserts = [];
 
   for (const message of batch.messages) {
-    console.log(`Processing ${message.body.name} event`);
-    processedEventIds.add(message.body.id);
+    const event = message.body as any;
+    console.log(`Processing ${getGitlabEventName(event)} event`);
+    const id = nanoid();
+    const gitlabId = nanoid();
+    processedEventIds.add(gitlabId);
     message.ack();
 
-    const event = message.body.payload;
     if (!event.project?.id) {
       console.log("No project found in GitLab event.");
       continue;
     }
 
-    // Find corresponding project in our database
     const project = await db.query.gitlabProject.findFirst({
       where: eq(schema.gitlabProject.projectId, event.project.id.toString()),
       with: { integration: true },
     });
-    
+
     if (!project) {
       console.log(`GitLab project ${event.project.id} not found in database.`);
       continue;
     }
 
-    // Skip events without user info
-    if (!event.user?.id) {
-      console.log("No user found in GitLab event.");
-      continue;
-    }
+    console.log({
+      id,
+      gitlabId,
+      gitlabActorId: getGitlabActorIdFromQueueMessage(message.body),
+      projectId: project.id,
+      type: getGitlabEventName(event),
+      action: getActionName(event),
+      payload: JSON.parse(JSON.stringify(event)),
+      createdAt: getEventCreatedAt(event),
+      insertedAt: new Date(),
+    });
 
     batchUpserts.push(
       db
         .insert(schema.gitlabEvent)
         .values({
-          id: nanoid(),
-          gitlabId: message.body.id,
-          gitlabActorId: event.user.id.toString(),
+          id,
+          gitlabId,
+          gitlabActorId: getGitlabActorIdFromQueueMessage(message.body),
           projectId: project.id,
-          type: message.body.name,
-          action: getEventAction(event),
-          payload: event,
+          type: getGitlabEventName(event),
+          action: getActionName(event),
+          payload: JSON.parse(JSON.stringify(event)),
           createdAt: getEventCreatedAt(event),
           insertedAt: new Date(),
         })
         .onConflictDoUpdate({
           target: schema.gitlabEvent.gitlabId,
-          setWhere: eq(schema.gitlabEvent.gitlabId, message.body.id),
+          setWhere: eq(schema.gitlabEvent.gitlabId, gitlabId),
           set: {
             insertedAt: new Date(),
-            payload: event,
+            payload: JSON.parse(JSON.stringify(event)),
           },
-        })
+        }),
     );
   }
 
   if (isTuple(batchUpserts)) {
-    await db.batch(batchUpserts);
+    try {
+      await db.batch(batchUpserts);
+    } catch (error) {
+      console.error("Error inserting GitLab events:", error);
+      throw error;
+    }
   }
 
   // Send to processing queue for AI analysis
@@ -93,11 +105,17 @@ export async function gitlabWebhookEventsQueue(
 
 function getEventCreatedAt(event: AnyGitlabWebhookEventDefinition): Date {
   // Try different fields where GitLab might store the creation date
-  if ('created_at' in event && event.created_at) {
+  if ("created_at" in event && event.created_at) {
     return new Date(event.created_at as string);
   }
-  
-  if ('object_attributes' in event && event.object_attributes && typeof event.object_attributes === 'object' && event.object_attributes !== null && 'created_at' in event.object_attributes) {
+
+  if (
+    "object_attributes" in event &&
+    event.object_attributes &&
+    typeof event.object_attributes === "object" &&
+    event.object_attributes !== null &&
+    "created_at" in event.object_attributes
+  ) {
     return new Date(event.object_attributes.created_at as string);
   }
 
@@ -105,61 +123,71 @@ function getEventCreatedAt(event: AnyGitlabWebhookEventDefinition): Date {
   return new Date();
 }
 
-function getEventAction(event: AnyGitlabWebhookEventDefinition): string | null {
-  // Extract action from different GitLab event types
-  if ('object_attributes' in event && event.object_attributes && typeof event.object_attributes === 'object' && event.object_attributes !== null) {
-    const objAttrs = event.object_attributes as any;
-    
-    // Check for action field
-    if (objAttrs.action) {
-      return objAttrs.action as string;
-    }
-    
-    // Check for state field
-    if (objAttrs.state) {
-      return objAttrs.state as string;
-    }
-    
-    // Check for status field
-    if (objAttrs.status) {
-      return objAttrs.status as string;
+function getGitlabActorId(event: AnyGitlabWebhookEventDefinition): string {
+  // Prefer explicit user field if present
+  const anyEvent = event as unknown as Record<string, unknown>;
+  if ("user" in anyEvent && isRecord(anyEvent.user)) {
+    const user = anyEvent.user as Record<string, unknown>;
+    if (typeof user.id === "number") return String(user.id);
+  }
+
+  // Push events expose user_id at the top level
+  if (typeof (anyEvent as Record<string, unknown>).user_id === "number") {
+    return String((anyEvent as Record<string, unknown>).user_id);
+  }
+
+  // Many events include author_id in object_attributes
+  if ("object_attributes" in anyEvent && isRecord(anyEvent.object_attributes)) {
+    const attrs = anyEvent.object_attributes as Record<string, unknown>;
+    if (typeof attrs.author_id === "number") return String(attrs.author_id);
+  }
+
+  // Pipeline builds may include a user per build; take the first available
+  if (Array.isArray((anyEvent as Record<string, unknown>).builds)) {
+    const builds = (anyEvent as Record<string, unknown>).builds as unknown[];
+    for (const build of builds) {
+      if (isRecord(build) && isRecord(build.user) && typeof build.user.id === "number") {
+        return String(build.user.id);
+      }
     }
   }
 
-  // For push events
-  if ('before' in event && 'after' in event) {
-    if (event.before === '0000000000000000000000000000000000000000') {
-      return 'created';
-    }
-    if (event.after === '0000000000000000000000000000000000000000') {
-      return 'deleted';
-    }
-    return 'updated';
-  }
-  
-  // For pipeline events
-  if ('object_kind' in event && event.object_kind === 'pipeline') {
-    const pipelineEvent = event as any;
-    if (pipelineEvent.object_attributes?.status) {
-      return pipelineEvent.object_attributes.status;
-    }
-  }
-  
-  // For job events
-  if ('object_kind' in event && event.object_kind === 'job') {
-    const jobEvent = event as any;
-    if (jobEvent.build_status) {
-      return jobEvent.build_status;
-    }
-  }
-  
-  // For deployment events
-  if ('object_kind' in event && event.object_kind === 'deployment') {
-    const deploymentEvent = event as any;
-    if (deploymentEvent.object_attributes?.status) {
-      return deploymentEvent.object_attributes.status;
-    }
-  }
+  // Fallback when actor is not provided (system/webhook-triggered)
+  return "webhook";
+}
 
+function getGitlabActorIdFromQueueMessage(
+  message: GitlabWebhookEventsQueueMessage | AnyGitlabWebhookEventDefinition,
+): string {
+  const event = hasPayload(message) ? message.payload : message;
+  return getGitlabActorId(event as AnyGitlabWebhookEventDefinition);
+}
+
+function getGitlabEventName(event: AnyGitlabWebhookEventDefinition): string {
+  const anyEvent = event as unknown as Record<string, unknown> | undefined | null;
+  if (anyEvent && typeof anyEvent.object_kind === "string") return anyEvent.object_kind;
+  if (anyEvent && typeof anyEvent.event_type === "string") return anyEvent.event_type;
+  return "unknown";
+}
+
+function getActionName(event: AnyGitlabWebhookEventDefinition): string | null {
+  const anyEvent = event as unknown as Record<string, unknown>;
+  if (typeof anyEvent.action_name === "string" && anyEvent.action_name) {
+    return anyEvent.action_name;
+  }
+  if (
+    isRecord(anyEvent.object_attributes) &&
+    typeof anyEvent.object_attributes.action === "string"
+  ) {
+    return anyEvent.object_attributes.action as string;
+  }
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function hasPayload(value: unknown): value is GitlabWebhookEventsQueueMessage {
+  return isRecord(value) && "payload" in value;
 }

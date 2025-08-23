@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
-import { z } from "zod/v4";
+import { z } from "zod";
 import * as schema from "../../db";
 import type { Db } from "../../db/db";
 
@@ -9,7 +9,7 @@ export function getGitlabUserTool(db: Db) {
     description: "Get GitLab user details",
     parameters: z.object({
       gitlabId: z.string(),
-    }) as any,
+    }),
     execute: async ({ gitlabId }) => {
       const user = await db.query.gitlabUser.findFirst({
         where: eq(schema.gitlabUser.gitlabId, gitlabId),

@@ -2,17 +2,11 @@ import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, desc, eq } from "drizzle-orm";
 import * as schema from "../db";
-import { 
-  setupGitlabProjectWebhook, 
-  findWebhookByUrl, 
-  testGitlabApiConnection,
-  getWebhookSetupInfo 
-} from "../lib/gitlab-webhook";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
-import { requiredOrganization, requiredSession } from "./middleware";
+import { findWebhookByUrl, setupGitlabProjectWebhook } from "../lib/gitlab-webhook";
 import {
   deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
@@ -22,6 +16,7 @@ import {
   resyncGitlabIntegrationContract,
   setupGitlabWebhooksContract,
 } from "./gitlab-integration-contracts";
+import { requiredOrganization, requiredSession } from "./middleware";
 
 export const gitlabIntegrationCallbackHandler = typedHandler<
   TypedHandlersContextWithSession,
@@ -32,30 +27,15 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
   async ({ redirect, webAppUrl, db, input, workflow, session, bucket, betterAuthUrl, gitlab }) => {
     try {
       const { code, state: organizationSlug, redirect: redirectUrl } = input;
-      
+
       if (!code) {
         throw new TypedHandlersError({
-          code: "BAD_REQUEST", 
+          code: "BAD_REQUEST",
           message: "Missing authorization code",
         });
       }
 
-      // Exchange authorization code for access token
-      // The redirect URI must match EXACTLY what was sent in the OAuth request
-      // Since the callback is to the API, we need to use the API endpoint URL
-      // Use betterAuthUrl which should be the API base URL
       const redirectUri = `${betterAuthUrl}${gitlabIntegrationCallbackContract.url()}`;
-      console.log("GitLab OAuth token exchange:", {
-        client_id: gitlab.clientId,
-        code,
-        redirect_uri: redirectUri,
-        webAppUrl,
-        betterAuthUrl,
-        input: input, // Log the full input to see what we received
-        organizationSlug,
-        redirectUrl,
-      });
-      
       const tokenResponse = await fetch("https://gitlab.com/oauth/token", {
         method: "POST",
         headers: {
@@ -72,19 +52,13 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
-        console.error("GitLab token exchange failed:", {
-          status: tokenResponse.status,
-          statusText: tokenResponse.statusText,
-          error: errorText,
-          headers: Object.fromEntries(tokenResponse.headers.entries()),
-        });
         throw new TypedHandlersError({
           code: "UNAUTHORIZED",
           message: `Failed to exchange authorization code for access token: ${errorText}`,
         });
       }
 
-      const tokenData = await tokenResponse.json() as {
+      const tokenData = (await tokenResponse.json()) as {
         access_token: string;
         refresh_token?: string;
         expires_in?: number;
@@ -131,8 +105,8 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
       const gitlabInstanceUrl = "https://gitlab.com"; // Default to GitLab.com for now
       const userResponse = await fetch(`${gitlabInstanceUrl}/api/v4/user`, {
         headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: "application/json",
         },
       });
 
@@ -143,7 +117,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         });
       }
 
-      const gitlabUser = await userResponse.json() as {
+      const gitlabUser = (await userResponse.json()) as {
         id: number;
         name?: string;
         username: string;
@@ -192,7 +166,9 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
           gitlabInstanceUrl,
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token || null,
-          tokenExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null,
+          tokenExpiresAt: tokenData.expires_in
+            ? new Date(Date.now() + tokenData.expires_in * 1000)
+            : null,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -204,170 +180,18 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         );
       }
 
-      // Set up webhook for the integration immediately
-      let webhookSetupError: string | null = null;
-      try {
-        const webhookUrl = `${betterAuthUrl}/integrations/gitlab/webhooks`;
-        const webhookSecret = gitlab?.webhookSecret;
-        
-        console.log(`🚀 GitLab webhook setup initiated`);
-        console.log(`   - Secret available: ${!!webhookSecret}`);
-        console.log(`   - Webhook URL: ${webhookUrl}`);
-        console.log(`   - GitLab instance: ${gitlabInstanceUrl}`);
-        
-        if (!webhookSecret) {
-          webhookSetupError = "GitLab webhook secret not configured - please set GITLAB_WEBHOOK_SECRET environment variable.";
-          console.warn(`⚠️ ${webhookSetupError}`);
-        } else {
-          // Test GitLab API connection first
-          console.log(`🔍 Testing GitLab API connection...`);
-          const connectionTest = await testGitlabApiConnection(tokenData.access_token, gitlabInstanceUrl);
-          
-          if (!connectionTest.success) {
-            webhookSetupError = `GitLab API connection failed: ${connectionTest.error}`;
-            console.error(`❌ ${webhookSetupError}`);
-          } else {
-            console.log(`✅ GitLab API connection successful`);
-            console.log(`   - User: ${connectionTest.user?.username || 'Unknown'} (ID: ${connectionTest.user?.id || 'Unknown'})`);
-            
-            // Get user's GitLab projects to set up webhooks
-            console.log(`🔍 Fetching GitLab projects...`);
-            const projectsResponse = await fetch(`${gitlabInstanceUrl}/api/v4/projects?membership=true&per_page=100`, {
-              headers: {
-                'Authorization': `Bearer ${tokenData.access_token}`,
-                'Accept': 'application/json',
-              },
-            });
-            
-            console.log(`📊 GitLab projects API response: ${projectsResponse.status} ${projectsResponse.statusText}`);
-            
-            if (projectsResponse.ok) {
-              const projects = await projectsResponse.json() as Array<{
-                id: number;
-                path_with_namespace: string;
-                web_url: string;
-              }>;
-              
-              console.log(`📁 Found ${projects.length} GitLab projects for webhook setup`);
-              
-              if (projects.length === 0) {
-                webhookSetupError = "No GitLab projects found. User might not have access to any projects or the OAuth scopes might be insufficient.";
-                console.warn(`⚠️ ${webhookSetupError}`);
-                console.warn("   - Required scopes: read_user, read_repository, read_api, api");
-              }
-              
-              // Set up webhooks for each project
-              let webhooksCreated = 0;
-              let webhooksSkipped = 0;
-              let webhooksFailed = 0;
-              const failedProjects: string[] = [];
-              
-              for (const project of projects) {
-                try {
-                  console.log(`🔧 Setting up webhook for project: ${project.path_with_namespace} (ID: ${project.id})`);
-                  
-                  // Get detailed webhook setup info for debugging
-                  const setupInfo = await getWebhookSetupInfo(
-                    tokenData.access_token,
-                    gitlabInstanceUrl,
-                    project.id.toString(),
-                    webhookUrl
-                  );
-                  
-                  if (!setupInfo.projectAccess) {
-                    console.warn(`⚠️ No access to project ${project.path_with_namespace}: ${setupInfo.error}`);
-                    webhooksFailed++;
-                    failedProjects.push(`${project.path_with_namespace} (no access)`);
-                    continue;
-                  }
-                  
-                  if (!setupInfo.canCreateWebhook) {
-                    console.warn(`⚠️ Cannot create webhooks for project ${project.path_with_namespace} - insufficient permissions`);
-                    webhooksFailed++;
-                    failedProjects.push(`${project.path_with_namespace} (insufficient permissions)`);
-                    continue;
-                  }
-                  
-                  // Check if webhook already exists
-                  const existingWebhook = setupInfo.existingWebhooks.find(webhook => webhook.url === webhookUrl);
-                  
-                  if (existingWebhook) {
-                    console.log(`✅ Webhook already exists for project: ${project.path_with_namespace} (ID: ${existingWebhook.id})`);
-                    webhooksSkipped++;
-                  } else {
-                    const webhook = await setupGitlabProjectWebhook({
-                      accessToken: tokenData.access_token,
-                      instanceUrl: gitlabInstanceUrl,
-                      projectId: project.id.toString(),
-                      webhookUrl,
-                      webhookSecret,
-                    });
-                    console.log(`✅ Webhook configured for project: ${project.path_with_namespace} (Webhook ID: ${webhook.id})`);
-                    webhooksCreated++;
-                  }
-                } catch (error) {
-                  console.error(`❌ Failed to set up webhook for project ${project.path_with_namespace}:`, error);
-                  webhooksFailed++;
-                  failedProjects.push(`${project.path_with_namespace} (${error})`);
-                  // Continue with other projects
-                }
-              }
-              
-              console.log(`📊 Webhook setup summary:`);
-              console.log(`   - Created: ${webhooksCreated}`);
-              console.log(`   - Skipped (already exist): ${webhooksSkipped}`);
-              console.log(`   - Failed: ${webhooksFailed}`);
-              console.log(`   - Total projects: ${projects.length}`);
-              
-              if (webhooksFailed > 0) {
-                webhookSetupError = `Failed to set up webhooks for ${webhooksFailed} projects: ${failedProjects.join(", ")}`;
-              }
-              
-            } else {
-              const errorText = await projectsResponse.text();
-              webhookSetupError = `Failed to fetch GitLab projects for webhook setup. Status: ${projectsResponse.status}, Error: ${errorText}`;
-              console.error(`❌ ${webhookSetupError}`);
-            }
-          }
-        }
-      } catch (error) {
-        webhookSetupError = `Failed to set up GitLab webhooks: ${error}`;
-        console.error(`❌ ${webhookSetupError}`);
-      }
-      
-      // Update integration with webhook setup error if any
-      if (webhookSetupError) {
-        await db
-          .update(schema.gitlabIntegration)
-          .set({
-            syncError: webhookSetupError,
-            syncErrorAt: new Date(),
-          })
-          .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
-      }
+      const workflowInstance = await workflow.syncGitlab.create({
+        params: { integrationId: newGitlabIntegration.id },
+      });
 
-      // Trigger sync workflow (if available)
-      if (workflow.syncGitlab) {
-        try {
-          const workflowInstance = await workflow.syncGitlab.create({
-            params: { integrationId: newGitlabIntegration.id },
-          });
-
-          await db
-            .update(schema.gitlabIntegration)
-            .set({
-              syncId: workflowInstance.id,
-              syncStartedAt: new Date(),
-              syncUpdatedAt: new Date(),
-            })
-            .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
-        } catch (error) {
-          console.error("Failed to start GitLab sync workflow:", error);
-          // Continue without failing the integration creation
-        }
-      } else {
-        console.warn("GitLab sync workflow not configured");
-      }
+      await db
+        .update(schema.gitlabIntegration)
+        .set({
+          syncId: workflowInstance.id,
+          syncStartedAt: new Date(),
+          syncUpdatedAt: new Date(),
+        })
+        .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
 
       return redirect(
         `${webAppUrl}/${targetOrganizationSlug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
@@ -474,23 +298,18 @@ export const listGitlabProjectsHandler = typedHandler<
 export const listGitlabUsersHandler = typedHandler<
   TypedHandlersContextWithOrganization,
   typeof listGitlabUsersContract
->(
-  listGitlabUsersContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization }) => {
-    const integration = await db.query.gitlabIntegration.findFirst({
-      where: eq(schema.gitlabIntegration.organizationId, organization.id),
-      with: {
-        users: {
-          orderBy: [schema.gitlabUser.username],
-        },
+>(listGitlabUsersContract, requiredSession, requiredOrganization, async ({ db, organization }) => {
+  const integration = await db.query.gitlabIntegration.findFirst({
+    where: eq(schema.gitlabIntegration.organizationId, organization.id),
+    with: {
+      users: {
+        orderBy: [schema.gitlabUser.username],
       },
-    });
+    },
+  });
 
-    return integration?.users || [];
-  },
-);
+  return integration?.users || [];
+});
 
 export const deleteGitlabIntegrationHandler = typedHandler<
   TypedHandlersContextWithOrganization,
@@ -596,7 +415,7 @@ export const setupGitlabWebhooksHandler = typedHandler<
             integration.accessToken,
             integration.gitlabInstanceUrl,
             project.projectId,
-            webhookUrl
+            webhookUrl,
           );
 
           if (existingWebhook) {
@@ -610,7 +429,9 @@ export const setupGitlabWebhooksHandler = typedHandler<
               webhookSecret,
             });
             webhooksCreated++;
-            console.log(`✅ Webhook configured for project: ${project.pathWithNamespace} (Webhook ID: ${webhook.id})`);
+            console.log(
+              `✅ Webhook configured for project: ${project.pathWithNamespace} (Webhook ID: ${webhook.id})`,
+            );
           }
         } catch (error) {
           const errorMessage = `Failed to set up webhook for project ${project.pathWithNamespace}: ${error}`;
@@ -631,15 +452,15 @@ export const setupGitlabWebhooksHandler = typedHandler<
           .where(eq(schema.gitlabIntegration.id, integration.id));
       }
 
-      return { 
-        success: errors.length === 0, 
+      return {
+        success: errors.length === 0,
         webhooksCreated,
         errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
       const errorMessage = `Failed to set up GitLab webhooks: ${error}`;
       console.error(`❌ ${errorMessage}`);
-      
+
       // Update integration status with error
       await db
         .update(schema.gitlabIntegration)

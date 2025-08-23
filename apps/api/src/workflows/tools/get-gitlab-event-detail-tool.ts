@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { eq } from "drizzle-orm";
-import { z } from "zod/v4";
+import { z } from "zod";
 import * as schema from "../../db";
 import type { Db } from "../../db/db";
 
@@ -9,7 +9,7 @@ export function getGitlabEventDetailTool(db: Db) {
     description: "Get full details of a specific GitLab event",
     parameters: z.object({
       eventId: z.string(),
-    }) as any,
+    }),
     execute: async ({ eventId }) => {
       const event = await db.query.gitlabEvent.findFirst({
         where: eq(schema.gitlabEvent.id, eventId),

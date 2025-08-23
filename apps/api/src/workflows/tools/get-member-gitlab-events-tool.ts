@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
-import { z } from "zod/v4";
+import { z } from "zod";
 import * as schema from "../../db";
 import type { Db } from "../../db/db";
 
@@ -13,13 +13,13 @@ export function getMemberGitlabEventsTool(db: Db) {
       effectiveFrom: z.string(),
       effectiveTo: z.string(),
       projectIds: z.array(z.string()).optional(),
-    }) as any,
+    }),
     execute: async ({ organizationId, memberId, effectiveFrom, effectiveTo, projectIds }) => {
       // Get member's GitLab ID
       const member = await db.query.member.findFirst({
         where: and(
           eq(schema.member.id, memberId),
-          eq(schema.member.organizationId, organizationId)
+          eq(schema.member.organizationId, organizationId),
         ),
         columns: { gitlabId: true },
       });
@@ -51,13 +51,15 @@ export function getMemberGitlabEventsTool(db: Db) {
         const matchingProjects = await db
           .select({ id: schema.gitlabProject.id })
           .from(schema.gitlabProject)
-          .where(and(
-            eq(schema.gitlabProject.integrationId, integration.id),
-            inArray(schema.gitlabProject.projectId, projectIds)
-          ));
-        
+          .where(
+            and(
+              eq(schema.gitlabProject.integrationId, integration.id),
+              inArray(schema.gitlabProject.projectId, projectIds),
+            ),
+          );
+
         if (matchingProjects.length > 0) {
-          const projectDbIds = matchingProjects.map(p => p.id);
+          const projectDbIds = matchingProjects.map((p) => p.id);
           conditions.push(inArray(schema.gitlabEvent.projectId, projectDbIds));
         } else {
           // No matching projects found, return empty result
@@ -80,7 +82,7 @@ export function getMemberGitlabEventsTool(db: Db) {
         .limit(100);
 
       // Get project and vector data separately
-      const eventProjectIds = events.map(e => e.projectId);
+      const eventProjectIds = new Set(events.map((e) => e.projectId));
       const projects = await db
         .select({
           id: schema.gitlabProject.id,
@@ -90,22 +92,22 @@ export function getMemberGitlabEventsTool(db: Db) {
           webUrl: schema.gitlabProject.webUrl,
         })
         .from(schema.gitlabProject)
-        .where(inArray(schema.gitlabProject.id, eventProjectIds));
+        .where(inArray(schema.gitlabProject.id, Array.from(eventProjectIds)));
 
-      const eventIds = events.map(e => e.id);
+      const eventIds = new Set(events.map((e) => e.id));
       const vectors = await db
         .select({
           eventId: schema.gitlabEventVector.eventId,
           embeddingText: schema.gitlabEventVector.embeddingText,
         })
         .from(schema.gitlabEventVector)
-        .where(inArray(schema.gitlabEventVector.eventId, eventIds))
+        .where(inArray(schema.gitlabEventVector.eventId, Array.from(eventIds)))
         .limit(100);
 
       return events.map((event) => {
-        const project = projects.find(p => p.id === event.projectId);
-        const vector = vectors.find(v => v.eventId === event.id);
-        
+        const project = projects.find((p) => p.id === event.projectId);
+        const vector = vectors.find((v) => v.eventId === event.id);
+
         return {
           id: event.id,
           gitlabId: event.gitlabId,

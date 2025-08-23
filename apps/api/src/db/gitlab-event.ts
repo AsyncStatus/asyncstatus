@@ -1,6 +1,6 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
-import type { GitlabWebhookEventName, AnyGitlabWebhookEventDefinition } from "../lib/gitlab-event-definition";
+import type { AnyGitlabWebhookEventDefinition } from "../lib/gitlab-event-definition";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { gitlabProject } from "./gitlab-project";
 
@@ -33,28 +33,18 @@ export const gitlabEvent = sqliteTable(
 export const GitlabEvent = createSelectSchema(gitlabEvent, {
   gitlabId: z.string().trim().min(1),
   gitlabActorId: z.string().trim().min(1),
-  type: z.string().trim().min(1).refine((val) => {
-    const validTypes = ["push", "issues", "merge_request", "wiki_page", "deployment", "job", "pipeline", "tag_push", "note", "confidential_issues", "confidential_note", "release", "subgroup", "feature_flag", "emoji", "resource_access_token", "member", "push_rule", "archive", "system_hook"];
-    return validTypes.includes(val) || val === "unknown";
-  }, "Invalid GitLab event type"),
+  type: z.string().trim().min(1),
 });
 export type GitlabEvent = z.output<typeof GitlabEvent>;
 export const GitlabEventInsert = createInsertSchema(gitlabEvent, {
   gitlabId: z.string().trim().min(1),
   gitlabActorId: z.string().trim().min(1),
-  type: z.string().trim().min(1).refine((val) => {
-    const validTypes = ["push", "issues", "merge_request", "wiki_page", "deployment", "job", "pipeline", "tag_push", "note", "confidential_issues", "confidential_note", "release", "subgroup", "feature_flag", "emoji", "resource_access_token", "member", "push_rule", "archive", "system_hook"];
-    return validTypes.includes(val) || val === "unknown";
-  }, "Invalid GitLab event type"),
+  type: z.string().trim().min(1),
 });
 export type GitlabEventInsert = z.output<typeof GitlabEventInsert>;
 export const GitlabEventUpdate = createUpdateSchema(gitlabEvent, {
   gitlabId: z.string().trim().min(1).optional(),
   gitlabActorId: z.string().trim().min(1).optional(),
-  type: z.string().trim().min(1).refine((val) => {
-    if (!val) return true;
-    const validTypes = ["push", "issues", "merge_request", "wiki_page", "deployment", "job", "pipeline", "tag_push", "note", "confidential_issues", "confidential_note", "release", "subgroup", "feature_flag", "emoji", "resource_access_token", "member", "push_rule", "archive", "system_hook"];
-    return validTypes.includes(val) || val === "unknown";
-  }, "Invalid GitLab event type").optional(),
+  type: z.string().trim().min(1).optional(),
 });
 export type GitlabEventUpdate = z.output<typeof GitlabEventUpdate>;

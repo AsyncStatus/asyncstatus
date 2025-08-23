@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
-import { listGitlabProjectWebhooks, deleteGitlabProjectWebhook } from "../../lib/gitlab-webhook";
+import { deleteGitlabProjectWebhook, listGitlabProjectWebhooks } from "../../lib/gitlab-webhook";
 import { getGitlabWebhookUrl } from "../../lib/integrations-connect-url";
 
 export type DeleteGitlabIntegrationWorkflowParams = {
@@ -43,18 +43,22 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
               const webhooks = await listGitlabProjectWebhooks(
                 integration.accessToken!,
                 integration.gitlabInstanceUrl,
-                project.projectId
+                project.projectId,
               );
 
-              // Delete webhooks that point to our webhook URL
-              const webhookUrl = getGitlabWebhookUrl(this.env.BETTER_AUTH_URL, integrationId);
+              console.log(webhooks);
               for (const webhook of webhooks) {
-                if (webhook.url === webhookUrl) {
+                if (
+                  webhook.url.startsWith(this.env.BETTER_AUTH_URL) ||
+                  webhook.url.startsWith(
+                    "https://rio-ecommerce-asylum-antarctica.trycloudflare.com",
+                  )
+                ) {
                   await deleteGitlabProjectWebhook(
                     integration.accessToken!,
                     integration.gitlabInstanceUrl,
                     project.projectId,
-                    webhook.id
+                    webhook.id,
                   );
                 }
               }
@@ -67,8 +71,8 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
                   projectId: project.projectId,
                   error: errorMessage,
                   integrationId,
-                  instanceUrl: integration.gitlabInstanceUrl
-                }
+                  instanceUrl: integration.gitlabInstanceUrl,
+                },
               );
               // Continue with other projects as this is non-critical
             }
@@ -79,7 +83,7 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
           console.warn("Failed to clean up GitLab webhooks:", {
             error: errorMessage,
             integrationId,
-            instanceUrl: integration.gitlabInstanceUrl
+            instanceUrl: integration.gitlabInstanceUrl,
           });
           // Continue with deletion as webhook cleanup failure shouldn't block integration removal
         }
@@ -97,12 +101,15 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
             db
               .select({ id: schema.gitlabEvent.id })
               .from(schema.gitlabEvent)
-              .innerJoin(schema.gitlabProject, eq(schema.gitlabEvent.projectId, schema.gitlabProject.id))
-              .where(eq(schema.gitlabProject.integrationId, integrationId))
-          )
+              .innerJoin(
+                schema.gitlabProject,
+                eq(schema.gitlabEvent.projectId, schema.gitlabProject.id),
+              )
+              .where(eq(schema.gitlabProject.integrationId, integrationId)),
+          ),
         );
 
-      // GitLab events (references gitlab_project)  
+      // GitLab events (references gitlab_project)
       await db
         .delete(schema.gitlabEvent)
         .where(
@@ -111,8 +118,8 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
             db
               .select({ id: schema.gitlabProject.id })
               .from(schema.gitlabProject)
-              .where(eq(schema.gitlabProject.integrationId, integrationId))
-          )
+              .where(eq(schema.gitlabProject.integrationId, integrationId)),
+          ),
         );
 
       // GitLab projects (references gitlab_integration)
@@ -121,9 +128,7 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
         .where(eq(schema.gitlabProject.integrationId, integrationId));
 
       // GitLab users (references gitlab_integration)
-      await db
-        .delete(schema.gitlabUser)
-        .where(eq(schema.gitlabUser.integrationId, integrationId));
+      await db.delete(schema.gitlabUser).where(eq(schema.gitlabUser.integrationId, integrationId));
 
       // Finally, delete the integration itself
       await db

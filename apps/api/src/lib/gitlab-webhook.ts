@@ -35,14 +35,16 @@ export interface GitlabWebhookResponse {
 /**
  * Set up a webhook for a GitLab project
  */
-export async function setupGitlabProjectWebhook(config: GitlabWebhookConfig): Promise<GitlabWebhookResponse> {
+export async function setupGitlabProjectWebhook(
+  config: GitlabWebhookConfig,
+): Promise<GitlabWebhookResponse> {
   const { accessToken, instanceUrl, projectId, webhookUrl, webhookSecret } = config;
-  
+
   const webhookData = {
-    url: "https://hill-obtaining-signature-bachelor.trycloudflare.com/integrations/gitlab/webhooks",
+    url: "https://rio-ecommerce-asylum-antarctica.trycloudflare.com/integrations/gitlab/webhooks",
     token: webhookSecret,
     push_events: true,
-    push_events_branch_filter: '',
+    push_events_branch_filter: "",
     issues_events: true,
     confidential_issues_events: true,
     merge_requests_events: true,
@@ -58,20 +60,22 @@ export async function setupGitlabProjectWebhook(config: GitlabWebhookConfig): Pr
   };
 
   const response = await fetch(`${instanceUrl}/api/v4/projects/${projectId}/hooks`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(webhookData),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to create GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new Error(
+      `Failed to create GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
 
-  return await response.json() as GitlabWebhookResponse;
+  return (await response.json()) as GitlabWebhookResponse;
 }
 
 /**
@@ -80,22 +84,24 @@ export async function setupGitlabProjectWebhook(config: GitlabWebhookConfig): Pr
 export async function listGitlabProjectWebhooks(
   accessToken: string,
   instanceUrl: string,
-  projectId: string
+  projectId: string,
 ): Promise<GitlabWebhookResponse[]> {
   const response = await fetch(`${instanceUrl}/api/v4/projects/${projectId}/hooks`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to list GitLab webhooks: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new Error(
+      `Failed to list GitLab webhooks: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
 
-  return await response.json() as GitlabWebhookResponse[];
+  return (await response.json()) as GitlabWebhookResponse[];
 }
 
 /**
@@ -105,19 +111,21 @@ export async function deleteGitlabProjectWebhook(
   accessToken: string,
   instanceUrl: string,
   projectId: string,
-  webhookId: number
+  webhookId: number,
 ): Promise<void> {
   const response = await fetch(`${instanceUrl}/api/v4/projects/${projectId}/hooks/${webhookId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to delete GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new Error(
+      `Failed to delete GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
 }
 
@@ -129,23 +137,25 @@ export async function updateGitlabProjectWebhook(
   instanceUrl: string,
   projectId: string,
   webhookId: number,
-  webhookData: Partial<Omit<GitlabWebhookConfig, 'accessToken' | 'instanceUrl' | 'projectId'>>
+  webhookData: Partial<Omit<GitlabWebhookConfig, "accessToken" | "instanceUrl" | "projectId">>,
 ): Promise<GitlabWebhookResponse> {
   const response = await fetch(`${instanceUrl}/api/v4/projects/${projectId}/hooks/${webhookId}`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(webhookData),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to update GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new Error(
+      `Failed to update GitLab webhook: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
 
-  return await response.json() as GitlabWebhookResponse;
+  return (await response.json()) as GitlabWebhookResponse;
 }
 
 /**
@@ -155,10 +165,10 @@ export async function findWebhookByUrl(
   accessToken: string,
   instanceUrl: string,
   projectId: string,
-  targetUrl: string
+  targetUrl: string,
 ): Promise<GitlabWebhookResponse | null> {
   const webhooks = await listGitlabProjectWebhooks(accessToken, instanceUrl, projectId);
-  return webhooks.find(webhook => webhook.url === targetUrl) || null;
+  return webhooks.find((webhook) => webhook.url === targetUrl) || null;
 }
 
 /**
@@ -166,14 +176,14 @@ export async function findWebhookByUrl(
  */
 export async function testGitlabApiConnection(
   accessToken: string,
-  instanceUrl: string
+  instanceUrl: string,
 ): Promise<{ success: boolean; user?: any; error?: string }> {
   try {
     // Test user authentication
     const userResponse = await fetch(`${instanceUrl}/api/v4/user`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
       },
     });
 
@@ -186,14 +196,17 @@ export async function testGitlabApiConnection(
     }
 
     const user = await userResponse.json();
-    
+
     // Test projects access
-    const projectsResponse = await fetch(`${instanceUrl}/api/v4/projects?membership=true&per_page=1`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
+    const projectsResponse = await fetch(
+      `${instanceUrl}/api/v4/projects?membership=true&per_page=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
       },
-    });
+    );
 
     if (!projectsResponse.ok) {
       const errorText = await projectsResponse.text();
@@ -222,7 +235,7 @@ export async function getWebhookSetupInfo(
   accessToken: string,
   instanceUrl: string,
   projectId: string,
-  webhookUrl: string
+  webhookUrl: string,
 ): Promise<{
   projectExists: boolean;
   projectAccess: boolean;
@@ -234,8 +247,8 @@ export async function getWebhookSetupInfo(
     // Check if project exists and is accessible
     const projectResponse = await fetch(`${instanceUrl}/api/v4/projects/${projectId}`, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
       },
     });
 
@@ -262,10 +275,10 @@ export async function getWebhookSetupInfo(
 
     // Check if we can create webhooks (test with a minimal request)
     const testResponse = await fetch(`${instanceUrl}/api/v4/projects/${projectId}/hooks`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
       },
     });
 

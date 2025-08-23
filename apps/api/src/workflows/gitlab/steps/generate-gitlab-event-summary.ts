@@ -1,5 +1,5 @@
-import { generateText } from "ai";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
+import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
 import type { GitlabEvent } from "../../../db";
 
@@ -15,7 +15,7 @@ export async function generateGitlabEventSummary({
   event,
 }: GenerateGitlabEventSummaryOptions) {
   const payload = event.payload;
-  
+
   // Check for extremely large payloads (similar to GitHub implementation)
   if (
     typeof payload === "object" &&

@@ -18,23 +18,24 @@ export async function fetchAndSyncGitlabProjects({
   integrationId,
 }: FetchAndSyncGitlabProjectsParams) {
   const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'Accept': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "application/json",
   };
 
   let page = 1;
   const perPage = 100;
-  
-  while (true) {
+  let maxIterations = 10;
+
+  while (maxIterations > 0) {
     const url = `${instanceUrl}/api/v4/projects?membership=true&per_page=${perPage}&page=${page}`;
     const response = await fetch(url, { headers });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch GitLab projects: ${response.status} ${response.statusText}`);
     }
-    
+
     const projects = await response.json();
-    
+
     if (!Array.isArray(projects) || projects.length === 0) {
       break;
     }
@@ -77,11 +78,12 @@ export async function fetchAndSyncGitlabProjects({
     }
 
     // Check if there are more pages
-    const totalPages = response.headers.get('X-Total-Pages');
+    const totalPages = response.headers.get("X-Total-Pages");
     if (totalPages && page >= parseInt(totalPages)) {
       break;
     }
-    
+
     page++;
+    maxIterations--;
   }
 }
