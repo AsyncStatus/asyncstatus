@@ -1,5 +1,6 @@
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { listGithubUsersContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import { listLinearUsersContract } from "@asyncstatus/api/typed-handlers/linear-integration";
 import {
   getMemberContract,
   listMembersContract,
@@ -80,6 +81,11 @@ export function UpdateMemberForm(props: {
       return data.filter((user) => !user.isBot && user.username !== "slackbot");
     },
   });
+  const linearUsers = useQuery(
+    typedQueryOptions(listLinearUsersContract, {
+      idOrSlug: props.organizationSlugOrId,
+    }),
+  );
   const organization = useQuery(
     typedQueryOptions(getOrganizationContract, {
       idOrSlug: props.organizationSlugOrId,
@@ -103,6 +109,7 @@ export function UpdateMemberForm(props: {
       autoDetectTimezone: member.data?.user.autoDetectTimezone,
       githubId: member.data?.githubId,
       slackId: member.data?.slackId,
+      linearId: (member.data as any)?.linearId,
     },
   });
 
@@ -138,6 +145,7 @@ export function UpdateMemberForm(props: {
         autoDetectTimezone: member.data?.user.autoDetectTimezone,
         githubId: member.data?.githubId,
         slackId: member.data?.slackId,
+        linearId: (member.data as any)?.linearId,
       });
     }
   }, [member.data, props.organizationSlugOrId, props.memberId]);
@@ -163,7 +171,7 @@ export function UpdateMemberForm(props: {
           }).queryKey,
         });
 
-        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+        queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
           if (!sessionData) {
             return sessionData;
           }
@@ -185,6 +193,7 @@ export function UpdateMemberForm(props: {
         autoDetectTimezone: data.user.autoDetectTimezone,
         githubId: data.githubId,
         slackId: data.slackId,
+        linearId: data.linearId,
       });
       props.onSuccess?.(data);
     },
@@ -437,6 +446,51 @@ export function UpdateMemberForm(props: {
                       {slackUsers.data.map((user) => (
                         <SelectItem key={user.slackUserId} value={user.slackUserId}>
                           {user.displayName || user.username || user.slackUserId}
+                        </SelectItem>
+                      ))}
+                      <Button
+                        className="w-full px-2"
+                        variant="secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          field.onChange(null);
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {linearUsers.data?.length > 0 && (
+          <FormField
+            control={form.control}
+            name="linearId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Linear</FormLabel>
+                <FormControl>
+                  <Select
+                    {...field}
+                    disabled={linearUsers.isLoading}
+                    value={field.value ?? undefined}
+                    onValueChange={(value) => {
+                      field.onChange(value === field.value ? "" : value);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a Linear user" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {linearUsers.data.map((user) => (
+                        <SelectItem key={user.userId} value={user.userId}>
+                          {user.displayName || user.name || user.email || user.userId}
                         </SelectItem>
                       ))}
                       <Button
