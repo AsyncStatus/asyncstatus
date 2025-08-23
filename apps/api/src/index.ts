@@ -91,6 +91,14 @@ import {
   updateScheduleHandler,
 } from "./typed-handlers/schedule-handlers";
 import {
+  deleteGitlabIntegrationHandler,
+  getGitlabIntegrationHandler,
+  gitlabIntegrationCallbackHandler,
+  listGitlabProjectsHandler,
+  listGitlabUsersHandler,
+  resyncGitlabIntegrationHandler,
+} from "./typed-handlers/gitlab-integration-handlers";
+import {
   deleteSlackIntegrationHandler,
   getSlackIntegrationHandler,
   listSlackChannelsHandler,
@@ -160,6 +168,39 @@ const githubWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", (c) => {
   return createGithubWebhooksMiddleware(githubWebhooks, { path: "/integrations/github/webhooks" })(
     c.req.raw,
   );
+});
+
+const gitlabWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
+  const rawBody = await c.req.raw.text();
+  const gitlabToken = c.req.header("X-Gitlab-Token");
+  const gitlabEvent = c.req.header("X-Gitlab-Event");
+  
+  // Verify webhook token (GitLab uses simple token verification)
+  if (!gitlabToken || gitlabToken !== c.env.GITLAB_WEBHOOK_SECRET) {
+    return c.json({ error: "Invalid webhook token" }, 401);
+  }
+  
+  if (!gitlabEvent) {
+    return c.json({ error: "Missing GitLab event header" }, 400);
+  }
+  
+  let body: Record<string, unknown>;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return c.json({ error: "Invalid JSON payload" }, 400);
+  }
+  
+  // Add event type to payload
+  const eventPayload = {
+    ...body,
+    gitlab_event: gitlabEvent,
+  };
+  
+  const queue = c.env.GITLAB_WEBHOOK_EVENTS_QUEUE;
+  await queue.send(eventPayload, { contentType: "json" });
+  
+  return c.json({ ok: true }, 200);
 });
 
 const slackWebhooksRouter = new Hono<HonoEnv>().on(["POST"], "*", async (c) => {
@@ -303,10 +344,12 @@ const app = new Hono<HonoEnv>()
     c.set("stripeConfig", context.stripeConfig);
     c.set("betterAuthUrl", context.betterAuthUrl);
     c.set("github", context.github);
+    c.set("gitlab", context.gitlab);
     return next();
   })
   .route("/auth", authRouter)
   .route("/integrations/github/webhooks", githubWebhooksRouter)
+  .route("/integrations/gitlab/webhooks", gitlabWebhooksRouter)
   .route("/integrations/slack/webhooks", slackWebhooksRouter)
   .route("/integrations/discord/webhooks", discordWebhooksRouter)
   .route("/integrations/stripe/webhooks", stripeWebhooksRouter)
@@ -388,6 +431,12 @@ const typedHandlersApp = typedHandlersHonoServer(
     listGithubUsersHandler,
     deleteGithubIntegrationHandler,
     resyncGithubIntegrationHandler,
+    gitlabIntegrationCallbackHandler,
+    getGitlabIntegrationHandler,
+    listGitlabProjectsHandler,
+    listGitlabUsersHandler,
+    deleteGitlabIntegrationHandler,
+    resyncGitlabIntegrationHandler,
     slackIntegrationCallbackHandler,
     getSlackIntegrationHandler,
     listSlackChannelsHandler,
@@ -448,6 +497,7 @@ const typedHandlersApp = typedHandlersHonoServer(
       workflow: c.get("workflow"),
       betterAuthUrl: c.env.BETTER_AUTH_URL,
       github: c.get("github"),
+      gitlab: c.get("gitlab"),
     }),
   },
 );

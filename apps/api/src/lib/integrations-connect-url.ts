@@ -27,3 +27,15 @@ type GithubIntegrationConnectUrlParams = {
 export function getGithubIntegrationConnectUrl(params: GithubIntegrationConnectUrlParams) {
   return `https://github.com/apps/${params.clientId}/installations/new?state=${params.organizationSlug}&redirect_uri=${encodeURIComponent(params.redirectUri)}`;
 }
+
+type GitlabIntegrationConnectUrlParams = {
+  clientId: string;
+  redirectUri: string;
+  organizationSlug: string;
+  instanceUrl?: string;
+};
+
+export function getGitlabIntegrationConnectUrl(params: GitlabIntegrationConnectUrlParams) {
+  const instanceUrl = params.instanceUrl || "https://gitlab.com";
+  return `${instanceUrl}/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&state=${params.organizationSlug}&scope=read_user+read_repository+read_api`;
+}

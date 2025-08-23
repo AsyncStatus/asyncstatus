@@ -15,6 +15,10 @@ import { getGithubRepositoryTool } from "../../tools/get-github-repository-tool"
 import { getGithubUserTool } from "../../tools/get-github-user-tool";
 import { getMemberDiscordEventsTool } from "../../tools/get-member-discord-events-tool";
 import { getMemberGithubEventsTool } from "../../tools/get-member-github-events-tool";
+import { getGitlabEventDetailTool } from "../../tools/get-gitlab-event-detail-tool";
+import { getGitlabProjectTool } from "../../tools/get-gitlab-project-tool";
+import { getGitlabUserTool } from "../../tools/get-gitlab-user-tool";
+import { getMemberGitlabEventsTool } from "../../tools/get-member-gitlab-events-tool";
 import { getMemberSlackEventsTool } from "../../tools/get-member-slack-events-tool";
 import { getSlackChannelTool } from "../../tools/get-slack-channel-tool";
 import { getSlackEventDetailTool } from "../../tools/get-slack-event-detail-tool";
@@ -74,6 +78,11 @@ Only use activity sources/resources that match these filters when selecting even
       getGitHubEventDetail: getGithubEventDetailTool(db),
       getGitHubUser: getGithubUserTool(db),
       getGitHubRepository: getGithubRepositoryTool(db),
+
+      getMemberGitlabEvents: getMemberGitlabEventsTool(db),
+      getGitlabEventDetail: getGitlabEventDetailTool(db),
+      getGitlabUser: getGitlabUserTool(db),
+      getGitlabProject: getGitlabProjectTool(db),
 
       getMemberSlackEvents: getMemberSlackEventsTool(db),
       getSlackEventDetail: getSlackEventDetailTool(db),

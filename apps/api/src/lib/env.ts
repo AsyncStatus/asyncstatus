@@ -12,6 +12,8 @@ import { createDb } from "../db/db";
 import type { DiscordGatewayDurableObject } from "../durable-objects/discord-gateway";
 import type { DeleteGithubIntegrationWorkflowParams } from "../workflows/github/delete-github-integration";
 import type { SyncGithubWorkflowParams } from "../workflows/github/sync-github";
+import type { DeleteGitlabIntegrationWorkflowParams } from "../workflows/gitlab/delete-gitlab-integration";
+import type { SyncGitlabWorkflowParams } from "../workflows/gitlab/sync-gitlab";
 import type { GenerateStatusUpdatesWorkflowParams } from "../workflows/schedules/generate-status-updates";
 import type { PingForUpdatesWorkflowParams } from "../workflows/schedules/ping-for-updates";
 import type { SendSummariesWorkflowParams } from "../workflows/schedules/send-summaries";
@@ -39,6 +41,10 @@ export type Bindings = {
   GITHUB_APP_ID: string;
   GITHUB_APP_PRIVATE_KEY: string;
   GITHUB_APP_NAME: string;
+  GITLAB_CLIENT_ID: string;
+  GITLAB_CLIENT_SECRET: string;
+  GITLAB_INSTANCE_URL?: string;
+  GITLAB_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
   WEB_APP_URL: string;
   PRIVATE_BUCKET: R2Bucket;
@@ -47,10 +53,14 @@ export type Bindings = {
   RATE_LIMITER: KVNamespace;
   SYNC_GITHUB_WORKFLOW: Workflow<SyncGithubWorkflowParams>;
   DELETE_GITHUB_INTEGRATION_WORKFLOW: Workflow<DeleteGithubIntegrationWorkflowParams>;
+  SYNC_GITLAB_WORKFLOW: Workflow<SyncGitlabWorkflowParams>;
+  DELETE_GITLAB_INTEGRATION_WORKFLOW: Workflow<DeleteGitlabIntegrationWorkflowParams>;
   AI: Ai;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_WEBHOOK_EVENTS_QUEUE: Queue<AnyGithubWebhookEventDefinition>;
   GITHUB_PROCESS_EVENTS_QUEUE: Queue<string>;
+  GITLAB_WEBHOOK_EVENTS_QUEUE: Queue;
+  GITLAB_PROCESS_EVENTS_QUEUE: Queue<string>;
   OPENROUTER_API_KEY: string;
   SLACK_APP_ID: string;
   SLACK_CLIENT_ID: string;
@@ -103,6 +113,8 @@ export type Variables = {
   workflow: {
     syncGithub: Workflow<SyncGithubWorkflowParams>;
     deleteGithubIntegration: Workflow<DeleteGithubIntegrationWorkflowParams>;
+    syncGitlab: Workflow<SyncGitlabWorkflowParams>;
+    deleteGitlabIntegration: Workflow<DeleteGitlabIntegrationWorkflowParams>;
     syncSlack: Workflow<SyncSlackWorkflowParams>;
     deleteSlackIntegration: Workflow<DeleteSlackIntegrationWorkflowParams>;
     syncDiscord: Workflow<any>; // TODO: Add SyncDiscordWorkflowParams
@@ -151,6 +163,12 @@ export type Variables = {
     clientSecret: string;
     privateKey: string;
     appName: string;
+  };
+  gitlab: {
+    clientId: string;
+    clientSecret: string;
+    instanceUrl: string;
+    webhookSecret: string;
   };
 };
 
@@ -211,6 +229,12 @@ export async function createContext(c: Context<HonoEnv>) {
       privateKey: c.env.GITHUB_APP_PRIVATE_KEY,
       appName: c.env.GITHUB_APP_NAME,
     },
+    gitlab: {
+      clientId: c.env.GITLAB_CLIENT_ID,
+      clientSecret: c.env.GITLAB_CLIENT_SECRET,
+      instanceUrl: c.env.GITLAB_INSTANCE_URL || "https://gitlab.com",
+      webhookSecret: c.env.GITLAB_WEBHOOK_SECRET,
+    },
     slack: {
       appId: c.env.SLACK_APP_ID,
       clientId: c.env.SLACK_CLIENT_ID,
@@ -254,6 +278,8 @@ export async function createContext(c: Context<HonoEnv>) {
     workflow: {
       syncGithub: c.env.SYNC_GITHUB_WORKFLOW,
       deleteGithubIntegration: c.env.DELETE_GITHUB_INTEGRATION_WORKFLOW,
+      syncGitlab: c.env.SYNC_GITLAB_WORKFLOW,
+      deleteGitlabIntegration: c.env.DELETE_GITLAB_INTEGRATION_WORKFLOW,
       syncSlack: c.env.SYNC_SLACK_WORKFLOW,
       deleteSlackIntegration: c.env.DELETE_SLACK_INTEGRATION_WORKFLOW,
       syncDiscord: c.env.SYNC_DISCORD_WORKFLOW,

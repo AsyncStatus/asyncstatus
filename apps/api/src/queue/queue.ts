@@ -23,10 +23,20 @@ import {
   type SlackWebhookEventsQueueMessage,
   slackWebhookEventsQueue,
 } from "./slack-webhook-events-queue";
+import {
+  type GitlabProcessEventsQueueMessage,
+  gitlabProcessEventsQueue,
+} from "./gitlab-process-events-queue";
+import {
+  type GitlabWebhookEventsQueueMessage,
+  gitlabWebhookEventsQueue,
+} from "./gitlab-webhook-events-queue";
 
 type QueueMessage =
   | GithubWebhookEventsQueueMessage
   | GithubProcessEventsQueueMessage
+  | GitlabWebhookEventsQueueMessage
+  | GitlabProcessEventsQueueMessage
   | SlackWebhookEventsQueueMessage
   | SlackProcessEventsQueueMessage
   | DiscordWebhookEventsQueueMessage
@@ -72,6 +82,22 @@ export async function queue(
   if (batch.queue === "discord-process-events") {
     return discordProcessEventsQueue(
       batch as MessageBatch<DiscordProcessEventsQueueMessage>,
+      env,
+      ctx,
+    );
+  }
+
+  if (batch.queue === "gitlab-webhook-events") {
+    return gitlabWebhookEventsQueue(
+      batch as MessageBatch<GitlabWebhookEventsQueueMessage>,
+      env,
+      ctx,
+    );
+  }
+
+  if (batch.queue === "gitlab-process-events") {
+    return gitlabProcessEventsQueue(
+      batch as MessageBatch<GitlabProcessEventsQueueMessage>,
       env,
       ctx,
     );
