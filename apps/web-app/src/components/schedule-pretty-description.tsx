@@ -1,6 +1,10 @@
 import { listDiscordChannelsContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { listGithubRepositoriesContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  listLinearProjectsContract,
+  listLinearTeamsContract,
+} from "@asyncstatus/api/typed-handlers/linear-integration";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import type {
   listSchedulesContract,
@@ -12,7 +16,7 @@ import type {
 import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { dayjs } from "@asyncstatus/dayjs";
-import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiLinear, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { BuildingIcon, UsersIcon } from "@asyncstatus/ui/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -226,6 +230,12 @@ function GenerateForUsingActivityFromItem(props: {
   const discordChannels = useQuery(
     typedQueryOptions(listDiscordChannelsContract, { idOrSlug: props.organizationSlug }),
   );
+  const linearTeams = useQuery(
+    typedQueryOptions(listLinearTeamsContract, { idOrSlug: props.organizationSlug }),
+  );
+  const linearProjects = useQuery(
+    typedQueryOptions(listLinearProjectsContract, { idOrSlug: props.organizationSlug }),
+  );
 
   if (props.usingActivityFrom.type === "anyIntegration") {
     return <span>any activity{props.includeAnd && <span> and </span>}</span>;
@@ -253,6 +263,15 @@ function GenerateForUsingActivityFromItem(props: {
     return (
       <span>
         any <SiDiscord className="size-3 mb-1 inline" /> Discord activity
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.usingActivityFrom.type === "anyLinear") {
+    return (
+      <span>
+        any <SiLinear className="size-3 mb-1 inline" /> Linear activity
         {props.includeAnd && <span> and </span>}
       </span>
     );
@@ -299,6 +318,32 @@ function GenerateForUsingActivityFromItem(props: {
     return (
       <span>
         activity in <SiDiscord className="size-3 mb-1 inline" /> {discordChannel.name} channel
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.usingActivityFrom.type === "linearTeam") {
+    const team = linearTeams.data?.find((t) => t.teamId === props.usingActivityFrom.value);
+    if (!team) {
+      return null;
+    }
+    return (
+      <span>
+        activity in <SiLinear className="size-3 mb-1 inline" /> {team.name} team
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.usingActivityFrom.type === "linearProject") {
+    const project = linearProjects.data?.find((p) => p.projectId === props.usingActivityFrom.value);
+    if (!project) {
+      return null;
+    }
+    return (
+      <span>
+        activity in <SiLinear className="size-3 mb-1 inline" /> {project.name} project
         {props.includeAnd && <span> and </span>}
       </span>
     );

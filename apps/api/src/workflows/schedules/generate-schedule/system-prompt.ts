@@ -33,9 +33,12 @@ UsingActivityFrom is an array of discriminated objects (not strings). Each item 
 - { type: "anyGithub", value: "anyGithub" }
 - { type: "anySlack", value: "anySlack" }
 - { type: "anyDiscord", value: "anyDiscord" }
+- { type: "anyLinear", value: "anyLinear" }
 - { type: "slackChannel", value: slackChannelId }
 - { type: "githubRepository", value: githubRepositoryId }
 - { type: "discordChannel", value: discordChannelId }
+- { type: "linearTeam", value: linearTeamId }
+- { type: "linearProject", value: linearProjectId }
 
 SUMMARY TARGETS (for sendSummaries): array summaryFor[] where each item is one of (discriminated by type):
 - { type: "organization", value: organizationSlug }
@@ -44,9 +47,12 @@ SUMMARY TARGETS (for sendSummaries): array summaryFor[] where each item is one o
 - { type: "anyGithub", value: "anyGithub" }
 - { type: "anySlack", value: "anySlack" }
 - { type: "anyDiscord", value: "anyDiscord" }
+- { type: "anyLinear", value: "anyLinear" }
 - { type: "slackChannel", value: slackChannelId }
 - { type: "githubRepository", value: githubRepositoryId }
 - { type: "discordChannel", value: discordChannelId }
+- { type: "linearTeam", value: linearTeamId }
+- { type: "linearProject", value: linearProjectId }
 
 RULES:
 - Natural language mapping:

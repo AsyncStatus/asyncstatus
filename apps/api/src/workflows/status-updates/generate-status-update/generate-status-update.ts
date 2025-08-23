@@ -15,6 +15,7 @@ import { getGithubRepositoryTool } from "../../tools/get-github-repository-tool"
 import { getGithubUserTool } from "../../tools/get-github-user-tool";
 import { getMemberDiscordEventsTool } from "../../tools/get-member-discord-events-tool";
 import { getMemberGithubEventsTool } from "../../tools/get-member-github-events-tool";
+import { getMemberLinearEventsTool } from "../../tools/get-member-linear-events-tool";
 import { getMemberSlackEventsTool } from "../../tools/get-member-slack-events-tool";
 import { getSlackChannelTool } from "../../tools/get-slack-channel-tool";
 import { getSlackEventDetailTool } from "../../tools/get-slack-event-detail-tool";
@@ -50,7 +51,7 @@ export async function generateStatusUpdate({
 }: GenerateStatusUpdateOptions) {
   const model = "openai/gpt-5-mini";
 
-  const { text, usage } = await generateText({
+  const { text } = await generateText({
     model: openRouterProvider(model),
     seed: 123,
     maxSteps: 100,
@@ -87,6 +88,9 @@ Only use activity sources/resources that match these filters when selecting even
       getDiscordUser: getDiscordUserTool(db),
       getDiscordServer: getDiscordServerTool(db),
       getDiscordIntegration: getDiscordIntegrationTool(db),
+
+      // Linear
+      getMemberLinearEvents: getMemberLinearEventsTool(db),
     },
   });
 

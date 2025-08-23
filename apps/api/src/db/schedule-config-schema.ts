@@ -2,6 +2,8 @@ import { z as z3 } from "zod";
 import { z } from "zod/v4";
 import { DiscordChannel } from "./discord-channel";
 import { GithubRepository } from "./github-repository";
+import { LinearProject } from "./linear-project";
+import { LinearTeam } from "./linear-team";
 import { Member } from "./member";
 import { Organization } from "./organization";
 import { SlackChannel } from "./slack-channel";
@@ -53,6 +55,10 @@ export const ScheduleConfigUsingActivityFrom = z.discriminatedUnion("type", [
     value: z.literal("anyDiscord"), // any discord activity
   }),
   z.strictObject({
+    type: z.literal("anyLinear"),
+    value: z.literal("anyLinear"), // any linear activity
+  }),
+  z.strictObject({
     type: z.literal("slackChannel"),
     value: SlackChannel.shape.channelId, // slack channel activity
   }),
@@ -63,6 +69,14 @@ export const ScheduleConfigUsingActivityFrom = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("discordChannel"),
     value: DiscordChannel.shape.channelId, // discord channel activity
+  }),
+  z.strictObject({
+    type: z.literal("linearTeam"),
+    value: LinearTeam.shape.teamId, // linear team activity
+  }),
+  z.strictObject({
+    type: z.literal("linearProject"),
+    value: LinearProject.shape.projectId, // linear project activity
   }),
 ]);
 export type ScheduleConfigUsingActivityFrom = z.infer<typeof ScheduleConfigUsingActivityFrom>;
@@ -134,6 +148,10 @@ export const ScheduleConfigSummaryFor = z.discriminatedUnion("type", [
     value: z.literal("anyDiscord"), // any discord activity
   }),
   z.strictObject({
+    type: z.literal("anyLinear"),
+    value: z.literal("anyLinear"), // any linear activity
+  }),
+  z.strictObject({
     type: z.literal("slackChannel"),
     value: SlackChannel.shape.channelId, // slack channel activity
   }),
@@ -144,6 +162,14 @@ export const ScheduleConfigSummaryFor = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("discordChannel"),
     value: DiscordChannel.shape.channelId, // discord channel activity
+  }),
+  z.strictObject({
+    type: z.literal("linearTeam"),
+    value: LinearTeam.shape.teamId, // linear team activity
+  }),
+  z.strictObject({
+    type: z.literal("linearProject"),
+    value: LinearProject.shape.projectId, // linear project activity
   }),
 ]);
 export type ScheduleConfigSummaryFor = z.infer<typeof ScheduleConfigSummaryFor>;
@@ -251,6 +277,12 @@ const ScheduleConfigUsingActivityFromV3 = z3
       .strict(),
     z3
       .object({
+        type: z3.literal("anyLinear"),
+        value: z3.literal("anyLinear"),
+      })
+      .strict(),
+    z3
+      .object({
         type: z3.literal("slackChannel"),
         value: z3.string().describe("Slack channel ID (e.g., C0123456789)"),
       })
@@ -265,6 +297,18 @@ const ScheduleConfigUsingActivityFromV3 = z3
       .object({
         type: z3.literal("discordChannel"),
         value: z3.string().describe("Discord channel ID (e.g., 123456789012345678)"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("linearTeam"),
+        value: z3.string().describe("Linear team ID (e.g., team_... from Linear)"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("linearProject"),
+        value: z3.string().describe("Linear project ID (e.g., proj_... from Linear)"),
       })
       .strict(),
   ])
@@ -421,6 +465,12 @@ const ScheduleConfigSummaryForV3 = z3
       .strict(),
     z3
       .object({
+        type: z3.literal("anyLinear"),
+        value: z3.literal("anyLinear"),
+      })
+      .strict(),
+    z3
+      .object({
         type: z3.literal("slackChannel"),
         value: z3.string().describe("Slack channel ID (e.g., C0123456789)"),
       })
@@ -435,6 +485,18 @@ const ScheduleConfigSummaryForV3 = z3
       .object({
         type: z3.literal("discordChannel"),
         value: z3.string().describe("Discord channel ID (e.g., 123456789012345678)"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("linearTeam"),
+        value: z3.string().describe("Linear team ID (e.g., team_... from Linear)"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("linearProject"),
+        value: z3.string().describe("Linear project ID (e.g., proj_... from Linear)"),
       })
       .strict(),
   ])

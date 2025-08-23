@@ -20,6 +20,7 @@ import { getOrganizationPlan } from "../../lib/get-organization-plan";
 import { isTuple } from "../../lib/is-tuple";
 import { summarizeDiscordActivity } from "../summarization/summarize-discord-activity/summarize-discord-activity";
 import { summarizeGithubActivity } from "../summarization/summarize-github-activity/summarize-github-activity";
+import { summarizeLinearActivity } from "../summarization/summarize-linear-activity/summarize-linear-activity";
 import { summarizeOrganizationStatusUpdates } from "../summarization/summarize-organization-status-updates/summarize-organization-status-updates";
 import { summarizeSlackActivity } from "../summarization/summarize-slack-activity/summarize-slack-activity";
 import { summarizeTeamStatusUpdates } from "../summarization/summarize-team-status-updates/summarize-team-status-updates";
@@ -159,7 +160,8 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               | "user_status_updates"
               | "github_activity"
               | "slack_activity"
-              | "discord_activity";
+              | "discord_activity"
+              | "linear_activity";
             teamId?: string;
             userId?: string;
             content: any;
@@ -330,6 +332,37 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               });
               generatedSummaries.push({
                 type: "discord_activity",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
+            if (
+              target.type === "anyLinear" ||
+              target.type === "linearTeam" ||
+              target.type === "linearProject"
+            ) {
+              const teamIds = target.type === "linearTeam" ? [target.value as string] : [];
+              const projectIds = target.type === "linearProject" ? [target.value as string] : [];
+              const content = await summarizeLinearActivity({
+                db,
+                openRouterProvider,
+                organizationId,
+                teamIds,
+                projectIds,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "linear_activity",
                 content,
                 effectiveFrom,
                 effectiveTo,
