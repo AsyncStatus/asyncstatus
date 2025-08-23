@@ -189,7 +189,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "connected" | "disconnected" | "connecting"
+    "all" | "connected" | "disconnected" | "connecting" | "error"
   >("all");
 
   // Clear error message from URL
@@ -1094,8 +1094,8 @@ function RouteComponent() {
               ? "connecting"
               : "disconnected",
         connectLink: getGitlabIntegrationConnectUrl({
-          clientId: "3cdd167b80063e89e246a3de2594ed89ea5af6e926ad92483ba3273446c11321", // Use the provided client ID
-          redirectUri: typedUrl(gitlabIntegrationCallbackContract, {}),
+          clientId: import.meta.env.VITE_GITLAB_INTEGRATION_APP_CLIENT_ID,
+          redirectUri: typedUrl(gitlabIntegrationCallbackContract, { code: "", state: "", redirect: "" }),
           organizationSlug: params.organizationSlug,
           instanceUrl: "https://gitlab.com", // Default to GitLab.com
         }),
@@ -1197,6 +1197,18 @@ function RouteComponent() {
               )}
             </div>
 
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resyncGitlabIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+                }}
+              >
+                Resync users and projects
+              </Button>
+            </div>
+
             <div className="space-y-2">
               <h4 className="font-medium">Data we track</h4>
               <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
@@ -1282,6 +1294,9 @@ function RouteComponent() {
       discordServers.data,
       discordChannels.data,
       discordUsers.data,
+      gitlabIntegrationQuery.data,
+      gitlabProjects.data,
+      gitlabUsers.data,
       organizationMembers.data,
     ],
   );
@@ -1295,7 +1310,9 @@ function RouteComponent() {
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "connected" && integration.status === "connected") ||
-        (statusFilter === "disconnected" && integration.status === "disconnected");
+        (statusFilter === "disconnected" && integration.status === "disconnected") ||
+        (statusFilter === "connecting" && integration.status === "connecting") ||
+        (statusFilter === "error" && integration.status === "error");
 
       return matchesSearch && matchesStatus;
     });
@@ -1362,6 +1379,7 @@ function RouteComponent() {
             <SelectItem value="connected">Connected</SelectItem>
             <SelectItem value="disconnected">Disconnected</SelectItem>
             <SelectItem value="connecting">Connecting</SelectItem>
+            <SelectItem value="error">Error</SelectItem>
           </SelectContent>
         </Select>
 
