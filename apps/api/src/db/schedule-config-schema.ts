@@ -45,6 +45,10 @@ export const ScheduleConfigUsingActivityFrom = z.discriminatedUnion("type", [
     value: z.literal("anyGithub"), // any github activity
   }),
   z.strictObject({
+    type: z.literal("anyGitlab"),
+    value: z.literal("anyGitlab"), // any gitlab activity
+  }),
+  z.strictObject({
     type: z.literal("anySlack"),
     value: z.literal("anySlack"), // any slack activity
   }),
@@ -59,6 +63,10 @@ export const ScheduleConfigUsingActivityFrom = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("githubRepository"),
     value: GithubRepository.shape.id, // github repository activity
+  }),
+  z.strictObject({
+    type: z.literal("gitlabProject"),
+    value: z.string(), // gitlab project id (gitlab_project.id)
   }),
   z.strictObject({
     type: z.literal("discordChannel"),
@@ -126,6 +134,10 @@ export const ScheduleConfigSummaryFor = z.discriminatedUnion("type", [
     value: z.literal("anyGithub"), // any github activity
   }),
   z.strictObject({
+    type: z.literal("anyGitlab"),
+    value: z.literal("anyGitlab"), // any gitlab activity
+  }),
+  z.strictObject({
     type: z.literal("anySlack"),
     value: z.literal("anySlack"), // any slack activity
   }),
@@ -140,6 +152,10 @@ export const ScheduleConfigSummaryFor = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("githubRepository"),
     value: GithubRepository.shape.id, // github repository activity
+  }),
+  z.strictObject({
+    type: z.literal("gitlabProject"),
+    value: z.string(), // gitlab project id (gitlab_project.id)
   }),
   z.strictObject({
     type: z.literal("discordChannel"),
@@ -239,6 +255,12 @@ const ScheduleConfigUsingActivityFromV3 = z3
       .strict(),
     z3
       .object({
+        type: z3.literal("anyGitlab"),
+        value: z3.literal("anyGitlab"),
+      })
+      .strict(),
+    z3
+      .object({
         type: z3.literal("anySlack"),
         value: z3.literal("anySlack"),
       })
@@ -259,6 +281,12 @@ const ScheduleConfigUsingActivityFromV3 = z3
       .object({
         type: z3.literal("githubRepository"),
         value: z3.string().describe("GitHub repository ID"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("gitlabProject"),
+        value: z3.string().describe("GitLab project ID (gitlab_project.id)"),
       })
       .strict(),
     z3
@@ -409,6 +437,12 @@ const ScheduleConfigSummaryForV3 = z3
       .strict(),
     z3
       .object({
+        type: z3.literal("anyGitlab"),
+        value: z3.literal("anyGitlab"),
+      })
+      .strict(),
+    z3
+      .object({
         type: z3.literal("anySlack"),
         value: z3.literal("anySlack"),
       })
@@ -429,6 +463,12 @@ const ScheduleConfigSummaryForV3 = z3
       .object({
         type: z3.literal("githubRepository"),
         value: z3.string().describe("GitHub repository ID"),
+      })
+      .strict(),
+    z3
+      .object({
+        type: z3.literal("gitlabProject"),
+        value: z3.string().describe("GitLab project ID (gitlab_project.id)"),
       })
       .strict(),
     z3

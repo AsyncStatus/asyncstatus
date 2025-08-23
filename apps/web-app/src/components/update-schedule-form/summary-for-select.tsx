@@ -7,6 +7,10 @@ import {
   getGithubIntegrationContract,
   listGithubRepositoriesContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  getGitlabIntegrationContract,
+  listGitlabProjectsContract,
+} from "@asyncstatus/api/typed-handlers/gitlab-integration";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import type { ScheduleConfigSummaryFor } from "@asyncstatus/api/typed-handlers/schedule";
 import {
@@ -14,7 +18,7 @@ import {
   listSlackChannelsContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
-import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiGitlab, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -27,14 +31,7 @@ import {
   CommandList,
 } from "@asyncstatus/ui/components/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
-import {
-  ActivityIcon,
-  BuildingIcon,
-  Check,
-  ChevronsUpDown,
-  UsersIcon,
-  XIcon,
-} from "@asyncstatus/ui/icons";
+import { BuildingIcon, Check, ChevronsUpDown, UsersIcon, XIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -78,6 +75,16 @@ export function SummaryForSelect({
   );
   const slackChannels = useQuery(
     typedQueryOptions(listSlackChannelsContract, { idOrSlug: organizationSlug }),
+  );
+  const gitlabIntegration = useQuery(
+    typedQueryOptions(
+      getGitlabIntegrationContract,
+      { idOrSlug: organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const gitlabProjects = useQuery(
+    typedQueryOptions(listGitlabProjectsContract, { idOrSlug: organizationSlug }),
   );
   const discordIntegration = useQuery(
     typedQueryOptions(
@@ -243,6 +250,35 @@ export function SummaryForSelect({
                 );
               }
 
+              if (value.type === "anyGitlab") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>Any GitLab activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
               if (value.type === "githubRepository") {
                 const repository = githubRepositories.data?.find(
                   (repository) => repository.id === value.value,
@@ -259,6 +295,40 @@ export function SummaryForSelect({
                   >
                     <SiGithub className="size-4 m-1" />
                     <span>{repository.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "gitlabProject") {
+                const project = gitlabProjects.data?.find((p) => p.id === value.value);
+                if (!project) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>{project.name} activity</span>
                     {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
                     <div
                       className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
@@ -587,6 +657,69 @@ export function SummaryForSelect({
                         values.findIndex(
                           (value) =>
                             value.type === "githubRepository" && value.value === repository.id,
+                        ) !== -1
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {gitlabIntegration.data && (
+              <CommandGroup heading="GitLab activity">
+                <CommandItem
+                  value="anyGitlab"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anyGitlab") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anyGitlab")]);
+                    } else {
+                      onSelect([...values, { type: "anyGitlab", value: "anyGitlab" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiGitlab className="size-4 m-1" />
+                  <span>Any GitLab activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      values.findIndex((value) => value.type === "anyGitlab") !== -1
+                        ? "opacity-100"
+                        : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {gitlabProjects.data?.map((project) => (
+                  <CommandItem
+                    key={project.id}
+                    value={project.id}
+                    onSelect={() => {
+                      if (
+                        values.findIndex(
+                          (value) => value.type === "gitlabProject" && value.value === project.id,
+                        ) !== -1
+                      ) {
+                        onSelect([
+                          ...values.filter(
+                            (value) => value.type !== "gitlabProject" || value.value !== project.id,
+                          ),
+                        ]);
+                      } else {
+                        onSelect([...values, { type: "gitlabProject", value: project.id }]);
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>{project.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        values.findIndex(
+                          (value) => value.type === "gitlabProject" && value.value === project.id,
                         ) !== -1
                           ? "opacity-100"
                           : "opacity-0",
