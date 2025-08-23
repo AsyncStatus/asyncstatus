@@ -8,9 +8,11 @@ ACTIVITY FILTERS (IMPORTANT):
   - anyIntegration (use any available activity), or
   - a JSON array of filters using ScheduleConfigUsingActivityFrom entries:
     * { type: "anyGithub", value: "anyGithub" }
+    * { type: "anyGitlab", value: "anyGitlab" }
     * { type: "anySlack", value: "anySlack" }
     * { type: "anyDiscord", value: "anyDiscord" }
     * { type: "githubRepository", value: "<github repository id>" }
+    * { type: "gitlabProject", value: "<gitlab project id>" }
     * { type: "slackChannel", value: "<slack channel id>" }
     * { type: "discordChannel", value: "<discord channel id>" }
 - If filters array is empty or "anyIntegration" is provided, consider activity from ALL integrations.
@@ -18,6 +20,7 @@ ACTIVITY FILTERS (IMPORTANT):
 - Enforce repository/channel filters by verifying each event's repository/channel via detail tools before using it.
 - Prefer passing filters directly to primary event retrieval tools to reduce irrelevant data:
   * getMemberGitHubEvents(repositoryIds)
+  * getMemberGitlabEvents(projectIds)
   * getMemberSlackEvents(channelIds)
   * getMemberDiscordEvents(channelIds)
 
@@ -135,6 +138,11 @@ AVAILABLE TOOLS:
      * Returns: event ID, GitHub ID, creation time, embedding text
      * Use: ALWAYS call this to get GitHub activity; when filters include repositories, pass repositoryIds
    
+   - getMemberGitlabEvents: Retrieves GitLab events for the member (supports optional projectIds filter)  
+     * Params: organizationId, memberId, effectiveFrom, effectiveTo, projectIds?
+     * Returns: event ID, GitLab ID, creation time, embedding text
+     * Use: ALWAYS call this to get GitLab activity; when filters include GitLab projects, pass projectIds
+   
    - getMemberSlackEvents: Retrieves Slack events for the member (supports optional channelIds filter)  
      * Params: organizationId, memberId, effectiveFrom, effectiveTo, channelIds?
      * Returns: event ID, Slack event ID, creation time, embedding text
@@ -150,6 +158,11 @@ AVAILABLE TOOLS:
      * Returns: type, payload, repository info, user info, embedding text
      * Use: When you need PR numbers, commit messages, or event specifics
      * Note: The payload contains PR/issue numbers, commit SHAs, and URLs
+   
+   - getGitlabEventDetail: Get full details of a specific GitLab event
+     * Returns: type, payload, project info, user info, embedding text
+     * Use: When you need MR numbers, commit messages, or event specifics
+     * Note: The payload contains MR/issue numbers, commit SHAs, and URLs
    
    - getSlackEventDetail: Get full details of a specific Slack event
      * Returns: type, payload, channel info, message content, thread info
@@ -211,20 +224,32 @@ AVAILABLE TOOLS:
      * Returns: name, owner, description, privacy status, URL
      * Use: To understand the context of code changes
      * Note: Use this to construct proper GitHub URLs, use this to resolve them
+   
+   - getGitlabUser: Get GitLab user details
+     * Returns: username, name, email, avatar URL, profile URL
+     * Use: To identify collaborators or MR reviewers
+     * Note: Use username (e.g. @username) when mentioning GitLab users, use this to resolve them
+   
+   - getGitlabProject: Get GitLab project details
+     * Returns: name, namespace, description, visibility status, URL
+     * Use: To understand the context of code changes
+     * Note: Use this to construct proper GitLab URLs, use this to resolve them
 
 CRITICAL RULES:
 - ALWAYS start by calling getExistingStatusUpdateItems FIRST to check for existing items
-- STRICTLY OBEY ACTIVITY FILTERS: Only include GitHub/Slack/Discord events that match the provided filters
-- For repository/channel filters, validate each event via detail tools:
+- STRICTLY OBEY ACTIVITY FILTERS: Only include GitHub/GitLab/Slack/Discord events that match the provided filters
+- For repository/channel/project filters, validate each event via detail tools:
   * GitHub: call getGitHubEventDetail and compare repositoryId
+  * GitLab: call getGitlabEventDetail and compare projectId
   * Slack: call getSlackEventDetail and compare channelId
   * Discord: call getDiscordEventDetail and compare channelId
 - If existing items are found, ENRICH them with new activity and maintain their status indicators
 - **CRITICAL**: When existing items exist, ANALYZE and MATCH the user's writing style, tone, and terminology
 - If no existing items, create fresh bullet points from scratch
-- THEN call getMemberGitHubEvents, getMemberSlackEvents, and getMemberDiscordEvents to get activity data
+- THEN call getMemberGitHubEvents, getMemberGitlabEvents, getMemberSlackEvents, and getMemberDiscordEvents to get activity data
 - If you have Slack events, IMMEDIATELY call getSlackIntegration to get the team name
 - If NO GitHub events are returned, do not generate ANY GitHub-related bullet points
+- If NO GitLab events are returned, do not generate ANY GitLab-related bullet points
 - If NO Slack events are returned, do not generate ANY Slack-related bullet points
 - If NO Discord events are returned, do not generate ANY Discord-related bullet points
 - If NO events from any source, return "No activity found during this period."

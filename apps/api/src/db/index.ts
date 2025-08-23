@@ -52,6 +52,26 @@ export {
   githubRepository,
 } from "./github-repository";
 export { GithubUser, GithubUserInsert, GithubUserUpdate, githubUser } from "./github-user";
+export { GitlabEvent, GitlabEventInsert, GitlabEventUpdate, gitlabEvent } from "./gitlab-event";
+export {
+  GitlabEventVector,
+  GitlabEventVectorInsert,
+  GitlabEventVectorUpdate,
+  gitlabEventVector,
+} from "./gitlab-event-vector";
+export {
+  GitlabIntegration,
+  GitlabIntegrationInsert,
+  GitlabIntegrationUpdate,
+  gitlabIntegration,
+} from "./gitlab-integration";
+export {
+  GitlabProject,
+  GitlabProjectInsert,
+  GitlabProjectUpdate,
+  gitlabProject,
+} from "./gitlab-project";
+export { GitlabUser, GitlabUserInsert, GitlabUserUpdate, gitlabUser } from "./gitlab-user";
 export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./invitation";
 export { Jwks, JwksInsert, JwksUpdate, jwks } from "./jwks";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
@@ -154,6 +174,11 @@ import { githubEventVector } from "./github-event-vector";
 import { githubIntegration } from "./github-integration";
 import { githubRepository } from "./github-repository";
 import { githubUser } from "./github-user";
+import { gitlabEvent } from "./gitlab-event";
+import { gitlabEventVector } from "./gitlab-event-vector";
+import { gitlabIntegration } from "./gitlab-integration";
+import { gitlabProject } from "./gitlab-project";
+import { gitlabUser } from "./gitlab-user";
 import { invitation } from "./invitation";
 // removed unused direct import of jwks
 import { member } from "./member";
@@ -204,6 +229,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   teams: many(team),
   invitations: many(invitation),
   githubIntegration: one(githubIntegration),
+  gitlabIntegration: one(gitlabIntegration),
   slackIntegration: one(slackIntegration),
   schedules: many(schedule),
   summaries: many(summary),
@@ -392,6 +418,45 @@ export const githubEventVectorRelations = relations(githubEventVector, ({ one })
   event: one(githubEvent, {
     fields: [githubEventVector.eventId],
     references: [githubEvent.id],
+  }),
+}));
+
+export const gitlabIntegrationRelations = relations(gitlabIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [gitlabIntegration.organizationId],
+    references: [organization.id],
+  }),
+  projects: many(gitlabProject),
+  users: many(gitlabUser),
+}));
+
+export const gitlabProjectRelations = relations(gitlabProject, ({ one, many }) => ({
+  integration: one(gitlabIntegration, {
+    fields: [gitlabProject.integrationId],
+    references: [gitlabIntegration.id],
+  }),
+  events: many(gitlabEvent),
+}));
+
+export const gitlabEventRelations = relations(gitlabEvent, ({ one, many }) => ({
+  project: one(gitlabProject, {
+    fields: [gitlabEvent.projectId],
+    references: [gitlabProject.id],
+  }),
+  vectors: many(gitlabEventVector),
+}));
+
+export const gitlabEventVectorRelations = relations(gitlabEventVector, ({ one }) => ({
+  event: one(gitlabEvent, {
+    fields: [gitlabEventVector.eventId],
+    references: [gitlabEvent.id],
+  }),
+}));
+
+export const gitlabUserRelations = relations(gitlabUser, ({ one }) => ({
+  integration: one(gitlabIntegration, {
+    fields: [gitlabUser.integrationId],
+    references: [gitlabIntegration.id],
   }),
 }));
 

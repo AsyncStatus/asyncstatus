@@ -20,6 +20,7 @@ interface ResolvedGenerationTarget {
   memberId: string;
   userId: string;
   displayName: string;
+  usingActivityFrom?: schema.ScheduleConfigUsingActivityFrom[];
 }
 
 export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
@@ -91,6 +92,11 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
       const teamIds = new Set<string>();
 
       // Analyze generateFor methods and collect IDs
+      const generateForEntries = (config.generateFor || []).filter(
+        (g): g is NonNullable<typeof g> => !!g,
+      );
+      const organizationGenerateFor = generateForEntries.find((g) => g.type === "organization");
+
       for (const generateFor of config.generateFor || []) {
         if (!generateFor) continue;
 
@@ -144,7 +150,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
       const teamMap = new Map(teams.map((t) => [t.id, t]));
 
       // Now resolve generation targets using the batched data
-      for (const generateFor of config.generateFor || []) {
+      for (const generateFor of generateForEntries) {
         if (!generateFor) continue;
 
         switch (generateFor.type) {
@@ -155,6 +161,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
                 memberId: member.id,
                 userId: member.userId,
                 displayName: member.user.name || member.user.email,
+                usingActivityFrom: generateFor.usingActivityFrom as any,
               });
             }
             continue;
@@ -169,6 +176,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
                     memberId: membership.member.id,
                     userId: membership.member.userId,
                     displayName: membership.member.user.name || membership.member.user.email,
+                    usingActivityFrom: generateFor.usingActivityFrom as any,
                   });
                 }
               }
@@ -185,6 +193,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
             memberId: member.id,
             userId: member.userId,
             displayName: member.user.name || member.user.email,
+            usingActivityFrom: organizationGenerateFor?.usingActivityFrom as any,
           });
         }
       }
@@ -286,6 +295,7 @@ export class GenerateStatusUpdatesWorkflow extends WorkflowEntrypoint<
                 },
                 effectiveFrom,
                 effectiveTo,
+                usingActivityFrom: target.usingActivityFrom as any,
               });
 
               // Skip if no items generated

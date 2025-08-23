@@ -2,6 +2,7 @@ import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloud
 import { dayjs } from "@asyncstatus/dayjs";
 import { DiscordActivitySummaryEmail } from "@asyncstatus/email/organization/discord-activity-summary-email";
 import { GithubActivitySummaryEmail } from "@asyncstatus/email/organization/github-activity-summary-email";
+import { GitlabActivitySummaryEmail } from "@asyncstatus/email/organization/gitlab-activity-summary-email";
 import { SlackActivitySummaryEmail } from "@asyncstatus/email/organization/slack-activity-summary-email";
 import { StatusUpdatesSummaryEmail } from "@asyncstatus/email/organization/status-updates-summary-email";
 import { TeamStatusUpdatesSummaryEmail } from "@asyncstatus/email/organization/team-status-updates-summary-email";
@@ -20,6 +21,7 @@ import { getOrganizationPlan } from "../../lib/get-organization-plan";
 import { isTuple } from "../../lib/is-tuple";
 import { summarizeDiscordActivity } from "../summarization/summarize-discord-activity/summarize-discord-activity";
 import { summarizeGithubActivity } from "../summarization/summarize-github-activity/summarize-github-activity";
+import { summarizeGitlabActivity } from "../summarization/summarize-gitlab-activity/summarize-gitlab-activity";
 import { summarizeOrganizationStatusUpdates } from "../summarization/summarize-organization-status-updates/summarize-organization-status-updates";
 import { summarizeSlackActivity } from "../summarization/summarize-slack-activity/summarize-slack-activity";
 import { summarizeTeamStatusUpdates } from "../summarization/summarize-team-status-updates/summarize-team-status-updates";
@@ -158,6 +160,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               | "team_status_updates"
               | "user_status_updates"
               | "github_activity"
+              | "gitlab_activity"
               | "slack_activity"
               | "discord_activity";
             teamId?: string;
@@ -311,6 +314,31 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               });
               continue;
             }
+            if (target.type === "anyGitlab" || target.type === "gitlabProject") {
+              const projectIds = target.type === "gitlabProject" ? [target.value as string] : [];
+              const content = await summarizeGitlabActivity({
+                db,
+                openRouterProvider,
+                organizationId,
+                projectIds,
+                plan: orgPlan.plan,
+                kv: this.env.STRIPE_KV,
+                aiLimits: {
+                  basic: parseInt(this.env.AI_BASIC_MONTHLY_LIMIT),
+                  startup: parseInt(this.env.AI_STARTUP_MONTHLY_LIMIT),
+                  enterprise: parseInt(this.env.AI_ENTERPRISE_MONTHLY_LIMIT),
+                },
+                effectiveFrom,
+                effectiveTo,
+              });
+              generatedSummaries.push({
+                type: "gitlab_activity",
+                content,
+                effectiveFrom,
+                effectiveTo,
+              });
+              continue;
+            }
             if (target.type === "anyDiscord" || target.type === "discordChannel") {
               const channelIds = target.type === "discordChannel" ? [target.value as string] : [];
               const content = await summarizeDiscordActivity({
@@ -369,6 +397,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             pickByType("user_status_updates") ||
             pickByType("slack_activity") ||
             pickByType("github_activity") ||
+            pickByType("gitlab_activity") ||
             pickByType("discord_activity");
 
           // Normalize primary summary to shape { generalSummary, userSummaries[] }
@@ -400,6 +429,14 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               return {
                 generalSummary: c.generalSummary ?? null,
                 userSummaries: Array.isArray(c.repoSummaries) ? c.repoSummaries : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            if (primary.type === "gitlab_activity") {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: Array.isArray(c.projectSummaries) ? c.projectSummaries : [],
                 effectiveFrom,
                 effectiveTo,
               };
@@ -720,6 +757,21 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   [
                     `📦 *Repository Highlights*`,
                     ...s.content.repoSummaries.map((r: any) => `• ${r.content}`),
+                  ].join("\n"),
+                );
+              }
+            } else if (s.type === "gitlab_activity") {
+              header = `*GitLab activity — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.projectSummaries) &&
+                s.content.projectSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `📦 *Project Highlights*`,
+                    ...s.content.projectSummaries.map((p: any) => `• ${p.content}`),
                   ].join("\n"),
                 );
               }

@@ -74,6 +74,20 @@
         "max_batch_timeout": 2,
         "retry_delay": 60,
         "max_retries": 10
+      },
+      {
+        "queue": "gitlab-webhook-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 2,
+        "retry_delay": 10,
+        "max_retries": 3
+      },
+      {
+        "queue": "gitlab-process-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
       }
     ],
     "producers": [
@@ -100,6 +114,14 @@
       {
         "queue": "discord-process-events",
         "binding": "DISCORD_PROCESS_EVENTS_QUEUE"
+      },
+      {
+        "queue": "gitlab-webhook-events",
+        "binding": "GITLAB_WEBHOOK_EVENTS_QUEUE"
+      },
+      {
+        "queue": "gitlab-process-events",
+        "binding": "GITLAB_PROCESS_EVENTS_QUEUE"
       }
     ]
   },
@@ -153,6 +175,16 @@
       "name": "fetch-discord-messages",
       "binding": "FETCH_DISCORD_MESSAGES_WORKFLOW",
       "class_name": "FetchDiscordMessagesWorkflow"
+    },
+    {
+      "name": "sync-gitlab",
+      "binding": "SYNC_GITLAB_WORKFLOW",
+      "class_name": "SyncGitlabWorkflow"
+    },
+    {
+      "name": "delete-gitlab-integration",
+      "binding": "DELETE_GITLAB_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteGitlabIntegrationWorkflow"
     }
   ],
   "kv_namespaces": [

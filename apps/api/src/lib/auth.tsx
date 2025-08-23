@@ -38,6 +38,17 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
           };
         },
       },
+      gitlab: {
+        clientId: env.GITLAB_CLIENT_ID,
+        clientSecret: env.GITLAB_CLIENT_SECRET,
+        mapProfileToUser: async (profile) => {
+          return {
+            email: profile.email,
+            name: profile.name || profile.username,
+            emailVerified: true,
+          };
+        },
+      },
       discord: {
         clientId: env.DISCORD_CLIENT_ID,
         clientSecret: env.DISCORD_CLIENT_SECRET,

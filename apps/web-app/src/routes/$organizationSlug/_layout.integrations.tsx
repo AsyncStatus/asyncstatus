@@ -1,6 +1,7 @@
 import {
   getDiscordIntegrationConnectUrl,
   getGithubIntegrationConnectUrl,
+  getGitlabIntegrationConnectUrl,
   getSlackIntegrationConnectUrl,
 } from "@asyncstatus/api/integrations-connect-url";
 import {
@@ -25,6 +26,14 @@ import {
   listGithubUsersContract,
   resyncGithubIntegrationContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  deleteGitlabIntegrationContract,
+  getGitlabIntegrationContract,
+  gitlabIntegrationCallbackContract,
+  listGitlabProjectsContract,
+  listGitlabUsersContract,
+  resyncGitlabIntegrationContract,
+} from "@asyncstatus/api/typed-handlers/gitlab-integration";
 import {
   getMemberContract,
   listMembersContract,
@@ -136,6 +145,23 @@ export const Route = createFileRoute("/$organizationSlug/_layout/integrations")(
         ),
       ),
       queryClient.ensureQueryData(
+        typedQueryOptions(getGitlabIntegrationContract, { idOrSlug: organizationSlug }),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listGitlabProjectsContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listGitlabUsersContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
         typedQueryOptions(getSlackIntegrationContract, { idOrSlug: organizationSlug }),
       ),
       queryClient.ensureQueryData(
@@ -163,7 +189,7 @@ function RouteComponent() {
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "connected" | "disconnected" | "connecting"
+    "all" | "connected" | "disconnected" | "connecting" | "error"
   >("all");
 
   // Clear error message from URL
@@ -184,6 +210,41 @@ function RouteComponent() {
       onSuccess: () => {
         queryClient.invalidateQueries({
           queryKey: typedQueryOptions(getGithubIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const gitlabIntegrationQuery = useQuery(
+    typedQueryOptions(getGitlabIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
+  const resyncGitlabIntegrationMutation = useMutation(
+    typedMutationOptions(resyncGitlabIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getGitlabIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const deleteGitlabIntegrationMutation = useMutation(
+    typedMutationOptions(deleteGitlabIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getGitlabIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listGitlabProjectsContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listGitlabUsersContract, {
             idOrSlug: params.organizationSlug,
           }).queryKey,
         });
@@ -289,7 +350,7 @@ function RouteComponent() {
             }).queryKey,
           });
 
-          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
             if (!sessionData) {
               return sessionData;
             }
@@ -312,6 +373,20 @@ function RouteComponent() {
   const githubUsers = useQuery(
     typedQueryOptions(
       listGithubUsersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const gitlabProjects = useQuery(
+    typedQueryOptions(
+      listGitlabProjectsContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const gitlabUsers = useQuery(
+    typedQueryOptions(
+      listGitlabUsersContract,
       { idOrSlug: params.organizationSlug },
       { throwOnError: false },
     ),
@@ -1011,7 +1086,184 @@ function RouteComponent() {
         name: "GitLab",
         description: "Monitor merge requests, CI/CD pipelines, and repository activity.",
         icon: <SiGitlab className="size-3.5" />,
-        status: "disconnected",
+        status: gitlabIntegrationQuery.data?.syncErrorAt
+          ? "error"
+          : gitlabIntegrationQuery.data?.syncFinishedAt
+            ? "connected"
+            : gitlabIntegrationQuery.data?.syncStartedAt
+              ? "connecting"
+              : "disconnected",
+        connectLink: getGitlabIntegrationConnectUrl({
+          clientId: import.meta.env.VITE_GITLAB_INTEGRATION_APP_CLIENT_ID,
+          redirectUri: import.meta.env.VITE_API_URL + gitlabIntegrationCallbackContract.url(),
+          organizationSlug: params.organizationSlug,
+          instanceUrl: "https://gitlab.com", // Default to GitLab.com
+        }),
+        onDisconnect: () => {
+          deleteGitlabIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+        },
+        settingsChildren: (
+          <div className="space-y-6">
+            {gitlabUsers.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No users found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Users ({gitlabUsers.data?.length})</h4>
+              {gitlabUsers.data?.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-2">
+                  {gitlabUsers.data.map((user) => {
+                    const member = organizationMembers.data?.members.find(
+                      (member) => member.gitlabId === user.gitlabId,
+                    );
+
+                    return (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <Button variant="link" asChild className="p-0 text-left">
+                          <a href={user.webUrl} target="_blank" rel="noreferrer">
+                            {user.name || user.username}
+                          </a>
+                        </Button>
+                        <ArrowRight className="size-4" />
+                        <Select
+                          value={member?.id}
+                          onValueChange={(value) => {
+                            const member = organizationMembers.data?.members.find(
+                              (member) => member.id === value,
+                            );
+                            if (!member) return;
+
+                            updateMemberMutation.mutate({
+                              idOrSlug: params.organizationSlug,
+                              memberId: member.id,
+                              gitlabId: user.gitlabId,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AsyncStatus profile" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationMembers.data?.members.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {member && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              updateMemberMutation.mutate({
+                                idOrSlug: params.organizationSlug,
+                                memberId: member.id,
+                                gitlabId: null,
+                              });
+                            }}
+                          >
+                            <XIcon className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {gitlabProjects.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No projects found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Projects ({gitlabProjects.data?.length})</h4>
+              {gitlabProjects.data?.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-1">
+                  {gitlabProjects.data.map((project) => (
+                    <div key={project.id} className="flex items-center gap-2">
+                      <Button variant="link" asChild className="p-0 text-left">
+                        <a href={project.webUrl} target="_blank" rel="noreferrer">
+                          {project.pathWithNamespace}
+                        </a>
+                      </Button>
+                      <Badge variant={project.visibility === "private" ? "secondary" : "outline"}>
+                        {project.visibility}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resyncGitlabIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+                }}
+              >
+                Resync users and projects
+              </Button>
+            </div>
+          </div>
+        ),
+        children: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your GitLab activity across projects.</li>
+                <li>Generates meaningful status updates from your code contributions.</li>
+                <li>Links AsyncStatus profiles to your GitLab accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Read-only access - we never modify your code.</li>
+                <li>Secure OAuth authentication with GitLab.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>Data is used only for status update generation. We don't store your code.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Data we track</h4>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  <strong>Project Information:</strong> Project names, descriptions, visibility
+                  settings.
+                </li>
+                <li>
+                  <strong>Merge Requests:</strong> MR creation, reviews, approvals, and merges.
+                </li>
+                <li>
+                  <strong>Issues:</strong> Issue creation, assignments, labels, and resolution.
+                </li>
+                <li>
+                  <strong>Commits & Pushes:</strong> Code commits and push events across branches.
+                </li>
+                <li>
+                  <strong>CI/CD Pipelines:</strong> Pipeline status, job results, and deployment
+                  tracking.
+                </li>
+                <li>
+                  <strong>User Activity:</strong> Developer contributions and collaboration
+                  patterns.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <strong>Status Example:</strong> "Merged 3 MRs for payment gateway, reviewed
+              [@colleague]'s authentication changes, resolved 2 critical issues in CI pipeline."
+            </div>
+          </div>
+        ),
       },
       {
         name: "Asana",
@@ -1079,6 +1331,9 @@ function RouteComponent() {
       discordServers.data,
       discordChannels.data,
       discordUsers.data,
+      gitlabIntegrationQuery.data,
+      gitlabProjects.data,
+      gitlabUsers.data,
       organizationMembers.data,
     ],
   );
@@ -1092,7 +1347,9 @@ function RouteComponent() {
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "connected" && integration.status === "connected") ||
-        (statusFilter === "disconnected" && integration.status === "disconnected");
+        (statusFilter === "disconnected" && integration.status === "disconnected") ||
+        (statusFilter === "connecting" && integration.status === "connecting") ||
+        (statusFilter === "error" && integration.status === "error");
 
       return matchesSearch && matchesStatus;
     });
@@ -1159,6 +1416,7 @@ function RouteComponent() {
             <SelectItem value="connected">Connected</SelectItem>
             <SelectItem value="disconnected">Disconnected</SelectItem>
             <SelectItem value="connecting">Connecting</SelectItem>
+            <SelectItem value="error">Error</SelectItem>
           </SelectContent>
         </Select>
 

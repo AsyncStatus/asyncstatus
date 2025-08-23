@@ -1,6 +1,7 @@
 import { listDiscordChannelsContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getFileContract } from "@asyncstatus/api/typed-handlers/file";
 import { listGithubRepositoriesContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import { listGitlabProjectsContract } from "@asyncstatus/api/typed-handlers/gitlab-integration";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import type {
   listSchedulesContract,
@@ -12,7 +13,7 @@ import type {
 import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
 import { dayjs } from "@asyncstatus/dayjs";
-import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiGitlab, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { BuildingIcon, UsersIcon } from "@asyncstatus/ui/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -220,6 +221,9 @@ function GenerateForUsingActivityFromItem(props: {
   const githubRepos = useQuery(
     typedQueryOptions(listGithubRepositoriesContract, { idOrSlug: props.organizationSlug }),
   );
+  const gitlabProjects = useQuery(
+    typedQueryOptions(listGitlabProjectsContract, { idOrSlug: props.organizationSlug }),
+  );
   const slackChannels = useQuery(
     typedQueryOptions(listSlackChannelsContract, { idOrSlug: props.organizationSlug }),
   );
@@ -235,6 +239,15 @@ function GenerateForUsingActivityFromItem(props: {
     return (
       <span>
         any <SiGithub className="size-3 mb-1 inline" /> GitHub activity
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.usingActivityFrom.type === "anyGitlab") {
+    return (
+      <span>
+        any <SiGitlab className="size-3 mb-1 inline" /> GitLab activity
         {props.includeAnd && <span> and </span>}
       </span>
     );
@@ -267,6 +280,20 @@ function GenerateForUsingActivityFromItem(props: {
     return (
       <span>
         activity in <SiGithub className="size-3 mb-1 inline" /> {githubRepo.name} repo
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.usingActivityFrom.type === "gitlabProject") {
+    const project = gitlabProjects.data?.find((p) => p.id === props.usingActivityFrom.value);
+    if (!project) {
+      return null;
+    }
+
+    return (
+      <span>
+        activity in <SiGitlab className="size-3 mb-1 inline" /> {project.name} project
         {props.includeAnd && <span> and </span>}
       </span>
     );
@@ -455,6 +482,9 @@ function ScheduleSummaryForItem(props: {
   const githubRepos = useQuery(
     typedQueryOptions(listGithubRepositoriesContract, { idOrSlug: props.organizationSlug }),
   );
+  const gitlabProjects = useQuery(
+    typedQueryOptions(listGitlabProjectsContract, { idOrSlug: props.organizationSlug }),
+  );
   const slackChannels = useQuery(
     typedQueryOptions(listSlackChannelsContract, { idOrSlug: props.organizationSlug }),
   );
@@ -508,6 +538,15 @@ function ScheduleSummaryForItem(props: {
     );
   }
 
+  if (props.summaryFor.type === "anyGitlab") {
+    return (
+      <span>
+        any <SiGitlab className="size-3 mb-1 inline" /> GitLab activity
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
   if (props.summaryFor.type === "githubRepository") {
     const githubRepo = githubRepos.data?.find((repo) => repo.id === props.summaryFor.value);
     if (!githubRepo) {
@@ -517,6 +556,20 @@ function ScheduleSummaryForItem(props: {
     return (
       <span>
         activity in <SiGithub className="size-3 mb-1 inline" /> {githubRepo.name} repo
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.summaryFor.type === "gitlabProject") {
+    const project = gitlabProjects.data?.find((p) => p.id === props.summaryFor.value);
+    if (!project) {
+      return null;
+    }
+
+    return (
+      <span>
+        activity in <SiGitlab className="size-3 mb-1 inline" /> {project.name} project
         {props.includeAnd && <span> and </span>}
       </span>
     );

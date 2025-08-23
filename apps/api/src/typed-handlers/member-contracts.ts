@@ -33,6 +33,7 @@ export const updateMemberContract = typedContract(
     archivedAt: MemberUpdate.shape.archivedAt,
     slackId: MemberUpdate.shape.slackId,
     githubId: MemberUpdate.shape.githubId,
+    gitlabId: MemberUpdate.shape.gitlabId,
     discordId: MemberUpdate.shape.discordId,
     timezone: UserUpdate.shape.timezone,
     autoDetectTimezone: UserUpdate.shape.autoDetectTimezone,
