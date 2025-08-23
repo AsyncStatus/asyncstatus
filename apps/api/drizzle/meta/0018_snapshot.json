@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "08cd8072-d3df-4ca8-8089-9c09fa19beae",
+  "id": "218172a2-c80b-43d1-84ae-bc98c6c3f105",
   "prevId": "91e14821-93ad-499d-b4a6-969322e8b3a1",
   "tables": {
     "account": {
@@ -1831,7 +1831,7 @@
         },
         "embedding": {
           "name": "embedding",
-          "type": "blob",
+          "type": "F32_BLOB(1024)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -2488,6 +2488,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "gitlab_id": {
+          "name": "gitlab_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "slack_id": {
           "name": "slack_id",
           "type": "text",
@@ -2536,6 +2543,13 @@
           "name": "member_github_id_index",
           "columns": [
             "github_id"
+          ],
+          "isUnique": false
+        },
+        "member_gitlab_id_index": {
+          "name": "member_gitlab_id_index",
+          "columns": [
+            "gitlab_id"
           ],
           "isUnique": false
         },

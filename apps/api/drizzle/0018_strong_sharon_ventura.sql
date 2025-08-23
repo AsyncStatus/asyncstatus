@@ -21,7 +21,7 @@ CREATE TABLE `gitlab_event_vector` (
 	`id` text PRIMARY KEY NOT NULL,
 	`event_id` text NOT NULL,
 	`embedding_text` text NOT NULL,
-	`embedding` blob NOT NULL,
+	`embedding` F32_BLOB(1024) NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`event_id`) REFERENCES `gitlab_event`(`id`) ON UPDATE no action ON DELETE cascade
 );
@@ -86,4 +86,7 @@ CREATE TABLE `gitlab_user` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `gitlab_user_gitlab_id_unique` ON `gitlab_user` (`gitlab_id`);--> statement-breakpoint
 CREATE INDEX `gitlab_user_integration_id_index` ON `gitlab_user` (`integration_id`);--> statement-breakpoint
-CREATE INDEX `gitlab_user_gitlab_id_index` ON `gitlab_user` (`gitlab_id`);
+CREATE INDEX `gitlab_user_gitlab_id_index` ON `gitlab_user` (`gitlab_id`);--> statement-breakpoint
+ALTER TABLE `member` ADD `gitlab_id` text;--> statement-breakpoint
+CREATE INDEX `member_gitlab_id_index` ON `member` (`gitlab_id`);--> statement-breakpoint
+CREATE INDEX `gitlab_event_vector_embedding_idx` ON `gitlab_event_vector`(libsql_vector_idx(embedding));

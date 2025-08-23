@@ -131,22 +131,8 @@
     {
       "idx": 18,
       "version": "6",
-      "when": 1755943907244,
-      "tag": "0018_brave_thunderbird",
-      "breakpoints": true
-    },
-    {
-      "idx": 19,
-      "version": "6",
-      "when": 1755943985453,
-      "tag": "0019_spooky_sersi",
-      "breakpoints": true
-    },
-    {
-      "idx": 20,
-      "version": "6",
-      "when": 1755966204392,
-      "tag": "0020_purple_lizard",
+      "when": 1755985829344,
+      "tag": "0018_strong_sharon_ventura",
       "breakpoints": true
     }
   ]
