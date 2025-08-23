@@ -22,6 +22,7 @@ CREATE TABLE `linear_event` (
 	FOREIGN KEY (`integration_id`) REFERENCES `linear_integration`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `linear_event_external_id_unique` ON `linear_event` (`external_id`);--> statement-breakpoint
 CREATE INDEX `linear_event_integration_id_index` ON `linear_event` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_event_external_id_index` ON `linear_event` (`external_id`);--> statement-breakpoint
 CREATE INDEX `linear_event_issue_id_index` ON `linear_event` (`issue_id`);--> statement-breakpoint
@@ -31,11 +32,9 @@ CREATE INDEX `linear_event_created_at_index` ON `linear_event` (`created_at`);--
 CREATE TABLE `linear_event_vector` (
 	`id` text PRIMARY KEY NOT NULL,
 	`event_id` text NOT NULL,
-	`embedding` text NOT NULL,
-	`content` text NOT NULL,
-	`metadata` text,
+	`embedding_text` text NOT NULL,
+	`embedding` F32_BLOB(1024) NOT NULL,
 	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL,
 	FOREIGN KEY (`event_id`) REFERENCES `linear_event`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -108,6 +107,7 @@ CREATE TABLE `linear_issue` (
 	FOREIGN KEY (`integration_id`) REFERENCES `linear_integration`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `linear_issue_issue_id_unique` ON `linear_issue` (`issue_id`);--> statement-breakpoint
 CREATE INDEX `linear_issue_integration_id_index` ON `linear_issue` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_issue_issue_id_index` ON `linear_issue` (`issue_id`);--> statement-breakpoint
 CREATE INDEX `linear_issue_team_id_index` ON `linear_issue` (`team_id`);--> statement-breakpoint
@@ -143,6 +143,7 @@ CREATE TABLE `linear_project` (
 	FOREIGN KEY (`integration_id`) REFERENCES `linear_integration`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `linear_project_project_id_unique` ON `linear_project` (`project_id`);--> statement-breakpoint
 CREATE INDEX `linear_project_integration_id_index` ON `linear_project` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_project_project_id_index` ON `linear_project` (`project_id`);--> statement-breakpoint
 CREATE INDEX `linear_project_team_id_index` ON `linear_project` (`team_id`);--> statement-breakpoint
@@ -163,6 +164,7 @@ CREATE TABLE `linear_team` (
 	FOREIGN KEY (`integration_id`) REFERENCES `linear_integration`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `linear_team_team_id_unique` ON `linear_team` (`team_id`);--> statement-breakpoint
 CREATE INDEX `linear_team_integration_id_index` ON `linear_team` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_team_team_id_index` ON `linear_team` (`team_id`);--> statement-breakpoint
 CREATE TABLE `linear_user` (
@@ -182,6 +184,8 @@ CREATE TABLE `linear_user` (
 	FOREIGN KEY (`integration_id`) REFERENCES `linear_integration`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `linear_user_user_id_unique` ON `linear_user` (`user_id`);--> statement-breakpoint
 CREATE INDEX `linear_user_integration_id_index` ON `linear_user` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_user_user_id_index` ON `linear_user` (`user_id`);--> statement-breakpoint
-CREATE INDEX `linear_user_email_index` ON `linear_user` (`email`);
+CREATE INDEX `linear_user_email_index` ON `linear_user` (`email`);--> statement-breakpoint
+CREATE INDEX `linear_event_vector_embedding_idx` ON `linear_event_vector`(libsql_vector_idx(embedding));

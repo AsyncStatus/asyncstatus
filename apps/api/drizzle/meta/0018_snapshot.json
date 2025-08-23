@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "961ff801-74c4-4b97-8c1b-794de53efc3d",
+  "id": "347e6b18-8efe-45e8-b735-bcac0484e53c",
   "prevId": "91e14821-93ad-499d-b4a6-969322e8b3a1",
   "tables": {
     "account": {
@@ -1987,6 +1987,13 @@
         }
       },
       "indexes": {
+        "linear_event_external_id_unique": {
+          "name": "linear_event_external_id_unique",
+          "columns": [
+            "external_id"
+          ],
+          "isUnique": true
+        },
         "linear_event_integration_id_index": {
           "name": "linear_event_integration_id_index",
           "columns": [
@@ -2066,36 +2073,22 @@
           "notNull": true,
           "autoincrement": false
         },
+        "embedding_text": {
+          "name": "embedding_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "embedding": {
           "name": "embedding",
-          "type": "text",
+          "type": "F32_BLOB(1024)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -2580,6 +2573,13 @@
         }
       },
       "indexes": {
+        "linear_issue_issue_id_unique": {
+          "name": "linear_issue_issue_id_unique",
+          "columns": [
+            "issue_id"
+          ],
+          "isUnique": true
+        },
         "linear_issue_integration_id_index": {
           "name": "linear_issue_integration_id_index",
           "columns": [
@@ -2822,6 +2822,13 @@
         }
       },
       "indexes": {
+        "linear_project_project_id_unique": {
+          "name": "linear_project_project_id_unique",
+          "columns": [
+            "project_id"
+          ],
+          "isUnique": true
+        },
         "linear_project_integration_id_index": {
           "name": "linear_project_integration_id_index",
           "columns": [
@@ -2959,6 +2966,13 @@
         }
       },
       "indexes": {
+        "linear_team_team_id_unique": {
+          "name": "linear_team_team_id_unique",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": true
+        },
         "linear_team_integration_id_index": {
           "name": "linear_team_integration_id_index",
           "columns": [
@@ -3089,6 +3103,13 @@
         }
       },
       "indexes": {
+        "linear_user_user_id_unique": {
+          "name": "linear_user_user_id_unique",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": true
+        },
         "linear_user_integration_id_index": {
           "name": "linear_user_integration_id_index",
           "columns": [
