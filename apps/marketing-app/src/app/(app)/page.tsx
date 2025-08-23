@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BetaMessage } from "../components/beta-message";
 import { ConnectCard } from "../components/connect-card";
 import { CtaSection } from "../components/cta-section";
+import { FaqSection } from "../components/faq-section";
 import { FeaturesList } from "../components/features-list";
 import { Footer } from "../components/footer";
 import { GenerateCard } from "../components/generate-card";
@@ -342,6 +343,8 @@ export default async function Page(props: {
         </section>
 
         <CtaSection />
+
+        <FaqSection />
       </main>
 
       <Footer />
