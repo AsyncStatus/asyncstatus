@@ -62,6 +62,9 @@ export default async function Page(props: {
             <Link href="#team" className="hover:text-foreground">
               Use cases
             </Link>
+            <Link href="#remote-culture" className="hover:text-foreground">
+              Remote culture
+            </Link>
             <Link href="#pricing" className="hover:text-foreground">
               Pricing
             </Link>
@@ -279,6 +282,113 @@ export default async function Page(props: {
 
         <section id="team">
           <TargetAudience />
+        </section>
+
+        <section id="remote-culture" className="mt-36">
+          <div className="text-center">
+            <h3 className="text-6xl font-bold max-sm:text-5xl">
+              Building culture when everyone works remote
+            </h3>
+            <h4 className="text-muted-foreground mt-6 text-xl text-pretty max-w-4xl mx-auto">
+              Strong company culture isn't built in conference rooms—it's built through consistent, thoughtful communication that respects everyone's time and context.
+            </h4>
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Transparency by default</h5>
+                <p className="text-muted-foreground text-sm">
+                  When updates are written and shared asynchronously, everyone has access to the same information. No more wondering what happened in that meeting you missed.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                💡 Culture wins when information is accessible
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Deep work protection</h5>
+                <p className="text-muted-foreground text-sm">
+                  By eliminating unnecessary meetings, your team can focus on what they do best. Protecting deep work time shows you value quality over performative busyness.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                🎯 Culture wins when focus is protected
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Global inclusion</h5>
+                <p className="text-muted-foreground text-sm">
+                  Async communication naturally accommodates different time zones, work styles, and life situations. Your team in Tokyo contributes just as much as your team in New York.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                🌍 Culture wins when everyone belongs
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Written documentation wins</h5>
+                <p className="text-muted-foreground text-sm">
+                  Great decisions and progress get documented automatically. New team members can understand context quickly instead of relying on tribal knowledge.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                📚 Culture wins when knowledge is preserved
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Trust and autonomy</h5>
+                <p className="text-muted-foreground text-sm">
+                  When you don't need to watch people work, you're inherently building a culture of trust. Your team knows they're valued for their output, not their online status.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                🤝 Culture wins when trust is the default
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="bg-primary/10 border-primary/20 rounded-lg border p-4 mb-4">
+                <h5 className="text-lg font-semibold mb-2">Thoughtful communication</h5>
+                <p className="text-muted-foreground text-sm">
+                  Async updates encourage people to think before they share. Less noise, more signal. Better conversations happen when people have time to process and respond thoughtfully.
+                </p>
+              </div>
+              <div className="text-primary text-sm font-medium">
+                💬 Culture wins when communication improves
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center">
+            <div className="bg-muted/50 border-border rounded-lg border p-8 max-w-4xl mx-auto">
+              <blockquote className="text-xl italic text-balance">
+                "The strongest remote cultures aren't built by forcing people into more meetings. They're built by creating systems that respect people's time, celebrate their contributions, and trust them to do great work."
+              </blockquote>
+              <div className="mt-4 text-sm text-muted-foreground">
+                The async-first approach to building culture
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-12">
+            <Button size="lg" asChild>
+              <Link
+                href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+                className="hover:text-foreground"
+              >
+                <span>Start building better culture</span>
+              </Link>
+            </Button>
+          </div>
         </section>
 
         <section id="features">
