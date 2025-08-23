@@ -218,7 +218,13 @@ export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps)
 
         <DialogFooter className="flex flex-row w-full items-center justify-between">
           {props.onDisconnect && (
-            <Button variant="destructive" onClick={props.onDisconnect}>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                props.onDisconnect?.();
+                props.onOpenChange(false);
+              }}
+            >
               Disconnect
             </Button>
           )}

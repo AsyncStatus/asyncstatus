@@ -205,6 +205,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
       }
 
       // Set up webhook for the integration immediately
+      let webhookSetupError: string | null = null;
       try {
         const webhookUrl = `${betterAuthUrl}/integrations/gitlab/webhooks`;
         const webhookSecret = gitlab?.webhookSecret;
@@ -215,14 +216,16 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         console.log(`   - GitLab instance: ${gitlabInstanceUrl}`);
         
         if (!webhookSecret) {
-          console.warn("⚠️ GitLab webhook secret not configured - skipping webhook setup. Please set GITLAB_WEBHOOK_SECRET environment variable.");
+          webhookSetupError = "GitLab webhook secret not configured - please set GITLAB_WEBHOOK_SECRET environment variable.";
+          console.warn(`⚠️ ${webhookSetupError}`);
         } else {
           // Test GitLab API connection first
           console.log(`🔍 Testing GitLab API connection...`);
           const connectionTest = await testGitlabApiConnection(tokenData.access_token, gitlabInstanceUrl);
           
           if (!connectionTest.success) {
-            console.error(`❌ GitLab API connection failed: ${connectionTest.error}`);
+            webhookSetupError = `GitLab API connection failed: ${connectionTest.error}`;
+            console.error(`❌ ${webhookSetupError}`);
           } else {
             console.log(`✅ GitLab API connection successful`);
             console.log(`   - User: ${connectionTest.user?.username || 'Unknown'} (ID: ${connectionTest.user?.id || 'Unknown'})`);
@@ -248,7 +251,8 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
               console.log(`📁 Found ${projects.length} GitLab projects for webhook setup`);
               
               if (projects.length === 0) {
-                console.warn("⚠️ No GitLab projects found. User might not have access to any projects or the OAuth scopes might be insufficient.");
+                webhookSetupError = "No GitLab projects found. User might not have access to any projects or the OAuth scopes might be insufficient.";
+                console.warn(`⚠️ ${webhookSetupError}`);
                 console.warn("   - Required scopes: read_user, read_repository, read_api, api");
               }
               
@@ -256,6 +260,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
               let webhooksCreated = 0;
               let webhooksSkipped = 0;
               let webhooksFailed = 0;
+              const failedProjects: string[] = [];
               
               for (const project of projects) {
                 try {
@@ -272,12 +277,14 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
                   if (!setupInfo.projectAccess) {
                     console.warn(`⚠️ No access to project ${project.path_with_namespace}: ${setupInfo.error}`);
                     webhooksFailed++;
+                    failedProjects.push(`${project.path_with_namespace} (no access)`);
                     continue;
                   }
                   
                   if (!setupInfo.canCreateWebhook) {
                     console.warn(`⚠️ Cannot create webhooks for project ${project.path_with_namespace} - insufficient permissions`);
                     webhooksFailed++;
+                    failedProjects.push(`${project.path_with_namespace} (insufficient permissions)`);
                     continue;
                   }
                   
@@ -301,6 +308,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
                 } catch (error) {
                   console.error(`❌ Failed to set up webhook for project ${project.path_with_namespace}:`, error);
                   webhooksFailed++;
+                  failedProjects.push(`${project.path_with_namespace} (${error})`);
                   // Continue with other projects
                 }
               }
@@ -311,15 +319,31 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
               console.log(`   - Failed: ${webhooksFailed}`);
               console.log(`   - Total projects: ${projects.length}`);
               
+              if (webhooksFailed > 0) {
+                webhookSetupError = `Failed to set up webhooks for ${webhooksFailed} projects: ${failedProjects.join(", ")}`;
+              }
+              
             } else {
               const errorText = await projectsResponse.text();
-              console.error(`❌ Failed to fetch GitLab projects for webhook setup. Status: ${projectsResponse.status}, Error: ${errorText}`);
+              webhookSetupError = `Failed to fetch GitLab projects for webhook setup. Status: ${projectsResponse.status}, Error: ${errorText}`;
+              console.error(`❌ ${webhookSetupError}`);
             }
           }
         }
       } catch (error) {
-        console.error("❌ Failed to set up GitLab webhooks:", error);
-        // Don't fail the integration creation if webhook setup fails
+        webhookSetupError = `Failed to set up GitLab webhooks: ${error}`;
+        console.error(`❌ ${webhookSetupError}`);
+      }
+      
+      // Update integration with webhook setup error if any
+      if (webhookSetupError) {
+        await db
+          .update(schema.gitlabIntegration)
+          .set({
+            syncError: webhookSetupError,
+            syncErrorAt: new Date(),
+          })
+          .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
       }
 
       // Trigger sync workflow (if available)
@@ -595,16 +619,39 @@ export const setupGitlabWebhooksHandler = typedHandler<
         }
       }
 
+      // Update integration status based on webhook setup results
+      if (errors.length > 0) {
+        const errorMessage = `Failed to set up webhooks for some projects: ${errors.join(", ")}`;
+        await db
+          .update(schema.gitlabIntegration)
+          .set({
+            syncError: errorMessage,
+            syncErrorAt: new Date(),
+          })
+          .where(eq(schema.gitlabIntegration.id, integration.id));
+      }
+
       return { 
-        success: true, 
+        success: errors.length === 0, 
         webhooksCreated,
         errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
-      console.error("❌ Failed to set up GitLab webhooks:", error);
+      const errorMessage = `Failed to set up GitLab webhooks: ${error}`;
+      console.error(`❌ ${errorMessage}`);
+      
+      // Update integration status with error
+      await db
+        .update(schema.gitlabIntegration)
+        .set({
+          syncError: errorMessage,
+          syncErrorAt: new Date(),
+        })
+        .where(eq(schema.gitlabIntegration.id, integration.id));
+
       throw new TypedHandlersError({
         code: "INTERNAL_SERVER_ERROR",
-        message: `Failed to set up webhooks: ${error}`,
+        message: errorMessage,
       });
     }
   },
