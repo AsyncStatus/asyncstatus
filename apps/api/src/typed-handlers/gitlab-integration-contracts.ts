@@ -4,10 +4,10 @@ import { GitlabIntegration, GitlabProject, GitlabUser } from "../db";
 
 export const gitlabIntegrationCallbackContract = typedContract(
   "get /integrations/gitlab/callback",
-  z.object({ 
+  z.object({
     code: z.string(),
     state: z.string().optional(), // organization slug
-    redirect: z.string().optional() 
+    redirect: z.string().optional(),
   }),
   z.instanceof(Response),
 );
@@ -40,14 +40,4 @@ export const deleteGitlabIntegrationContract = typedContract(
   "delete /organizations/:idOrSlug/integrations/gitlab",
   z.strictObject({ idOrSlug: z.string().min(1) }),
   z.strictObject({ success: z.boolean() }),
-);
-
-export const setupGitlabWebhooksContract = typedContract(
-  "post /organizations/:idOrSlug/integrations/gitlab/setup-webhooks", 
-  z.strictObject({ idOrSlug: z.string().min(1) }),
-  z.strictObject({ 
-    success: z.boolean(),
-    webhooksCreated: z.number(),
-    errors: z.array(z.string()).optional(),
-  }),
 );

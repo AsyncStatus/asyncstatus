@@ -41,7 +41,7 @@ export async function setupGitlabProjectWebhook(
   const { accessToken, instanceUrl, projectId, webhookUrl, webhookSecret } = config;
 
   const webhookData = {
-    url: "https://rio-ecommerce-asylum-antarctica.trycloudflare.com/integrations/gitlab/webhooks",
+    url: webhookUrl,
     token: webhookSecret,
     push_events: true,
     push_events_branch_filter: "",

@@ -48,12 +48,7 @@ export class DeleteGitlabIntegrationWorkflow extends WorkflowEntrypoint<
 
               console.log(webhooks);
               for (const webhook of webhooks) {
-                if (
-                  webhook.url.startsWith(this.env.BETTER_AUTH_URL) ||
-                  webhook.url.startsWith(
-                    "https://rio-ecommerce-asylum-antarctica.trycloudflare.com",
-                  )
-                ) {
+                if (webhook.url.startsWith(this.env.BETTER_AUTH_URL)) {
                   await deleteGitlabProjectWebhook(
                     integration.accessToken!,
                     integration.gitlabInstanceUrl,

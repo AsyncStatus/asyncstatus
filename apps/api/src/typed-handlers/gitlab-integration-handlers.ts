@@ -6,7 +6,6 @@ import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,
 } from "../lib/env";
-import { findWebhookByUrl, setupGitlabProjectWebhook } from "../lib/gitlab-webhook";
 import {
   deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
@@ -14,7 +13,6 @@ import {
   listGitlabProjectsContract,
   listGitlabUsersContract,
   resyncGitlabIntegrationContract,
-  setupGitlabWebhooksContract,
 } from "./gitlab-integration-contracts";
 import { requiredOrganization, requiredSession } from "./middleware";
 
@@ -358,122 +356,5 @@ export const deleteGitlabIntegrationHandler = typedHandler<
     }
 
     return { success: true };
-  },
-);
-
-export const setupGitlabWebhooksHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof setupGitlabWebhooksContract
->(
-  setupGitlabWebhooksContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, betterAuthUrl, gitlab }) => {
-    const integration = await db.query.gitlabIntegration.findFirst({
-      where: eq(schema.gitlabIntegration.organizationId, organization.id),
-    });
-
-    if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "GitLab integration not found",
-      });
-    }
-
-    if (!integration.accessToken) {
-      throw new TypedHandlersError({
-        code: "BAD_REQUEST",
-        message: "GitLab access token not available",
-      });
-    }
-
-    const webhookUrl = `${betterAuthUrl}/integrations/gitlab/webhooks`;
-    const webhookSecret = gitlab?.webhookSecret;
-
-    if (!webhookSecret) {
-      throw new TypedHandlersError({
-        code: "SERVICE_UNAVAILABLE",
-        message: "GitLab webhook secret not configured",
-      });
-    }
-
-    let webhooksCreated = 0;
-    const errors: string[] = [];
-
-    try {
-      // Get projects from the database
-      const projects = await db.query.gitlabProject.findMany({
-        where: eq(schema.gitlabProject.integrationId, integration.id),
-      });
-
-      console.log(`Setting up webhooks for ${projects.length} GitLab projects`);
-
-      for (const project of projects) {
-        try {
-          // Check if webhook already exists
-          const existingWebhook = await findWebhookByUrl(
-            integration.accessToken,
-            integration.gitlabInstanceUrl,
-            project.projectId,
-            webhookUrl,
-          );
-
-          if (existingWebhook) {
-            console.log(`✅ Webhook already exists for project: ${project.pathWithNamespace}`);
-          } else {
-            const webhook = await setupGitlabProjectWebhook({
-              accessToken: integration.accessToken,
-              instanceUrl: integration.gitlabInstanceUrl,
-              projectId: project.projectId,
-              webhookUrl,
-              webhookSecret,
-            });
-            webhooksCreated++;
-            console.log(
-              `✅ Webhook configured for project: ${project.pathWithNamespace} (Webhook ID: ${webhook.id})`,
-            );
-          }
-        } catch (error) {
-          const errorMessage = `Failed to set up webhook for project ${project.pathWithNamespace}: ${error}`;
-          console.error(`❌ ${errorMessage}`);
-          errors.push(errorMessage);
-        }
-      }
-
-      // Update integration status based on webhook setup results
-      if (errors.length > 0) {
-        const errorMessage = `Failed to set up webhooks for some projects: ${errors.join(", ")}`;
-        await db
-          .update(schema.gitlabIntegration)
-          .set({
-            syncError: errorMessage,
-            syncErrorAt: new Date(),
-          })
-          .where(eq(schema.gitlabIntegration.id, integration.id));
-      }
-
-      return {
-        success: errors.length === 0,
-        webhooksCreated,
-        errors: errors.length > 0 ? errors : undefined,
-      };
-    } catch (error) {
-      const errorMessage = `Failed to set up GitLab webhooks: ${error}`;
-      console.error(`❌ ${errorMessage}`);
-
-      // Update integration status with error
-      await db
-        .update(schema.gitlabIntegration)
-        .set({
-          syncError: errorMessage,
-          syncErrorAt: new Date(),
-        })
-        .where(eq(schema.gitlabIntegration.id, integration.id));
-
-      throw new TypedHandlersError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: errorMessage,
-      });
-    }
   },
 );

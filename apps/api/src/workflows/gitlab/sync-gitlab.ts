@@ -1,14 +1,14 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { eq } from "drizzle-orm";
 import { dayjs } from "@asyncstatus/dayjs";
+import { eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
+import { listGitlabProjectWebhooks, setupGitlabProjectWebhook } from "../../lib/gitlab-webhook";
 import { createReportStatusFn } from "../github/steps/common";
+import { fetchAndSyncGitlabEvents } from "./steps/fetch-and-sync-events";
 import { fetchAndSyncGitlabProjects } from "./steps/fetch-and-sync-projects";
 import { fetchAndSyncGitlabUsers } from "./steps/fetch-and-sync-users";
-import { fetchAndSyncGitlabEvents } from "./steps/fetch-and-sync-events";
-import { setupGitlabProjectWebhook, listGitlabProjectWebhooks } from "../../lib/gitlab-webhook";
 
 export type SyncGitlabWorkflowParams = { integrationId: string };
 
@@ -19,12 +19,12 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
   async run(event: WorkflowEvent<SyncGitlabWorkflowParams>, step: WorkflowStep) {
     const { integrationId } = event.payload;
     const db = createDb(this.env);
-    
+
     const integration = await db.query.gitlabIntegration.findFirst({
       where: eq(schema.gitlabIntegration.id, integrationId),
       with: { organization: true },
     });
-    
+
     if (!integration) {
       throw new Error("GitLab integration not found");
     }
@@ -45,12 +45,14 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
 
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
-      return await reportStatusFn(() => fetchAndSyncGitlabProjects({
-        accessToken: integration.accessToken!,
-        instanceUrl: integration.gitlabInstanceUrl,
-        db,
-        integrationId,
-      }));
+      return await reportStatusFn(() =>
+        fetchAndSyncGitlabProjects({
+          accessToken: integration.accessToken!,
+          instanceUrl: integration.gitlabInstanceUrl,
+          db,
+          integrationId,
+        }),
+      );
     });
 
     await step.do("fetch-and-sync-users", async () => {
@@ -65,12 +67,14 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
 
       const reportStatusFn = createReportStatusFn({ db, integrationId });
 
-      await reportStatusFn(() => fetchAndSyncGitlabUsers({
-        accessToken: integration.accessToken!,
-        instanceUrl: integration.gitlabInstanceUrl,
-        db,
-        integrationId,
-      }));
+      await reportStatusFn(() =>
+        fetchAndSyncGitlabUsers({
+          accessToken: integration.accessToken!,
+          instanceUrl: integration.gitlabInstanceUrl,
+          db,
+          integrationId,
+        }),
+      );
     });
 
     await step.do("prefetch-past-events", async () => {
@@ -133,12 +137,12 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
               const existingWebhooks = await listGitlabProjectWebhooks(
                 integration.accessToken!,
                 integration.gitlabInstanceUrl,
-                project.projectId
+                project.projectId,
               );
 
               // Only set up webhook if none exists for our URL
-              const hasWebhook = existingWebhooks.some(webhook => webhook.url === webhookUrl);
-              
+              const hasWebhook = existingWebhooks.some((webhook) => webhook.url === webhookUrl);
+
               if (!hasWebhook) {
                 await setupGitlabProjectWebhook({
                   accessToken: integration.accessToken!,
@@ -150,7 +154,10 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
                 console.log(`✅ Webhook configured for new project: ${project.pathWithNamespace}`);
               }
             } catch (error) {
-              console.warn(`⚠️ Failed to check/set up webhook for project ${project.pathWithNamespace}:`, error);
+              console.warn(
+                `⚠️ Failed to check/set up webhook for project ${project.pathWithNamespace}:`,
+                error,
+              );
               // Continue with other projects
             }
           }
