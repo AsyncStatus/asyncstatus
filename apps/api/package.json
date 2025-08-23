@@ -9,6 +9,7 @@
     "./integrations-connect-url": "./src/lib/integrations-connect-url.ts",
     "./typed-handlers/file": "./src/typed-handlers/file-contracts.ts",
     "./typed-handlers/github-integration": "./src/typed-handlers/github-integration-contracts.ts",
+    "./typed-handlers/gitlab-integration": "./src/typed-handlers/gitlab-integration-contracts.ts",
     "./typed-handlers/invitation": "./src/typed-handlers/invitation-contracts.ts",
     "./typed-handlers/member": "./src/typed-handlers/member-contracts.ts",
     "./typed-handlers/organization": "./src/typed-handlers/organization-contracts.ts",

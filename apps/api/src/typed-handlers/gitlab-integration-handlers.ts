@@ -33,18 +33,60 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         });
       }
 
-      // Get user's account to check GitHub linking (GitLab uses OAuth, not apps)
-      const account = await db.query.account.findFirst({
-        where: and(
-          eq(schema.account.userId, session.user.id),
-          eq(schema.account.providerId, "gitlab"),
-        ),
+      // Exchange authorization code for access token
+      // The redirect URI must match EXACTLY what was sent in the OAuth request
+      // Since the callback is to the API, we need to use the API endpoint URL
+      // Use betterAuthUrl which should be the API base URL
+      const redirectUri = `${betterAuthUrl}/integrations/gitlab/callback`;
+      console.log("GitLab OAuth token exchange:", {
+        client_id: "3cdd167b80063e89e246a3de2594ed89ea5af6e926ad92483ba3273446c11321",
+        code,
+        redirect_uri: redirectUri,
+        webAppUrl,
+        betterAuthUrl,
+        input: input, // Log the full input to see what we received
+        organizationSlug,
+        redirectUrl,
+      });
+      
+      const tokenResponse = await fetch("https://gitlab.com/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: "3cdd167b80063e89e246a3de2594ed89ea5af6e926ad92483ba3273446c11321",
+          client_secret: "gloas-88c9d8b2ef88a696eb89f06133630410daba926bc3d0860524dc2be4480324d1",
+          code,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        }),
       });
 
-      if (!account || !account.accessToken) {
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error("GitLab token exchange failed:", {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          error: errorText,
+          headers: Object.fromEntries(tokenResponse.headers.entries()),
+        });
         throw new TypedHandlersError({
-          code: "NOT_FOUND",
-          message: "Account not found or not linked to GitLab",
+          code: "UNAUTHORIZED",
+          message: `Failed to exchange authorization code for access token: ${errorText}`,
+        });
+      }
+
+      const tokenData = await tokenResponse.json() as {
+        access_token: string;
+        refresh_token?: string;
+        expires_in?: number;
+      };
+
+      if (!tokenData.access_token) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "No access token received from GitLab",
         });
       }
 
@@ -82,7 +124,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
       const gitlabInstanceUrl = "https://gitlab.com"; // Default to GitLab.com for now
       const userResponse = await fetch(`${gitlabInstanceUrl}/api/v4/user`, {
         headers: {
-          'Authorization': `Bearer ${account.accessToken}`,
+          'Authorization': `Bearer ${tokenData.access_token}`,
           'Accept': 'application/json',
         },
       });
@@ -141,9 +183,9 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
           id: generateId(),
           organizationId: results.organization.id,
           gitlabInstanceUrl,
-          accessToken: account.accessToken,
-          // Note: GitLab OAuth tokens typically don't have refresh tokens in this flow
-          // but we store the field for future use
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          tokenExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -155,19 +197,28 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         );
       }
 
-      // Trigger sync workflow
-      const workflowInstance = await workflow.syncGitlab.create({
-        params: { integrationId: newGitlabIntegration.id },
-      });
+      // Trigger sync workflow (if available)
+      if (workflow.syncGitlab) {
+        try {
+          const workflowInstance = await workflow.syncGitlab.create({
+            params: { integrationId: newGitlabIntegration.id },
+          });
 
-      await db
-        .update(schema.gitlabIntegration)
-        .set({
-          syncId: workflowInstance.id,
-          syncStartedAt: new Date(),
-          syncUpdatedAt: new Date(),
-        })
-        .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
+          await db
+            .update(schema.gitlabIntegration)
+            .set({
+              syncId: workflowInstance.id,
+              syncStartedAt: new Date(),
+              syncUpdatedAt: new Date(),
+            })
+            .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
+        } catch (error) {
+          console.error("Failed to start GitLab sync workflow:", error);
+          // Continue without failing the integration creation
+        }
+      } else {
+        console.warn("GitLab sync workflow not configured");
+      }
 
       return redirect(
         `${webAppUrl}/${targetOrganizationSlug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
@@ -214,22 +265,37 @@ export const resyncGitlabIntegrationHandler = typedHandler<
       });
     }
 
-    // Trigger new sync workflow
-    const workflowInstance = await workflow.syncGitlab.create({
-      params: { integrationId: integration.id },
-    });
+    // Trigger new sync workflow (if available)
+    if (workflow.syncGitlab) {
+      try {
+        const workflowInstance = await workflow.syncGitlab.create({
+          params: { integrationId: integration.id },
+        });
 
-    await db
-      .update(schema.gitlabIntegration)
-      .set({
-        syncId: workflowInstance.id,
-        syncStartedAt: new Date(),
-        syncUpdatedAt: new Date(),
-        syncFinishedAt: null,
-        syncError: null,
-        syncErrorAt: null,
-      })
-      .where(eq(schema.gitlabIntegration.id, integration.id));
+        await db
+          .update(schema.gitlabIntegration)
+          .set({
+            syncId: workflowInstance.id,
+            syncStartedAt: new Date(),
+            syncUpdatedAt: new Date(),
+            syncFinishedAt: null,
+            syncError: null,
+            syncErrorAt: null,
+          })
+          .where(eq(schema.gitlabIntegration.id, integration.id));
+      } catch (error) {
+        console.error("Failed to start GitLab sync workflow:", error);
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to start sync workflow",
+        });
+      }
+    } else {
+      throw new TypedHandlersError({
+        code: "SERVICE_UNAVAILABLE",
+        message: "GitLab sync workflow not configured",
+      });
+    }
 
     return { success: true };
   },
@@ -296,17 +362,32 @@ export const deleteGitlabIntegrationHandler = typedHandler<
       });
     }
 
-    // Trigger delete workflow
-    const workflowInstance = await workflow.deleteGitlabIntegration.create({
-      params: { integrationId: integration.id },
-    });
+    // Trigger delete workflow (if available)
+    if (workflow.deleteGitlabIntegration) {
+      try {
+        const workflowInstance = await workflow.deleteGitlabIntegration.create({
+          params: { integrationId: integration.id },
+        });
 
-    await db
-      .update(schema.gitlabIntegration)
-      .set({
-        deleteId: workflowInstance.id,
-      })
-      .where(eq(schema.gitlabIntegration.id, integration.id));
+        await db
+          .update(schema.gitlabIntegration)
+          .set({
+            deleteId: workflowInstance.id,
+          })
+          .where(eq(schema.gitlabIntegration.id, integration.id));
+      } catch (error) {
+        console.error("Failed to start GitLab delete workflow:", error);
+        throw new TypedHandlersError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to start delete workflow",
+        });
+      }
+    } else {
+      throw new TypedHandlersError({
+        code: "SERVICE_UNAVAILABLE",
+        message: "GitLab delete workflow not configured",
+      });
+    }
 
     return { success: true };
   },
