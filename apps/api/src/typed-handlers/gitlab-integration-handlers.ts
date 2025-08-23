@@ -22,7 +22,7 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
 >(
   gitlabIntegrationCallbackContract,
   requiredSession,
-  async ({ redirect, webAppUrl, db, input, workflow, session, bucket, betterAuthUrl }) => {
+  async ({ redirect, webAppUrl, db, input, workflow, session, bucket, betterAuthUrl, gitlab }) => {
     try {
       const { code, state: organizationSlug, redirect: redirectUrl } = input;
       
@@ -37,9 +37,9 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
       // The redirect URI must match EXACTLY what was sent in the OAuth request
       // Since the callback is to the API, we need to use the API endpoint URL
       // Use betterAuthUrl which should be the API base URL
-      const redirectUri = `${betterAuthUrl}/integrations/gitlab/callback`;
+      const redirectUri = `${betterAuthUrl}${gitlabIntegrationCallbackContract.url()}`;
       console.log("GitLab OAuth token exchange:", {
-        client_id: "3cdd167b80063e89e246a3de2594ed89ea5af6e926ad92483ba3273446c11321",
+        client_id: gitlab.clientId,
         code,
         redirect_uri: redirectUri,
         webAppUrl,
@@ -55,8 +55,8 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          client_id: "3cdd167b80063e89e246a3de2594ed89ea5af6e926ad92483ba3273446c11321",
-          client_secret: "gloas-88c9d8b2ef88a696eb89f06133630410daba926bc3d0860524dc2be4480324d1",
+          client_id: gitlab.clientId,
+          client_secret: gitlab.clientSecret,
           code,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,

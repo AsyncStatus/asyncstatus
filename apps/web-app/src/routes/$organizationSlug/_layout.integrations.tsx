@@ -1095,7 +1095,7 @@ function RouteComponent() {
               : "disconnected",
         connectLink: getGitlabIntegrationConnectUrl({
           clientId: import.meta.env.VITE_GITLAB_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: typedUrl(gitlabIntegrationCallbackContract, { code: "", state: "", redirect: "" }),
+          redirectUri: import.meta.env.VITE_API_URL + gitlabIntegrationCallbackContract.url(),
           organizationSlug: params.organizationSlug,
           instanceUrl: "https://gitlab.com", // Default to GitLab.com
         }),
