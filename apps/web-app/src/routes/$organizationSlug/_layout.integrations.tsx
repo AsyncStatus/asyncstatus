@@ -350,7 +350,7 @@ function RouteComponent() {
             }).queryKey,
           });
 
-          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
+          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
             if (!sessionData) {
               return sessionData;
             }
@@ -1132,7 +1132,7 @@ function RouteComponent() {
                               (member) => member.id === value,
                             );
                             if (!member) return;
-                            
+
                             updateMemberMutation.mutate({
                               idOrSlug: params.organizationSlug,
                               memberId: member.id,
@@ -1208,21 +1208,58 @@ function RouteComponent() {
                 Resync users and projects
               </Button>
             </div>
+          </div>
+        ),
+        children: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your GitLab activity across projects.</li>
+                <li>Generates meaningful status updates from your code contributions.</li>
+                <li>Links AsyncStatus profiles to your GitLab accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Read-only access - we never modify your code.</li>
+                <li>Secure OAuth authentication with GitLab.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>Data is used only for status update generation. We don't store your code.</li>
+              </ul>
+            </div>
 
             <div className="space-y-2">
               <h4 className="font-medium">Data we track</h4>
               <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li><strong>Project Information:</strong> Project names, descriptions, visibility settings.</li>
-                <li><strong>Merge Requests:</strong> MR creation, reviews, approvals, and merges.</li>
-                <li><strong>Issues:</strong> Issue creation, assignments, labels, and resolution.</li>
-                <li><strong>Commits & Pushes:</strong> Code commits and push events across branches.</li>
-                <li><strong>CI/CD Pipelines:</strong> Pipeline status, job results, and deployment tracking.</li>
-                <li><strong>User Activity:</strong> Developer contributions and collaboration patterns.</li>
+                <li>
+                  <strong>Project Information:</strong> Project names, descriptions, visibility
+                  settings.
+                </li>
+                <li>
+                  <strong>Merge Requests:</strong> MR creation, reviews, approvals, and merges.
+                </li>
+                <li>
+                  <strong>Issues:</strong> Issue creation, assignments, labels, and resolution.
+                </li>
+                <li>
+                  <strong>Commits & Pushes:</strong> Code commits and push events across branches.
+                </li>
+                <li>
+                  <strong>CI/CD Pipelines:</strong> Pipeline status, job results, and deployment
+                  tracking.
+                </li>
+                <li>
+                  <strong>User Activity:</strong> Developer contributions and collaboration
+                  patterns.
+                </li>
               </ul>
             </div>
 
             <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <strong>Status Example:</strong> "Merged 3 MRs for payment gateway, reviewed 
+              <strong>Status Example:</strong> "Merged 3 MRs for payment gateway, reviewed
               [@colleague]'s authentication changes, resolved 2 critical issues in CI pipeline."
             </div>
           </div>
