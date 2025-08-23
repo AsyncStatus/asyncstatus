@@ -5,6 +5,7 @@ import {
   getOrganizationUserContract,
 } from "@asyncstatus/api/typed-handlers/organization";
 import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
+import { getLinearIntegrationContract } from "@asyncstatus/api/typed-handlers/linear-integration";
 import {
   AlertDialog,
   AlertDialogContentBlurredOverlay,
@@ -56,6 +57,13 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
     discordIntegration.data?.syncFinishedAt ||
     discordIntegration.data?.syncStartedAt ||
     discordIntegration.data?.syncUpdatedAt;
+  const linearIntegration = useQuery(
+    typedQueryOptions(getLinearIntegrationContract, { idOrSlug: organizationSlug }),
+  );
+  const hasLinearIntegration =
+    linearIntegration.data?.syncFinishedAt ||
+    linearIntegration.data?.syncStartedAt ||
+    linearIntegration.data?.syncUpdatedAt;
 
   // session is cached so we'd just use the user from getOrganizationUserContract
   useEffect(() => {
@@ -90,7 +98,7 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
             )}
 
             <div className="flex flex-col gap-2">
-              {!hasGithubIntegration && !hasSlackIntegration && !hasDiscordIntegration && (
+              {!hasGithubIntegration && !hasSlackIntegration && !hasDiscordIntegration && !hasLinearIntegration && (
                 <Button
                   size="sm"
                   variant="ghost"

@@ -1,6 +1,7 @@
 import {
   getDiscordIntegrationConnectUrl,
   getGithubIntegrationConnectUrl,
+  getLinearIntegrationConnectUrl,
   getSlackIntegrationConnectUrl,
 } from "@asyncstatus/api/integrations-connect-url";
 import {
@@ -25,6 +26,16 @@ import {
   listGithubUsersContract,
   resyncGithubIntegrationContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
+import {
+  deleteLinearIntegrationContract,
+  getLinearIntegrationContract,
+  linearIntegrationCallbackContract,
+  listLinearIssuesContract,
+  listLinearProjectsContract,
+  listLinearTeamsContract,
+  listLinearUsersContract,
+  resyncLinearIntegrationContract,
+} from "@asyncstatus/api/typed-handlers/linear-integration";
 import {
   getMemberContract,
   listMembersContract,
@@ -152,6 +163,23 @@ export const Route = createFileRoute("/$organizationSlug/_layout/integrations")(
           { throwOnError: false },
         ),
       ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(getLinearIntegrationContract, { idOrSlug: organizationSlug }),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listLinearTeamsContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
+      queryClient.ensureQueryData(
+        typedQueryOptions(
+          listLinearUsersContract,
+          { idOrSlug: organizationSlug },
+          { throwOnError: false },
+        ),
+      ),
     ]);
   },
 });
@@ -195,6 +223,53 @@ function RouteComponent() {
   );
   const discordIntegrationQuery = useQuery(
     typedQueryOptions(getDiscordIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
+  const linearIntegrationQuery = useQuery(
+    typedQueryOptions(getLinearIntegrationContract, { idOrSlug: params.organizationSlug }),
+  );
+  const resyncLinearIntegrationMutation = useMutation(
+    typedMutationOptions(resyncLinearIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getLinearIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+      },
+    }),
+  );
+  const deleteLinearIntegrationMutation = useMutation(
+    typedMutationOptions(deleteLinearIntegrationContract, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(getLinearIntegrationContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listLinearTeamsContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listLinearUsersContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listLinearProjectsContract, {
+            idOrSlug: params.organizationSlug,
+          }).queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: typedQueryOptions(listLinearIssuesContract, {
+            idOrSlug: params.organizationSlug,
+            limit: 50,
+            offset: 0,
+          }).queryKey,
+        });
+      },
+    }),
   );
   const session = useQuery(sessionBetterAuthQueryOptions());
   const deleteGithubIntegrationMutation = useMutation(
@@ -359,6 +434,34 @@ function RouteComponent() {
   });
   const organizationMembers = useQuery(
     typedQueryOptions(listMembersContract, { idOrSlug: params.organizationSlug }),
+  );
+  const linearTeams = useQuery(
+    typedQueryOptions(
+      listLinearTeamsContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const linearUsers = useQuery(
+    typedQueryOptions(
+      listLinearUsersContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const linearProjects = useQuery(
+    typedQueryOptions(
+      listLinearProjectsContract,
+      { idOrSlug: params.organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const linearIssues = useQuery(
+    typedQueryOptions(
+      listLinearIssuesContract,
+      { idOrSlug: params.organizationSlug, limit: 50, offset: 0 },
+      { throwOnError: false },
+    ),
   );
 
   const integrations = useMemo(
@@ -1005,7 +1108,208 @@ function RouteComponent() {
         name: "Linear",
         description: "Sync issue updates, sprint progress, and project milestones.",
         icon: <SiLinear className="size-3.5" />,
-        status: "disconnected",
+        status: linearIntegrationQuery.data?.syncErrorAt
+          ? "error"
+          : linearIntegrationQuery.data?.syncFinishedAt
+            ? "connected"
+            : linearIntegrationQuery.data?.syncStartedAt
+              ? "connecting"
+              : "disconnected",
+        connectLink: getLinearIntegrationConnectUrl({
+          clientId: import.meta.env.VITE_LINEAR_INTEGRATION_APP_CLIENT_ID,
+          redirectUri: typedUrl(linearIntegrationCallbackContract, {}),
+          organizationSlug: params.organizationSlug,
+        }),
+        onDisconnect: () => {
+          deleteLinearIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+        },
+        settingsChildren: (
+          <div className="space-y-6">
+            {linearUsers.data?.users?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No users found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Users ({linearUsers.data?.users?.length || 0})</h4>
+              {linearUsers.data?.users && linearUsers.data.users.length > 0 && (
+                <div className="text-sm text-muted-foreground space-y-2">
+                  {linearUsers.data.users.map((user) => {
+                    const member = organizationMembers.data?.members.find(
+                      (member) => member.linearId === user.userId,
+                    );
+
+                    return (
+                      <div key={user.id} className="flex items-center gap-2">
+                        <span>
+                          {user.name || user.displayName || user.email || user.userId}
+                        </span>
+                        <ArrowRight className="size-4" />
+                        <Select
+                          value={member?.id}
+                          onValueChange={(value) => {
+                            const member = organizationMembers.data?.members.find(
+                              (member) => member.id === value,
+                            );
+                            if (!member) {
+                              return;
+                            }
+                            updateMemberMutation.mutate({
+                              idOrSlug: params.organizationSlug,
+                              memberId: member.id,
+                              linearId: user.userId,
+                            });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AsyncStatus profile" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {organizationMembers.data?.members.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                {member.user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {member && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              updateMemberMutation.mutate({
+                                idOrSlug: params.organizationSlug,
+                                memberId: member.id,
+                                linearId: null,
+                              });
+                            }}
+                          >
+                            <XIcon className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {linearTeams.data?.teams?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No teams found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Teams ({linearTeams.data?.teams?.length || 0})</h4>
+              {linearTeams.data?.teams && linearTeams.data.teams.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {linearTeams.data.teams.map((team) => (
+                    <div key={team.id} className="flex items-center gap-2">
+                      <span>{team.name} ({team.key})</span>
+                      {team.issueCount !== null && (
+                        <span className="text-xs text-muted-foreground">
+                          ({team.issueCount} issues)
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {linearProjects.data?.projects?.length === 0 && (
+              <div className="text-sm text-muted-foreground">No projects found.</div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Projects ({linearProjects.data?.projects?.length || 0})</h4>
+              {linearProjects.data?.projects && linearProjects.data.projects.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {linearProjects.data.projects.map((project) => (
+                    <div key={project.id} className="flex items-center gap-2">
+                      <span>{project.name}</span>
+                      {project.state && (
+                        <span className="text-xs text-muted-foreground">({project.state})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resyncLinearIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
+                }}
+              >
+                Resync teams, users and issues
+              </Button>
+            </div>
+          </div>
+        ),
+        children: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">What this integration does</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Automatically tracks your Linear activity in real-time.</li>
+                <li>Generates meaningful status updates from your issue progress and project work.</li>
+                <li>Links AsyncStatus profiles to your Linear accounts.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Privacy & Security</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>Secure OAuth authentication with Linear.</li>
+                <li>Actions are performed by the AsyncStatus app, not individual users.</li>
+                <li>Data is encrypted in transit and at rest.</li>
+                <li>
+                  Data is used only for status update generation. We don't store sensitive project data.
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-medium">Data we track</h4>
+              <p className="text-xs text-muted-foreground mb-2">
+                Access to the following Linear data:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
+                <li>
+                  <strong>Issues & Tasks:</strong> Track issue creation, updates, status changes, and
+                  completion.
+                </li>
+                <li>
+                  <strong>Projects & Milestones:</strong> Monitor project progress, milestones, and
+                  deliverables.
+                </li>
+                <li>
+                  <strong>Teams & Members:</strong> Access team structure and member information for
+                  collaboration tracking.
+                </li>
+                <li>
+                  <strong>Comments & Activity:</strong> Track discussions, feedback, and issue
+                  activity.
+                </li>
+                <li>
+                  <strong>Cycles & Sprints:</strong> Monitor sprint progress, velocity, and cycle
+                  performance.
+                </li>
+                <li>
+                  <strong>Labels & Priorities:</strong> Track issue categorization, priorities, and
+                  workflow states.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <strong>Status Example:</strong> "Completed 8 issues this week, shipped the auth
+              feature, reviewed 3 PRs, and started planning the next sprint milestone."
+            </div>
+          </div>
+        ),
       },
       {
         name: "GitLab",
@@ -1079,6 +1383,11 @@ function RouteComponent() {
       discordServers.data,
       discordChannels.data,
       discordUsers.data,
+      linearIntegrationQuery.data,
+      linearTeams.data,
+      linearUsers.data,
+      linearProjects.data,
+      linearIssues.data,
       organizationMembers.data,
     ],
   );

@@ -36,5 +36,5 @@ type LinearIntegrationConnectUrlParams = {
 
 export function getLinearIntegrationConnectUrl(params: LinearIntegrationConnectUrlParams) {
   const scope = "read,write";
-  return `https://linear.app/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&scope=${scope}&state=${params.organizationSlug}`;
+  return `https://linear.app/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&scope=${scope}&state=${params.organizationSlug}&actor=app`;
 }
