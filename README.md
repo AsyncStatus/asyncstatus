@@ -218,6 +218,23 @@ Here's an example of how we added the `slackUsername` field to the `member` tabl
    bun run migrate
    ```
 
+#### Database Studio
+
+For database inspection and management, you can use Drizzle Studio:
+
+```bash
+cd apps/api
+bun studio
+```
+
+This opens a web-based database browser where you can:
+- View and edit table data
+- Inspect database schema
+- Run SQL queries
+- Manage relationships
+
+The studio will be available at `http://localhost:4983` (or another port if specified).
+
 #### Troubleshooting
 
 - **Migration not applying**: Make sure your local database is running (`bun dev:turso`)
@@ -385,6 +402,7 @@ We welcome contributions! This section provides everything you need to get start
 
 - **Hot Reloading**: All development servers support hot reloading
 - **Database**: Use `bun dev:turso` for a local SQLite database that matches production
+- **Database Studio**: Use `cd apps/api && bun studio` to open a web interface for database inspection
 - **CLI Testing**: Build the CLI with `go build` in the `apps/cli` directory
 - **Debugging**: Each app has debug configurations for popular IDEs
 
