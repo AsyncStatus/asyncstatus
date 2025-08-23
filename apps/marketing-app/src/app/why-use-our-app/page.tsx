@@ -64,116 +64,111 @@ export default function WhyToUseOurAppPage() {
         {/* Hero Section */}
         <div className="text-center">
           <h1 className="text-6xl font-bold text-balance tracking-wide max-sm:text-4xl">
-            How It Works? A&nbsp;Quick&nbsp;Overview
+            Why&nbsp;AsyncStatus?
           </h1>
           <p className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
-            Send this to your manager
+            Because standups are broken
           </p>
         </div>
 
-        {/* Key Benefits Section */}
+        {/* The Problem */}
         <section className="mt-24">
-          <h2 className="text-4xl font-bold text-center mb-16 max-sm:text-3xl">
-            Here's What Actually Happens
+          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
+            Your Morning Goes Like This
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">2-3 hrs</div>
-              <h3 className="text-xl font-semibold mb-2">Back per dev per week</h3>
-              <p className="text-muted-foreground">
-                No more 15-30 min daily standups. No more "quick syncs" that aren't quick. Just
-                actual work time.
+          <div className="space-y-6 max-w-2xl mx-auto">
+            <div className="text-center">
+              <p className="text-lg text-muted-foreground">
+                9:27 AM: You're in the zone, about to solve that tricky bug.
               </p>
             </div>
-
-            <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">~$30K</div>
-              <h3 className="text-xl font-semibold mb-2">What that time costs you</h3>
-              <p className="text-muted-foreground">
-                For a 5-person team making $120K average. Yeah, standups are expensive.
+            <div className="text-center">
+              <p className="text-lg text-muted-foreground">
+                9:30 AM: "Daily standup time!"
               </p>
             </div>
-
-            <div className="bg-card border-border rounded-lg border p-6">
-              <div className="text-primary text-2xl font-bold mb-3">2 mins</div>
-              <h3 className="text-xl font-semibold mb-2">To connect your tools</h3>
-              <p className="text-muted-foreground">
-                Git, Jira, Slack. Done. We pull your updates automatically. Your team keeps working.
+            <div className="text-center">
+              <p className="text-lg text-muted-foreground">
+                9:45 AM: Meeting ends. What were you working on again?
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xl font-bold">
+                Flow state: destroyed.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Problem/Solution Section */}
+        {/* Simple Benefits */}
         <section className="mt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Why Standups Suck</h2>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">•</span>
-                  <div>
-                    <strong>They kill flow state</strong> — You know that feeling when you're in the
-                    zone at 10:30am and then... standup.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">•</span>
-                  <div>
-                    <strong>Timezone hell</strong> — Someone's always getting screwed. 6am calls or
-                    staying late, pick your poison.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">•</span>
-                  <div>
-                    <strong>90% irrelevant info</strong> — You don't care about the CSS bug Sarah's
-                    fixing. She doesn't care about your API refactor.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-500 mt-1">•</span>
-                  <div>
-                    <strong>Theater, not communication</strong> — Everyone performs their status
-                    update then zones out.
-                  </div>
-                </li>
-              </ul>
+          <h2 className="text-4xl font-bold text-center mb-16 max-sm:text-3xl">
+            What If You Could Skip That?
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="text-primary text-5xl font-bold mb-4">↗️</div>
+              <h3 className="text-xl font-semibold mb-2">Keep your flow</h3>
+              <p className="text-muted-foreground">
+                No more 9:30 AM interruptions when you're most productive.
+              </p>
             </div>
 
-            <div>
-              <h2 className="text-3xl font-bold mb-6">What We Do Instead</h2>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">•</span>
-                  <div>
-                    <strong>Your tools already know what you did</strong> — Git commits, closed
-                    tickets, Slack messages. We just format it nicely.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">•</span>
-                  <div>
-                    <strong>Works for humans across timezones</strong> — Read updates when you want.
-                    No more 5am "quick syncs."
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">•</span>
-                  <div>
-                    <strong>Filter the noise</strong> — Only see updates from people/projects you
-                    actually care about.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-500 mt-1">•</span>
-                  <div>
-                    <strong>Keep your flow</strong> — No scheduled interruptions. Just pure,
-                    uninterrupted coding time.
-                  </div>
-                </li>
-              </ul>
+            <div className="text-center">
+              <div className="text-primary text-5xl font-bold mb-4">🌍</div>
+              <h3 className="text-xl font-semibold mb-2">Work across timezones</h3>
+              <p className="text-muted-foreground">
+                No more 6 AM calls or staying late for "quick syncs."
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="text-primary text-5xl font-bold mb-4">📊</div>
+              <h3 className="text-xl font-semibold mb-2">Actually useful updates</h3>
+              <p className="text-muted-foreground">
+                See what matters to you, skip what doesn't.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* How Simple It Is */}
+        <section className="mt-24">
+          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
+            Here's How Simple It Is
+          </h2>
+
+          <div className="space-y-8 max-w-3xl mx-auto">
+            <div className="flex items-start gap-4">
+              <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Connect your tools</h3>
+                <p className="text-muted-foreground">
+                  GitHub, Jira, Slack. Takes 2 minutes. Your team keeps working exactly like before.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">2</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">We track what you do</h3>
+                <p className="text-muted-foreground">
+                  Commits, tickets, messages. All the work you're already doing.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Everyone sees the updates</h3>
+                <p className="text-muted-foreground">
+                  When they want to. No meetings required.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -181,83 +176,39 @@ export default function WhyToUseOurAppPage() {
         {/* ROI Calculator Section */}
         <section className="mt-24">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 max-sm:text-3xl">Do The Math</h2>
+            <h2 className="text-4xl font-bold mb-4 max-sm:text-3xl">The Numbers</h2>
             <p className="text-muted-foreground text-lg">
-              Your manager cares about numbers. Here they are.
+              Calculate what standups actually cost you.
             </p>
           </div>
           <SavingsCalculator />
         </section>
 
-        {/* Risk Mitigation Section */}
+        {/* What People Worry About */}
         <section className="mt-24">
           <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">
-            "But What If It Doesn't Work?"
+            "But What About..."
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">Your team changes nothing</h3>
-              <p className="text-muted-foreground">
-                Keep using Git, Jira, Slack like you always have. We just read the data and format
-                it. No new tools to learn.
-              </p>
-            </div>
-
-            <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">Test it with one team</h3>
-              <p className="text-muted-foreground">
-                Pick your most fed-up-with-standups team. Run it alongside meetings for a week. See
-                what happens.
-              </p>
-            </div>
-
-            <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">Easy exit</h3>
-              <p className="text-muted-foreground">
-                Don't like it? Just stop using it. Go back to meetings. We won't email you 47 times
-                asking why you left.
-              </p>
-            </div>
-
-            <div className="bg-card border-border rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-4">🔒 Actually secure</h3>
-              <p className="text-muted-foreground">
-                We're developers too — we get why security and encryption matters.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Common Objections Section */}
-        <section className="mt-24">
-          <h2 className="text-4xl font-bold text-center mb-12 max-sm:text-3xl">"Yeah But..."</h2>
-
-          <div className="space-y-8">
+          <div className="space-y-6 max-w-3xl mx-auto">
             <div className="border-border bg-card rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-3">"We need face-to-face collaboration!"</h3>
+              <h3 className="text-xl font-semibold mb-3">"Team bonding!"</h3>
               <p className="text-muted-foreground">
-                Cool. Keep your design reviews, planning sessions, and architecture discussions.
-                Those are useful meetings. Daily status theater? Not so much.
+                Use that time for actual team bonding. Lunch together. Pair programming. Coffee chats. Not status theater.
               </p>
             </div>
 
             <div className="border-border bg-card rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-3">
-                "But then I won't know what everyone's doing!"
-              </h3>
+              <h3 className="text-xl font-semibold mb-3">"I won't know what's happening!"</h3>
               <p className="text-muted-foreground">
-                You'll know more. Search for "what did Alex work on last week?" Try doing that with
-                standup memories. Plus, it's all there when you need it — not just for 15 minutes at
-                9:30am.
+                You'll know more. Search "what did Sarah work on last week?" Try doing that with standup memories.
               </p>
             </div>
 
             <div className="border-border bg-card rounded-lg border p-6">
-              <h3 className="text-xl font-semibold mb-3">"Our team will feel disconnected!"</h3>
+              <h3 className="text-xl font-semibold mb-3">"What if my team hates it?"</h3>
               <p className="text-muted-foreground">
-                Do you feel connected during standups now? Honestly? Use that time for actual team
-                building. Lunch together. Pair programming. Literally anything else.
+                Then go back to standups. That's it. We won't guilt trip you with 20 retention emails.
               </p>
             </div>
           </div>
@@ -266,10 +217,9 @@ export default function WhyToUseOurAppPage() {
         {/* CTA Section */}
         <section className="mt-24 text-center">
           <div className="bg-card border-border rounded-lg border p-12 max-sm:p-8">
-            <h2 className="text-3xl font-bold mb-4">Try It. What's The Worst That Could Happen?</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Get Your Mornings Back?</h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              You go back to standups. That's it. That's the worst case. But maybe — just maybe —
-              you get your mornings back.
+              Start with one team. See what happens. Worst case? You go back to meetings.
             </p>
             <WaitlistDialog buttonSize="lg" />
           </div>
