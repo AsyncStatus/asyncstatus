@@ -2,19 +2,6 @@ import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
 import { Member, StatusUpdate, StatusUpdateItem, Team, User } from "../db";
 
-export const listStatusUpdatesContract = typedContract(
-  "get /organizations/:idOrSlug/status-updates",
-  z.strictObject({ idOrSlug: z.string() }),
-  z.array(
-    z.strictObject({
-      ...StatusUpdate.shape,
-      items: z.array(StatusUpdateItem),
-      team: Team.nullable(),
-      member: z.strictObject({ ...Member.shape, user: User }),
-    }),
-  ),
-);
-
 export const shareStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates/:statusUpdateId/share",
   z.strictObject({ idOrSlug: z.string(), statusUpdateId: z.string() }),
@@ -33,37 +20,6 @@ export const listStatusUpdatesByDateContract = typedContract(
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     memberId: z.string().optional(),
     teamId: z.string().optional(),
-  }),
-  z.array(
-    z.strictObject({
-      ...StatusUpdate.shape,
-      team: Team.nullable(),
-      items: z.array(StatusUpdateItem),
-      member: z.strictObject({ ...Member.shape, user: User }),
-    }),
-  ),
-);
-
-export const listStatusUpdatesByTeamContract = typedContract(
-  "get /organizations/:idOrSlug/status-updates/team/:teamId",
-  z.strictObject({ idOrSlug: z.string(), teamId: z.string() }),
-  z.array(
-    z.strictObject({
-      ...StatusUpdate.shape,
-      team: Team,
-      items: z.array(StatusUpdateItem),
-      member: z.strictObject({ ...Member.shape, user: User }),
-    }),
-  ),
-);
-
-export const listStatusUpdatesByMemberContract = typedContract(
-  "get /organizations/:idOrSlug/status-updates/member/:memberId",
-  z.strictObject({
-    idOrSlug: z.string(),
-    memberId: z.string(),
-    isDraft: z.coerce.boolean().optional(),
-    effectiveFrom: z.coerce.date().optional(),
   }),
   z.array(
     z.strictObject({

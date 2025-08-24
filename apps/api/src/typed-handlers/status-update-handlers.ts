@@ -14,36 +14,9 @@ import {
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
   listStatusUpdatesByDateContract,
-  listStatusUpdatesByMemberContract,
-  listStatusUpdatesByTeamContract,
-  listStatusUpdatesContract,
   shareStatusUpdateContract,
   updateStatusUpdateContract,
 } from "./status-update-contracts";
-
-export const listStatusUpdatesHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof listStatusUpdatesContract
->(
-  listStatusUpdatesContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization }) => {
-    const statusUpdates = await db.query.statusUpdate.findMany({
-      where: eq(schema.statusUpdate.organizationId, organization.id),
-      with: {
-        member: { with: { user: true } },
-        team: true,
-        items: {
-          orderBy: (items) => [items.order],
-        },
-      },
-      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
-    });
-
-    return statusUpdates;
-  },
-);
 
 export const shareStatusUpdateHandler = typedHandler<
   TypedHandlersContextWithOrganization,
@@ -149,102 +122,6 @@ export const listStatusUpdatesByDateHandler = typedHandler<
 
     if (teamId) {
       where.push(eq(schema.statusUpdate.teamId, teamId));
-    }
-
-    const statusUpdates = await db.query.statusUpdate.findMany({
-      where: and(...where),
-      with: {
-        member: { with: { user: true } },
-        team: true,
-        items: {
-          orderBy: (items) => [items.order],
-        },
-      },
-      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
-    });
-
-    return statusUpdates;
-  },
-);
-
-export const listStatusUpdatesByTeamHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof listStatusUpdatesByTeamContract
->(
-  listStatusUpdatesByTeamContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, input }) => {
-    const { teamId } = input;
-
-    const team = await db.query.team.findFirst({
-      where: and(eq(schema.team.id, teamId), eq(schema.team.organizationId, organization.id)),
-    });
-
-    if (!team) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Team not found",
-      });
-    }
-
-    const statusUpdates = await db.query.statusUpdate.findMany({
-      where: and(
-        eq(schema.statusUpdate.organizationId, organization.id),
-        eq(schema.statusUpdate.teamId, teamId),
-      ),
-      with: {
-        member: { with: { user: true } },
-        team: true,
-        items: {
-          orderBy: (items) => [items.order],
-        },
-      },
-      orderBy: (statusUpdates) => [desc(statusUpdates.effectiveFrom)],
-    });
-
-    return statusUpdates.map((statusUpdate) => ({
-      ...statusUpdate,
-      // biome-ignore lint/style/noNonNullAssertion: we already checked that the team exists
-      team: statusUpdate.team!,
-    }));
-  },
-);
-
-export const listStatusUpdatesByMemberHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof listStatusUpdatesByMemberContract
->(
-  listStatusUpdatesByMemberContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, input }) => {
-    const { memberId, isDraft, effectiveFrom } = input;
-
-    const member = await db.query.member.findFirst({
-      where: and(eq(schema.member.id, memberId), eq(schema.member.organizationId, organization.id)),
-    });
-
-    if (!member) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Member not found",
-      });
-    }
-
-    const where = [
-      eq(schema.statusUpdate.organizationId, organization.id),
-      eq(schema.statusUpdate.memberId, memberId),
-    ];
-
-    if (typeof isDraft === "boolean" && isDraft) {
-      where.push(eq(schema.statusUpdate.isDraft, true));
-    } else if (typeof isDraft === "boolean" && !isDraft) {
-      where.push(eq(schema.statusUpdate.isDraft, false));
-    }
-
-    if (effectiveFrom instanceof Date) {
-      where.push(eq(schema.statusUpdate.effectiveFrom, effectiveFrom));
     }
 
     const statusUpdates = await db.query.statusUpdate.findMany({

@@ -124,9 +124,6 @@ import {
   getMemberStatusUpdateHandler,
   getStatusUpdateHandler,
   listStatusUpdatesByDateHandler,
-  listStatusUpdatesByMemberHandler,
-  listStatusUpdatesByTeamHandler,
-  listStatusUpdatesHandler,
   shareStatusUpdateHandler,
   updateStatusUpdateHandler,
 } from "./typed-handlers/status-update-handlers";
@@ -149,7 +146,6 @@ import {
   listTeamsHandler,
   updateTeamHandler,
 } from "./typed-handlers/team-handlers";
-import { joinWaitlistHandler } from "./typed-handlers/waitlist-handlers";
 
 const authRouter = new Hono<HonoEnv>()
   .get("/session", (c) => {
@@ -425,7 +421,6 @@ const app = new Hono<HonoEnv>()
 const typedHandlersApp = typedHandlersHonoServer(
   app,
   [
-    joinWaitlistHandler,
     listUserInvitationsHandler,
     getInvitationHandler,
     cancelInvitationHandler,
@@ -455,10 +450,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     updateScheduleHandler,
     deleteScheduleHandler,
     generateScheduleHandler,
-    listStatusUpdatesHandler,
-    listStatusUpdatesByMemberHandler,
     listStatusUpdatesByDateHandler,
-    listStatusUpdatesByTeamHandler,
     getStatusUpdateHandler,
     getMemberStatusUpdateHandler,
     updateStatusUpdateHandler,
