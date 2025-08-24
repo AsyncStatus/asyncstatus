@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+# Disallow sensitive areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /private/
+
+# Allow specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# Sitemap
+Sitemap: https://asyncstatus.com/sitemap.xml
+
+# Crawl delay (optional - helps prevent overwhelming server)
+Crawl-delay: 1
