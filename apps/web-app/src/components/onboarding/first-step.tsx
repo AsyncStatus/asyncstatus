@@ -491,106 +491,108 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           </div>
         )}
 
-        {!generateStatusUpdate.isPending && (
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={Boolean(githubIntegration.data || githubIntegration.isPending)}
-            onClick={() =>
-              linkSocial.mutate({
-                provider: "github",
-                scopes: ["user:email"],
-                callbackURL: typedUrl(githubIntegrationCallbackContract, {}),
-              })
-            }
-          >
-            <div
-              className={cn("size-2 rounded-full", githubIntegration.data && "bg-green-500")}
-            ></div>
-            <SiGithub className="size-4" />
-            {githubIntegration.data ? "Using context from GitHub" : "Add context from GitHub"}
-          </Button>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 grid-auto-rows-min">
+          {!generateStatusUpdate.isPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={Boolean(githubIntegration.data || githubIntegration.isPending)}
+              onClick={() =>
+                linkSocial.mutate({
+                  provider: "github",
+                  scopes: ["user:email"],
+                  callbackURL: typedUrl(githubIntegrationCallbackContract, {}),
+                })
+              }
+            >
+              <div
+                className={cn("size-2 rounded-full", githubIntegration.data && "bg-green-500")}
+              ></div>
+              <SiGithub className="size-4" />
+              {githubIntegration.data ? "Using context from GitHub" : "Add context from GitHub"}
+            </Button>
+          )}
 
-        {!generateStatusUpdate.isPending && (
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={Boolean(gitlabIntegration.data || gitlabIntegration.isPending)}
-            onClick={() =>
-              linkSocial.mutate({
-                provider: "gitlab",
-                callbackURL: typedUrl(gitlabIntegrationCallbackContract, {}),
-              })
-            }
-          >
-            <div
-              className={cn("size-2 rounded-full", gitlabIntegration.data && "bg-green-500")}
-            ></div>
-            <SiGitlab className="size-4" />
-            {gitlabIntegration.data ? "Using context from GitLab" : "Add context from GitLab"}
-          </Button>
-        )}
+          {!generateStatusUpdate.isPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={Boolean(gitlabIntegration.data || gitlabIntegration.isPending)}
+              onClick={() =>
+                linkSocial.mutate({
+                  provider: "gitlab",
+                  callbackURL: typedUrl(gitlabIntegrationCallbackContract, {}),
+                })
+              }
+            >
+              <div
+                className={cn("size-2 rounded-full", gitlabIntegration.data && "bg-green-500")}
+              ></div>
+              <SiGitlab className="size-4" />
+              {gitlabIntegration.data ? "Using context from GitLab" : "Add context from GitLab"}
+            </Button>
+          )}
 
-        {!generateStatusUpdate.isPending && (
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={Boolean(slackIntegration.data || slackIntegration.isPending)}
-            onClick={() =>
-              linkSocial.mutate({
-                provider: "slack",
-                callbackURL: typedUrl(slackIntegrationCallbackContract, {}),
-              })
-            }
-          >
-            <div
-              className={cn("size-2 rounded-full", slackIntegration.data && "bg-green-500")}
-            ></div>
-            <SiSlack className="size-4" />
-            {slackIntegration.data ? "Using context from Slack" : "Add context from Slack"}
-          </Button>
-        )}
+          {!generateStatusUpdate.isPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={Boolean(slackIntegration.data || slackIntegration.isPending)}
+              onClick={() =>
+                linkSocial.mutate({
+                  provider: "slack",
+                  callbackURL: typedUrl(slackIntegrationCallbackContract, {}),
+                })
+              }
+            >
+              <div
+                className={cn("size-2 rounded-full", slackIntegration.data && "bg-green-500")}
+              ></div>
+              <SiSlack className="size-4" />
+              {slackIntegration.data ? "Using context from Slack" : "Add context from Slack"}
+            </Button>
+          )}
 
-        {!generateStatusUpdate.isPending && (
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={Boolean(discordIntegration.data || discordIntegration.isPending)}
-            onClick={() =>
-              linkSocial.mutate({
-                provider: "discord",
-                callbackURL: typedUrl(discordIntegrationCallbackContract, {}),
-              })
-            }
-          >
-            <div
-              className={cn("size-2 rounded-full", discordIntegration.data && "bg-green-500")}
-            ></div>
-            <SiDiscord className="size-4" />
-            {discordIntegration.data ? "Using context from Discord" : "Add context from Discord"}
-          </Button>
-        )}
+          {!generateStatusUpdate.isPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={Boolean(discordIntegration.data || discordIntegration.isPending)}
+              onClick={() =>
+                linkSocial.mutate({
+                  provider: "discord",
+                  callbackURL: typedUrl(discordIntegrationCallbackContract, {}),
+                })
+              }
+            >
+              <div
+                className={cn("size-2 rounded-full", discordIntegration.data && "bg-green-500")}
+              ></div>
+              <SiDiscord className="size-4" />
+              {discordIntegration.data ? "Using context from Discord" : "Add context from Discord"}
+            </Button>
+          )}
 
-        {!generateStatusUpdate.isPending && (
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={Boolean(linearIntegration.data || linearIntegration.isPending)}
-            onClick={() =>
-              linkSocial.mutate({
-                provider: "linear",
-                callbackURL: typedUrl(linearIntegrationCallbackContract, {} as any),
-              })
-            }
-          >
-            <div
-              className={cn("size-2 rounded-full", linearIntegration.data && "bg-green-500")}
-            ></div>
-            <SiLinear className="size-4" />
-            {linearIntegration.data ? "Using context from Linear" : "Add context from Linear"}
-          </Button>
-        )}
+          {!generateStatusUpdate.isPending && (
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={Boolean(linearIntegration.data || linearIntegration.isPending)}
+              onClick={() =>
+                linkSocial.mutate({
+                  provider: "linear",
+                  callbackURL: typedUrl(linearIntegrationCallbackContract, {} as any),
+                })
+              }
+            >
+              <div
+                className={cn("size-2 rounded-full", linearIntegration.data && "bg-green-500")}
+              ></div>
+              <SiLinear className="size-4" />
+              {linearIntegration.data ? "Using context from Linear" : "Add context from Linear"}
+            </Button>
+          )}
+        </div>
 
         {statusUpdate.data && connectedIntegrationsCount > 0 && !generateStatusUpdate.isPending && (
           <Button
