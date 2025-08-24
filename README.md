@@ -54,44 +54,22 @@ asyncstatus/
 
 ## Quick Start
 
-### Prerequisites
-- [Bun](https://bun.sh) >= 1.2
-- [Go](https://golang.org) >= 1.21 (for CLI development)
+For a complete development setup, see the [Contributing](#contributing) section. For a quick demo:
 
-### 1. Clone and Install
 ```bash
+# Clone and install
 git clone https://github.com/asyncstatus/asyncstatus.git
-cd asyncstatus
-bun install
+cd asyncstatus && bun install
+
+# Start database and API
+cd apps/api && bun dev:turso
+# In new terminal: bun run dev
+
+# Start web app (new terminal)
+cd apps/web-app && bun run dev
 ```
 
-### 2. Start the API
-```bash
-cd apps/api
-bun dev:turso  # Start local database
-# In a new terminal:
-bun run dev    # Start API server
-```
-
-### 3. Start the Web App
-```bash
-cd apps/web-app
-bun run dev
-```
-
-The web app will be available at `http://localhost:3000`
-
-### 4. Start the Marketing App (Optional)
-```bash
-cd apps/marketing-app
-bun run dev
-```
-
-### 5. Try the CLI (Optional)
-```bash
-cd apps/cli
-go run main.go version
-```
+Web app: `http://localhost:3000`
 
 ## Usage Examples
 
@@ -241,25 +219,7 @@ The studio will be available at `http://localhost:4983` (or another port if spec
 - **Schema errors**: Check the Drizzle ORM documentation for correct type definitions
 - **Conflict errors**: If you have conflicts between local and remote databases, you may need to reset your local database or use `drizzle-kit push --force`
 
-### Running Tests
-```bash
-# Run all tests
-bun test
 
-# Run specific app tests
-cd apps/api && bun test
-cd apps/web-app && bun test
-```
-
-### Code Quality
-```bash
-# Format and lint
-bun run format
-bun run lint
-
-# Type checking
-bun run typecheck
-```
 
 ## Deployment
 
@@ -381,9 +341,17 @@ We welcome contributions! This section provides everything you need to get start
 
 3. **Test Your Changes**
    ```bash
+   # Run all tests
    bun test
-   bun run typecheck
+   
+   # Run specific app tests
+   cd apps/api && bun test
+   cd apps/web-app && bun test
+   
+   # Code quality checks
+   bun run format
    bun run lint
+   bun run typecheck
    ```
 
 4. **Commit and Push**
@@ -400,11 +368,9 @@ We welcome contributions! This section provides everything you need to get start
 
 ### Development Tips
 
-- **Hot Reloading**: All development servers support hot reloading
-- **Database**: Use `bun dev:turso` for a local SQLite database that matches production
-- **Database Studio**: Use `cd apps/api && bun studio` to open a web interface for database inspection
-- **CLI Testing**: Build the CLI with `go build` in the `apps/cli` directory
-- **Debugging**: Each app has debug configurations for popular IDEs
+- **Database Studio**: Use `cd apps/api && bun studio` for database inspection
+- **CLI Testing**: Build with `go build` in the `apps/cli` directory
+- **Hot Reloading**: All development servers support live reloading
 
 ## License
 
