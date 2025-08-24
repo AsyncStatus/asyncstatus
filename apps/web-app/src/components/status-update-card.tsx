@@ -33,7 +33,6 @@ const formatter = new Intl.ListFormat("en", {
 });
 
 export function StatusUpdateCard(props: StatusUpdateCardProps) {
-  const queryClient = useQueryClient();
   const name = useMemo(
     () => props.statusUpdate.member.user.name.split(" ")[0] ?? props.statusUpdate.member.user.name,
     [props.statusUpdate.member.user.name],
@@ -46,49 +45,11 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
     () => getUpdateStatusItemsText(props.statusUpdate.items),
     [props.statusUpdate.items],
   );
-  const shareStatusUpdateMutation = useMutation(
-    typedMutationOptions(shareStatusUpdateContract, {
-      onSuccess: (data) => {
-        queryClient.setQueryData(
-          typedQueryOptions(listStatusUpdatesByDateContract, {
-            idOrSlug: props.organizationSlug,
-            date: dayjs(props.statusUpdate.createdAt).format("YYYY-MM-DD"),
-          }).queryKey,
-          (old) => {
-            if (!old) {
-              return old;
-            }
-
-            return old.map((statusUpdate: any) =>
-              statusUpdate.id === props.statusUpdate.id
-                ? { ...statusUpdate, slug: data.slug }
-                : statusUpdate,
-            );
-          },
-        );
-        queryClient.setQueryData(
-          typedQueryOptions(getStatusUpdateContract, {
-            idOrSlug: props.organizationSlug,
-            statusUpdateIdOrDate: props.statusUpdate.id,
-          }).queryKey,
-          (old) => {
-            if (!old) {
-              return old;
-            }
-
-            return { ...old, slug: data.slug };
-          },
-        );
-      },
-    }),
-  );
-
-  const [copiedLink, copyLinkToClipboard] = useCopyToClipboard();
 
   return (
     <div className="flex flex-col border border-border rounded-lg">
       <header className="p-3.5">
-        <div className="flex items-center justify-between mb-1 gap-0.5">
+        <div className="flex items-center justify-between gap-0.5">
           {hasAnyBlockers && (
             <Link
               className="w-full"
@@ -108,44 +69,21 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
             </Link>
           )}
 
-          <button
-            type="button"
-            className="flex items-center gap-2 bg-background hover:bg-muted p-1 rounded-sm cursor-pointer"
-            onClick={() => {
-              if (!props.statusUpdate.slug) {
-                shareStatusUpdateMutation
-                  .mutateAsync({
-                    idOrSlug: props.organizationSlug,
-                    statusUpdateId: props.statusUpdate.id,
-                  })
-                  .then((data) => {
-                    copyLinkToClipboard(
-                      `${import.meta.env.VITE_MARKETING_APP_URL}/s/${data.slug}`,
-                    ).then(() => {
-                      toast.success("Status update link copied to clipboard", {
-                        position: "top-center",
-                      });
-                    });
-                  });
-              } else {
-                copyLinkToClipboard(
-                  `${import.meta.env.VITE_MARKETING_APP_URL}/s/${props.statusUpdate.slug}`,
-                ).then(() => {
-                  toast.success("Status update link copied to clipboard", {
-                    position: "top-center",
-                  });
-                });
-              }
-            }}
-          >
-            <ShareIcon className="size-3" />
-            <p className="text-xs">Share</p>
-          </button>
+          {!hasAnyBlockers && (
+            <p className="text-xs text-muted-foreground w-full">{updateStatusItemsText}</p>
+          )}
+
+          <StatusUpdateShareButton
+            organizationSlug={props.organizationSlug}
+            statusUpdate={props.statusUpdate}
+          />
         </div>
 
-        <div>
-          <p className="text-xs text-muted-foreground">{updateStatusItemsText}</p>
-        </div>
+        {hasAnyBlockers && (
+          <div className="mt-1">
+            <p className="text-xs text-muted-foreground w-full">{updateStatusItemsText}</p>
+          </div>
+        )}
       </header>
 
       <Link
@@ -222,6 +160,87 @@ export function StatusUpdateCard(props: StatusUpdateCardProps) {
         </div>
       </footer>
     </div>
+  );
+}
+
+function StatusUpdateShareButton(props: {
+  organizationSlug: string;
+  statusUpdate: (typeof listStatusUpdatesByDateContract.$infer.output)[number];
+}) {
+  const queryClient = useQueryClient();
+  const shareStatusUpdateMutation = useMutation(
+    typedMutationOptions(shareStatusUpdateContract, {
+      onSuccess: (data) => {
+        queryClient.setQueryData(
+          typedQueryOptions(listStatusUpdatesByDateContract, {
+            idOrSlug: props.organizationSlug,
+            date: dayjs(props.statusUpdate.createdAt).format("YYYY-MM-DD"),
+          }).queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
+
+            return old.map((statusUpdate: any) =>
+              statusUpdate.id === props.statusUpdate.id
+                ? { ...statusUpdate, slug: data.slug }
+                : statusUpdate,
+            );
+          },
+        );
+        queryClient.setQueryData(
+          typedQueryOptions(getStatusUpdateContract, {
+            idOrSlug: props.organizationSlug,
+            statusUpdateIdOrDate: props.statusUpdate.id,
+          }).queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
+
+            return { ...old, slug: data.slug };
+          },
+        );
+      },
+    }),
+  );
+
+  const [copiedLink, copyLinkToClipboard] = useCopyToClipboard();
+
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-2 bg-background hover:bg-muted p-1 rounded-sm cursor-pointer"
+      onClick={() => {
+        if (!props.statusUpdate.slug) {
+          shareStatusUpdateMutation
+            .mutateAsync({
+              idOrSlug: props.organizationSlug,
+              statusUpdateId: props.statusUpdate.id,
+            })
+            .then((data) => {
+              copyLinkToClipboard(`${import.meta.env.VITE_MARKETING_APP_URL}/s/${data.slug}`).then(
+                () => {
+                  toast.success("Status update link copied to clipboard", {
+                    position: "top-center",
+                  });
+                },
+              );
+            });
+        } else {
+          copyLinkToClipboard(
+            `${import.meta.env.VITE_MARKETING_APP_URL}/s/${props.statusUpdate.slug}`,
+          ).then(() => {
+            toast.success("Status update link copied to clipboard", {
+              position: "top-center",
+            });
+          });
+        }
+      }}
+    >
+      <ShareIcon className="size-3" />
+      <p className="text-xs">Share</p>
+    </button>
   );
 }
 
