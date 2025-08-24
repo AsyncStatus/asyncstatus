@@ -35,6 +35,7 @@ export const updateMemberContract = typedContract(
     githubId: MemberUpdate.shape.githubId,
     gitlabId: MemberUpdate.shape.gitlabId,
     discordId: MemberUpdate.shape.discordId,
+    linearId: MemberUpdate.shape.linearId,
     timezone: UserUpdate.shape.timezone,
     autoDetectTimezone: UserUpdate.shape.autoDetectTimezone,
     image: UserUpdate.shape.image.or(z.file().max(1024 * 1024 * 10)),

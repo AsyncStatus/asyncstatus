@@ -1,1594 +1,639 @@
 import {
-  getDiscordIntegrationConnectUrl,
-  getGithubIntegrationConnectUrl,
-  getGitlabIntegrationConnectUrl,
-  getSlackIntegrationConnectUrl,
-} from "@asyncstatus/api/integrations-connect-url";
-import {
-  getDiscordGatewayStatusContract,
-  startDiscordGatewayContract,
-  stopDiscordGatewayContract,
-} from "@asyncstatus/api/typed-handlers/discord-gateway";
-import {
-  deleteDiscordIntegrationContract,
-  discordIntegrationCallbackContract,
-  fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
-  listDiscordServersContract,
-  listDiscordUsersContract,
 } from "@asyncstatus/api/typed-handlers/discord-integration";
 import {
-  deleteGithubIntegrationContract,
   getGithubIntegrationContract,
-  githubIntegrationCallbackContract,
   listGithubRepositoriesContract,
-  listGithubUsersContract,
-  resyncGithubIntegrationContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
-  deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
-  gitlabIntegrationCallbackContract,
   listGitlabProjectsContract,
-  listGitlabUsersContract,
-  resyncGitlabIntegrationContract,
 } from "@asyncstatus/api/typed-handlers/gitlab-integration";
+import type { ScheduleConfigGenerateFor } from "@asyncstatus/api/typed-handlers/schedule";
 import {
-  getMemberContract,
-  listMembersContract,
-  updateMemberContract,
-} from "@asyncstatus/api/typed-handlers/member";
-import { getOrganizationContract } from "@asyncstatus/api/typed-handlers/organization";
-import {
-  deleteSlackIntegrationContract,
   getSlackIntegrationContract,
   listSlackChannelsContract,
-  listSlackUsersContract,
-  slackIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
-import {
-  NotSiMicrosoftTeams,
-  SiAsana,
-  SiClickup,
-  SiDiscord,
-  SiFigma,
-  SiGithub,
-  SiGitlab,
-  SiGooglemeet,
-  SiJira,
-  SiLinear,
-  SiNotion,
-  SiSlack,
-  SiTrello,
-  SiZoom,
-} from "@asyncstatus/ui/brand-icons";
-import { Alert, AlertDescription, AlertTitle } from "@asyncstatus/ui/components/alert";
+import { SiDiscord, SiGithub, SiGitlab, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Badge } from "@asyncstatus/ui/components/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";
-import { Input } from "@asyncstatus/ui/components/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@asyncstatus/ui/components/select";
-import { Separator } from "@asyncstatus/ui/components/separator";
-import { SidebarTrigger } from "@asyncstatus/ui/components/sidebar";
-import {
-  AlertTriangleIcon,
-  ArrowRight,
-  DownloadIcon,
-  PlayIcon,
-  Send,
-  StopCircleIcon,
-  XIcon,
-} from "@asyncstatus/ui/icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
-import { z } from "zod/v4";
-import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
-import {
-  IntegrationSettingsItem,
-  IntegrationSuggestionItem,
-} from "@/components/integration-settings";
-import { typedMutationOptions, typedQueryOptions, typedUrl } from "@/typed-handlers";
-import { ensureValidOrganization, ensureValidSession } from "../-lib/common";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@asyncstatus/ui/components/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@asyncstatus/ui/components/popover";
+import { ActivityIcon, Check, ChevronsUpDown, XIcon } from "@asyncstatus/ui/icons";
+import { cn } from "@asyncstatus/ui/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { typedQueryOptions } from "@/typed-handlers";
 
-export const Route = createFileRoute("/$organizationSlug/_layout/integrations")({
-  validateSearch: z.object({
-    "error-title": z.string().optional(),
-    "error-description": z.string().optional(),
-  }),
-  component: RouteComponent,
-  loader: async ({ context: { queryClient }, location, params: { organizationSlug } }) => {
-    const [organization] = await Promise.all([
-      ensureValidOrganization(queryClient, organizationSlug),
-      ensureValidSession(queryClient, location),
-    ]);
-
-    await Promise.all([
-      queryClient.ensureQueryData(
-        typedQueryOptions(getOrganizationContract, {
-          idOrSlug: organizationSlug,
-        }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(getMemberContract, {
-          idOrSlug: organizationSlug,
-          memberId: organization.member.id,
-        }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(getGithubIntegrationContract, { idOrSlug: organizationSlug }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listGithubRepositoriesContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listGithubUsersContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(getGitlabIntegrationContract, { idOrSlug: organizationSlug }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listGitlabProjectsContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listGitlabUsersContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(getSlackIntegrationContract, { idOrSlug: organizationSlug }),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listSlackChannelsContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-      queryClient.ensureQueryData(
-        typedQueryOptions(
-          listSlackUsersContract,
-          { idOrSlug: organizationSlug },
-          { throwOnError: false },
-        ),
-      ),
-    ]);
-  },
-});
-
-function RouteComponent() {
-  const params = Route.useParams();
-  const search = Route.useSearch();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [searchText, setSearchText] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "connected" | "disconnected" | "connecting" | "error"
-  >("all");
-
-  // Clear error message from URL
-  const clearError = () => {
-    navigate({
-      to: "/$organizationSlug/integrations",
-      params: { organizationSlug: params.organizationSlug },
-      search: {},
-      replace: true,
-    });
-  };
-
-  const githubIntegrationQuery = useQuery(
-    typedQueryOptions(getGithubIntegrationContract, { idOrSlug: params.organizationSlug }),
-  );
-  const resyncGithubIntegrationMutation = useMutation(
-    typedMutationOptions(resyncGithubIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getGithubIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const gitlabIntegrationQuery = useQuery(
-    typedQueryOptions(getGitlabIntegrationContract, { idOrSlug: params.organizationSlug }),
-  );
-  const resyncGitlabIntegrationMutation = useMutation(
-    typedMutationOptions(resyncGitlabIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getGitlabIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const deleteGitlabIntegrationMutation = useMutation(
-    typedMutationOptions(deleteGitlabIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getGitlabIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listGitlabProjectsContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listGitlabUsersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const slackIntegrationQuery = useQuery(
-    typedQueryOptions(getSlackIntegrationContract, { idOrSlug: params.organizationSlug }),
-  );
-  const discordIntegrationQuery = useQuery(
-    typedQueryOptions(getDiscordIntegrationContract, { idOrSlug: params.organizationSlug }),
-  );
-  const session = useQuery(sessionBetterAuthQueryOptions());
-  const deleteGithubIntegrationMutation = useMutation(
-    typedMutationOptions(deleteGithubIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getGithubIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listGithubRepositoriesContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listGithubUsersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const deleteSlackIntegrationMutation = useMutation(
-    typedMutationOptions(deleteSlackIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getSlackIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listSlackChannelsContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listSlackUsersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const deleteDiscordIntegrationMutation = useMutation(
-    typedMutationOptions(deleteDiscordIntegrationContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getDiscordIntegrationContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listDiscordServersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listDiscordChannelsContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listDiscordUsersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-  const fetchDiscordMessagesMutation = useMutation(
-    typedMutationOptions(fetchDiscordMessagesContract),
-  );
-  const updateMemberMutation = useMutation(
-    typedMutationOptions(updateMemberContract, {
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listMembersContract, {
-            idOrSlug: params.organizationSlug,
-          }).queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getMemberContract, {
-            idOrSlug: params.organizationSlug,
-            memberId: data.id,
-          }).queryKey,
-        });
-        if (data.userId === session.data?.user.id) {
-          queryClient.invalidateQueries({
-            queryKey: typedQueryOptions(getOrganizationContract, {
-              idOrSlug: params.organizationSlug,
-            }).queryKey,
-          });
-
-          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
-            if (!sessionData) {
-              return sessionData;
-            }
-            return {
-              ...sessionData,
-              user: { ...sessionData.user, ...data.user },
-            };
-          });
-        }
-      },
-    }),
+export function GenerateForUsingActivityFromSelect({
+  size = "sm",
+  organizationSlug,
+  values,
+  onSelect,
+  id,
+  placeholder,
+}: {
+  size?: "sm" | "default";
+  organizationSlug: string;
+  values: ScheduleConfigGenerateFor["usingActivityFrom"];
+  onSelect: (value: ScheduleConfigGenerateFor["usingActivityFrom"]) => void;
+  id?: string;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const githubIntegration = useQuery(
+    typedQueryOptions(
+      getGithubIntegrationContract,
+      { idOrSlug: organizationSlug },
+      { throwOnError: false },
+    ),
   );
   const githubRepositories = useQuery(
-    typedQueryOptions(
-      listGithubRepositoriesContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
+    typedQueryOptions(listGithubRepositoriesContract, { idOrSlug: organizationSlug }),
   );
-  const githubUsers = useQuery(
+  const slackIntegration = useQuery(
     typedQueryOptions(
-      listGithubUsersContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
-  );
-  const gitlabProjects = useQuery(
-    typedQueryOptions(
-      listGitlabProjectsContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
-  );
-  const gitlabUsers = useQuery(
-    typedQueryOptions(
-      listGitlabUsersContract,
-      { idOrSlug: params.organizationSlug },
+      getSlackIntegrationContract,
+      { idOrSlug: organizationSlug },
       { throwOnError: false },
     ),
   );
   const slackChannels = useQuery(
+    typedQueryOptions(listSlackChannelsContract, { idOrSlug: organizationSlug }),
+  );
+  const gitlabIntegration = useQuery(
     typedQueryOptions(
-      listSlackChannelsContract,
-      { idOrSlug: params.organizationSlug },
+      getGitlabIntegrationContract,
+      { idOrSlug: organizationSlug },
       { throwOnError: false },
     ),
   );
-  const slackUsers = useQuery({
-    ...typedQueryOptions(
-      listSlackUsersContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
-    select(data) {
-      return data.filter((user) => !user.isBot && user.username !== "slackbot");
-    },
-  });
-  const discordServers = useQuery(
+  const gitlabProjects = useQuery(
+    typedQueryOptions(listGitlabProjectsContract, { idOrSlug: organizationSlug }),
+  );
+  const discordIntegration = useQuery(
     typedQueryOptions(
-      listDiscordServersContract,
-      { idOrSlug: params.organizationSlug },
+      getDiscordIntegrationContract,
+      { idOrSlug: organizationSlug },
       { throwOnError: false },
     ),
   );
   const discordChannels = useQuery(
-    typedQueryOptions(
-      listDiscordChannelsContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
-  );
-  const discordUsers = useQuery({
-    ...typedQueryOptions(
-      listDiscordUsersContract,
-      { idOrSlug: params.organizationSlug },
-      { throwOnError: false },
-    ),
-    select(data) {
-      return data.filter((user) => !user.isBot);
-    },
-  });
-  const organizationMembers = useQuery(
-    typedQueryOptions(listMembersContract, { idOrSlug: params.organizationSlug }),
+    typedQueryOptions(listDiscordChannelsContract, { idOrSlug: organizationSlug }),
   );
 
-  const integrations = useMemo(
-    () => [
-      {
-        name: "GitHub",
-        description: "Track commits, pull requests, code reviews, and issue management.",
-        icon: <SiGithub className="size-3.5" />,
-        status: githubIntegrationQuery.data?.syncErrorAt
-          ? "error"
-          : githubIntegrationQuery.data?.syncFinishedAt
-            ? "connected"
-            : githubIntegrationQuery.data?.syncStartedAt
-              ? "connecting"
-              : "disconnected",
-        connectLink: getGithubIntegrationConnectUrl({
-          clientId: import.meta.env.VITE_GITHUB_INTEGRATION_APP_NAME,
-          redirectUri: typedUrl(githubIntegrationCallbackContract, {}),
-          organizationSlug: params.organizationSlug,
-        }),
-        onDisconnect: () => {
-          deleteGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-        },
-        settingsChildren: (
-          <div className="space-y-6">
-            {githubUsers.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No users found.</div>
-            )}
+  const selectedAnyIntegrationActivity = useMemo(() => {
+    return values?.findIndex((value) => value.type === "anyIntegration") !== -1;
+  }, [values]);
 
-            <div className="space-y-2">
-              <h4 className="font-medium">Users ({githubUsers.data?.length})</h4>
-              {githubUsers.data?.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-2">
-                  {githubUsers.data.map((user) => {
-                    const member = organizationMembers.data?.members.find(
-                      (member) => member.githubId === user.githubId,
-                    );
+  const selectedAnyGithubActivity = useMemo(() => {
+    return values?.findIndex((value) => value.type === "anyGithub") !== -1;
+  }, [values]);
 
-                    return (
-                      <div key={user.id} className="flex items-center gap-2">
-                        <Button variant="link" asChild className="p-0 text-left">
-                          <a href={user.htmlUrl} target="_blank" rel="noreferrer">
-                            {user.name || user.login}
-                          </a>
-                        </Button>
-                        <ArrowRight className="size-4" />
-                        <Select
-                          value={member?.id}
-                          onValueChange={(value) => {
-                            const member = organizationMembers.data?.members.find(
-                              (member) => member.id === value,
-                            );
-                            if (!member) {
-                              return;
-                            }
-                            updateMemberMutation.mutate({
-                              idOrSlug: params.organizationSlug,
-                              memberId: member.id,
-                              githubId: user.githubId,
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AsyncStatus profile" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {organizationMembers.data?.members.map((member) => (
-                              <SelectItem key={member.id} value={member.id}>
-                                {member.user.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {member && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              updateMemberMutation.mutate({
-                                idOrSlug: params.organizationSlug,
-                                memberId: member.id,
-                                githubId: null,
-                              });
-                            }}
-                          >
-                            <XIcon className="size-4" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+  const selectedAnySlackActivity = useMemo(() => {
+    return values?.findIndex((value) => value.type === "anySlack") !== -1;
+  }, [values]);
 
-            {githubRepositories.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No repositories found.</div>
-            )}
+  const selectedAnyDiscordActivity = useMemo(() => {
+    return values?.findIndex((value) => value.type === "anyDiscord") !== -1;
+  }, [values]);
 
-            <div className="space-y-2">
-              <h4 className="font-medium">Repositories ({githubRepositories.data?.length})</h4>
-              {githubRepositories.data?.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {githubRepositories.data.map((repository) => (
-                    <div key={repository.id} className="flex items-center gap-2">
-                      <Button variant="link" asChild className="p-0 text-left">
-                        <a href={repository.htmlUrl} target="_blank" rel="noreferrer">
-                          {repository.name}
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  resyncGithubIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-                }}
-              >
-                Resync users and repositories
-              </Button>
-            </div>
-          </div>
-        ),
-        children: (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">What this integration does</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Automatically tracks your GitHub activity in real-time.</li>
-                <li>Generates meaningful status updates from your code contributions.</li>
-                <li>Links AsyncStatus profiles to your GitHub accounts.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Privacy & Security</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Read-only access - we never modify your code.</li>
-                <li>Secure OAuth authentication with GitHub.</li>
-                <li>Data is encrypted in transit and at rest.</li>
-                <li>
-                  Data is used only for status update generation. We don't store any of your code.
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Data we track</h4>
-              <p className="text-xs text-muted-foreground mb-2">
-                Read-only access to the following GitHub data:
-              </p>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>
-                  <strong>Code & Commits:</strong> Track code changes, contributions, and commit
-                  history.
-                </li>
-                <li>
-                  <strong>Pull Requests:</strong> Monitor code reviews, merges, and collaboration.
-                </li>
-                <li>
-                  <strong>Issues & Discussions:</strong> Follow bug reports, feature requests, and
-                  team discussions.
-                </li>
-                <li>
-                  <strong>Actions & Checks:</strong> Track CI/CD workflows, build statuses, and
-                  automated checks.
-                </li>
-                <li>
-                  <strong>Deployments:</strong> Monitor deployment activity and release management.
-                </li>
-                <li>
-                  <strong>Projects & Packages:</strong> Track project boards, package releases, and
-                  dependencies.
-                </li>
-                <li>
-                  <strong>Organization Data:</strong> Access team membership, events, and
-                  organizational insights.
-                </li>
-                <li>
-                  <strong>Repository Metadata:</strong> Read repository settings, properties, and
-                  administration data.
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <strong>Status Example:</strong> "Reviewed 3 pull requests, merged feature/user-auth,
-              and resolved 2 critical issues in the dashboard repository."
-            </div>
-          </div>
-        ),
-      },
-      {
-        name: "Slack",
-        description: "Monitor channel activity, direct messages, and team communication.",
-        icon: <SiSlack className="size-3.5" />,
-        status: slackIntegrationQuery.data?.syncErrorAt
-          ? "error"
-          : slackIntegrationQuery.data?.syncFinishedAt
-            ? "connected"
-            : slackIntegrationQuery.data?.syncStartedAt
-              ? "connecting"
-              : "disconnected",
-        connectLink: getSlackIntegrationConnectUrl({
-          clientId: import.meta.env.VITE_SLACK_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: typedUrl(slackIntegrationCallbackContract, {}),
-          organizationSlug: params.organizationSlug,
-        }),
-        onDisconnect: () => {
-          deleteSlackIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-        },
-        settingsChildren: (
-          <div className="space-y-6">
-            {slackUsers.data.length === 0 && (
-              <div className="text-sm text-muted-foreground">No users found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Users ({slackUsers.data.length})</h4>
-              {slackUsers.data.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-2">
-                  {slackUsers.data.map((user) => {
-                    const member = organizationMembers.data?.members.find(
-                      (member) => member.slackId === user.slackUserId,
-                    );
-
-                    return (
-                      <div key={user.id} className="flex items-center gap-2">
-                        <Button variant="link" asChild className="p-0 text-left">
-                          <a
-                            href={`https://${slackIntegrationQuery.data?.teamName}.slack.com/team/${user.slackUserId}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {user.displayName || user.username || user.slackUserId}
-                          </a>
-                        </Button>
-                        <ArrowRight className="size-4" />
-                        <Select
-                          value={member?.id}
-                          onValueChange={(value) => {
-                            const member = organizationMembers.data?.members.find(
-                              (member) => member.id === value,
-                            );
-                            if (!member) {
-                              return;
-                            }
-                            updateMemberMutation.mutate({
-                              idOrSlug: params.organizationSlug,
-                              memberId: member.id,
-                              slackId: user.slackUserId,
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AsyncStatus profile" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {organizationMembers.data?.members.map((member) => (
-                              <SelectItem key={member.id} value={member.id}>
-                                {member.user.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {member && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              updateMemberMutation.mutate({
-                                idOrSlug: params.organizationSlug,
-                                memberId: member.id,
-                                slackId: null,
-                              });
-                            }}
-                          >
-                            <XIcon className="size-4" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {slackChannels.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No channels found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Channels ({slackChannels.data?.length})</h4>
-              {slackChannels.data?.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {slackChannels.data.map((channel) => (
-                    <div key={channel.id} className="flex items-center gap-2">
-                      <Button variant="link" asChild className="p-0 text-left">
-                        <a
-                          href={`https://${slackIntegrationQuery.data?.teamName}.slack.com/channels/${channel.channelId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          #{channel.name}
-                          <span className="text-xs text-muted-foreground">
-                            {channel.isPrivate && " (private)"}
-                            {channel.isArchived && " (archived)"}
-                            {channel.isShared && " (shared)"}
-                            {channel.isIm && " (direct message)"}
-                            {channel.isMpim && " (group direct message)"}
-                            {channel.isGeneral && " (general channel)"}
-                            {channel.isGroup && " (group channel)"}
-                          </span>
-                        </a>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ),
-        children: (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">What this integration does</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Automatically tracks your Slack communication and activity.</li>
-                <li>Generates meaningful status updates from your team conversations.</li>
-                <li>Links AsyncStatus profiles to your Slack accounts.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Privacy & Security</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>
-                  Limited, scoped permissions to track communication and collaboration activity.
-                </li>
-                <li>Can interact with channels and conversations AsyncStatus is added to.</li>
-                <li>Cannot access admin settings, billing, or workspace-wide configuration.</li>
-                <li>Secure OAuth authentication with Slack.</li>
-                <li>Data is encrypted in transit and at rest.</li>
-                <li>
-                  Data is used only for status update generation. We don't store message content.
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Data we track & actions we can perform</h4>
-              <p className="text-xs text-muted-foreground mb-2">
-                Access to view and interact with the following Slack data:
-              </p>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>
-                  <strong>Messages & Conversations:</strong> Track activity in public channels,
-                  private channels, and direct messages. Can send messages and start conversations.
-                </li>
-                <li>
-                  <strong>Channel Management:</strong> View channel information, join public
-                  channels, and manage channels AsyncStatus is added to.
-                </li>
-                <li>
-                  <strong>User Profiles:</strong> Access profile details, workspace member
-                  information, and email addresses.
-                </li>
-                <li>
-                  <strong>Reactions & Pins:</strong> View and add emoji reactions, manage pinned
-                  content in conversations.
-                </li>
-                <li>
-                  <strong>Files & Attachments:</strong> View, upload, edit, and delete files in
-                  conversations.
-                </li>
-                <li>
-                  <strong>Meeting & Call Data:</strong> Track participation in Slack calls and
-                  huddles.
-                </li>
-                <li>
-                  <strong>Workspace Management:</strong> Access workspace settings, manage user
-                  groups, create slash commands, and set bot presence.
-                </li>
-                <li>
-                  <strong>Reminders:</strong> Create, edit, and manage reminders for team members.
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <strong>Status Example:</strong> "Led 4 discussions in #engineering, shared project
-              updates in 3 channels, and coordinated with the design team on the new feature
-              rollout."
-            </div>
-          </div>
-        ),
-      },
-      {
-        name: "Discord",
-        description: "Track server activity, voice channels, and community engagement.",
-        icon: <SiDiscord className="size-3.5" />,
-        status: discordIntegrationQuery.data?.syncErrorAt
-          ? "error"
-          : discordIntegrationQuery.data?.syncFinishedAt
-            ? "connected"
-            : discordIntegrationQuery.data?.syncStartedAt
-              ? "connecting"
-              : "disconnected",
-        connectLink: getDiscordIntegrationConnectUrl({
-          clientId: import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: typedUrl(discordIntegrationCallbackContract, {}),
-          organizationSlug: params.organizationSlug,
-        }),
-        onDisconnect: () => {
-          deleteDiscordIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-        },
-        settingsChildren: (
-          <div className="space-y-6">
-            {discordUsers.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No users found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Users ({discordUsers.data?.length})</h4>
-              {discordUsers.data && discordUsers.data.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-2 overflow-y-auto max-h-[100px]">
-                  {discordUsers.data.map((user) => {
-                    const member = organizationMembers.data?.members.find(
-                      (member) => member.discordId === user.discordUserId,
-                    );
-
-                    return (
-                      <div key={user.id} className="flex items-center gap-2">
-                        <span>
-                          {user.globalName || user.username}
-                          {user.discriminator &&
-                            user.discriminator !== "0" &&
-                            `#${user.discriminator}`}
-                        </span>
-                        <ArrowRight className="size-4" />
-                        <Select
-                          value={member?.id}
-                          onValueChange={(value) => {
-                            const member = organizationMembers.data?.members.find(
-                              (member) => member.id === value,
-                            );
-                            if (!member) {
-                              return;
-                            }
-                            updateMemberMutation.mutate({
-                              idOrSlug: params.organizationSlug,
-                              memberId: member.id,
-                              discordId: user.discordUserId,
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AsyncStatus profile" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {organizationMembers.data?.members.map((member) => (
-                              <SelectItem key={member.id} value={member.id}>
-                                {member.user.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {member && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              updateMemberMutation.mutate({
-                                idOrSlug: params.organizationSlug,
-                                memberId: member.id,
-                                discordId: null,
-                              });
-                            }}
-                          >
-                            <XIcon className="size-4" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {discordServers.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No servers found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Servers ({discordServers.data?.length})</h4>
-              {discordServers.data && discordServers.data.length > 0 && (
-                <div className="text-sm text-muted-foreground overflow-y-auto max-h-[100px]">
-                  {discordServers.data.map((server) => (
-                    <div key={server.id} className="flex items-center gap-2">
-                      <span>{server.name}</span>
-                      {server.memberCount && (
-                        <span className="text-xs text-muted-foreground">
-                          ({server.memberCount} members)
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {discordChannels.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No channels found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Channels ({discordChannels.data?.length})</h4>
-              {discordChannels.data && discordChannels.data.length > 0 && (
-                <div className="text-sm text-muted-foreground overflow-y-auto max-h-[100px]">
-                  {discordChannels.data.map((channel) => (
-                    <div key={channel.id} className="flex items-center gap-2">
-                      <span>
-                        #{channel.name}
-                        <span className="text-xs text-muted-foreground">
-                          {channel.type === 0 && " (text)"}
-                          {channel.type === 2 && " (voice)"}
-                          {channel.nsfw && " (NSFW)"}
-                          {channel.isArchived && " (archived)"}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Real-time Discord Gateway</h4>
-              <DiscordGatewayControls organizationSlug={params.organizationSlug} />
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Manual Message Sync</h4>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Manually fetch the latest Discord messages for processing. This will fetch up to
-                  50 recent messages from all channels and send them for AI summarization.
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    fetchDiscordMessagesMutation.mutate({ idOrSlug: params.organizationSlug });
-                  }}
-                  disabled={fetchDiscordMessagesMutation.isPending}
-                >
-                  <DownloadIcon className="size-4 mr-2" />
-                  {fetchDiscordMessagesMutation.isPending ? "Fetching..." : "Fetch Latest Messages"}
-                </Button>
-                {fetchDiscordMessagesMutation.error && (
-                  <Alert variant="destructive">
-                    <AlertTriangleIcon className="size-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>
-                      {fetchDiscordMessagesMutation.error.message}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {fetchDiscordMessagesMutation.isSuccess && (
-                  <Alert>
-                    <AlertTitle>Success</AlertTitle>
-                    <AlertDescription>
-                      Discord message fetch started successfully. Messages will be processed for AI
-                      summarization.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </div>
-          </div>
-        ),
-        children: (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-medium">What this integration does</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Automatically tracks your Discord activity in real-time.</li>
-                <li>Generates meaningful status updates from community interactions.</li>
-                <li>Links AsyncStatus profiles to your Discord accounts.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Privacy & Security</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Read-only access to server data.</li>
-                <li>Secure OAuth authentication with Discord.</li>
-                <li>Data is encrypted in transit and at rest.</li>
-                <li>
-                  Data is used only for status update generation. We don't store message content.
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Data we track</h4>
-              <p className="text-xs text-muted-foreground mb-2">
-                Read-only access to the following Discord data:
-              </p>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>
-                  <strong>Server Information:</strong> Server names, icons, member counts, and basic
-                  metadata.
-                </li>
-                <li>
-                  <strong>Channel Information:</strong> Channel names, types, and topics (text
-                  channels only).
-                </li>
-                <li>
-                  <strong>Member Information:</strong> Usernames, avatars, and member lists to link
-                  with AsyncStatus profiles.
-                </li>
-                <li>
-                  <strong>Message Activity:</strong> Message events and metadata for activity
-                  tracking (content requires Message Content Intent).
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <strong>Status Example:</strong> "Active in #engineering and #product channels,
-              participated in design discussions, helped 5 team members in #support channel."
-            </div>
-          </div>
-        ),
-      },
-      {
-        name: "Linear",
-        description: "Sync issue updates, sprint progress, and project milestones.",
-        icon: <SiLinear className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "GitLab",
-        description: "Monitor merge requests, CI/CD pipelines, and repository activity.",
-        icon: <SiGitlab className="size-3.5" />,
-        status: gitlabIntegrationQuery.data?.syncErrorAt
-          ? "error"
-          : gitlabIntegrationQuery.data?.syncFinishedAt
-            ? "connected"
-            : gitlabIntegrationQuery.data?.syncStartedAt
-              ? "connecting"
-              : "disconnected",
-        connectLink: getGitlabIntegrationConnectUrl({
-          clientId: import.meta.env.VITE_GITLAB_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: import.meta.env.VITE_API_URL + gitlabIntegrationCallbackContract.url(),
-          organizationSlug: params.organizationSlug,
-          instanceUrl: "https://gitlab.com", // Default to GitLab.com
-        }),
-        onDisconnect: () => {
-          deleteGitlabIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-        },
-        settingsChildren: (
-          <div className="space-y-6">
-            {gitlabUsers.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No users found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Users ({gitlabUsers.data?.length})</h4>
-              {gitlabUsers.data?.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-2">
-                  {gitlabUsers.data.map((user) => {
-                    const member = organizationMembers.data?.members.find(
-                      (member) => member.gitlabId === user.gitlabId,
-                    );
-
-                    return (
-                      <div key={user.id} className="flex items-center gap-2">
-                        <Button variant="link" asChild className="p-0 text-left">
-                          <a href={user.webUrl} target="_blank" rel="noreferrer">
-                            {user.name || user.username}
-                          </a>
-                        </Button>
-                        <ArrowRight className="size-4" />
-                        <Select
-                          value={member?.id}
-                          onValueChange={(value) => {
-                            const member = organizationMembers.data?.members.find(
-                              (member) => member.id === value,
-                            );
-                            if (!member) return;
-
-                            updateMemberMutation.mutate({
-                              idOrSlug: params.organizationSlug,
-                              memberId: member.id,
-                              gitlabId: user.gitlabId,
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AsyncStatus profile" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {organizationMembers.data?.members.map((member) => (
-                              <SelectItem key={member.id} value={member.id}>
-                                {member.user.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {member && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              updateMemberMutation.mutate({
-                                idOrSlug: params.organizationSlug,
-                                memberId: member.id,
-                                gitlabId: null,
-                              });
-                            }}
-                          >
-                            <XIcon className="size-4" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {gitlabProjects.data?.length === 0 && (
-              <div className="text-sm text-muted-foreground">No projects found.</div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Projects ({gitlabProjects.data?.length})</h4>
-              {gitlabProjects.data?.length > 0 && (
-                <div className="text-sm text-muted-foreground space-y-1">
-                  {gitlabProjects.data.map((project) => (
-                    <div key={project.id} className="flex items-center gap-2">
-                      <Button variant="link" asChild className="p-0 text-left">
-                        <a href={project.webUrl} target="_blank" rel="noreferrer">
-                          {project.pathWithNamespace}
-                        </a>
-                      </Button>
-                      <Badge variant={project.visibility === "private" ? "secondary" : "outline"}>
-                        {project.visibility}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  resyncGitlabIntegrationMutation.mutate({ idOrSlug: params.organizationSlug });
-                }}
-              >
-                Resync users and projects
-              </Button>
-            </div>
-          </div>
-        ),
-        children: (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">What this integration does</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Automatically tracks your GitLab activity across projects.</li>
-                <li>Generates meaningful status updates from your code contributions.</li>
-                <li>Links AsyncStatus profiles to your GitLab accounts.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Privacy & Security</h4>
-              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Read-only access - we never modify your code.</li>
-                <li>Secure OAuth authentication with GitLab.</li>
-                <li>Data is encrypted in transit and at rest.</li>
-                <li>Data is used only for status update generation. We don't store your code.</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Data we track</h4>
-              <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>
-                  <strong>Project Information:</strong> Project names, descriptions, visibility
-                  settings.
-                </li>
-                <li>
-                  <strong>Merge Requests:</strong> MR creation, reviews, approvals, and merges.
-                </li>
-                <li>
-                  <strong>Issues:</strong> Issue creation, assignments, labels, and resolution.
-                </li>
-                <li>
-                  <strong>Commits & Pushes:</strong> Code commits and push events across branches.
-                </li>
-                <li>
-                  <strong>CI/CD Pipelines:</strong> Pipeline status, job results, and deployment
-                  tracking.
-                </li>
-                <li>
-                  <strong>User Activity:</strong> Developer contributions and collaboration
-                  patterns.
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <strong>Status Example:</strong> "Merged 3 MRs for payment gateway, reviewed
-              [@colleague]'s authentication changes, resolved 2 critical issues in CI pipeline."
-            </div>
-          </div>
-        ),
-      },
-      {
-        name: "Asana",
-        description: "Track task completions, project updates, and team assignments.",
-        icon: <SiAsana className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Jira",
-        description: "Track ticket status, sprint progress, and bug resolution.",
-        icon: <SiJira className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Google Meet",
-        description: "Track meeting attendance, duration, and collaboration sessions.",
-        icon: <SiGooglemeet className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Microsoft Teams",
-        description: "Track meeting attendance, duration, and collaboration sessions.",
-        icon: <NotSiMicrosoftTeams className="size-3.5 dark:fill-white" />,
-        status: "disconnected",
-      },
-      {
-        name: "Zoom",
-        description: "Monitor meeting participation, recording activity, and team calls.",
-        icon: <SiZoom className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "ClickUp",
-        description: "Monitor task status, time tracking, and goal progress.",
-        icon: <SiClickup className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Trello",
-        description: "Monitor card movements, board updates, and task progress.",
-        icon: <SiTrello className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Notion",
-        description: "Track page edits, database updates, and workspace activity.",
-        icon: <SiNotion className="size-3.5" />,
-        status: "disconnected",
-      },
-      {
-        name: "Figma",
-        description: "Track design updates, prototype changes, and design reviews.",
-        icon: <SiFigma className="size-3.5" />,
-        status: "disconnected",
-      },
-    ],
-    [
-      githubIntegrationQuery.data,
-      githubRepositories.data,
-      githubUsers.data,
-      slackIntegrationQuery.data,
-      slackChannels.data,
-      slackUsers.data,
-      discordIntegrationQuery.data,
-      discordServers.data,
-      discordChannels.data,
-      discordUsers.data,
-      gitlabIntegrationQuery.data,
-      gitlabProjects.data,
-      gitlabUsers.data,
-      organizationMembers.data,
-    ],
-  );
-
-  const filteredIntegrations = useMemo(() => {
-    return integrations.filter((integration) => {
-      const matchesSearch =
-        integration.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        integration.description.toLowerCase().includes(searchText.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "connected" && integration.status === "connected") ||
-        (statusFilter === "disconnected" && integration.status === "disconnected") ||
-        (statusFilter === "connecting" && integration.status === "connecting") ||
-        (statusFilter === "error" && integration.status === "error");
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [integrations, searchText, statusFilter]);
+  const selectedAnyGitlabActivity = useMemo(() => {
+    return values?.findIndex((value) => value.type === "anyGitlab") !== -1;
+  }, [values]);
 
   return (
-    <>
-      <header className="flex shrink-0 items-center justify-between gap-2">
-        <div className="flex items-center gap-0">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link
-                    to="/$organizationSlug/integrations"
-                    params={{ organizationSlug: params.organizationSlug }}
-                  >
-                    Integrations
-                  </Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
-
-      {(search["error-title"] || search["error-description"]) && (
-        <Alert
-          variant="destructive"
-          className="mt-4 flex items-center justify-between border border-destructive/50"
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <AlertTriangleIcon className="size-4" />
-              <AlertTitle className="text-base font-medium">
-                {search["error-title"] || "Error"}
-              </AlertTitle>
-            </div>
-            <AlertDescription className="flex items-start justify-between">
-              <span className="text-foreground">
-                {search["error-description"] || "Something went wrong. Please try again."}
-              </span>
-            </AlertDescription>
-          </div>
-          <Button variant="outline" onClick={clearError} className="text-foreground">
-            <span className="sr-only">Close error</span>
-            <XIcon className="size-4" />
-          </Button>
-        </Alert>
-      )}
-
-      <div className="flex items-center gap-2 py-4">
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="connected">Connected</SelectItem>
-            <SelectItem value="disconnected">Disconnected</SelectItem>
-            <SelectItem value="connecting">Connecting</SelectItem>
-            <SelectItem value="error">Error</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          type="text"
-          placeholder="Search for an integration"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 overflow-y-auto h-[calc(100vh-150px)] grid-auto-rows-min items-start">
-        {filteredIntegrations.length === 0 ? (
-          <div className="col-span-full text-center py-8">
-            <div className="space-y-2">
-              <p>No integrations found matching your search criteria.</p>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Don't see the integration you're looking for?
-                </p>
-                <Button asChild size="sm">
-                  <a
-                    href="mailto:kacper@asyncstatus.com?subject=Integration Suggestion&body=I'd like to suggest adding support for: [Tool Name]%0A%0AUse case: [How you would use this integration]%0A%0AAdditional context: [Any other relevant information]"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Send className="size-3" />
-                    Suggest an integration
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          filteredIntegrations.map((integration, index) => {
-            return (
-              <Fragment key={integration.name}>
-                {index === 3 && <IntegrationSuggestionItem />}
-                <IntegrationSettingsItem
-                  name={integration.name}
-                  description={integration.description}
-                  icon={integration.icon}
-                  status={
-                    integration.status as "connected" | "disconnected" | "connecting" | "error"
-                  }
-                  connectLink={integration.connectLink}
-                  onDisconnect={integration.onDisconnect}
-                  onViewDetails={() => {}}
-                  onSettings={() => {}}
-                  settingsChildren={integration.settingsChildren}
-                >
-                  {integration.children}
-                </IntegrationSettingsItem>
-              </Fragment>
-            );
-          })
-        )}
-      </div>
-    </>
-  );
-}
-
-function DiscordGatewayControls({ organizationSlug }: { organizationSlug: string }) {
-  const queryClient = useQueryClient();
-
-  const gatewayStatusQuery = useQuery(
-    typedQueryOptions(getDiscordGatewayStatusContract, {
-      idOrSlug: organizationSlug,
-    }),
-  );
-
-  const startGatewayMutation = useMutation(
-    typedMutationOptions(startDiscordGatewayContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
-            idOrSlug: organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-
-  const stopGatewayMutation = useMutation(
-    typedMutationOptions(stopDiscordGatewayContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(getDiscordGatewayStatusContract, {
-            idOrSlug: organizationSlug,
-          }).queryKey,
-        });
-      },
-    }),
-  );
-
-  const handleStart = () => {
-    startGatewayMutation.mutate({ idOrSlug: organizationSlug });
-  };
-
-  const handleStop = () => {
-    stopGatewayMutation.mutate({ idOrSlug: organizationSlug });
-  };
-
-  const isLoading =
-    gatewayStatusQuery.isLoading || startGatewayMutation.isPending || stopGatewayMutation.isPending;
-
-  const isConnected = gatewayStatusQuery.data?.isConnected;
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Status:</span>
-          <Badge variant={isConnected ? "default" : "secondary"}>
-            {isLoading ? "Loading..." : isConnected ? "Connected" : "Disconnected"}
-          </Badge>
-        </div>
-      </div>
-
-      {gatewayStatusQuery.data && (
-        <div className="text-xs text-muted-foreground space-y-1">
-          {gatewayStatusQuery.data.lastHeartbeat && (
-            <div>
-              Last heartbeat: {new Date(gatewayStatusQuery.data.lastHeartbeat).toLocaleString()}
-            </div>
-          )}
-          {gatewayStatusQuery.data.sessionId && (
-            <div>Session ID: {gatewayStatusQuery.data.sessionId}</div>
-          )}
-          <div>Connection attempts: {gatewayStatusQuery.data.connectionAttempts}</div>
-          {gatewayStatusQuery.data.sequenceNumber && (
-            <div>Sequence number: {gatewayStatusQuery.data.sequenceNumber}</div>
-          )}
-        </div>
-      )}
-
-      <div className="flex gap-2">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        {/** biome-ignore lint/a11y/useSemanticElements: it's fine */}
         <Button
-          size="sm"
-          variant={isConnected ? "secondary" : "default"}
-          onClick={handleStart}
-          disabled={isLoading || isConnected}
-        >
-          <PlayIcon className="size-4 mr-2" />
-          Start Gateway
-        </Button>
-
-        <Button
-          size="sm"
+          id={id}
+          size={size}
           variant="outline"
-          onClick={handleStop}
-          disabled={isLoading || !isConnected}
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "justify-between transition-none",
+            values.length > 0 && "max-h-auto h-auto p-1",
+            (!values?.length || values.length === 0) && "text-muted-foreground py-2 h-9",
+          )}
         >
-          <StopCircleIcon className="size-4 mr-2" />
-          Stop Gateway
+          <div className="flex items-center gap-2 max-h-auto h-auto flex-wrap max-w-[400px]">
+            {(!values?.length || values.length === 0) && (placeholder ?? "Select activity")}
+            {values.map((value) => {
+              if (value.type === "anyIntegration") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <ActivityIcon className="size-4 m-1" />
+                    <span>Any activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.type !== "anyIntegration"));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.type !== "anyIntegration"));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "anyGithub") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGithub className="size-4 m-1" />
+                    <span>Any GitHub activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.type !== "anyGithub"));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.type !== "anyGithub"));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "anySlack") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiSlack className="size-4 m-1" />
+                    <span>Any Slack activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.type !== "anySlack"));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.type !== "anySlack"));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "anyDiscord") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiDiscord className="size-4 m-1" />
+                    <span>Any Discord activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.type !== "anyDiscord"));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.type !== "anyDiscord"));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "anyGitlab") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>Any GitLab activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.type !== "anyGitlab"));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.type !== "anyGitlab"));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "gitlabProject") {
+                const project = gitlabProjects.data?.find((p) => p.id === value.value);
+                if (!project) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>{project.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "githubRepository") {
+                const repository = githubRepositories.data?.find(
+                  (repository) => repository.id === value.value,
+                );
+                if (!repository) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiGithub className="size-4 m-1" />
+                    <span>{repository.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "slackChannel") {
+                const channel = slackChannels.data?.find((channel) => channel.id === value.value);
+                if (!channel) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiSlack className="size-4 m-1" />
+                    <span>{channel.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "discordChannel") {
+                const channel = discordChannels.data?.find((channel) => channel.id === value.value);
+                if (!channel) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiDiscord className="size-4 m-1" />
+                    <span>{channel.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+            })}
+          </div>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
-      </div>
+      </PopoverTrigger>
+      <PopoverContent className="p-0">
+        <Command>
+          <CommandInput placeholder="Search activity..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
 
-      {(startGatewayMutation.error || stopGatewayMutation.error) && (
-        <Alert variant="destructive">
-          <AlertTriangleIcon className="size-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {startGatewayMutation.error?.message || stopGatewayMutation.error?.message}
-          </AlertDescription>
-        </Alert>
-      )}
+            <CommandItem
+              value="anyIntegration"
+              onSelect={() => {
+                if (values.findIndex((value) => value.type === "anyIntegration") !== -1) {
+                  onSelect([]);
+                } else {
+                  onSelect([{ type: "anyIntegration", value: "anyIntegration" }]);
+                }
+                setOpen(false);
+              }}
+            >
+              <ActivityIcon className="size-4 m-1" />
+              <span>Any activity</span>
+              <Check
+                className={cn(
+                  "ml-auto",
+                  selectedAnyIntegrationActivity ? "opacity-100" : "opacity-0",
+                )}
+              />
+            </CommandItem>
 
-      <div className="text-xs text-muted-foreground">
-        The Discord Gateway enables real-time message processing and event tracking. When connected,
-        your Discord events will be processed immediately for status updates.
-      </div>
-    </div>
+            {githubIntegration.data && (
+              <CommandGroup heading="GitHub">
+                <CommandItem
+                  value="github"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anyGithub") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anyGithub")]);
+                    } else {
+                      onSelect([...values, { type: "anyGithub", value: "anyGithub" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiGithub className="size-4 m-1" />
+                  <span>Any GitHub activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      selectedAnyGithubActivity ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {githubRepositories.data?.map((repository) => (
+                  <CommandItem
+                    key={repository.id}
+                    value={repository.id}
+                    onSelect={() => {
+                      if (
+                        values.findIndex(
+                          (value) =>
+                            value.type === "githubRepository" && value.value === repository.id,
+                        ) !== -1
+                      ) {
+                        onSelect([
+                          ...values.filter(
+                            (value) =>
+                              value.type !== "githubRepository" || value.value !== repository.id,
+                          ),
+                        ]);
+                      } else {
+                        onSelect([...values, { type: "githubRepository", value: repository.id }]);
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    <SiGithub className="size-4 m-1" />
+                    <span>{repository.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        values.findIndex(
+                          (value) =>
+                            value.type === "githubRepository" && value.value === repository.id,
+                        ) !== -1
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {slackIntegration.data && (
+              <CommandGroup heading="Slack">
+                <CommandItem
+                  value="slack"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anySlack") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anySlack")]);
+                    } else {
+                      onSelect([...values, { type: "anySlack", value: "anySlack" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiSlack className="size-4 m-1" />
+                  <span>Any Slack activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      selectedAnySlackActivity ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {slackChannels.data?.map((channel) => (
+                  <CommandItem key={channel.id} value={channel.id}>
+                    <SiSlack className="size-4 m-1" />
+                    <span>{channel.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {discordIntegration.data && (
+              <CommandGroup heading="Discord">
+                <CommandItem
+                  value="discord"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anyDiscord") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anyDiscord")]);
+                    } else {
+                      onSelect([...values, { type: "anyDiscord", value: "anyDiscord" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiDiscord className="size-4 m-1" />
+                  <span>Any Discord activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      selectedAnyDiscordActivity ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {discordChannels.data?.map((channel) => (
+                  <CommandItem key={channel.id} value={channel.id}>
+                    <SiDiscord className="size-4 m-1" />
+                    <span>{channel.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {gitlabIntegration.data && (
+              <CommandGroup heading="GitLab">
+                <CommandItem
+                  value="gitlab"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anyGitlab") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anyGitlab")]);
+                    } else {
+                      onSelect([...values, { type: "anyGitlab", value: "anyGitlab" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiGitlab className="size-4 m-1" />
+                  <span>Any GitLab activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      selectedAnyGitlabActivity ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {gitlabProjects.data?.map((project) => (
+                  <CommandItem
+                    key={project.id}
+                    value={project.id}
+                    onSelect={() => {
+                      if (
+                        values.findIndex(
+                          (value) => value.type === "gitlabProject" && value.value === project.id,
+                        ) !== -1
+                      ) {
+                        onSelect([
+                          ...values.filter(
+                            (value) => value.type !== "gitlabProject" || value.value !== project.id,
+                          ),
+                        ]);
+                      } else {
+                        onSelect([...values, { type: "gitlabProject", value: project.id }]);
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    <SiGitlab className="size-4 m-1" />
+                    <span>{project.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        values.findIndex(
+                          (value) => value.type === "gitlabProject" && value.value === project.id,
+                        ) !== -1
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

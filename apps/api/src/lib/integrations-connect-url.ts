@@ -47,5 +47,16 @@ export function getGitlabWebhookUrl(apiUrl: string, integrationId: string): stri
 export function getGitlabWebhookSecret(): string {
   // This should be a unique secret for each integration
   // For now, we'll use the environment variable, but ideally each integration should have its own secret
-  return process.env.GITLAB_WEBHOOK_SECRET || '';
+  return process.env.GITLAB_WEBHOOK_SECRET || "";
+}
+
+type LinearIntegrationConnectUrlParams = {
+  clientId: string;
+  redirectUri: string;
+  organizationSlug: string;
+};
+
+export function getLinearIntegrationConnectUrl(params: LinearIntegrationConnectUrlParams) {
+  const scope = "read,write";
+  return `https://linear.app/oauth/authorize?client_id=${params.clientId}&redirect_uri=${encodeURIComponent(params.redirectUri)}&response_type=code&scope=${scope}&state=${params.organizationSlug}&actor=app`;
 }

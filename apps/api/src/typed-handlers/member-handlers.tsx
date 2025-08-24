@@ -82,6 +82,7 @@ export const updateMemberHandler = typedHandler<
       slackId,
       discordId,
       gitlabId,
+      linearId,
       ...userUpdates
     } = input;
     const existingMember = await db.query.member.findFirst({
@@ -128,6 +129,11 @@ export const updateMemberHandler = typedHandler<
         await tx.update(member).set({ gitlabId }).where(eq(member.id, memberId));
       } else if (gitlabId === null && existingMember.gitlabId) {
         await tx.update(member).set({ gitlabId: null }).where(eq(member.id, memberId));
+      }
+      if (linearId) {
+        await tx.update(member).set({ linearId }).where(eq(member.id, memberId));
+      } else if (linearId === null && existingMember.linearId) {
+        await tx.update(member).set({ linearId: null }).where(eq(member.id, memberId));
       }
       if (archivedAt) {
         await tx

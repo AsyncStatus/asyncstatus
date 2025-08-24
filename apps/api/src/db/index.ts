@@ -74,6 +74,23 @@ export {
 export { GitlabUser, GitlabUserInsert, GitlabUserUpdate, gitlabUser } from "./gitlab-user";
 export { Invitation, InvitationInsert, InvitationUpdate, invitation } from "./invitation";
 export { Jwks, JwksInsert, JwksUpdate, jwks } from "./jwks";
+export { LinearEvent, LinearEventInsert, LinearEventUpdate, linearEvent } from "./linear-event";
+export {
+  LinearEventVector,
+  LinearEventVectorInsert,
+  LinearEventVectorUpdate,
+  linearEventVector,
+} from "./linear-event-vector";
+export {
+  LinearIntegration,
+  LinearIntegrationInsert,
+  LinearIntegrationUpdate,
+  linearIntegration,
+} from "./linear-integration";
+export { LinearIssue, LinearIssueInsert, LinearIssueUpdate, linearIssue } from "./linear-issue";
+export { LinearProject, LinearProjectInsert, LinearProjectUpdate, linearProject } from "./linear-project";
+export { LinearTeam, LinearTeamInsert, LinearTeamUpdate, linearTeam } from "./linear-team";
+export { LinearUser, LinearUserInsert, LinearUserUpdate, linearUser } from "./linear-user";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";
 export { Organization, OrganizationInsert, OrganizationUpdate, organization } from "./organization";
 export {
@@ -181,6 +198,13 @@ import { gitlabProject } from "./gitlab-project";
 import { gitlabUser } from "./gitlab-user";
 import { invitation } from "./invitation";
 // removed unused direct import of jwks
+import { linearEvent } from "./linear-event";
+import { linearEventVector } from "./linear-event-vector";
+import { linearIntegration } from "./linear-integration";
+import { linearIssue } from "./linear-issue";
+import { linearProject } from "./linear-project";
+import { linearTeam } from "./linear-team";
+import { linearUser } from "./linear-user";
 import { member } from "./member";
 import { organization } from "./organization";
 import { schedule } from "./schedule";
@@ -231,6 +255,7 @@ export const organizationRelations = relations(organization, ({ many, one }) => 
   githubIntegration: one(githubIntegration),
   gitlabIntegration: one(gitlabIntegration),
   slackIntegration: one(slackIntegration),
+  linearIntegration: one(linearIntegration),
   schedules: many(schedule),
   summaries: many(summary),
 }));
@@ -404,6 +429,66 @@ export const discordEventRelations = relations(discordEvent, ({ one }) => ({
   channel: one(discordChannel, {
     fields: [discordEvent.channelId],
     references: [discordChannel.channelId],
+  }),
+}));
+
+export const linearIntegrationRelations = relations(linearIntegration, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [linearIntegration.organizationId],
+    references: [organization.id],
+  }),
+  teams: many(linearTeam),
+  users: many(linearUser),
+  issues: many(linearIssue),
+  projects: many(linearProject),
+  events: many(linearEvent),
+}));
+
+export const linearTeamRelations = relations(linearTeam, ({ one }) => ({
+  integration: one(linearIntegration, {
+    fields: [linearTeam.integrationId],
+    references: [linearIntegration.id],
+  }),
+}));
+
+export const linearUserRelations = relations(linearUser, ({ one }) => ({
+  integration: one(linearIntegration, {
+    fields: [linearUser.integrationId],
+    references: [linearIntegration.id],
+  }),
+}));
+
+export const linearProjectRelations = relations(linearProject, ({ one }) => ({
+  integration: one(linearIntegration, {
+    fields: [linearProject.integrationId],
+    references: [linearIntegration.id],
+  }),
+}));
+
+export const linearIssueRelations = relations(linearIssue, ({ one, many }) => ({
+  integration: one(linearIntegration, {
+    fields: [linearIssue.integrationId],
+    references: [linearIntegration.id],
+  }),
+  events: many(linearEvent),
+}));
+
+export const linearEventRelations = relations(linearEvent, ({ one, many }) => ({
+  integration: one(linearIntegration, {
+    fields: [linearEvent.integrationId],
+    references: [linearIntegration.id],
+  }),
+  issue: one(linearIssue, {
+    fields: [linearEvent.issueId],
+    references: [linearIssue.issueId],
+  }),
+  vectors: many(linearEventVector),
+}));
+
+export const linearEventVectorRelations = relations(linearEventVector, ({ one }) => ({
+  event: one(linearEvent, {
+    fields: [linearEventVector.eventId],
+    references: [linearEvent.id],
   }),
 }));
 

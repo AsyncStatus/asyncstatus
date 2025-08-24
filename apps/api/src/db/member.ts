@@ -22,6 +22,7 @@ export const member = sqliteTable(
     gitlabId: text("gitlab_id"),
     slackId: text("slack_id"),
     discordId: text("discord_id"),
+    linearId: text("linear_id"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     archivedAt: integer("archived_at", { mode: "timestamp" }),
   },
@@ -32,6 +33,7 @@ export const member = sqliteTable(
     index("member_gitlab_id_index").on(t.gitlabId),
     index("member_slack_id_index").on(t.slackId),
     index("member_discord_id_index").on(t.discordId),
+    index("member_linear_id_index").on(t.linearId),
   ],
 );
 

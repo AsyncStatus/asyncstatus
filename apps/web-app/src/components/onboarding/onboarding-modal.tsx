@@ -1,9 +1,7 @@
 import { getDiscordIntegrationContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
-import {
-  getOrganizationContract,
-  getOrganizationUserContract,
-} from "@asyncstatus/api/typed-handlers/organization";
+import { getLinearIntegrationContract } from "@asyncstatus/api/typed-handlers/linear-integration";
+import { getOrganizationUserContract } from "@asyncstatus/api/typed-handlers/organization";
 import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   AlertDialog,
@@ -56,6 +54,13 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
     discordIntegration.data?.syncFinishedAt ||
     discordIntegration.data?.syncStartedAt ||
     discordIntegration.data?.syncUpdatedAt;
+  const linearIntegration = useQuery(
+    typedQueryOptions(getLinearIntegrationContract, { idOrSlug: organizationSlug }),
+  );
+  const hasLinearIntegration =
+    linearIntegration.data?.syncFinishedAt ||
+    linearIntegration.data?.syncStartedAt ||
+    linearIntegration.data?.syncUpdatedAt;
 
   // session is cached so we'd just use the user from getOrganizationUserContract
   useEffect(() => {
@@ -72,7 +77,7 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
 
   return (
     <>
-      <AlertDialog open={session.data?.user.showOnboarding} onOpenChange={() => {}}>
+      <AlertDialog open={Boolean(session.data?.user.showOnboarding)} onOpenChange={() => {}}>
         <AlertDialogContentBlurredOverlay
           className={cn("p-12 pb-2 sm:max-w-2xl transition-all gap-0 ring-0 outline-none")}
         >
@@ -90,16 +95,19 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
             )}
 
             <div className="flex flex-col gap-2">
-              {!hasGithubIntegration && !hasSlackIntegration && !hasDiscordIntegration && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-muted-foreground mt-12 text-xs"
-                  onClick={() => setManualUpdatesDialogOpen(true)}
-                >
-                  I prefer manual updates
-                </Button>
-              )}
+              {!hasGithubIntegration &&
+                !hasSlackIntegration &&
+                !hasDiscordIntegration &&
+                !hasLinearIntegration && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground mt-12 text-xs"
+                    onClick={() => setManualUpdatesDialogOpen(true)}
+                  >
+                    I prefer manual updates
+                  </Button>
+                )}
             </div>
           </div>
         </AlertDialogContentBlurredOverlay>

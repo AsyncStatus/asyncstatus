@@ -7,6 +7,10 @@ import {
   githubIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
+  getLinearIntegrationContract,
+  linearIntegrationCallbackContract,
+} from "@asyncstatus/api/typed-handlers/linear-integration";
+import {
   createOnboardingRecommendedAutomationsContract,
   updateUserOnboardingContract,
 } from "@asyncstatus/api/typed-handlers/onboarding";
@@ -20,7 +24,7 @@ import {
   getStatusUpdateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
-import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiLinear, SiSlack } from "@asyncstatus/ui/brand-icons";
 import {
   AlertDialogDescription,
   AlertDialogHeader,
@@ -170,6 +174,28 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       },
     ),
   );
+  const linearIntegration = useQuery(
+    typedQueryOptions(
+      getLinearIntegrationContract,
+      { idOrSlug: organizationSlug },
+      {
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchInterval(query) {
+          if (
+            query.state.data?.syncUpdatedAt &&
+            !query.state.data?.syncFinishedAt &&
+            !query.state.data?.syncError
+          ) {
+            return 500;
+          }
+
+          return false;
+        },
+      },
+    ),
+  );
   const createRecommendedAutomations = useMutation(
     typedMutationOptions(createOnboardingRecommendedAutomationsContract, {
       onSuccess(data) {
@@ -185,13 +211,15 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
   const hasGithubIntegration = githubIntegration.data?.syncFinishedAt;
   const hasSlackIntegration = slackIntegration.data?.syncFinishedAt;
   const hasDiscordIntegration = discordIntegration.data?.syncFinishedAt;
+  const hasLinearIntegration = linearIntegration.data?.syncFinishedAt;
   const connectedIntegrationsCount = useMemo(() => {
     let count = 0;
     if (hasGithubIntegration) count++;
     if (hasSlackIntegration) count++;
     if (hasDiscordIntegration) count++;
+    if (hasLinearIntegration) count++;
     return count;
-  }, [hasGithubIntegration, hasSlackIntegration, hasDiscordIntegration]);
+  }, [hasGithubIntegration, hasSlackIntegration, hasDiscordIntegration, hasLinearIntegration]);
 
   // Persist last finished timestamps per org to detect transitions across page navigations
   useEffect(() => {
@@ -199,13 +227,19 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       typeof window === "undefined" ||
       githubIntegration.isPending ||
       slackIntegration.isPending ||
-      discordIntegration.isPending
+      discordIntegration.isPending ||
+      linearIntegration.isPending
     ) {
       return;
     }
 
     const storageKey = `onboarding:integrationFinishedAt:${organizationSlug}`;
-    type Snapshot = { github: string | null; slack: string | null; discord: string | null };
+    type Snapshot = {
+      github: string | null;
+      slack: string | null;
+      discord: string | null;
+      linear: string | null;
+    };
     let prev: Snapshot | null = null;
     try {
       const raw = window.localStorage.getItem(storageKey);
@@ -222,13 +256,17 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       discord: discordIntegration.data?.syncFinishedAt
         ? String(discordIntegration.data.syncFinishedAt)
         : null,
+      linear: linearIntegration.data?.syncFinishedAt
+        ? String(linearIntegration.data.syncFinishedAt)
+        : null,
     };
 
     const transitioned =
       !!prev &&
       ((prev.github !== current.github && !!current.github) ||
         (prev.slack !== current.slack && !!current.slack) ||
-        (prev.discord !== current.discord && !!current.discord));
+        (prev.discord !== current.discord && !!current.discord) ||
+        (prev.linear !== current.linear && !!current.linear));
 
     if (transitioned && !generateStatusUpdate.isPending) {
       generateStatusUpdate.mutate({
@@ -246,9 +284,11 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     githubIntegration.isPending,
     slackIntegration.isPending,
     discordIntegration.isPending,
+    linearIntegration.isPending,
     githubIntegration.data?.syncFinishedAt,
     slackIntegration.data?.syncFinishedAt,
     discordIntegration.data?.syncFinishedAt,
+    linearIntegration.data?.syncFinishedAt,
     nowStartOfWeek,
     nowEndOfDay,
     generateStatusUpdate.isPending,
@@ -324,6 +364,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
         hasGithubIntegration ? "GitHub" : "",
         hasSlackIntegration ? "Slack" : "",
         hasDiscordIntegration ? "Discord" : "",
+        hasLinearIntegration ? "Linear" : "",
       ].filter(Boolean);
       return (
         <p>
@@ -341,7 +382,8 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     statusUpdate.isPending ||
     githubIntegration.isPending ||
     slackIntegration.isPending ||
-    discordIntegration.isPending
+    discordIntegration.isPending ||
+    linearIntegration.isPending
   ) {
     return <StepSkeleton />;
   }
@@ -447,6 +489,26 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
             ></div>
             <SiDiscord className="size-4" />
             {discordIntegration.data ? "Using context from Discord" : "Add context from Discord"}
+          </Button>
+        )}
+
+        {!generateStatusUpdate.isPending && (
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={Boolean(linearIntegration.data || linearIntegration.isPending)}
+            onClick={() =>
+              linkSocial.mutate({
+                provider: "linear",
+                callbackURL: typedUrl(linearIntegrationCallbackContract, {}),
+              })
+            }
+          >
+            <div
+              className={cn("size-2 rounded-full", linearIntegration.data && "bg-green-500")}
+            ></div>
+            <SiLinear className="size-4" />
+            {linearIntegration.data ? "Using context from Linear" : "Add context from Linear"}
           </Button>
         )}
 

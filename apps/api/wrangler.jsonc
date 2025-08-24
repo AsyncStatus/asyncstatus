@@ -88,6 +88,20 @@
         "max_batch_timeout": 2,
         "retry_delay": 60,
         "max_retries": 10
+      },
+      {
+        "queue": "linear-webhook-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 2,
+        "retry_delay": 10,
+        "max_retries": 3
+      },
+      {
+        "queue": "linear-process-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 2,
+        "retry_delay": 60,
+        "max_retries": 10
       }
     ],
     "producers": [
@@ -122,6 +136,14 @@
       {
         "queue": "gitlab-process-events",
         "binding": "GITLAB_PROCESS_EVENTS_QUEUE"
+      },
+      {
+        "queue": "linear-webhook-events",
+        "binding": "LINEAR_WEBHOOK_EVENTS_QUEUE"
+      },
+      {
+        "queue": "linear-process-events",
+        "binding": "LINEAR_PROCESS_EVENTS_QUEUE"
       }
     ]
   },
@@ -185,6 +207,16 @@
       "name": "delete-gitlab-integration",
       "binding": "DELETE_GITLAB_INTEGRATION_WORKFLOW",
       "class_name": "DeleteGitlabIntegrationWorkflow"
+    },
+    {
+      "name": "sync-linear",
+      "binding": "SYNC_LINEAR_WORKFLOW",
+      "class_name": "SyncLinearWorkflow"
+    },
+    {
+      "name": "delete-linear-integration",
+      "binding": "DELETE_LINEAR_INTEGRATION_WORKFLOW",
+      "class_name": "DeleteLinearIntegrationWorkflow"
     }
   ],
   "kv_namespaces": [
