@@ -852,6 +852,21 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                   ].join("\n"),
                 );
               }
+            } else if (s.type === "linear_activity") {
+              header = `*Linear activity — ${initData.organizationName}*`;
+              if (s.content.generalSummary)
+                sections.push(`🌟 *Overview*\n${s.content.generalSummary}`);
+              if (
+                Array.isArray(s.content.projectSummaries) &&
+                s.content.projectSummaries.length > 0
+              ) {
+                sections.push(
+                  [
+                    `📦 *Project Highlights*`,
+                    ...s.content.projectSummaries.map((p: any) => `• ${p.content}`),
+                  ].join("\n"),
+                );
+              }
             }
 
             const slackMessage = [
