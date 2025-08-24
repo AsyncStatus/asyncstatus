@@ -13,7 +13,6 @@ import {
 import {
   deleteDiscordIntegrationContract,
   discordAddIntegrationCallbackContract,
-  discordIntegrationCallbackContract,
   fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
   listDiscordChannelsContract,
@@ -32,7 +31,6 @@ import {
   deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
   gitlabIntegrationCallbackAddContract,
-  gitlabIntegrationCallbackContract,
   listGitlabProjectsContract,
   listGitlabUsersContract,
   resyncGitlabIntegrationContract,
@@ -58,7 +56,6 @@ import {
   listSlackChannelsContract,
   listSlackUsersContract,
   slackAddIntegrationCallbackContract,
-  slackIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
   NotSiMicrosoftTeams,
@@ -105,13 +102,10 @@ import {
   XIcon,
 } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
 import { z } from "zod/v4";
-import {
-  loginSocialMutationOptions,
-  sessionBetterAuthQueryOptions,
-} from "@/better-auth-tanstack-query";
+import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
 import {
   IntegrationSettingsItem,
   IntegrationSuggestionItem,
