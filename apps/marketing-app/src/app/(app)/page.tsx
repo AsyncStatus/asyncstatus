@@ -127,8 +127,7 @@ export default async function Page(props: {
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Your team already pushed code, closed tickets, replied in threads, fixed small things no
-          one asked them to. We turn it into an update. Or you can write it yourself. Either way, no
+        Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools.  Or you can write it yourself. Either way, no
           one has to talk about it at 9:30 a.m.
         </h3>
 
@@ -164,7 +163,7 @@ export default async function Page(props: {
               href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
               className="hover:text-foreground"
             >
-              <span>Turn activity into updates</span>
+              <span>Generate status updates automatically</span>
             </Link>
           </Button>
 
