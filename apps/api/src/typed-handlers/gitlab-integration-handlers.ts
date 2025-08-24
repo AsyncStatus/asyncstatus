@@ -12,6 +12,7 @@ import { getGitlabIntegrationConnectUrl } from "../lib/integrations-connect-url"
 import {
   deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
+  gitlabIntegrationCallbackAddContract,
   gitlabIntegrationCallbackContract,
   listGitlabProjectsContract,
   listGitlabUsersContract,
@@ -83,25 +84,6 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
           );
         }
 
-        // Check if GitLab app is connected (similar to GitHub installations check)
-        // Since GitLab doesn't have installations like GitHub, we check if we can access user's projects
-        const projectsResponse = await fetch(`${gitlabInstanceUrl}/api/v4/projects?membership=true`, {
-          headers: {
-            Authorization: `Bearer ${account.accessToken}`,
-            Accept: "application/json",
-          },
-        });
-        
-        if (!projectsResponse.ok) {
-          return redirect(
-            getGitlabIntegrationConnectUrl({
-              clientId: gitlab.clientId,
-              redirectUri: `${betterAuthUrl}${gitlabIntegrationCallbackContract.url()}`,
-              organizationSlug: organizations[0].organization.slug,
-            }),
-          );
-        }
-
         if (!session.user.image && gitlabUser.avatar_url) {
           const userGitlabAvatar = await fetch(gitlabUser.avatar_url).then((res) =>
             res.arrayBuffer(),
@@ -127,46 +109,20 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
             );
         }
 
-        const [newGitlabIntegration] = await db
-          .insert(schema.gitlabIntegration)
-          .values({
-            id: generateId(),
-            organizationId: organizations[0].organization.id,
-            gitlabInstanceUrl,
-            accessToken: account.accessToken,
-            refreshToken: account.refreshToken || null,
-            tokenExpiresAt: account.accessTokenExpiresAt || null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .returning();
-        if (!newGitlabIntegration) {
-          return redirect(
-            `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitLab integration")}&error-description=${encodeURIComponent("Failed to create GitLab integration. Please try again.")}`,
-          );
-        }
-
-        const workflowInstance = await workflow.syncGitlab.create({
-          params: { integrationId: newGitlabIntegration.id },
-        });
-
-        await db
-          .update(schema.gitlabIntegration)
-          .set({
-            syncId: workflowInstance.id,
-            syncStartedAt: new Date(),
-            syncUpdatedAt: new Date(),
-          })
-          .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
-
         return redirect(
-          `${webAppUrl}/${organizations[0].organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+          getGitlabIntegrationConnectUrl({
+            clientId: gitlab.clientId,
+            redirectUri: `${betterAuthUrl}${gitlabIntegrationCallbackAddContract.url()}`,
+            organizationSlug: organizations[0].organization.slug,
+          }),
         );
       }
 
       let image = null;
       if (gitlabUser.avatar_url) {
-        const userGitlabAvatar = await fetch(gitlabUser.avatar_url).then((res) => res.arrayBuffer());
+        const userGitlabAvatar = await fetch(gitlabUser.avatar_url).then((res) =>
+          res.arrayBuffer(),
+        );
         image = await bucket.private.put(generateId(), userGitlabAvatar);
       }
 
@@ -237,23 +193,107 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         );
       }
 
-      // Check if GitLab app is connected
-      const projectsResponse = await fetch(`${gitlabInstanceUrl}/api/v4/projects?membership=true`, {
+      return redirect(
+        getGitlabIntegrationConnectUrl({
+          clientId: gitlab.clientId,
+          redirectUri: `${betterAuthUrl}${gitlabIntegrationCallbackAddContract.url()}`,
+          organizationSlug: results.organization.slug,
+        }),
+      );
+    } catch {
+      return redirect(
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete GitLab integration")}&error-description=${encodeURIComponent(
+          `Failed to complete GitLab integration. Please try again.`,
+        )}`,
+      );
+    }
+  },
+);
+
+export const gitlabIntegrationCallbackAddHandler = typedHandler<
+  TypedHandlersContextWithSession,
+  typeof gitlabIntegrationCallbackAddContract
+>(
+  gitlabIntegrationCallbackAddContract,
+  requiredSession,
+  async ({ redirect, webAppUrl, db, input, workflow, session, betterAuthUrl, gitlab }) => {
+    try {
+      const { code, state: organizationSlug, redirect: redirectUrl } = input;
+
+      if (!code) {
+        throw new TypedHandlersError({
+          code: "BAD_REQUEST",
+          message: "Missing authorization code",
+        });
+      }
+
+      const redirectUri = `${betterAuthUrl}${gitlabIntegrationCallbackAddContract.url()}`;
+      const tokenResponse = await fetch("https://gitlab.com/oauth/token", {
+        method: "POST",
         headers: {
-          Authorization: `Bearer ${account.accessToken}`,
-          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
+        body: new URLSearchParams({
+          client_id: gitlab.clientId,
+          client_secret: gitlab.clientSecret,
+          code,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        }),
       });
-      
-      if (!projectsResponse.ok) {
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: `Failed to exchange authorization code for access token: ${errorText}`,
+        });
+      }
+
+      const tokenData = (await tokenResponse.json()) as {
+        access_token: string;
+        refresh_token?: string;
+        expires_in?: number;
+      };
+
+      if (!tokenData.access_token) {
+        throw new TypedHandlersError({
+          code: "UNAUTHORIZED",
+          message: "No access token received from GitLab",
+        });
+      }
+
+      // Get user organizations
+      const organizations = await db
+        .select({ organization: schema.organization, member: schema.member })
+        .from(schema.organization)
+        .innerJoin(schema.member, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, session.user.id))
+        .orderBy(desc(schema.organization.createdAt))
+        .limit(1);
+
+      if (!organizations[0]?.organization.slug) {
+        throw new TypedHandlersError({
+          code: "NOT_FOUND",
+          message: "Organization not found",
+        });
+      }
+
+      const results = organizations[0];
+      const targetOrganizationSlug = organizationSlug || results.organization.slug;
+
+      // Check if integration already exists
+      const gitlabIntegration = await db.query.gitlabIntegration.findFirst({
+        where: eq(schema.gitlabIntegration.organizationId, results.organization.id),
+      });
+
+      if (gitlabIntegration) {
         return redirect(
-          getGitlabIntegrationConnectUrl({
-            clientId: gitlab.clientId,
-            redirectUri: `${betterAuthUrl}${gitlabIntegrationCallbackContract.url()}`,
-            organizationSlug: results.organization.slug,
-          }),
+          `${webAppUrl}/${targetOrganizationSlug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
         );
       }
+
+      const gitlabInstanceUrl = gitlab.instanceUrl ?? "https://gitlab.com";
 
       const [newGitlabIntegration] = await db
         .insert(schema.gitlabIntegration)
@@ -261,13 +301,16 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
           id: generateId(),
           organizationId: results.organization.id,
           gitlabInstanceUrl,
-          accessToken: account.accessToken,
-          refreshToken: account.refreshToken || null,
-          tokenExpiresAt: account.accessTokenExpiresAt || null,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          tokenExpiresAt: tokenData.expires_in
+            ? new Date(Date.now() + tokenData.expires_in * 1000)
+            : null,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
+
       if (!newGitlabIntegration) {
         return redirect(
           `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to create GitLab integration")}&error-description=${encodeURIComponent("Failed to create GitLab integration. Please try again.")}`,
@@ -288,13 +331,17 @@ export const gitlabIntegrationCallbackHandler = typedHandler<
         .where(eq(schema.gitlabIntegration.id, newGitlabIntegration.id));
 
       return redirect(
-        `${webAppUrl}/${results.organization.slug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
+        `${webAppUrl}/${targetOrganizationSlug}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`,
       );
-    } catch {
+    } catch (error) {
+      const message =
+        error instanceof TypedHandlersError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Unknown error";
       return redirect(
-        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to complete GitLab integration")}&error-description=${encodeURIComponent(
-          `Failed to complete GitLab integration. Please try again.`,
-        )}`,
+        `${webAppUrl}/error?error-title=${encodeURIComponent("Failed to add GitLab integration")}&error-description=${encodeURIComponent(message)}`,
       );
     }
   },

@@ -6,118 +6,66 @@ import type { Db } from "../../db/db";
 
 export function getMemberGitlabEventsTool(db: Db) {
   return tool({
-    description: "Retrieves GitLab events for a member",
+    description:
+      "Get the GitLab events for the member between the effectiveFrom and effectiveTo dates. Optionally filter by projectIds (if empty, include all).",
     parameters: z.object({
       organizationId: z.string(),
       memberId: z.string(),
-      effectiveFrom: z.string(),
-      effectiveTo: z.string(),
-      projectIds: z.array(z.string()).optional(),
+      effectiveFrom: z
+        .string()
+        .describe("The effectiveFrom date in ISO 8601 format, e.g. 2025-01-01T00:00:00Z."),
+      effectiveTo: z
+        .string()
+        .describe("The effectiveTo date in ISO 8601 format, e.g. 2025-01-02T00:00:00Z."),
+      projectIds: z.array(z.string()).optional().default([]),
     }),
-    execute: async ({ organizationId, memberId, effectiveFrom, effectiveTo, projectIds }) => {
-      // Get member's GitLab ID
-      const member = await db.query.member.findFirst({
-        where: and(
-          eq(schema.member.id, memberId),
-          eq(schema.member.organizationId, organizationId),
-        ),
-        columns: { gitlabId: true },
-      });
-
-      if (!member?.gitlabId) {
-        return [];
-      }
-
-      // Get GitLab integration for this organization
-      const integration = await db.query.gitlabIntegration.findFirst({
-        where: eq(schema.gitlabIntegration.organizationId, organizationId),
-        columns: { id: true },
-      });
-
-      if (!integration) {
-        return [];
-      }
-
-      // Build query conditions
+    execute: async (params) => {
       const conditions = [
-        eq(schema.gitlabEvent.gitlabActorId, member.gitlabId),
-        gte(schema.gitlabEvent.createdAt, new Date(effectiveFrom)),
-        lte(schema.gitlabEvent.createdAt, new Date(effectiveTo)),
+        eq(schema.gitlabIntegration.organizationId, params.organizationId),
+        eq(schema.member.id, params.memberId),
+        gte(schema.gitlabEvent.createdAt, new Date(params.effectiveFrom)),
+        lte(schema.gitlabEvent.createdAt, new Date(params.effectiveTo)),
       ];
 
-      // Add project filter if specified
-      if (projectIds && projectIds.length > 0) {
-        // First get the GitLab project IDs that match the provided project IDs
-        const matchingProjects = await db
-          .select({ id: schema.gitlabProject.id })
-          .from(schema.gitlabProject)
-          .where(
-            and(
-              eq(schema.gitlabProject.integrationId, integration.id),
-              inArray(schema.gitlabProject.projectId, projectIds),
-            ),
-          );
-
-        if (matchingProjects.length > 0) {
-          const projectDbIds = matchingProjects.map((p) => p.id);
-          conditions.push(inArray(schema.gitlabEvent.projectId, projectDbIds));
-        } else {
-          // No matching projects found, return empty result
-          return [];
-        }
+      if (params.projectIds && params.projectIds.length > 0) {
+        conditions.push(inArray(schema.gitlabProject.id, params.projectIds));
       }
 
       const events = await db
-        .select({
-          id: schema.gitlabEvent.id,
-          gitlabId: schema.gitlabEvent.gitlabId,
-          type: schema.gitlabEvent.type,
-          action: schema.gitlabEvent.action,
-          createdAt: schema.gitlabEvent.createdAt,
-          projectId: schema.gitlabEvent.projectId,
+        .selectDistinct({
+          gitlabEvent: {
+            id: schema.gitlabEvent.id,
+            gitlabId: schema.gitlabEvent.gitlabId,
+            type: schema.gitlabEvent.type,
+            action: schema.gitlabEvent.action,
+            createdAt: schema.gitlabEvent.createdAt,
+          },
+          gitlabEventVector: { embeddingText: schema.gitlabEventVector.embeddingText },
+          gitlabUser: { id: schema.gitlabUser.id, username: schema.gitlabUser.username },
+          member: { id: schema.member.id, gitlabId: schema.member.gitlabId },
         })
         .from(schema.gitlabEvent)
+        .innerJoin(schema.gitlabProject, eq(schema.gitlabEvent.projectId, schema.gitlabProject.id))
+        .innerJoin(
+          schema.gitlabIntegration,
+          eq(schema.gitlabProject.integrationId, schema.gitlabIntegration.id),
+        )
+        .leftJoin(
+          schema.gitlabEventVector,
+          eq(schema.gitlabEvent.id, schema.gitlabEventVector.eventId),
+        )
+        .innerJoin(
+          schema.gitlabUser,
+          and(
+            eq(schema.gitlabUser.gitlabId, schema.gitlabEvent.gitlabActorId),
+            eq(schema.gitlabUser.integrationId, schema.gitlabIntegration.id),
+          ),
+        )
+        .innerJoin(schema.member, eq(schema.member.gitlabId, schema.gitlabUser.gitlabId))
         .where(and(...conditions))
-        .orderBy(desc(schema.gitlabEvent.createdAt))
-        .limit(100);
+        .orderBy(desc(schema.gitlabEvent.createdAt));
 
-      // Get project and vector data separately
-      const eventProjectIds = new Set(events.map((e) => e.projectId));
-      const projects = await db
-        .select({
-          id: schema.gitlabProject.id,
-          name: schema.gitlabProject.name,
-          namespace: schema.gitlabProject.namespace,
-          pathWithNamespace: schema.gitlabProject.pathWithNamespace,
-          webUrl: schema.gitlabProject.webUrl,
-        })
-        .from(schema.gitlabProject)
-        .where(inArray(schema.gitlabProject.id, Array.from(eventProjectIds)));
-
-      const eventIds = new Set(events.map((e) => e.id));
-      const vectors = await db
-        .select({
-          eventId: schema.gitlabEventVector.eventId,
-          embeddingText: schema.gitlabEventVector.embeddingText,
-        })
-        .from(schema.gitlabEventVector)
-        .where(inArray(schema.gitlabEventVector.eventId, Array.from(eventIds)))
-        .limit(100);
-
-      return events.map((event) => {
-        const project = projects.find((p) => p.id === event.projectId);
-        const vector = vectors.find((v) => v.eventId === event.id);
-
-        return {
-          id: event.id,
-          gitlabId: event.gitlabId,
-          type: event.type,
-          action: event.action,
-          createdAt: event.createdAt,
-          embeddingText: vector?.embeddingText || null,
-          project: project || null,
-        };
-      });
+      return events;
     },
   });
 }

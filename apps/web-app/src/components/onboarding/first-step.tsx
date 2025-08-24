@@ -7,6 +7,10 @@ import {
   githubIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/github-integration";
 import {
+  getGitlabIntegrationContract,
+  gitlabIntegrationCallbackContract,
+} from "@asyncstatus/api/typed-handlers/gitlab-integration";
+import {
   getLinearIntegrationContract,
   linearIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/linear-integration";
@@ -24,7 +28,7 @@ import {
   getStatusUpdateContract,
 } from "@asyncstatus/api/typed-handlers/status-update";
 import { dayjs } from "@asyncstatus/dayjs";
-import { SiDiscord, SiGithub, SiLinear, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiGitlab, SiLinear, SiSlack } from "@asyncstatus/ui/brand-icons";
 import {
   AlertDialogDescription,
   AlertDialogHeader,
@@ -37,7 +41,7 @@ import { ArrowRight, Loader2 } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   linkSocialMutationOptions,
   sessionBetterAuthQueryOptions,
@@ -174,6 +178,28 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
       },
     ),
   );
+  const gitlabIntegration = useQuery(
+    typedQueryOptions(
+      getGitlabIntegrationContract,
+      { idOrSlug: organizationSlug },
+      {
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchInterval(query) {
+          if (
+            query.state.data?.syncUpdatedAt &&
+            !query.state.data?.syncFinishedAt &&
+            !query.state.data?.syncError
+          ) {
+            return 500;
+          }
+
+          return false;
+        },
+      },
+    ),
+  );
   const linearIntegration = useQuery(
     typedQueryOptions(
       getLinearIntegrationContract,
@@ -211,21 +237,30 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
   const hasGithubIntegration = githubIntegration.data?.syncFinishedAt;
   const hasSlackIntegration = slackIntegration.data?.syncFinishedAt;
   const hasDiscordIntegration = discordIntegration.data?.syncFinishedAt;
+  const hasGitlabIntegration = gitlabIntegration.data?.syncFinishedAt;
   const hasLinearIntegration = linearIntegration.data?.syncFinishedAt;
   const connectedIntegrationsCount = useMemo(() => {
     let count = 0;
     if (hasGithubIntegration) count++;
+    if (hasGitlabIntegration) count++;
     if (hasSlackIntegration) count++;
     if (hasDiscordIntegration) count++;
     if (hasLinearIntegration) count++;
     return count;
-  }, [hasGithubIntegration, hasSlackIntegration, hasDiscordIntegration, hasLinearIntegration]);
+  }, [
+    hasGithubIntegration,
+    hasGitlabIntegration,
+    hasSlackIntegration,
+    hasDiscordIntegration,
+    hasLinearIntegration,
+  ]);
 
   // Persist last finished timestamps per org to detect transitions across page navigations
   useEffect(() => {
     if (
       typeof window === "undefined" ||
       githubIntegration.isPending ||
+      gitlabIntegration.isPending ||
       slackIntegration.isPending ||
       discordIntegration.isPending ||
       linearIntegration.isPending
@@ -236,6 +271,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     const storageKey = `onboarding:integrationFinishedAt:${organizationSlug}`;
     type Snapshot = {
       github: string | null;
+      gitlab: string | null;
       slack: string | null;
       discord: string | null;
       linear: string | null;
@@ -249,6 +285,9 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     const current: Snapshot = {
       github: githubIntegration.data?.syncFinishedAt
         ? String(githubIntegration.data.syncFinishedAt)
+        : null,
+      gitlab: gitlabIntegration.data?.syncFinishedAt
+        ? String(gitlabIntegration.data.syncFinishedAt)
         : null,
       slack: slackIntegration.data?.syncFinishedAt
         ? String(slackIntegration.data.syncFinishedAt)
@@ -264,6 +303,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     const transitioned =
       !!prev &&
       ((prev.github !== current.github && !!current.github) ||
+        (prev.gitlab !== current.gitlab && !!current.gitlab) ||
         (prev.slack !== current.slack && !!current.slack) ||
         (prev.discord !== current.discord && !!current.discord) ||
         (prev.linear !== current.linear && !!current.linear));
@@ -282,10 +322,12 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
   }, [
     organizationSlug,
     githubIntegration.isPending,
+    gitlabIntegration.isPending,
     slackIntegration.isPending,
     discordIntegration.isPending,
     linearIntegration.isPending,
     githubIntegration.data?.syncFinishedAt,
+    gitlabIntegration.data?.syncFinishedAt,
     slackIntegration.data?.syncFinishedAt,
     discordIntegration.data?.syncFinishedAt,
     linearIntegration.data?.syncFinishedAt,
@@ -362,6 +404,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
     if (statusUpdate.data) {
       const basedOnText = [
         hasGithubIntegration ? "GitHub" : "",
+        hasGitlabIntegration ? "GitLab" : "",
         hasSlackIntegration ? "Slack" : "",
         hasDiscordIntegration ? "Discord" : "",
         hasLinearIntegration ? "Linear" : "",
@@ -456,6 +499,26 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
           <Button
             variant="outline"
             size="lg"
+            disabled={Boolean(gitlabIntegration.data || gitlabIntegration.isPending)}
+            onClick={() =>
+              linkSocial.mutate({
+                provider: "gitlab",
+                callbackURL: typedUrl(gitlabIntegrationCallbackContract, {}),
+              })
+            }
+          >
+            <div
+              className={cn("size-2 rounded-full", gitlabIntegration.data && "bg-green-500")}
+            ></div>
+            <SiGitlab className="size-4" />
+            {gitlabIntegration.data ? "Using context from GitLab" : "Add context from GitLab"}
+          </Button>
+        )}
+
+        {!generateStatusUpdate.isPending && (
+          <Button
+            variant="outline"
+            size="lg"
             disabled={Boolean(slackIntegration.data || slackIntegration.isPending)}
             onClick={() =>
               linkSocial.mutate({
@@ -500,7 +563,7 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
             onClick={() =>
               linkSocial.mutate({
                 provider: "linear",
-                callbackURL: typedUrl(linearIntegrationCallbackContract, {}),
+                callbackURL: typedUrl(linearIntegrationCallbackContract, {} as any),
               })
             }
           >

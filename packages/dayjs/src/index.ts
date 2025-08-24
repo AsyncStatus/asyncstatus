@@ -44,4 +44,13 @@ export function formatRelativeTime(date: string | Date) {
   return selectedDate.format("dddd, MMMM D, YYYY");
 }
 
+export function getStartOfWeek(date?: dayjs.ConfigType) {
+  const selectedDate = dayjs(date);
+  const startOfWeek = dayjs().startOf("week");
+  if (startOfWeek.isSame(selectedDate, "day")) {
+    return startOfWeek.subtract(1, "week");
+  }
+  return startOfWeek;
+}
+
 export { dayjs };

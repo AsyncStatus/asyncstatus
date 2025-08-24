@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { dayjs } from "@asyncstatus/dayjs";
+import { dayjs, getStartOfWeek } from "@asyncstatus/dayjs";
 import { and, eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
@@ -100,7 +100,7 @@ export class SyncDiscordWorkflow extends WorkflowEntrypoint<
           botToken: userDiscordAccessToken ?? integration.botAccessToken,
           db,
           integrationId,
-          minEventCreatedAt: dayjs().startOf("week").toDate(),
+          minEventCreatedAt: getStartOfWeek().toDate(),
         });
 
         if (eventIds.size > 0) {

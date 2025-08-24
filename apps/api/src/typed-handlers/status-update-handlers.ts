@@ -702,12 +702,14 @@ export const generateStatusUpdateHandler = typedHandler<
       generatedItems = [];
     }
 
-    // No items generated, return early
     if (generatedItems.length === 0) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "No activity found during this period",
-      });
+      generatedItems = [
+        {
+          content: "No activity found during this period",
+          isBlocker: false,
+          isInProgress: true,
+        },
+      ];
     }
 
     const effectiveFromStartOfDay = effectiveFrom.startOf("day").toDate();

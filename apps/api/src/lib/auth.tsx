@@ -41,6 +41,7 @@ export function createAuth(env: Bindings, db: Db, resend: Resend) {
       gitlab: {
         clientId: env.GITLAB_CLIENT_ID,
         clientSecret: env.GITLAB_CLIENT_SECRET,
+        scopes: ["read_user", "read_repository", "read_api", "api"],
         mapProfileToUser: async (profile) => {
           return {
             email: profile.email,

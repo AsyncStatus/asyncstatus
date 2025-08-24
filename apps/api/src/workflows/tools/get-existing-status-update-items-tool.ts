@@ -52,7 +52,11 @@ export function getExistingStatusUpdateItemsTool(db: Db) {
           ),
         )
         .orderBy(desc(schema.statusUpdateItem.order));
-      return existingItems.filter((item) => item.statusUpdateItem.content !== "");
+      return existingItems.filter(
+        (item) =>
+          item.statusUpdateItem.content !== "" &&
+          item.statusUpdateItem.content !== "No activity found during this period",
+      );
     },
   });
 }

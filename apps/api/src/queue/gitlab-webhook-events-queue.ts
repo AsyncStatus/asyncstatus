@@ -44,18 +44,6 @@ export async function gitlabWebhookEventsQueue(
       continue;
     }
 
-    console.log({
-      id,
-      gitlabId,
-      gitlabActorId: getGitlabActorIdFromQueueMessage(message.body),
-      projectId: project.id,
-      type: getGitlabEventName(event),
-      action: getActionName(event),
-      payload: JSON.parse(JSON.stringify(event)),
-      createdAt: getEventCreatedAt(event),
-      insertedAt: new Date(),
-    });
-
     batchUpserts.push(
       db
         .insert(schema.gitlabEvent)

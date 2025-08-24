@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { dayjs } from "@asyncstatus/dayjs";
+import { getStartOfWeek } from "@asyncstatus/dayjs";
 import { eq } from "drizzle-orm";
 import { App } from "octokit";
 import * as schema from "../../db";
@@ -89,7 +89,7 @@ export class SyncGithubWorkflow extends WorkflowEntrypoint<
           octokit,
           db,
           integrationId,
-          minEventCreatedAt: dayjs().startOf("week").toDate(),
+          minEventCreatedAt: getStartOfWeek().toDate(),
         });
 
         if (eventIds.size > 0) {

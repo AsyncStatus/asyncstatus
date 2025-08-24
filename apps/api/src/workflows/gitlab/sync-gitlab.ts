@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { dayjs } from "@asyncstatus/dayjs";
+import { dayjs, getStartOfWeek } from "@asyncstatus/dayjs";
 import { eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
@@ -95,7 +95,7 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
           instanceUrl: integration.gitlabInstanceUrl,
           db,
           integrationId,
-          minEventCreatedAt: dayjs().startOf("week").toDate(),
+          minEventCreatedAt: getStartOfWeek().toDate(),
         });
 
         if (eventIds.size > 0) {
@@ -163,14 +163,17 @@ export class SyncGitlabWorkflow extends WorkflowEntrypoint<
           }
         }
       });
-    });
 
-    await db
-      .update(schema.gitlabIntegration)
-      .set({
-        syncFinishedAt: new Date(),
-        syncUpdatedAt: new Date(),
-      })
-      .where(eq(schema.gitlabIntegration.id, integrationId));
+      await db
+        .update(schema.gitlabIntegration)
+        .set({
+          syncFinishedAt: new Date(),
+          syncId: null,
+          syncError: null,
+          syncErrorAt: null,
+          syncStartedAt: null,
+        })
+        .where(eq(schema.gitlabIntegration.id, integrationId));
+    });
   }
 }

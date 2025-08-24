@@ -58,6 +58,7 @@ import {
 import {
   deleteGitlabIntegrationHandler,
   getGitlabIntegrationHandler,
+  gitlabIntegrationCallbackAddHandler,
   gitlabIntegrationCallbackHandler,
   listGitlabProjectsHandler,
   listGitlabUsersHandler,
@@ -526,6 +527,7 @@ const typedHandlersApp = typedHandlersHonoServer(
     getPublicStatusUpdateHandler,
     shareStatusUpdateHandler,
     getOrganizationUserHandler,
+    gitlabIntegrationCallbackAddHandler,
   ],
   {
     getContext: (c) => ({

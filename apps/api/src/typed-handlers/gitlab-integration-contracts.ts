@@ -4,11 +4,13 @@ import { GitlabIntegration, GitlabProject, GitlabUser } from "../db";
 
 export const gitlabIntegrationCallbackContract = typedContract(
   "get /integrations/gitlab/callback",
-  z.object({
-    code: z.string(),
-    state: z.string().optional(), // organization slug
-    redirect: z.string().optional(),
-  }),
+  z.object({ redirect: z.string().optional() }),
+  z.instanceof(Response),
+);
+
+export const gitlabIntegrationCallbackAddContract = typedContract(
+  "get /integrations/gitlab/callback/add",
+  z.object({ code: z.string(), state: z.string(), redirect: z.string().optional() }),
   z.instanceof(Response),
 );
 

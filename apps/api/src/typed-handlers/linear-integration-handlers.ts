@@ -311,10 +311,7 @@ export const listLinearProjectsHandler = typedHandler<
     });
 
     if (!integration) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Linear integration not found",
-      });
+      return [];
     }
 
     const projects = await db.query.linearProject.findMany({

@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
-import { dayjs } from "@asyncstatus/dayjs";
+import { dayjs, getStartOfWeek } from "@asyncstatus/dayjs";
 import { eq } from "drizzle-orm";
 import * as schema from "../../db";
 import { createDb } from "../../db/db";
@@ -96,7 +96,7 @@ export class SyncLinearWorkflow extends WorkflowEntrypoint<
           linearClient,
           db,
           integrationId,
-          minIssueCreatedAt: dayjs().startOf("week").toDate(),
+          minIssueCreatedAt: getStartOfWeek().toDate(),
         });
 
         if (eventIds.size > 0) {

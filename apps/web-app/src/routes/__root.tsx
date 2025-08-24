@@ -73,11 +73,11 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="w-full h-full">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="w-full h-full">
         {children}
         <Suspense>
           <TanStackRouterDevtools position="bottom-right" />

@@ -1,8 +1,9 @@
 import { discordIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { githubIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import { gitlabIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/gitlab-integration";
 import { getInvitationContract } from "@asyncstatus/api/typed-handlers/invitation";
 import { slackIntegrationCallbackContract } from "@asyncstatus/api/typed-handlers/slack-integration";
-import { SiDiscord, SiGithub, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiGitlab, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
@@ -176,6 +177,38 @@ function RouteComponent() {
             <SiGithub className="size-4" />
             Continue with GitHub
             {lastUsedProvider === "github" ? (
+              <Badge
+                variant="secondary"
+                className="ml-auto text-[0.65rem] absolute -right-2 -top-2"
+              >
+                Last used
+              </Badge>
+            ) : null}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full relative"
+            onClick={() => {
+              loginSocial
+                .mutateAsync({
+                  provider: "gitlab",
+                  callbackURL: typedUrl(gitlabIntegrationCallbackContract, {
+                    redirect: search.redirect,
+                  } as any),
+                })
+                .then(() => {
+                  try {
+                    localStorage.setItem("lastLoginProvider", "gitlab");
+                    setLastUsedProvider("gitlab");
+                  } catch {}
+                });
+            }}
+          >
+            <SiGitlab className="size-4" />
+            Continue with GitLab
+            {lastUsedProvider === "gitlab" ? (
               <Badge
                 variant="secondary"
                 className="ml-auto text-[0.65rem] absolute -right-2 -top-2"

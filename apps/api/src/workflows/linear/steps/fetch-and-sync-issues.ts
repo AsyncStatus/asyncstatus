@@ -1,4 +1,4 @@
-import { dayjs } from "@asyncstatus/dayjs";
+import { getStartOfWeek } from "@asyncstatus/dayjs";
 import type { LinearClient } from "@linear/sdk";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -20,7 +20,7 @@ export async function fetchAndSyncIssues({
   minIssueCreatedAt,
 }: FetchAndSyncIssuesParams): Promise<Set<string>> {
   const eventIds = new Set<string>();
-  const filterDate = minIssueCreatedAt ?? dayjs().startOf("week").toDate();
+  const filterDate = minIssueCreatedAt ?? getStartOfWeek().toDate();
   let maxIterations = 10;
   const issues = await linearClient.issues({
     filter: {

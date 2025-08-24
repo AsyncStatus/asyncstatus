@@ -1,5 +1,6 @@
 import { getDiscordIntegrationContract } from "@asyncstatus/api/typed-handlers/discord-integration";
 import { getGithubIntegrationContract } from "@asyncstatus/api/typed-handlers/github-integration";
+import { getGitlabIntegrationContract } from "@asyncstatus/api/typed-handlers/gitlab-integration";
 import { getLinearIntegrationContract } from "@asyncstatus/api/typed-handlers/linear-integration";
 import { getOrganizationUserContract } from "@asyncstatus/api/typed-handlers/organization";
 import { getSlackIntegrationContract } from "@asyncstatus/api/typed-handlers/slack-integration";
@@ -40,6 +41,13 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
     githubIntegration.data?.syncFinishedAt ||
     githubIntegration.data?.syncStartedAt ||
     githubIntegration.data?.syncUpdatedAt;
+  const gitlabIntegration = useQuery(
+    typedQueryOptions(getGitlabIntegrationContract, { idOrSlug: organizationSlug }),
+  );
+  const hasGitlabIntegration =
+    gitlabIntegration.data?.syncFinishedAt ||
+    gitlabIntegration.data?.syncStartedAt ||
+    gitlabIntegration.data?.syncUpdatedAt;
   const slackIntegration = useQuery(
     typedQueryOptions(getSlackIntegrationContract, { idOrSlug: organizationSlug }),
   );
@@ -65,10 +73,10 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
   // session is cached so we'd just use the user from getOrganizationUserContract
   useEffect(() => {
     if (user.data) {
-      queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (old: any) => ({
-        ...old,
+      queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (old) => ({
+        ...(old as any),
         user: {
-          ...old.user,
+          ...(old as any)?.user,
           ...user.data,
         },
       }));
@@ -96,6 +104,7 @@ export function OnboardingModal({ organizationSlug }: { organizationSlug: string
 
             <div className="flex flex-col gap-2">
               {!hasGithubIntegration &&
+                !hasGitlabIntegration &&
                 !hasSlackIntegration &&
                 !hasDiscordIntegration &&
                 !hasLinearIntegration && (
