@@ -12,12 +12,15 @@ import { getDiscordServerTool } from "../../tools/get-discord-server-tool";
 import { getDiscordUserTool } from "../../tools/get-discord-user-tool";
 import { getExistingStatusUpdateItemsTool } from "../../tools/get-existing-status-update-items-tool";
 import { getGithubEventDetailTool } from "../../tools/get-github-event-detail-tool";
+import { getGithubIntegrationTool } from "../../tools/get-github-integration-tool";
 import { getGithubRepositoryTool } from "../../tools/get-github-repository-tool";
 import { getGithubUserTool } from "../../tools/get-github-user-tool";
 import { getGitlabEventDetailTool } from "../../tools/get-gitlab-event-detail-tool";
+import { getGitlabIntegrationTool } from "../../tools/get-gitlab-integration-tool";
 import { getGitlabProjectTool } from "../../tools/get-gitlab-project-tool";
 import { getGitlabUserTool } from "../../tools/get-gitlab-user-tool";
 import { getLinearEventDetailTool } from "../../tools/get-linear-event-detail-tool";
+import { getLinearIntegrationTool } from "../../tools/get-linear-integration-tool";
 import { getLinearIssueTool } from "../../tools/get-linear-issue-tool";
 import { getLinearProjectTool } from "../../tools/get-linear-project-tool";
 import { getLinearTeamTool } from "../../tools/get-linear-team-tool";
@@ -127,11 +130,13 @@ Available integrations: ${JSON.stringify(availableIntegrations)}.`,
       getGitHubEventDetail: getGithubEventDetailTool(db),
       getGitHubUser: getGithubUserTool(db),
       getGitHubRepository: getGithubRepositoryTool(db),
+      getGithubIntegration: getGithubIntegrationTool(db),
 
       getMemberGitlabEvents: getMemberGitlabEventsTool(db),
       getGitlabEventDetail: getGitlabEventDetailTool(db),
       getGitlabUser: getGitlabUserTool(db),
       getGitlabProject: getGitlabProjectTool(db),
+      getGitlabIntegration: getGitlabIntegrationTool(db),
 
       getMemberSlackEvents: getMemberSlackEventsTool(db),
       getSlackEventDetail: getSlackEventDetailTool(db),
@@ -152,6 +157,7 @@ Available integrations: ${JSON.stringify(availableIntegrations)}.`,
       getLinearTeam: getLinearTeamTool(db),
       getLinearProject: getLinearProjectTool(db),
       getLinearIssue: getLinearIssueTool(db),
+      getLinearIntegration: getLinearIntegrationTool(db),
     },
   });
 

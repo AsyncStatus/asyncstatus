@@ -31,11 +31,13 @@ GENERATE TARGETS (for generateUpdates): array generateFor[] where each item is o
 UsingActivityFrom is an array of discriminated objects (not strings). Each item is exactly one of:
 - { type: "anyIntegration", value: "anyIntegration" }
 - { type: "anyGithub", value: "anyGithub" }
+- { type: "anyGitlab", value: "anyGitlab" }
 - { type: "anySlack", value: "anySlack" }
 - { type: "anyDiscord", value: "anyDiscord" }
 - { type: "anyLinear", value: "anyLinear" }
 - { type: "slackChannel", value: slackChannelId }
 - { type: "githubRepository", value: githubRepositoryId }
+- { type: "gitlabProject", value: gitlabProjectId }
 - { type: "discordChannel", value: discordChannelId }
 - { type: "linearTeam", value: linearTeamId }
 - { type: "linearProject", value: linearProjectId }
@@ -45,11 +47,13 @@ SUMMARY TARGETS (for sendSummaries): array summaryFor[] where each item is one o
 - { type: "member", value: memberId }
 - { type: "team", value: teamId }
 - { type: "anyGithub", value: "anyGithub" }
+- { type: "anyGitlab", value: "anyGitlab" }
 - { type: "anySlack", value: "anySlack" }
 - { type: "anyDiscord", value: "anyDiscord" }
 - { type: "anyLinear", value: "anyLinear" }
 - { type: "slackChannel", value: slackChannelId }
 - { type: "githubRepository", value: githubRepositoryId }
+- { type: "gitlabProject", value: gitlabProjectId }
 - { type: "discordChannel", value: discordChannelId }
 - { type: "linearTeam", value: linearTeamId }
 - { type: "linearProject", value: linearProjectId }
@@ -61,12 +65,14 @@ RULES:
     - For generation: add { type: "organization", value: organizationSlug, usingActivityFrom: [...] }
   * If a specific team is mentioned (e.g., "Engineering team"), resolve to { type: "team", value: teamId }
   * If a specific person is mentioned, resolve to { type: "member", value: memberId }
-- Never invent IDs. Use list tools to resolve: members, teams, Slack/Discord channels. Use integration tools for github/slack/discord integration IDs.
+- Never invent IDs. Use list tools to resolve: members, teams, Slack/Discord channels. Use integration tools for github/slack/discord/gitlab/linear integration IDs.
 - Validate timezone and time format; if missing, default timezone to UTC and timeOfDay to 09:00.
 - If recurrence not specified, default to daily.
 - If weekly/monthly, ensure the correct day value exists; if not provided, choose the nearest valid future day based on current day.
 - For send routes (slackChannel/discordChannel), resolve channels by exact name match; prefer public channels when multiple; if ambiguity remains, pick the first and proceed.
 - If you cannot resolve a specific GitHub repository, prefer { type: "anyGithub", value: "anyGithub" }.
+- If you cannot resolve a specific GitLab project, prefer { type: "anyGitlab", value: "anyGitlab" }.
+- If you cannot resolve a specific Linear team or project, prefer { type: "anyLinear", value: "anyLinear" }.
 - After constructing a typed config, call create-organization-schedule (this will also create the initial run if active).
 - Return the created schedule id and the initial run id from the tool response.
 `;
