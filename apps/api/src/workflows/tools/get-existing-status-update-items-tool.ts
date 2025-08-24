@@ -52,11 +52,14 @@ export function getExistingStatusUpdateItemsTool(db: Db) {
           ),
         )
         .orderBy(desc(schema.statusUpdateItem.order));
-      return existingItems.filter(
+
+      const filteredItems = existingItems.filter(
         (item) =>
           item.statusUpdateItem.content !== "" &&
           item.statusUpdateItem.content !== "No activity found during this period",
       );
+
+      return filteredItems;
     },
   });
 }

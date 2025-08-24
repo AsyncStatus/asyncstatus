@@ -1,7 +1,8 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import type * as schema from "../../../db";
+import { eq } from "drizzle-orm";
 import type { ScheduleConfigUsingActivityFrom } from "../../../db";
+import * as schema from "../../../db";
 import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getDiscordChannelTool } from "../../tools/get-discord-channel-tool";
@@ -60,6 +61,46 @@ export async function generateStatusUpdate({
 }: GenerateStatusUpdateOptions) {
   const model = "openai/gpt-5-mini";
 
+  // One Drizzle call with left joins to determine which integrations are available and synced
+  const [integrationRow] = await db
+    .select({
+      githubSyncFinishedAt: schema.githubIntegration.syncFinishedAt,
+      gitlabSyncFinishedAt: schema.gitlabIntegration.syncFinishedAt,
+      slackSyncFinishedAt: schema.slackIntegration.syncFinishedAt,
+      discordSyncFinishedAt: schema.discordIntegration.syncFinishedAt,
+      linearSyncFinishedAt: schema.linearIntegration.syncFinishedAt,
+    })
+    .from(schema.organization)
+    .leftJoin(
+      schema.githubIntegration,
+      eq(schema.githubIntegration.organizationId, schema.organization.id),
+    )
+    .leftJoin(
+      schema.gitlabIntegration,
+      eq(schema.gitlabIntegration.organizationId, schema.organization.id),
+    )
+    .leftJoin(
+      schema.slackIntegration,
+      eq(schema.slackIntegration.organizationId, schema.organization.id),
+    )
+    .leftJoin(
+      schema.discordIntegration,
+      eq(schema.discordIntegration.organizationId, schema.organization.id),
+    )
+    .leftJoin(
+      schema.linearIntegration,
+      eq(schema.linearIntegration.organizationId, schema.organization.id),
+    )
+    .where(eq(schema.organization.id, organizationId));
+
+  const availableIntegrations = {
+    github: Boolean(integrationRow?.githubSyncFinishedAt),
+    gitlab: Boolean(integrationRow?.gitlabSyncFinishedAt),
+    slack: Boolean(integrationRow?.slackSyncFinishedAt),
+    discord: Boolean(integrationRow?.discordSyncFinishedAt),
+    linear: Boolean(integrationRow?.linearSyncFinishedAt),
+  } as const;
+
   const { text } = await generateText({
     model: openRouterProvider(model),
     seed: 123,
@@ -72,8 +113,10 @@ export async function generateStatusUpdate({
 in the organization (organizationId: ${organizationId}) between the effectiveFrom and effectiveTo dates.
 The effectiveFrom date is ${effectiveFrom} and the effectiveTo date is ${effectiveTo}.
 
-Activity filters: ${usingActivityFrom.length === 0 ? "anyIntegration (use any available activity)" : JSON.stringify(usingActivityFrom)}.
-Only use activity sources/resources that match these filters when selecting events to consider.`,
+Activity filters: ${usingActivityFrom.length === 0 ? "anyIntegration (check for any available activity)" : JSON.stringify(usingActivityFrom)}.
+Only use activity sources/resources that match these filters when selecting events to consider.
+
+Available integrations: ${JSON.stringify(availableIntegrations)}.`,
       },
     ],
     toolChoice: "auto",
