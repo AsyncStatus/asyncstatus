@@ -1,19 +1,14 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
-import { BetaMessage } from "../components/beta-message";
-import { ConnectCard } from "../components/connect-card";
+
 import { CtaSection } from "../components/cta-section";
-import { FeaturesList } from "../components/features-list";
 import { Footer } from "../components/footer";
-import { GenerateCard } from "../components/generate-card";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
-import { ReviewCard } from "../components/review-card";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
-import { TrackCard } from "../components/track-card";
-import { UseItYourWay } from "../components/use-it-your-way";
+
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
 
@@ -56,11 +51,11 @@ export default async function Page(props: {
             <Link href="#how-it-works" className="hover:text-foreground">
               How it works
             </Link>
-            <Link href="#features" className="hover:text-foreground">
-              Features
-            </Link>
             <Link href="#team" className="hover:text-foreground">
               Use cases
+            </Link>
+            <Link href="#remote-culture" className="hover:text-foreground">
+              Remote culture
             </Link>
             <Link href="#pricing" className="hover:text-foreground">
               Pricing
@@ -120,22 +115,6 @@ export default async function Page(props: {
           that value their time.
         </h3> */}
 
-        <div className="flex justify-center pt-16 pb-12 max-sm:pt-16 max-sm:pb-12">
-          <a
-            href="https://www.producthunt.com/products/async-status-updates-for-remote-startups?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-asyncstatus"
-            target="_blank"
-            rel="noopener"
-          >
-            {/** biome-ignore lint/performance/noImgElement: it's a product hunt badge */}
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=999509&theme=neutral&t=1754045157676"
-              alt="AsyncStatus - Don&#0039;t&#0032;join&#0032;another&#0032;9&#0058;30am&#0032;standup&#0032;meeting&#0032;ever&#0032;again&#0046; | Product Hunt"
-              style={{ width: "187.5px", height: "40.5px" }}
-              width="187.5"
-              height="40.5"
-            />
-          </a>
-        </div>
 
         <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
@@ -148,29 +127,13 @@ export default async function Page(props: {
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Your team already pushed code, closed tickets, replied in threads, fixed small things no
-          one asked them to. We turn it into an update. Or you can write it yourself. Either way, no
+        Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools.  Or you can write it yourself. Either way, no
           one has to talk about it at 9:30 a.m.
         </h3>
 
-        <div className="mt-14 flex flex-col items-center justify-center max-sm:mt-6">
-          <Button size="lg" asChild>
-            <Link
-              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-              className="hover:text-foreground"
-            >
-              <span>Turn activity into updates</span>
-            </Link>
-          </Button>
 
-          <p className="text-muted-foreground text-xs mt-2">
-            No credit card required. Cancel anytime.
-          </p>
-        </div>
-
-        {/* aspect-[2.4/1] */}
         <video
-          className="mt-36 w-full rounded-lg max-sm:mt-16 aspect-[2.4/1]"
+          className="mt-8 w-full rounded-lg max-sm:mt-6 aspect-[2.4/1]"
           autoPlay
           loop
           muted
@@ -181,7 +144,7 @@ export default async function Page(props: {
           Your browser does not support the video tag.
         </video>
 
-        <div className="flex justify-center mt-12 gap-4 max-sm:flex-col">
+        <div className="flex justify-center mt-8 gap-4 max-sm:flex-col">
           <Button variant="secondary" asChild>
             <Link href="https://youtu.be/y_Hl0rVJHKs" target="_blank">
               <span>Watch intro video</span>
@@ -194,11 +157,95 @@ export default async function Page(props: {
           </Button>
         </div>
 
+        <div className="mt-14 flex flex-col items-center justify-center">
+          <Button size="lg" asChild>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+              className="hover:text-foreground"
+            >
+              <span>Generate status updates automatically</span>
+            </Link>
+          </Button>
+
+          <p className="text-muted-foreground text-xs mt-2">
+            No credit card required. Cancel anytime.
+          </p>
+        </div>
+
+
+
         {/* <img
           src="/hero-light.webp"
           alt="AsyncStatus app screenshot"
           className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
         /> */}
+
+
+
+
+        <section id="team">
+          <TargetAudience />
+        </section>
+
+
+
+
+
+        <section id="calculator" className="mt-36">
+          <div className="mb-12 text-center">
+            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+              Calculate your savings
+            </h3>
+            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+              See how much time and money your team can save by replacing synchronous standups with
+              AsyncStatus.
+            </h3>
+          </div>
+          <SavingsCalculator />
+
+          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
+            <strong>Disclaimer</strong>: These figures are estimates provided for illustrative
+            purposes only and may not accurately reflect your team's specific situation. They do not
+            constitute financial advice or a guarantee of actual savings. <br />
+            <br />
+            <strong>How we calculate your savings</strong>: Hourly rate is derived from the average
+            salary divided by{" "}
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              260&nbsp;working&nbsp;days&nbsp;×&nbsp;8&nbsp;hours
+            </code>
+            . Gross stand-up time per month&nbsp;=&nbsp;
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              team&nbsp;size&nbsp;×&nbsp;stand-up&nbsp;length&nbsp;(min)&nbsp;×&nbsp;working&nbsp;days&nbsp;/&nbsp;60
+            </code>
+            . We assume each developer still spends the
+            <strong>&nbsp;async follow-up time&nbsp;</strong>
+            (default&nbsp;10&nbsp;min/day) that you set in the slider updating or reading status.
+            Hours saved per month therefore use
+            <code className="whitespace-nowrap max-sm:whitespace-normal">
+              (stand-up&nbsp;length&nbsp;−&nbsp;async&nbsp;follow-up&nbsp;time)
+            </code>
+            . Monthly savings are those hours multiplied by the hourly rate; annual savings are
+            simply monthly savings × 12. Your numbers update live as you move the sliders.
+          </p>
+        </section>
+
+        <section id="remote-culture" className="mt-36">
+          <div className="mb-12 text-center">
+            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+              Build a strong remote culture
+            </h3>
+            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+              Replace standup meetings with clear, async updates. Give people focus time without
+              losing visibility or momentum.
+            </h3>
+          </div>
+        </section>
+
+        <section id="pricing">
+          <Pricing />
+        </section>
+
+        <CtaSection />
 
         <div className="mt-36 flex flex-col items-center">
           <div className="relative w-full max-w-6xl">
@@ -264,84 +311,6 @@ export default async function Page(props: {
             </div>
           </div>
         </div>
-
-        <h3 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
-          How it works
-        </h3>
-        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
-          <ConnectCard />
-          <TrackCard />
-          <GenerateCard />
-          <ReviewCard />
-        </div>
-
-        <UseItYourWay />
-
-        <section id="team">
-          <TargetAudience />
-        </section>
-
-        <section id="features">
-          <FeaturesList />
-        </section>
-
-        <section id="early-stage">
-          <BetaMessage />
-          <div className="flex justify-center mt-12">
-            <Button size="lg" asChild>
-              <Link
-                href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-                className="hover:text-foreground"
-              >
-                <span>Turn activity into updates</span>
-              </Link>
-            </Button>
-          </div>
-        </section>
-
-        <section id="calculator" className="mt-36">
-          <div className="mb-12 text-center">
-            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
-              Calculate your savings
-            </h3>
-            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              See how much time and money your team can save by replacing synchronous standups with
-              AsyncStatus.
-            </h3>
-          </div>
-          <SavingsCalculator />
-
-          <p className="text-muted-foreground/80 mt-10 text-[0.65rem] text-pretty">
-            <strong>Disclaimer</strong>: These figures are estimates provided for illustrative
-            purposes only and may not accurately reflect your team's specific situation. They do not
-            constitute financial advice or a guarantee of actual savings. <br />
-            <br />
-            <strong>How we calculate your savings</strong>: Hourly rate is derived from the average
-            salary divided by{" "}
-            <code className="whitespace-nowrap max-sm:whitespace-normal">
-              260&nbsp;working&nbsp;days&nbsp;×&nbsp;8&nbsp;hours
-            </code>
-            . Gross stand-up time per month&nbsp;=&nbsp;
-            <code className="whitespace-nowrap max-sm:whitespace-normal">
-              team&nbsp;size&nbsp;×&nbsp;stand-up&nbsp;length&nbsp;(min)&nbsp;×&nbsp;working&nbsp;days&nbsp;/&nbsp;60
-            </code>
-            . We assume each developer still spends the
-            <strong>&nbsp;async follow-up time&nbsp;</strong>
-            (default&nbsp;10&nbsp;min/day) that you set in the slider updating or reading status.
-            Hours saved per month therefore use
-            <code className="whitespace-nowrap max-sm:whitespace-normal">
-              (stand-up&nbsp;length&nbsp;−&nbsp;async&nbsp;follow-up&nbsp;time)
-            </code>
-            . Monthly savings are those hours multiplied by the hourly rate; annual savings are
-            simply monthly savings × 12. Your numbers update live as you move the sliders.
-          </p>
-        </section>
-
-        <section id="pricing">
-          <Pricing />
-        </section>
-
-        <CtaSection />
       </main>
 
       <Footer />
