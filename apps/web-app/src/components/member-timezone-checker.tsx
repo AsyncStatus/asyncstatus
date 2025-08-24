@@ -22,6 +22,7 @@ export function MemberTimezoneChecker() {
     typedMutationOptions(updateMemberContract, {
       onSuccess: (data) => {
         toast.success("Timezone updated", {
+          id: `timezone-updated-${organizationSlug}-${data.user.timezone}-${session.data?.user.timezone}`,
           description: `Your timezone has been updated to ${data.user.timezone} (from ${session.data?.user.timezone}).`,
         });
 
@@ -37,7 +38,11 @@ export function MemberTimezoneChecker() {
           }
           return {
             ...sessionData,
-            user: { ...sessionData.user, ...data.user },
+            user: {
+              ...sessionData.user,
+              ...data.user,
+              onboardingStep: data.user.onboardingStep as any,
+            },
           };
         });
       },
