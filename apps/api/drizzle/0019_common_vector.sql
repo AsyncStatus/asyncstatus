@@ -188,4 +188,6 @@ CREATE UNIQUE INDEX `linear_user_user_id_unique` ON `linear_user` (`user_id`);--
 CREATE INDEX `linear_user_integration_id_index` ON `linear_user` (`integration_id`);--> statement-breakpoint
 CREATE INDEX `linear_user_user_id_index` ON `linear_user` (`user_id`);--> statement-breakpoint
 CREATE INDEX `linear_user_email_index` ON `linear_user` (`email`);--> statement-breakpoint
+ALTER TABLE `member` ADD `linear_id` text;--> statement-breakpoint
+CREATE INDEX `member_linear_id_index` ON `member` (`linear_id`);--> statement-breakpoint
 CREATE INDEX `linear_event_vector_embedding_idx` ON `linear_event_vector`(libsql_vector_idx(embedding));
