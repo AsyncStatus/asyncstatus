@@ -15,7 +15,6 @@ export async function linearWebhookEventsQueue(
   for (const message of batch.messages) {
     try {
       const payload = message.body as any;
-      console.log("payload", payload);
 
       const integration = await db.query.linearIntegration.findFirst({
         where: eq(schema.linearIntegration.teamId, payload.organizationId ?? ""),

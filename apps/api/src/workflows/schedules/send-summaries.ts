@@ -432,7 +432,8 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             pickByType("slack_activity") ||
             pickByType("github_activity") ||
             pickByType("gitlab_activity") ||
-            pickByType("discord_activity");
+            pickByType("discord_activity") ||
+            pickByType("linear_activity");
 
           // Normalize primary summary to shape { generalSummary, userSummaries[] }
           const primarySummary = (() => {
@@ -471,6 +472,17 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
               return {
                 generalSummary: c.generalSummary ?? null,
                 userSummaries: Array.isArray(c.projectSummaries) ? c.projectSummaries : [],
+                effectiveFrom,
+                effectiveTo,
+              };
+            }
+            if (primary.type === "linear_activity") {
+              return {
+                generalSummary: c.generalSummary ?? null,
+                userSummaries: [
+                  ...(Array.isArray(c.teamSummaries) ? c.teamSummaries : []),
+                  ...(Array.isArray(c.projectSummaries) ? c.projectSummaries : []),
+                ],
                 effectiveFrom,
                 effectiveTo,
               };

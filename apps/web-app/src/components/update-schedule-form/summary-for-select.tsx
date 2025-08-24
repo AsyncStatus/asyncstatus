@@ -11,6 +11,11 @@ import {
   getGitlabIntegrationContract,
   listGitlabProjectsContract,
 } from "@asyncstatus/api/typed-handlers/gitlab-integration";
+import {
+  getLinearIntegrationContract,
+  listLinearProjectsContract,
+  listLinearTeamsContract,
+} from "@asyncstatus/api/typed-handlers/linear-integration";
 import { listMembersContract } from "@asyncstatus/api/typed-handlers/member";
 import type { ScheduleConfigSummaryFor } from "@asyncstatus/api/typed-handlers/schedule";
 import {
@@ -18,7 +23,7 @@ import {
   listSlackChannelsContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
-import { SiDiscord, SiGithub, SiGitlab, SiSlack } from "@asyncstatus/ui/brand-icons";
+import { SiDiscord, SiGithub, SiGitlab, SiLinear, SiSlack } from "@asyncstatus/ui/brand-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@asyncstatus/ui/components/avatar";
 import { Badge } from "@asyncstatus/ui/components/badge";
 import { Button } from "@asyncstatus/ui/components/button";
@@ -95,6 +100,19 @@ export function SummaryForSelect({
   );
   const discordChannels = useQuery(
     typedQueryOptions(listDiscordChannelsContract, { idOrSlug: organizationSlug }),
+  );
+  const linearIntegration = useQuery(
+    typedQueryOptions(
+      getLinearIntegrationContract,
+      { idOrSlug: organizationSlug },
+      { throwOnError: false },
+    ),
+  );
+  const linearTeams = useQuery(
+    typedQueryOptions(listLinearTeamsContract, { idOrSlug: organizationSlug }),
+  );
+  const linearProjects = useQuery(
+    typedQueryOptions(listLinearProjectsContract, { idOrSlug: organizationSlug }),
   );
 
   return (
@@ -279,6 +297,35 @@ export function SummaryForSelect({
                 );
               }
 
+              if (value.type === "anyLinear") {
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiLinear className="size-4 m-1" />
+                    <span>Any Linear activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
               if (value.type === "githubRepository") {
                 const repository = githubRepositories.data?.find(
                   (repository) => repository.id === value.value,
@@ -328,6 +375,74 @@ export function SummaryForSelect({
                     key={value.value}
                   >
                     <SiGitlab className="size-4 m-1" />
+                    <span>{project.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "linearTeam") {
+                const team = linearTeams.data?.find((t) => t.teamId === value.value);
+                if (!team) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiLinear className="size-4 m-1" />
+                    <span>{team.name} activity</span>
+                    {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
+                    <div
+                      className="ml-auto cursor-pointer hover:bg-muted rounded-full p-1"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          onSelect(values.filter((v) => v.value !== value.value));
+                        }
+                      }}
+                      onClick={() => {
+                        onSelect(values.filter((v) => v.value !== value.value));
+                      }}
+                    >
+                      <XIcon className="size-3" />
+                    </div>
+                  </Badge>
+                );
+              }
+
+              if (value.type === "linearProject") {
+                const project = linearProjects.data?.find((p) => p.projectId === value.value);
+                if (!project) {
+                  return null;
+                }
+
+                return (
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-2 text-[0.65rem]"
+                    key={value.value}
+                  >
+                    <SiLinear className="size-4 m-1" />
                     <span>{project.name} activity</span>
                     {/** biome-ignore lint/a11y/useSemanticElements: it's okay */}
                     <div
@@ -847,6 +962,108 @@ export function SummaryForSelect({
                         "ml-auto",
                         values.findIndex(
                           (value) => value.type === "discordChannel" && value.value === channel.id,
+                        ) !== -1
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {linearIntegration.data && (
+              <CommandGroup heading="Linear activity">
+                <CommandItem
+                  value="anyLinear"
+                  onSelect={() => {
+                    if (values.findIndex((value) => value.type === "anyLinear") !== -1) {
+                      onSelect([...values.filter((value) => value.type !== "anyLinear")]);
+                    } else {
+                      onSelect([...values, { type: "anyLinear", value: "anyLinear" }]);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <SiLinear className="size-4 m-1" />
+                  <span>Any Linear activity</span>
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      values.findIndex((value) => value.type === "anyLinear") !== -1
+                        ? "opacity-100"
+                        : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+
+                {linearTeams.data?.map((team) => (
+                  <CommandItem
+                    key={team.teamId}
+                    value={team.teamId}
+                    onSelect={() => {
+                      if (
+                        values.findIndex(
+                          (value) => value.type === "linearTeam" && value.value === team.teamId,
+                        ) !== -1
+                      ) {
+                        onSelect([
+                          ...values.filter(
+                            (value) => value.type !== "linearTeam" || value.value !== team.teamId,
+                          ),
+                        ]);
+                      } else {
+                        onSelect([...values, { type: "linearTeam", value: team.teamId }]);
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    <SiLinear className="size-4 m-1" />
+                    <span>{team.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        values.findIndex(
+                          (value) => value.type === "linearTeam" && value.value === team.teamId,
+                        ) !== -1
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+
+                {linearProjects.data?.map((project) => (
+                  <CommandItem
+                    key={project.projectId}
+                    value={project.projectId}
+                    onSelect={() => {
+                      if (
+                        values.findIndex(
+                          (value) =>
+                            value.type === "linearProject" && value.value === project.projectId,
+                        ) !== -1
+                      ) {
+                        onSelect([
+                          ...values.filter(
+                            (value) =>
+                              value.type !== "linearProject" || value.value !== project.projectId,
+                          ),
+                        ]);
+                      } else {
+                        onSelect([...values, { type: "linearProject", value: project.projectId }]);
+                      }
+                      setOpen(false);
+                    }}
+                  >
+                    <SiLinear className="size-4 m-1" />
+                    <span>{project.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        values.findIndex(
+                          (value) =>
+                            value.type === "linearProject" && value.value === project.projectId,
                         ) !== -1
                           ? "opacity-100"
                           : "opacity-0",

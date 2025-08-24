@@ -25,12 +25,13 @@ export async function fetchAndSyncIssues({
   const issues = await linearClient.issues({
     filter: {
       createdAt: {
-        gte: filterDate.toISOString(),
+        gte: filterDate,
       },
     },
     includeArchived: false,
     first: 200,
   });
+  console.log(issues.nodes.length);
 
   if (issues.nodes.length === 0) {
     return eventIds;

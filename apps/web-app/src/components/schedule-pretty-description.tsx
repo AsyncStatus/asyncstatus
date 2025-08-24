@@ -536,6 +536,12 @@ function ScheduleSummaryForItem(props: {
   const discordChannels = useQuery(
     typedQueryOptions(listDiscordChannelsContract, { idOrSlug: props.organizationSlug }),
   );
+  const linearTeams = useQuery(
+    typedQueryOptions(listLinearTeamsContract, { idOrSlug: props.organizationSlug }),
+  );
+  const linearProjects = useQuery(
+    typedQueryOptions(listLinearProjectsContract, { idOrSlug: props.organizationSlug }),
+  );
 
   if (props.summaryFor.type === "organization") {
     return <span>everyone's status updates{props.includeAnd && <span> and </span>}</span>;
@@ -654,6 +660,15 @@ function ScheduleSummaryForItem(props: {
     );
   }
 
+  if (props.summaryFor.type === "anyLinear") {
+    return (
+      <span>
+        any <SiLinear className="size-3 mb-1 inline" /> Linear activity
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
   if (props.summaryFor.type === "discordChannel") {
     const discordChannel = discordChannels.data?.find(
       (channel) => channel.id === props.summaryFor.value,
@@ -665,6 +680,32 @@ function ScheduleSummaryForItem(props: {
     return (
       <span>
         activity in <SiDiscord className="size-3 mb-1 inline" /> {discordChannel.name} channel
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.summaryFor.type === "linearTeam") {
+    const team = linearTeams.data?.find((t) => t.teamId === props.summaryFor.value);
+    if (!team) {
+      return null;
+    }
+    return (
+      <span>
+        activity in <SiLinear className="size-3 mb-1 inline" /> {team.name} team
+        {props.includeAnd && <span> and </span>}
+      </span>
+    );
+  }
+
+  if (props.summaryFor.type === "linearProject") {
+    const project = linearProjects.data?.find((p) => p.projectId === props.summaryFor.value);
+    if (!project) {
+      return null;
+    }
+    return (
+      <span>
+        activity in <SiLinear className="size-3 mb-1 inline" /> {project.name} project
         {props.includeAnd && <span> and </span>}
       </span>
     );
