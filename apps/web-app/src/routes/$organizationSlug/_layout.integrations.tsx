@@ -439,13 +439,17 @@ function RouteComponent() {
             }).queryKey,
           });
 
-          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData: any) => {
+          queryClient.setQueryData(sessionBetterAuthQueryOptions().queryKey, (sessionData) => {
             if (!sessionData) {
               return sessionData;
             }
             return {
               ...sessionData,
-              user: { ...sessionData.user, ...data.user },
+              user: {
+                ...sessionData.user,
+                ...data.user,
+                onboardingStep: data.user.onboardingStep as any,
+              },
             };
           });
         }
@@ -546,7 +550,20 @@ function RouteComponent() {
     ),
   );
 
-  const integrations = useMemo(
+  type IntegrationListItem = {
+    name: string;
+    description: string;
+    icon: React.ReactNode;
+    status: "connected" | "disconnected" | "connecting" | "error";
+    connectLink?: string;
+    onDisconnect?: () => void;
+    settingsChildren?: React.ReactNode;
+    children?: React.ReactNode;
+    membersLinkedCount?: number;
+    membersTotalCount?: number;
+  };
+
+  const integrations: IntegrationListItem[] = useMemo(
     () => [
       {
         name: "GitHub",
@@ -569,6 +586,23 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
+            {(() => {
+              const total = organizationMembers.data?.members.length ?? 0;
+              const assigned =
+                organizationMembers.data?.members.filter((m) => m.githubId).length ?? 0;
+              if (total > 0 && assigned < total) {
+                return (
+                  <Alert>
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Some members are not linked</AlertTitle>
+                    <AlertDescription>
+                      {assigned} of {total} members linked to GitHub. Link remaining members below.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
             {githubUsers.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
@@ -673,6 +707,8 @@ function RouteComponent() {
             </div>
           </div>
         ),
+        membersLinkedCount: organizationMembers.data?.members.filter((m) => m.githubId).length ?? 0,
+        membersTotalCount: organizationMembers.data?.members.length ?? 0,
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -763,6 +799,23 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
+            {(() => {
+              const total = organizationMembers.data?.members.length ?? 0;
+              const assigned =
+                organizationMembers.data?.members.filter((m) => m.slackId).length ?? 0;
+              if (total > 0 && assigned < total) {
+                return (
+                  <Alert>
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Some members are not linked</AlertTitle>
+                    <AlertDescription>
+                      {assigned} of {total} members linked to Slack. Link remaining members below.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
             {slackUsers.data.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
@@ -872,6 +925,8 @@ function RouteComponent() {
             </div>
           </div>
         ),
+        membersLinkedCount: organizationMembers.data?.members.filter((m) => m.slackId).length ?? 0,
+        membersTotalCount: organizationMembers.data?.members.length ?? 0,
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -968,6 +1023,23 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
+            {(() => {
+              const total = organizationMembers.data?.members.length ?? 0;
+              const assigned =
+                organizationMembers.data?.members.filter((m) => m.discordId).length ?? 0;
+              if (total > 0 && assigned < total) {
+                return (
+                  <Alert>
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Some members are not linked</AlertTitle>
+                    <AlertDescription>
+                      {assigned} of {total} members linked to Discord. Link remaining members below.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
             {discordUsers.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
@@ -1131,6 +1203,9 @@ function RouteComponent() {
             </div>
           </div>
         ),
+        membersLinkedCount:
+          organizationMembers.data?.members.filter((m) => m.discordId).length ?? 0,
+        membersTotalCount: organizationMembers.data?.members.length ?? 0,
         children: (
           <div className="space-y-6">
             <div className="space-y-2">
@@ -1207,6 +1282,23 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
+            {(() => {
+              const total = organizationMembers.data?.members.length ?? 0;
+              const assigned =
+                organizationMembers.data?.members.filter((m) => m.linearId).length ?? 0;
+              if (total > 0 && assigned < total) {
+                return (
+                  <Alert>
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Some members are not linked</AlertTitle>
+                    <AlertDescription>
+                      {assigned} of {total} members linked to Linear. Link remaining members below.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
             {linearUsers.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
@@ -1318,6 +1410,8 @@ function RouteComponent() {
             </div>
           </div>
         ),
+        membersLinkedCount: organizationMembers.data?.members.filter((m) => m.linearId).length ?? 0,
+        membersTotalCount: organizationMembers.data?.members.length ?? 0,
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1367,6 +1461,23 @@ function RouteComponent() {
         },
         settingsChildren: (
           <div className="space-y-6">
+            {(() => {
+              const total = organizationMembers.data?.members.length ?? 0;
+              const assigned =
+                organizationMembers.data?.members.filter((m) => m.gitlabId).length ?? 0;
+              if (total > 0 && assigned < total) {
+                return (
+                  <Alert>
+                    <AlertTriangleIcon className="size-4" />
+                    <AlertTitle>Some members are not linked</AlertTitle>
+                    <AlertDescription>
+                      {assigned} of {total} members linked to GitLab. Link remaining members below.
+                    </AlertDescription>
+                  </Alert>
+                );
+              }
+              return null;
+            })()}
             {gitlabUsers.data?.length === 0 && (
               <div className="text-sm text-muted-foreground">No users found.</div>
             )}
@@ -1473,6 +1584,8 @@ function RouteComponent() {
             </div>
           </div>
         ),
+        membersLinkedCount: organizationMembers.data?.members.filter((m) => m.gitlabId).length ?? 0,
+        membersTotalCount: organizationMembers.data?.members.length ?? 0,
         children: (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1691,7 +1804,7 @@ function RouteComponent() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 overflow-y-auto h-[calc(100vh-150px)] grid-auto-rows-min items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 overflow-y-auto grid-auto-rows-min items-start">
         {filteredIntegrations.length === 0 ? (
           <div className="col-span-full text-center py-8">
             <div className="space-y-2">
@@ -1729,6 +1842,8 @@ function RouteComponent() {
                   onDisconnect={integration.onDisconnect}
                   onViewDetails={() => {}}
                   onSettings={() => {}}
+                  membersLinkedCount={integration.membersLinkedCount}
+                  membersTotalCount={integration.membersTotalCount}
                   settingsChildren={integration.settingsChildren}
                 >
                   {integration.children}

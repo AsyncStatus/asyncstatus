@@ -23,19 +23,40 @@ export type IntegrationSettingsItemProps = PropsWithChildren<{
   onViewDetails: () => void;
   onSettings: () => void;
   onDisconnect?: () => void;
+  membersLinkedCount?: number;
+  membersTotalCount?: number;
 }>;
 
 export function IntegrationSettingsItem(props: IntegrationSettingsItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4 border border-border rounded-lg p-3 min-h-[160px]">
+    <div className="flex flex-col gap-4 border border-border rounded-lg p-3 min-h-[150px] h-full">
       <div className="flex flex-col gap-1 flex-1">
         <div className="flex items-center gap-2">
           <div className="size-3.5">{props.icon}</div>
           <div className="text-lg">{props.name}</div>
         </div>
         <div className="text-sm text-muted-foreground text-pretty">{props.description}</div>
+
+        {props.status === "connected" &&
+          props.membersTotalCount != null &&
+          props.membersLinkedCount != null &&
+          props.membersTotalCount > 0 &&
+          props.membersLinkedCount < props.membersTotalCount && (
+            <div className="mt-4 text-xs text-orange-500 dark:text-orange-400 flex flex-col gap-0.5 border border-orange-500 dark:border-orange-400 rounded-md p-1 bg-orange-50 dark:bg-orange-950">
+              <div className="flex items-center gap-1 font-medium">
+                <Info className="size-3" />
+                <p>
+                  {props.membersLinkedCount} of {props.membersTotalCount} members linked
+                </p>
+              </div>
+              <p>
+                We might not be able to generate comprehensive summaries for all members. Go to
+                settings to link remaining members.
+              </p>
+            </div>
+          )}
       </div>
 
       <div className="flex items-end mt-auto">
@@ -218,8 +239,8 @@ export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps)
 
         <DialogFooter className="flex flex-row w-full items-center justify-between">
           {props.onDisconnect && (
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => {
                 props.onDisconnect?.();
                 props.onOpenChange(false);
@@ -240,7 +261,7 @@ export function IntegrationSettingsDialog(props: IntegrationSettingsDialogProps)
 
 export function IntegrationSuggestionItem() {
   return (
-    <div className="flex flex-col gap-4 border border-border rounded-lg p-3 min-h-[160px] border-dashed">
+    <div className="flex flex-col gap-4 border border-border rounded-lg p-3 min-h-[150px] h-full border-dashed">
       <div className="flex flex-col gap-1 flex-1">
         <div className="flex items-center gap-2">
           <div className="size-3.5">
