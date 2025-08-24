@@ -229,6 +229,18 @@ export default async function Page(props: {
           </p>
         </section>
 
+        <section id="remote-culture" className="mt-36">
+          <div className="mb-12 text-center">
+            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
+              Build a strong remote culture
+            </h3>
+            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
+              Replace standup meetings with clear, async updates. Give people focus time without
+              losing visibility or momentum.
+            </h3>
+          </div>
+        </section>
+
         <section id="pricing">
           <Pricing />
         </section>
