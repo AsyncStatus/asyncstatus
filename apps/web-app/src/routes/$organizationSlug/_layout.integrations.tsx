@@ -12,6 +12,7 @@ import {
 } from "@asyncstatus/api/typed-handlers/discord-gateway";
 import {
   deleteDiscordIntegrationContract,
+  discordAddIntegrationCallbackContract,
   discordIntegrationCallbackContract,
   fetchDiscordMessagesContract,
   getDiscordIntegrationContract,
@@ -30,6 +31,7 @@ import {
 import {
   deleteGitlabIntegrationContract,
   getGitlabIntegrationContract,
+  gitlabIntegrationCallbackAddContract,
   gitlabIntegrationCallbackContract,
   listGitlabProjectsContract,
   listGitlabUsersContract,
@@ -55,6 +57,7 @@ import {
   getSlackIntegrationContract,
   listSlackChannelsContract,
   listSlackUsersContract,
+  slackAddIntegrationCallbackContract,
   slackIntegrationCallbackContract,
 } from "@asyncstatus/api/typed-handlers/slack-integration";
 import {
@@ -102,10 +105,13 @@ import {
   XIcon,
 } from "@asyncstatus/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
 import { z } from "zod/v4";
-import { sessionBetterAuthQueryOptions } from "@/better-auth-tanstack-query";
+import {
+  loginSocialMutationOptions,
+  sessionBetterAuthQueryOptions,
+} from "@/better-auth-tanstack-query";
 import {
   IntegrationSettingsItem,
   IntegrationSuggestionItem,
@@ -791,7 +797,7 @@ function RouteComponent() {
               : "disconnected",
         connectLink: getSlackIntegrationConnectUrl({
           clientId: import.meta.env.VITE_SLACK_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: typedUrl(slackIntegrationCallbackContract, {}),
+          redirectUri: typedUrl(slackAddIntegrationCallbackContract, {} as any),
           organizationSlug: params.organizationSlug,
         }),
         onDisconnect: () => {
@@ -1015,7 +1021,7 @@ function RouteComponent() {
               : "disconnected",
         connectLink: getDiscordIntegrationConnectUrl({
           clientId: import.meta.env.VITE_DISCORD_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: typedUrl(discordIntegrationCallbackContract, {}),
+          redirectUri: typedUrl(discordAddIntegrationCallbackContract, {} as any),
           organizationSlug: params.organizationSlug,
         }),
         onDisconnect: () => {
@@ -1452,7 +1458,7 @@ function RouteComponent() {
               : "disconnected",
         connectLink: getGitlabIntegrationConnectUrl({
           clientId: import.meta.env.VITE_GITLAB_INTEGRATION_APP_CLIENT_ID,
-          redirectUri: import.meta.env.VITE_API_URL + gitlabIntegrationCallbackContract.url(),
+          redirectUri: typedUrl(gitlabIntegrationCallbackAddContract, {} as any),
           organizationSlug: params.organizationSlug,
           instanceUrl: "https://gitlab.com", // Default to GitLab.com
         }),
