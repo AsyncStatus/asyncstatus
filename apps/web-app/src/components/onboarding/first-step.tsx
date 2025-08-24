@@ -37,7 +37,7 @@ import {
 import { Button } from "@asyncstatus/ui/components/button";
 import { Input } from "@asyncstatus/ui/components/input";
 import { toast } from "@asyncstatus/ui/components/sonner";
-import { ArrowRight, Loader2 } from "@asyncstatus/ui/icons";
+import { ArrowRight, Loader2, RefreshCcw } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
@@ -471,6 +471,23 @@ export function FirstStep({ organizationSlug }: { organizationSlug: string }) {
               organizationSlug={organizationSlug}
               statusUpdate={statusUpdate.data}
             />
+
+            <Button
+              variant="ghost"
+              className="mt-2 mb-2 text-muted-foreground"
+              size="sm"
+              disabled={generateStatusUpdate.isPending}
+              onClick={() => {
+                generateStatusUpdate.mutate({
+                  idOrSlug: organizationSlug,
+                  effectiveFrom: nowStartOfWeek.toISOString(),
+                  effectiveTo: nowEndOfDay.toISOString(),
+                });
+              }}
+            >
+              <RefreshCcw className="size-4" />
+              Regenerate status update
+            </Button>
           </div>
         )}
 
