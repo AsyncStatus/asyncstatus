@@ -20,6 +20,7 @@ import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedul
 import type { HonoEnv } from "../../lib/env";
 import { getOrganizationPlan } from "../../lib/get-organization-plan";
 import { isTuple } from "../../lib/is-tuple";
+import { postSlackMessageSafely } from "../../lib/slack-safe";
 import { summarizeDiscordActivity } from "../summarization/summarize-discord-activity/summarize-discord-activity";
 import { summarizeGithubActivity } from "../summarization/summarize-github-activity/summarize-github-activity";
 import { summarizeGitlabActivity } from "../summarization/summarize-gitlab-activity/summarize-gitlab-activity";
@@ -864,7 +865,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
             ].join("\n");
 
             try {
-              await slackClient.chat.postMessage({
+              await postSlackMessageSafely(slackClient, {
                 channel: target.target,
                 text: header,
                 unfurl_links: false,
@@ -872,10 +873,7 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
                 blocks: [
                   {
                     type: "section",
-                    text: {
-                      type: "mrkdwn",
-                      text: slackMessage,
-                    },
+                    text: { type: "mrkdwn", text: slackMessage },
                   },
                 ],
               });

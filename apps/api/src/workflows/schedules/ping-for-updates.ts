@@ -7,6 +7,7 @@ import * as schema from "../../db";
 import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 import type { HonoEnv } from "../../lib/env";
+import { postSlackMessageSafely } from "../../lib/slack-safe";
 
 export type PingForUpdatesWorkflowParams = {
   scheduleRunId: string;
@@ -321,9 +322,9 @@ export class PingForUpdatesWorkflow extends WorkflowEntrypoint<
 
         for (const target of slackTargets) {
           try {
-            await slackClient.chat.postMessage({
+            await postSlackMessageSafely(slackClient, {
               channel: target.target,
-              text: "Time for status update!", // Fallback text for notifications
+              text: "Time for status update!",
               unfurl_links: false,
               unfurl_media: false,
               blocks: [
