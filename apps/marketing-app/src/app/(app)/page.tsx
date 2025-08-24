@@ -2,17 +2,12 @@ import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
 import { BetaMessage } from "../components/beta-message";
-import { ConnectCard } from "../components/connect-card";
 import { CtaSection } from "../components/cta-section";
-import { FeaturesList } from "../components/features-list";
 import { Footer } from "../components/footer";
-import { GenerateCard } from "../components/generate-card";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
-import { ReviewCard } from "../components/review-card";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
-import { TrackCard } from "../components/track-card";
 import { UseItYourWay } from "../components/use-it-your-way";
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
@@ -55,9 +50,6 @@ export default async function Page(props: {
           <div className="text-muted-foreground flex items-center gap-6 pt-0.5 text-sm max-sm:hidden">
             <Link href="#how-it-works" className="hover:text-foreground">
               How it works
-            </Link>
-            <Link href="#features" className="hover:text-foreground">
-              Features
             </Link>
             <Link href="#team" className="hover:text-foreground">
               Use cases
@@ -171,31 +163,7 @@ export default async function Page(props: {
           </p>
         </div>
 
-        {/* aspect-[2.4/1] */}
-        <video
-          className="mt-36 w-full rounded-lg max-sm:mt-16 aspect-[2.4/1]"
-          autoPlay
-          loop
-          muted
-          playsInline
-          controls
-        >
-          <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
 
-        <div className="flex justify-center mt-12 gap-4 max-sm:flex-col">
-          <Button variant="secondary" asChild>
-            <Link href="https://youtu.be/y_Hl0rVJHKs" target="_blank">
-              <span>Watch intro video</span>
-            </Link>
-          </Button>
-          <Button variant="secondary" asChild>
-            <Link href="https://youtu.be/kPK0FMHNSDY" target="_blank">
-              <span>Watch full product demo</span>
-            </Link>
-          </Button>
-        </div>
 
         {/* <img
           src="/hero-light.webp"
@@ -271,11 +239,31 @@ export default async function Page(props: {
         <h3 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
           How it works
         </h3>
-        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
-          <ConnectCard />
-          <TrackCard />
-          <GenerateCard />
-          <ReviewCard />
+
+        {/* aspect-[2.4/1] */}
+        <video
+          className="mt-24 w-full rounded-lg max-sm:mt-16 aspect-[2.4/1]"
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls
+        >
+          <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        <div className="flex justify-center mt-12 gap-4 max-sm:flex-col">
+          <Button variant="secondary" asChild>
+            <Link href="https://youtu.be/y_Hl0rVJHKs" target="_blank">
+              <span>Watch intro video</span>
+            </Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href="https://youtu.be/kPK0FMHNSDY" target="_blank">
+              <span>Watch full product demo</span>
+            </Link>
+          </Button>
         </div>
 
         <UseItYourWay />
@@ -391,9 +379,7 @@ export default async function Page(props: {
           </div>
         </section>
 
-        <section id="features">
-          <FeaturesList />
-        </section>
+
 
         <section id="early-stage">
           <BetaMessage />
