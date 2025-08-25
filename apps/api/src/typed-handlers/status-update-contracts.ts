@@ -158,12 +158,6 @@ export const updateStatusUpdateContract = typedContract(
   }),
 );
 
-export const deleteStatusUpdateContract = typedContract(
-  "delete /organizations/:idOrSlug/status-updates/:statusUpdateId",
-  z.strictObject({ idOrSlug: z.string(), statusUpdateId: z.string() }),
-  z.strictObject({ success: z.boolean() }),
-);
-
 export const generateStatusUpdateContract = typedContract(
   "post /organizations/:idOrSlug/status-updates/generate",
   z.strictObject({

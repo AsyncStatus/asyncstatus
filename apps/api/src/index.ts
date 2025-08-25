@@ -113,7 +113,6 @@ import {
 } from "./typed-handlers/slack-integration-handlers";
 import {
   createStatusUpdateHandler,
-  deleteStatusUpdateHandler,
   generateStatusUpdateHandler,
   getMemberStatusUpdateHandler,
   getStatusUpdateHandler,
@@ -424,7 +423,6 @@ const typedHandlersApp = typedHandlersHonoServer(
     getMemberStatusUpdateHandler,
     updateStatusUpdateHandler,
     createStatusUpdateHandler,
-    deleteStatusUpdateHandler,
     generateStatusUpdateHandler,
     addCliStatusUpdateItemHandler,
     editCliStatusUpdateHandler,

@@ -9,7 +9,6 @@ import { generateStatusUpdate } from "../workflows/status-updates/generate-statu
 import { requiredOrganization, requiredSession } from "./middleware";
 import {
   createStatusUpdateContract,
-  deleteStatusUpdateContract,
   generateStatusUpdateContract,
   getMemberStatusUpdateContract,
   getStatusUpdateContract,
@@ -489,48 +488,6 @@ export const updateStatusUpdateHandler = typedHandler<
     });
 
     return statusUpdate;
-  },
-);
-
-export const deleteStatusUpdateHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof deleteStatusUpdateContract
->(
-  deleteStatusUpdateContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, input, member }) => {
-    const { statusUpdateId } = input;
-
-    const statusUpdate = await db.query.statusUpdate.findFirst({
-      where: and(
-        eq(schema.statusUpdate.id, statusUpdateId),
-        eq(schema.statusUpdate.organizationId, organization.id),
-      ),
-      with: { member: true },
-    });
-
-    if (!statusUpdate) {
-      throw new TypedHandlersError({
-        code: "NOT_FOUND",
-        message: "Status update not found",
-      });
-    }
-
-    // Check if user can delete this status update
-    const isOwner = statusUpdate.member.id === member.id;
-    const isAdmin = ["admin", "owner"].includes(member.role);
-
-    if (!isOwner && !isAdmin) {
-      throw new TypedHandlersError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to delete this status update",
-      });
-    }
-
-    await db.delete(schema.statusUpdate).where(eq(schema.statusUpdate.id, statusUpdateId));
-
-    return { success: true };
   },
 );
 
