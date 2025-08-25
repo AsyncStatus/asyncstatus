@@ -202,7 +202,7 @@ const app = new Hono<HonoEnv>()
 
     return c.json(session);
   })
-  .on(["POST", "GET"], "/auth", (c) => {
+  .on(["POST", "GET"], "/auth/*", (c) => {
     return c.get("auth").handler(c.req.raw);
   })
   .on(["POST"], "/integrations/github/webhooks", (c) => {
