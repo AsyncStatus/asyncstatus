@@ -313,7 +313,6 @@ const app = new Hono<HonoEnv>()
       return c.body(null, 204); // Return 204 No Content for successful processing
     }
 
-    console.error("Unknown Discord webhook type:", body.type);
     return c.json({ error: "Unknown webhook type" }, 400);
   })
   .on(["POST"], "/integrations/linear/webhooks", async (c) => {
