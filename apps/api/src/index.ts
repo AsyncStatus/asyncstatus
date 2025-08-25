@@ -222,7 +222,6 @@ const app = new Hono<HonoEnv>()
     const gitlabToken = c.req.header("X-Gitlab-Token");
     const gitlabEvent = c.req.header("X-Gitlab-Event");
 
-    // Verify webhook token (GitLab uses simple token verification)
     if (!gitlabToken || gitlabToken !== c.env.GITLAB_WEBHOOK_SECRET) {
       return c.json({ error: "Invalid webhook token" }, 401);
     }
@@ -238,7 +237,6 @@ const app = new Hono<HonoEnv>()
       return c.json({ error: "Invalid JSON payload" }, 400);
     }
 
-    // Add event type to payload
     const eventPayload = {
       ...body,
       gitlab_event: gitlabEvent,
@@ -305,7 +303,6 @@ const app = new Hono<HonoEnv>()
       return c.json({ error: "Invalid JSON payload" }, 400);
     }
 
-    // Handle Discord webhook types
     // Type 0 = PING (verify webhook URL is active)
     if (body.type === 0) {
       return c.body(null, 204); // Return 204 No Content for PING
@@ -318,7 +315,6 @@ const app = new Hono<HonoEnv>()
       return c.body(null, 204); // Return 204 No Content for successful processing
     }
 
-    // Unknown webhook type
     console.error("Unknown Discord webhook type:", body.type);
     return c.json({ error: "Unknown webhook type" }, 400);
   })
