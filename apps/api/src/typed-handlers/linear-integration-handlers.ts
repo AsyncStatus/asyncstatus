@@ -12,7 +12,6 @@ import {
   deleteLinearIntegrationContract,
   getLinearIntegrationContract,
   linearIntegrationCallbackContract,
-  listLinearIssuesContract,
   listLinearProjectsContract,
   listLinearTeamsContract,
   listLinearUsersContract,
@@ -265,38 +264,6 @@ export const listLinearUsersHandler = typedHandler<
 
   return users;
 });
-
-export const listLinearIssuesHandler = typedHandler<
-  TypedHandlersContextWithOrganization,
-  typeof listLinearIssuesContract
->(
-  listLinearIssuesContract,
-  requiredSession,
-  requiredOrganization,
-  async ({ db, organization, input }) => {
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
-
-    const integration = await db.query.linearIntegration.findFirst({
-      where: eq(schema.linearIntegration.organizationId, organization.id),
-    });
-
-    if (!integration) {
-      return [];
-    }
-
-    const [issues] = await Promise.all([
-      db.query.linearIssue.findMany({
-        where: eq(schema.linearIssue.integrationId, integration.id),
-        orderBy: [desc(schema.linearIssue.createdAt)],
-        limit: limit as number,
-        offset: offset as number,
-      }),
-    ]);
-
-    return issues;
-  },
-);
 
 export const listLinearProjectsHandler = typedHandler<
   TypedHandlersContextWithOrganization,

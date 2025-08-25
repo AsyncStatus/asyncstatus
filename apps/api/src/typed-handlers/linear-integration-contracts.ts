@@ -52,16 +52,6 @@ export const listLinearUsersContract = typedContract(
   z.array(LinearUser),
 );
 
-export const listLinearIssuesContract = typedContract(
-  "get /organizations/:idOrSlug/integrations/linear/issues",
-  z.strictObject({
-    idOrSlug: z.string().min(1),
-    limit: z.coerce.number().optional().default(50),
-    offset: z.coerce.number().optional().default(0),
-  }),
-  z.array(LinearIssue),
-);
-
 export const listLinearProjectsContract = typedContract(
   "get /organizations/:idOrSlug/integrations/linear/projects",
   z.strictObject({
