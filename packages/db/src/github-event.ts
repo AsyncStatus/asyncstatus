@@ -1,9 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
-import type {
-  AnyGithubWebhookEventDefinition,
-  GithubWebhookEventName,
-} from "../lib/github-event-definition";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { githubRepository } from "./github-repository";
 
@@ -16,10 +12,10 @@ export const githubEvent = sqliteTable(
     repositoryId: text("repository_id")
       .notNull()
       .references(() => githubRepository.id, { onDelete: "cascade" }),
-    type: text("type").notNull().$type<GithubWebhookEventName>(),
+    type: text("type").notNull().$type<any>(),
     payload: text("payload", {
       mode: "json",
-    }).$type<AnyGithubWebhookEventDefinition>(),
+    }).$type<any>(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     insertedAt: integer("inserted_at", { mode: "timestamp" }).notNull(),
   },
