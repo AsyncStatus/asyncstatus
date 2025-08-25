@@ -5,7 +5,6 @@ import {
   generateScheduleContract,
   listSchedulesContract,
   runScheduleContract,
-  updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
 import { listSlackChannelsContract } from "@asyncstatus/api/typed-handlers/slack-integration";
 import { listTeamsContract } from "@asyncstatus/api/typed-handlers/team";
@@ -19,7 +18,7 @@ import {
 import { Button } from "@asyncstatus/ui/components/button";
 import { SidebarTrigger, useSidebar } from "@asyncstatus/ui/components/sidebar";
 import { Textarea } from "@asyncstatus/ui/components/textarea";
-import { ArrowRightIcon, ArrowUpIcon, Loader2Icon, PencilIcon } from "@asyncstatus/ui/icons";
+import { ArrowUpIcon, Loader2Icon, PencilIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -43,21 +42,10 @@ export const Route = createFileRoute("/$organizationSlug/_layout/automations/")(
 
 function RouteComponent() {
   const { organizationSlug } = Route.useParams();
-  const queryClient = useQueryClient();
   const schedules = useQuery(
     typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug }),
   );
   const session = useQuery(sessionBetterAuthQueryOptions());
-  const updateSchedule = useMutation(
-    typedMutationOptions(updateScheduleContract, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: typedQueryOptions(listSchedulesContract, { idOrSlug: organizationSlug })
-            .queryKey,
-        });
-      },
-    }),
-  );
   const runSchedule = useMutation(typedMutationOptions(runScheduleContract));
 
   return (

@@ -25,7 +25,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@asyncstatus/ui/components/breadcrumb";
 import { Button } from "@asyncstatus/ui/components/button";

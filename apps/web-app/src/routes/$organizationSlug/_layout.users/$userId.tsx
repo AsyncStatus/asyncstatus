@@ -73,7 +73,11 @@ function RouteComponent() {
           }
           return {
             ...sessionData,
-            user: { ...sessionData.user, ...data.user },
+            user: {
+              ...sessionData.user,
+              ...data.user,
+              onboardingStep: data.user.onboardingStep ?? (null as any),
+            },
           };
         });
       }
