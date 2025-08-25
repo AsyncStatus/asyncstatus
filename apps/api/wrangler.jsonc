@@ -11,9 +11,6 @@
   "placement": {
     "mode": "smart"
   },
-  "ai": {
-    "binding": "AI"
-  },
   "durable_objects": {
     "bindings": [
       {
