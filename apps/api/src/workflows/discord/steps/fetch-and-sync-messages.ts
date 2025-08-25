@@ -1,7 +1,7 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncMessagesParams = {

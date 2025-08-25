@@ -1,6 +1,6 @@
+import { DiscordChannel, DiscordIntegration, DiscordServer, DiscordUser } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { DiscordChannel, DiscordIntegration, DiscordServer, DiscordUser } from "../db";
 
 export const discordIntegrationCallbackContract = typedContract(
   "get /integrations/discord/callback",

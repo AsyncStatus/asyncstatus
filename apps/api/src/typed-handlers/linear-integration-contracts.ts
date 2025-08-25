@@ -1,7 +1,12 @@
+import {
+  LinearIntegration,
+  LinearIssue,
+  LinearProject,
+  LinearTeam,
+  LinearUser,
+} from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { LinearIntegration, LinearIssue, LinearProject, LinearTeam } from "../db";
-import { LinearUser } from "../db/linear-user";
 
 export const linearIntegrationCallbackContract = typedContract(
   "get /integrations/linear/callback",

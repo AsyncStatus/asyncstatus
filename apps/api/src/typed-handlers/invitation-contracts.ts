@@ -1,7 +1,6 @@
+import { Invitation, Member, Organization, Team, User } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-
-import { Invitation, Member, Organization, Team, User } from "../db";
 
 export const getInvitationContract = typedContract(
   "get /invitations/:id",

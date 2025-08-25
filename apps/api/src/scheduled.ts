@@ -1,8 +1,8 @@
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { and, desc, eq, inArray, isNull, lte } from "drizzle-orm";
 import type { ExecutionContext } from "hono";
-import * as schema from "./db";
-import { createDb } from "./db/db";
 import type { HonoEnv } from "./lib/env";
 
 export async function scheduled(

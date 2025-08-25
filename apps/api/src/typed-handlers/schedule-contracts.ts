@@ -1,6 +1,6 @@
+import { Member, Schedule, ScheduleInsert, ScheduleUpdate, User } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { Member, Schedule, ScheduleInsert, ScheduleUpdate, User } from "../db";
 
 export {
   ScheduleConfig,
@@ -12,7 +12,7 @@ export {
   ScheduleConfigSummaryFor,
   ScheduleConfigUsingActivityFrom,
   ScheduleName,
-} from "../db/schedule-config-schema";
+} from "@asyncstatus/db";
 
 export const listSchedulesContract = typedContract(
   "get /organizations/:idOrSlug/schedules",

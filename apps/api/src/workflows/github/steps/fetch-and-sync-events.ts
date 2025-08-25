@@ -1,8 +1,8 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Octokit } from "octokit";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 import type { AnyGithubWebhookEventDefinition } from "../../../lib/github-event-definition";
 import { isTuple } from "../../../lib/is-tuple";
 import { standardizeGithubEventName } from "../../../lib/standardize-github-event-name";

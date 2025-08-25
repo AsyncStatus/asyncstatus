@@ -1,6 +1,6 @@
+import type { Db } from "@asyncstatus/db/create-db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import type { Db } from "../../../db/db";
 import { createOrganizationScheduleTool } from "../../tools/create-organization-schedule-tool";
 import { getDiscordIntegrationTool } from "../../tools/get-discord-integration-tool";
 import { getGithubIntegrationTool } from "../../tools/get-github-integration-tool";

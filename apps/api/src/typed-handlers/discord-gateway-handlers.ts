@@ -1,6 +1,6 @@
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { eq } from "drizzle-orm";
-import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import {
   getDiscordGatewayStatusContract,

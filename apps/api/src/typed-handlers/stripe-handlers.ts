@@ -1,7 +1,7 @@
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { and, eq } from "drizzle-orm";
 import type Stripe from "stripe";
-import * as schema from "../db";
 import { getUsageStats } from "../lib/ai-usage-kv";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { getOrganizationPlan } from "../lib/get-organization-plan";

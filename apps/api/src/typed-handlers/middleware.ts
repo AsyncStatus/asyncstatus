@@ -1,7 +1,7 @@
+import { member, organization } from "@asyncstatus/db";
 import { TypedHandlersError, typedMiddleware } from "@asyncstatus/typed-handlers";
 import { desc, eq, or } from "drizzle-orm";
 import { createLocalJWKSet, jwtVerify } from "jose";
-import { member, organization } from "../db";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,

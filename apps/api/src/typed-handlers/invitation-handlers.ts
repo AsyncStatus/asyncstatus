@@ -1,7 +1,7 @@
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler, typedMiddleware } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, eq } from "drizzle-orm";
-import * as schema from "../db";
 import type { TypedHandlersContext, TypedHandlersContextWithSession } from "../lib/env";
 import {
   acceptInvitationContract,

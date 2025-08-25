@@ -1,0 +1,34 @@
+{
+  "name": "@asyncstatus/db",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./create-db": "./src/create-db.ts"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --max-warnings 0 --fix",
+    "format": "prettier --write .",
+    "check-types": "tsc --noEmit",
+    "dev:turso": "TZ=UTC turso dev --db-file ./local-db",
+    "studio": "drizzle-kit studio",
+    "migrate": "drizzle-kit migrate",
+    "migrate:push": "drizzle-kit push",
+    "migrate:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@asyncstatus/dayjs": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "catalog:",
+    "nanoid": "catalog:",
+    "@libsql/client": "catalog:",
+    "drizzle-kit": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@asyncstatus/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

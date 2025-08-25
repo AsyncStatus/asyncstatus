@@ -1,6 +1,6 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 
 type WithSafeSyncStatusParams = {
   db: Db;

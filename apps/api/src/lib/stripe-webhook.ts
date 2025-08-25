@@ -1,8 +1,8 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
 import type { ExecutionContext } from "hono";
 import type Stripe from "stripe";
-import * as schema from "../db";
-import type { Db } from "../db/db";
 import { getCurrentUsage, getUsageKvKey } from "./ai-usage-kv";
 import { ALLOWED_STRIPE_EVENTS, syncStripeDataToKV } from "./stripe";
 

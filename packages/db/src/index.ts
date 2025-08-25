@@ -88,7 +88,12 @@ export {
   linearIntegration,
 } from "./linear-integration";
 export { LinearIssue, LinearIssueInsert, LinearIssueUpdate, linearIssue } from "./linear-issue";
-export { LinearProject, LinearProjectInsert, LinearProjectUpdate, linearProject } from "./linear-project";
+export {
+  LinearProject,
+  LinearProjectInsert,
+  LinearProjectUpdate,
+  linearProject,
+} from "./linear-project";
 export { LinearTeam, LinearTeamInsert, LinearTeamUpdate, linearTeam } from "./linear-team";
 export { LinearUser, LinearUserInsert, LinearUserUpdate, linearUser } from "./linear-user";
 export { Member, MemberInsert, MemberUpdate, member } from "./member";

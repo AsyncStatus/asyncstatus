@@ -1,9 +1,9 @@
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import slugify from "@sindresorhus/slugify";
 import { generateId } from "better-auth";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import * as schema from "../db";
 import type {
   TypedHandlersContextWithOrganization,
   TypedHandlersContextWithSession,

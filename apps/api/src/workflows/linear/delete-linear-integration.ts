@@ -1,7 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
-import * as schema from "../../db";
-import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 import { revokeLinearToken } from "../../lib/linear-client";
 
@@ -46,16 +46,19 @@ export class DeleteLinearIntegrationWorkflow extends WorkflowEntrypoint<
 
     await step.do("delete-linear-data", async () => {
       const db = createDb(this.env);
-      
+
       try {
-        await db.delete(schema.linearIntegration).where(eq(schema.linearIntegration.id, integrationId));
+        await db
+          .delete(schema.linearIntegration)
+          .where(eq(schema.linearIntegration.id, integrationId));
       } catch (error) {
         console.error("Failed to delete Linear integration data:", error);
         await db
           .update(schema.linearIntegration)
           .set({
             deleteId: null,
-            deleteError: error instanceof Error ? error.message : "Failed to delete integration data",
+            deleteError:
+              error instanceof Error ? error.message : "Failed to delete integration data",
           })
           .where(eq(schema.linearIntegration.id, integrationId));
         throw error;

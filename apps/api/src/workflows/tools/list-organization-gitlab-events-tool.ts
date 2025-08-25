@@ -1,9 +1,9 @@
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { tool } from "ai";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../db";
-import type { Db } from "../../db/db";
 
 export function listOrganizationGitlabEventsTool(db: Db) {
   return tool({

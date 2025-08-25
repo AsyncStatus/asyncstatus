@@ -1,6 +1,6 @@
+import { SlackChannel, SlackIntegration, SlackUser } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { SlackChannel, SlackIntegration, SlackUser } from "../db";
 
 export const slackIntegrationCallbackContract = typedContract(
   "get /integrations/slack/callback",

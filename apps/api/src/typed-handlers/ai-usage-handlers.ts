@@ -1,6 +1,6 @@
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { and, eq } from "drizzle-orm";
-import * as schema from "../db";
 import { getCurrentUsage, getUsageKvKey } from "../lib/ai-usage-kv";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { getOrCreateOrganizationStripeCustomerId } from "../lib/stripe-organization";

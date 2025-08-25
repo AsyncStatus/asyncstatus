@@ -1,6 +1,6 @@
+import { Member, Organization, OrganizationUpdate, User } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { Member, Organization, OrganizationUpdate, User } from "../db";
 
 export const listMemberOrganizationsContract = typedContract(
   "get /organizations/member",

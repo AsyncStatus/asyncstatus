@@ -1,8 +1,8 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import type { LinearClient } from "@linear/sdk";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncProjectsParams = {

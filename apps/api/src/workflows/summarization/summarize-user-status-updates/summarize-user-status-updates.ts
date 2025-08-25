@@ -1,6 +1,6 @@
+import type { Db } from "@asyncstatus/db/create-db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { listUserStatusUpdatesTool } from "../../tools/list-user-status-updates-tool";
 import { postProcess, type UserSummaryResult } from "./post-process";

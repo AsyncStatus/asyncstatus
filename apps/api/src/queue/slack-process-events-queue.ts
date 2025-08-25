@@ -1,9 +1,9 @@
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateId } from "better-auth";
 import { eq, sql } from "drizzle-orm";
 import { VoyageAIClient } from "voyageai";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { Bindings } from "../lib/env";
 import { generateSlackEventSummary } from "../workflows/slack/steps/generate-slack-event-summary";
 
@@ -35,7 +35,7 @@ export async function slackProcessEventsQueue(
     const { summary, embedding } = await generateSlackEventSummary({
       openRouterProvider,
       voyageClient,
-      event,
+      event: event as any,
     });
     if (!summary || !embedding) {
       console.log(`Failed to generate summary for event ${message.body}`);

@@ -1,6 +1,6 @@
+import { GithubIntegration, GithubRepository, GithubUser } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { GithubIntegration, GithubRepository, GithubUser } from "../db";
 
 export const githubIntegrationCallbackContract = typedContract(
   "get /integrations/github/callback",

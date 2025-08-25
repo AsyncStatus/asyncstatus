@@ -1,8 +1,8 @@
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import * as schema from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { getOrganizationPlan } from "../lib/get-organization-plan";
 import { generateStatusUpdate } from "../workflows/status-updates/generate-status-update/generate-status-update";

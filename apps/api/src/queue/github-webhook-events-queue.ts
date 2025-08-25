@@ -1,7 +1,7 @@
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { Bindings } from "../lib/env";
 import type { AnyGithubWebhookEventDefinition } from "../lib/github-event-definition";
 import { isTuple } from "../lib/is-tuple";

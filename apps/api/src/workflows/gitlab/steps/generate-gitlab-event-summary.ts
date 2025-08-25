@@ -1,7 +1,7 @@
+import type { GitlabEvent } from "@asyncstatus/db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
-import type { GitlabEvent } from "../../../db";
 
 type GenerateGitlabEventSummaryOptions = {
   openRouterProvider: OpenRouterProvider;

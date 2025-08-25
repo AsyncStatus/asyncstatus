@@ -1,7 +1,7 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
-import * as schema from "../db";
-import type { Db } from "../db/db";
 
 type GetOrCreateOrganizationStripeCustomerIdOptions = {
   db: Db;

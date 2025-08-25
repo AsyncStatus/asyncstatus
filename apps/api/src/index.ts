@@ -9,11 +9,6 @@ import type { SlackEvent } from "@slack/web-api";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import {
-  AsyncStatusApiError,
-  type AsyncStatusApiJsonError,
-  AsyncStatusUnexpectedApiError,
-} from "./errors";
 import { createContext, type HonoEnv } from "./lib/env";
 import { verifySlackRequest } from "./lib/slack";
 import { handleStripeWebhook } from "./lib/stripe-webhook";
@@ -405,17 +400,7 @@ const app = new Hono<HonoEnv>()
         ] as ContentfulStatusCode,
       );
     }
-    if (err instanceof AsyncStatusUnexpectedApiError) {
-      return c.json({ type: err.name, message: err.message }, err.status);
-    }
-    if (err instanceof AsyncStatusApiError) {
-      return c.json({ type: err.name, message: err.message }, err.status);
-    }
-    const error = {
-      type: "ASAPIUnexpectedError",
-      message: "An unexpected error occurred. Please try again later.",
-    } satisfies AsyncStatusApiJsonError;
-    return c.json(error, 500);
+    return c.json({ message: "Unknown error", code: "INTERNAL_SERVER_ERROR", cause: err }, 500);
   });
 
 const typedHandlersApp = typedHandlersHonoServer(

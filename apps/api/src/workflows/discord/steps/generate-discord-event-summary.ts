@@ -1,7 +1,7 @@
+import type { DiscordEvent } from "@asyncstatus/db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
-import type { DiscordEvent } from "../../../db";
 
 type GenerateDiscordEventSummaryOptions = {
   openRouterProvider: OpenRouterProvider;

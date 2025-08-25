@@ -1,6 +1,6 @@
+import type { Db } from "@asyncstatus/db/create-db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getDiscordChannelTool } from "../../tools/get-discord-channel-tool";
 import { getDiscordEventDetailTool } from "../../tools/get-discord-event-detail-tool";

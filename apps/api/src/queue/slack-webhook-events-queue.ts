@@ -1,8 +1,8 @@
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import type { SlackEvent } from "@slack/web-api";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { Bindings } from "../lib/env";
 import { isTuple } from "../lib/is-tuple";
 

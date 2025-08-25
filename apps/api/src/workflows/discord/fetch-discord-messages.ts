@@ -1,8 +1,8 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { generateId } from "better-auth";
 import { eq, inArray } from "drizzle-orm";
-import * as schema from "../../db";
-import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 
 export type FetchDiscordMessagesWorkflowParams = {

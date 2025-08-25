@@ -1,9 +1,9 @@
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { VoyageAIClient } from "voyageai";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { Bindings } from "../lib/env";
 import { generateGitlabEventSummary } from "../workflows/gitlab/steps/generate-gitlab-event-summary";
 
@@ -26,7 +26,7 @@ export async function gitlabProcessEventsQueue(
     const event = await db.query.gitlabEvent.findFirst({
       where: eq(schema.gitlabEvent.gitlabId, message.body),
     });
-    
+
     if (!event) {
       console.log(`GitLab event ${message.body} not found.`);
       message.ack();
@@ -38,7 +38,7 @@ export async function gitlabProcessEventsQueue(
       voyageClient,
       event,
     });
-    
+
     if (!summary || !embedding) {
       console.log(`Failed to generate summary for GitLab event ${message.body}`);
       message.retry({ delaySeconds: 60 });

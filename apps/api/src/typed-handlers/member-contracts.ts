@@ -1,7 +1,14 @@
+import {
+  Invitation,
+  Member,
+  MemberUpdate,
+  Team,
+  TeamMembership,
+  User,
+  UserUpdate,
+} from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { Invitation, Member, MemberUpdate, Team, TeamMembership, User, UserUpdate } from "../db";
-import { MemberRole } from "../db/member";
 
 export const getMemberContract = typedContract(
   "get /organizations/:idOrSlug/members/:memberId",
@@ -50,7 +57,7 @@ export const inviteMemberContract = typedContract(
     firstName: z.string().min(1).trim(),
     lastName: z.string().min(1).trim(),
     email: z.email(),
-    role: MemberRole,
+    role: Member.shape.role,
     teamId: z.string().nullish(),
   }),
   Invitation,

@@ -1,9 +1,9 @@
+import type { ScheduleConfigUsingActivityFrom } from "@asyncstatus/db";
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import { eq } from "drizzle-orm";
-import type { ScheduleConfigUsingActivityFrom } from "../../../db";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getDiscordChannelTool } from "../../tools/get-discord-channel-tool";
 import { getDiscordEventDetailTool } from "../../tools/get-discord-event-detail-tool";

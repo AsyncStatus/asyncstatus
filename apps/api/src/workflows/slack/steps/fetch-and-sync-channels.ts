@@ -1,9 +1,9 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import type { WebClient } from "@slack/web-api";
 import type { Channel } from "@slack/web-api/dist/types/response/ConversationsListResponse";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
-import * as schema from "../../../db";
-import type { Db } from "../../../db/db";
 import { isTuple } from "../../../lib/is-tuple";
 
 type FetchAndSyncChannelsParams = {

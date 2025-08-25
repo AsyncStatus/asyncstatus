@@ -1,6 +1,6 @@
+import type { Db } from "@asyncstatus/db/create-db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import type { Db } from "../../../db/db";
 import { trackAiUsage } from "../../../lib/ai-usage-kv";
 import { getSlackChannelTool } from "../../tools/get-slack-channel-tool";
 import { getSlackEventDetailTool } from "../../tools/get-slack-event-detail-tool";

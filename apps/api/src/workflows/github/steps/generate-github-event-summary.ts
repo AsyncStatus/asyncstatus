@@ -1,7 +1,7 @@
+import type { GithubEvent } from "@asyncstatus/db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
-import type { GithubEvent } from "../../../db";
 
 type GenerateGithubEventSummaryOptions = {
   openRouterProvider: OpenRouterProvider;

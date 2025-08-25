@@ -1,5 +1,5 @@
 import { dayjs } from "@asyncstatus/dayjs";
-import type { Schedule } from "../db";
+import type { Schedule } from "@asyncstatus/db";
 
 export function calculateNextScheduleExecution(schedule: Schedule): Date | null {
   const now = dayjs().tz(schedule.config.timezone);

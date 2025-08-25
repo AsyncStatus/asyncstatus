@@ -1,7 +1,7 @@
+import { member, team, teamMembership, user } from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, eq, exists, isNull, or } from "drizzle-orm";
-import { member, team, teamMembership, user } from "../db";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { requiredOrganization, requiredSession } from "./middleware";
 import {

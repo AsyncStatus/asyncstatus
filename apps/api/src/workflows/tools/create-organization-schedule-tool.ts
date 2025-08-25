@@ -1,9 +1,9 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import { tool } from "ai";
 import { generateId } from "better-auth";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import * as schema from "../../db";
-import type { Db } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 
 export function createOrganizationScheduleTool(db: Db) {

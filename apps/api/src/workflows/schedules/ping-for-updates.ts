@@ -1,10 +1,10 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import StatusUpdateReminderEmail from "@asyncstatus/email/organization/status-update-reminder-email";
 import { WebClient as SlackWebClient } from "@slack/web-api";
 import { generateId } from "better-auth";
 import { and, eq, inArray } from "drizzle-orm";
-import * as schema from "../../db";
-import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 import type { HonoEnv } from "../../lib/env";
 import { postSlackMessageSafely } from "../../lib/slack-safe";

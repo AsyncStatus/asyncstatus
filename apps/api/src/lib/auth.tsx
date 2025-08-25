@@ -1,3 +1,5 @@
+import * as schema from "@asyncstatus/db";
+import type { Db } from "@asyncstatus/db/create-db";
 import ResetPassword from "@asyncstatus/email/auth/reset-password-email";
 import VerificationEmail from "@asyncstatus/email/auth/verification-email";
 import { betterAuth } from "better-auth";
@@ -5,8 +7,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { customSession, jwt } from "better-auth/plugins";
 import { desc, eq } from "drizzle-orm";
 import type { Resend } from "resend";
-import * as schema from "../db";
-import type { Db } from "../db/db";
 import { authCookiesPlugin } from "./auth-cookies-plugin";
 import type { Bindings } from "./env";
 

@@ -1,14 +1,10 @@
 import { drizzle } from "drizzle-orm/libsql";
-
-import * as schema from ".";
+import * as schema from "./index";
 
 export function createDb(env: { TURSO_URL: string; TURSO_AUTH_TOKEN: string }) {
   return drizzle({
     schema,
-    connection: {
-      url: env.TURSO_URL,
-      authToken: env.TURSO_AUTH_TOKEN,
-    },
+    connection: { url: env.TURSO_URL, authToken: env.TURSO_AUTH_TOKEN },
   });
 }
 

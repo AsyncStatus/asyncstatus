@@ -1,5 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { DiscordActivitySummaryEmail } from "@asyncstatus/email/organization/discord-activity-summary-email";
 import { GithubActivitySummaryEmail } from "@asyncstatus/email/organization/github-activity-summary-email";
 import { GitlabActivitySummaryEmail } from "@asyncstatus/email/organization/gitlab-activity-summary-email";
@@ -14,8 +16,6 @@ import { generateId } from "better-auth";
 import { and, eq, inArray } from "drizzle-orm";
 import { Resend } from "resend";
 import Stripe from "stripe";
-import * as schema from "../../db";
-import { createDb } from "../../db/db";
 import { calculateNextScheduleExecution } from "../../lib/calculate-next-schedule-execution";
 import type { HonoEnv } from "../../lib/env";
 import { getOrganizationPlan } from "../../lib/get-organization-plan";

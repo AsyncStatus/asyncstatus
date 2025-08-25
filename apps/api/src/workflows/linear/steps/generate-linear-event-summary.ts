@@ -1,7 +1,7 @@
+import type { LinearEvent } from "@asyncstatus/db";
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 import type { VoyageAIClient } from "voyageai";
-import type { LinearEvent } from "../../../db";
 
 type GenerateLinearEventSummaryOptions = {
   openRouterProvider: OpenRouterProvider;

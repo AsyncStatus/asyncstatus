@@ -1,9 +1,9 @@
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { VoyageAIClient } from "voyageai";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { HonoEnv } from "../lib/env";
 import { generateLinearEventSummary } from "../workflows/linear/steps/generate-linear-event-summary";
 

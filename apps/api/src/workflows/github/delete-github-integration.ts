@@ -1,8 +1,8 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
 import { App } from "octokit";
-import * as schema from "../../db";
-import { createDb } from "../../db/db";
 import type { HonoEnv } from "../../lib/env";
 
 export type DeleteGithubIntegrationWorkflowParams = {

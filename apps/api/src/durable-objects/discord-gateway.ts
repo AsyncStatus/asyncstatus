@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
+import * as schema from "@asyncstatus/db";
+import { createDb } from "@asyncstatus/db/create-db";
 import { eq } from "drizzle-orm";
-import * as schema from "../db";
-import { createDb } from "../db/db";
 import type { Bindings } from "../lib/env";
 
 // Discord Gateway API constants

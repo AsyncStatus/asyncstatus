@@ -1,6 +1,6 @@
+import { GitlabIntegration, GitlabProject, GitlabUser } from "@asyncstatus/db";
 import { typedContract } from "@asyncstatus/typed-handlers";
 import { z } from "zod/v4";
-import { GitlabIntegration, GitlabProject, GitlabUser } from "../db";
 
 export const gitlabIntegrationCallbackContract = typedContract(
   "get /integrations/gitlab/callback",

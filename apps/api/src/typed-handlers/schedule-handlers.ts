@@ -1,8 +1,8 @@
 import { dayjs } from "@asyncstatus/dayjs";
+import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
 import { generateId } from "better-auth";
 import { and, asc, eq } from "drizzle-orm";
-import * as schema from "../db";
 import { calculateNextScheduleExecution } from "../lib/calculate-next-schedule-execution";
 import type { TypedHandlersContextWithOrganization } from "../lib/env";
 import { generateSchedule } from "../workflows/schedules/generate-schedule/generate-schedule";
