@@ -1,6 +1,5 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
-import type { AnyGitlabWebhookEventDefinition } from "../lib/gitlab-event-definition";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "./common";
 import { gitlabProject } from "./gitlab-project";
 
@@ -17,7 +16,7 @@ export const gitlabEvent = sqliteTable(
     action: text("action"), // opened, closed, merged, etc.
     payload: text("payload", {
       mode: "json",
-    }).$type<AnyGitlabWebhookEventDefinition>(),
+    }).$type<any>(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     insertedAt: integer("inserted_at", { mode: "timestamp" }).notNull(),
   },
