@@ -28,6 +28,7 @@
     "better-auth": "catalog:",
     "fast-equals": "5.2.2",
     "motion": "catalog:",
+    "ogl": "1.0.11",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",

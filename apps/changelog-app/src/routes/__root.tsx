@@ -3,8 +3,9 @@
 import { Toaster } from "@asyncstatus/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, useEffect } from "react";
 import { z } from "zod/v4";
+import { NoiseBackground } from "../components/noise-background";
 import globalsCss from "../globals.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -14,7 +15,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AsyncStatus Changelog" },
+      { title: "Changelog Generator" },
     ],
     scripts: [
       {
@@ -51,6 +52,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
+      {
+        rel: "preload",
+        href: "/ABCStefan-Simple.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
     ],
   }),
 });
@@ -78,14 +86,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="w-full h-full">
+      <body className="w-full h-full relative">
         {children}
-        <Suspense>
+        <NoiseBackground />
+        {/* <Suspense>
           <TanStackRouterDevtools position="bottom-right" />
         </Suspense>
         <Suspense>
           <ReactQueryDevtools />
-        </Suspense>
+        </Suspense> */}
         <Toaster />
         <Scripts />
       </body>
