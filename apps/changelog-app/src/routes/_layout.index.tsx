@@ -72,11 +72,16 @@ function RouteComponent() {
 
               <div className="mb-6 max-w-md mx-auto">
                 <div className="relative flex items-stretch bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg overflow-hidden">
-                  <input
-                    type="url"
-                    placeholder="github.com/asyncstatus/asyncstatus"
-                    className="flex-1 bg-transparent px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-inset min-h-[48px]"
-                  />
+                  <div className="relative flex items-center w-full">
+                    <p className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 select-none pointer-events-none">
+                      github.com/
+                    </p>
+                    <input
+                      type="url"
+                      placeholder="asyncstatus/asyncstatus"
+                      className="flex-1 bg-transparent pl-[6.64rem] pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-inset min-h-[48px]"
+                    />
+                  </div>
                   <button
                     type="button"
                     className="px-4 bg-white/20 hover:bg-white/30 transition-colors border-l border-white/30 group flex items-center justify-center min-w-[48px]"
