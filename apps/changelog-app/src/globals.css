@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "@asyncstatus/ui/globals.css";
+@source "../../../node_modules/@asyncstatus/ui";
+@source inline("list-inside list-disc border-border border rounded-md p-2");
