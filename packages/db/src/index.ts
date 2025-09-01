@@ -2,6 +2,42 @@ import { relations } from "drizzle-orm";
 
 export { Account, AccountInsert, AccountUpdate, account } from "./account";
 export {
+  Changelog,
+  ChangelogInsert,
+  ChangelogUpdate,
+  changelog,
+} from "./changelog";
+export {
+  ChangelogGenerationJob,
+  ChangelogGenerationJobInsert,
+  ChangelogGenerationJobUpdate,
+  changelogGenerationJob,
+} from "./changelog-generation-job";
+export {
+  ChangelogGithubContributor,
+  ChangelogGithubContributorInsert,
+  ChangelogGithubContributorUpdate,
+  changelogGithubContributor,
+} from "./changelog-github-contributor";
+export {
+  ChangelogGithubEvent,
+  ChangelogGithubEventInsert,
+  ChangelogGithubEventUpdate,
+  changelogGithubEvent,
+} from "./changelog-github-event";
+export {
+  ChangelogGithubRepoContributor,
+  ChangelogGithubRepoContributorInsert,
+  ChangelogGithubRepoContributorUpdate,
+  changelogGithubRepoContributor,
+} from "./changelog-github-repo-contributor";
+export {
+  ChangelogGithubRepository,
+  ChangelogGithubRepositoryInsert,
+  ChangelogGithubRepositoryUpdate,
+  changelogGithubRepository,
+} from "./changelog-github-repository";
+export {
   DiscordChannel,
   DiscordChannelInsert,
   DiscordChannelUpdate,
@@ -186,6 +222,11 @@ export { Verification, VerificationInsert, VerificationUpdate, verification } fr
 
 // Import tables for relations
 import { account } from "./account";
+// removed unused direct import of jwks
+import { changelog } from "./changelog";
+import { changelogGenerationJob } from "./changelog-generation-job";
+import { changelogGithubContributor } from "./changelog-github-contributor";
+import { changelogGithubRepoContributor } from "./changelog-github-repo-contributor";
 import { discordChannel } from "./discord-channel";
 import { discordEvent } from "./discord-event";
 import { discordIntegration } from "./discord-integration";
@@ -202,7 +243,6 @@ import { gitlabIntegration } from "./gitlab-integration";
 import { gitlabProject } from "./gitlab-project";
 import { gitlabUser } from "./gitlab-user";
 import { invitation } from "./invitation";
-// removed unused direct import of jwks
 import { linearEvent } from "./linear-event";
 import { linearEventVector } from "./linear-event-vector";
 import { linearIntegration } from "./linear-integration";
@@ -578,6 +618,34 @@ export const statusGenerationJobRelations = relations(statusGenerationJob, ({ on
     references: [statusUpdate.id],
   }),
 }));
+
+export const changelogRelations = relations(changelog, ({ many }) => ({
+  generationJobs: many(changelogGenerationJob),
+}));
+
+export const changelogGenerationJobRelations = relations(changelogGenerationJob, ({ one }) => ({
+  changelog: one(changelog, {
+    fields: [changelogGenerationJob.changelogId],
+    references: [changelog.id],
+  }),
+}));
+
+export const changelogGithubContributorRelations = relations(
+  changelogGithubContributor,
+  ({ many }) => ({
+    repoContributions: many(changelogGithubRepoContributor),
+  }),
+);
+
+export const changelogGithubRepoContributorRelations = relations(
+  changelogGithubRepoContributor,
+  ({ one }) => ({
+    contributor: one(changelogGithubContributor, {
+      fields: [changelogGithubRepoContributor.contributorLogin],
+      references: [changelogGithubContributor.login],
+    }),
+  }),
+);
 
 export const scheduleRelations = relations(schedule, ({ one, many }) => ({
   organization: one(organization, {

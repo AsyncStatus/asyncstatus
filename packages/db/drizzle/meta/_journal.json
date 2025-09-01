@@ -141,6 +141,20 @@
       "when": 1756035750229,
       "tag": "0019_common_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1756633360983,
+      "tag": "0020_cute_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1756666192929,
+      "tag": "0021_pink_morph",
+      "breakpoints": true
     }
   ]
 }

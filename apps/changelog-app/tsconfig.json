@@ -1,0 +1,15 @@
+{
+  "extends": "@asyncstatus/typescript-config/base.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "verbatimModuleSyntax": false,
+    "types": ["vite/client", "@cloudflare/workers-types/2023-07-01"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@asyncstatus/ui/*": ["../../packages/ui/src/*"]
+    }
+  }
+}
