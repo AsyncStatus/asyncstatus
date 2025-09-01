@@ -1,9 +1,13 @@
-export function PaperTextureOverlay() {
+import { cn } from "@asyncstatus/ui/lib/utils";
+
+export function PaperTextureOverlay(props: { className?: string }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-30 mix-blend-soft-light"
-      style={{ opacity: 0.06 }}
+      className={cn(
+        "pointer-events-none fixed inset-0 z-30 mix-blend-soft-light opacity-[0.06]",
+        props.className,
+      )}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

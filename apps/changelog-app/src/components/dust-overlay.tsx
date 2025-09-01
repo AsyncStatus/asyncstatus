@@ -1,9 +1,13 @@
-export function DustOverlay() {
+import { cn } from "@asyncstatus/ui/lib/utils";
+
+export function DustOverlay(props: { className?: string }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-30 mix-blend-overlay"
-      style={{ opacity: 0.1 }}
+      className={cn(
+        "pointer-events-none fixed inset-0 z-30 mix-blend-overlay opacity-10",
+        props.className,
+      )}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

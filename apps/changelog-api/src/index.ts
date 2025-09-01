@@ -7,6 +7,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { createContext, type HonoEnv } from "./lib/env";
+import {
+  getChangelogBySlugHandler,
+  listChangelogsByRepoHandler,
+  listReposByOwnerHandler,
+  startChangelogGenerationHandler,
+} from "./typed-handlers/changelog-handlers";
 
 const app = new Hono<HonoEnv>()
   .use(
@@ -63,25 +69,36 @@ const app = new Hono<HonoEnv>()
     return c.json({ message: "Unknown error", code: "INTERNAL_SERVER_ERROR", cause: err }, 500);
   });
 
-const typedHandlersApp = typedHandlersHonoServer(app, [], {
-  getContext: (c) => ({
-    db: c.get("db"),
-    resend: c.get("resend"),
-    anthropicClient: c.get("anthropicClient"),
-    openRouterProvider: c.get("openRouterProvider"),
-    voyageClient: c.get("voyageClient"),
-    discord: c.get("discord"),
-    slack: c.get("slack"),
-    changelogAppUrl: c.env.CHANGELOG_APP_URL,
-    workflow: c.get("workflow"),
-    betterAuthUrl: c.env.BETTER_AUTH_URL,
-    github: c.get("github"),
-    gitlab: c.get("gitlab"),
-    linear: c.get("linear"),
-  }),
-});
+const typedHandlersApp = typedHandlersHonoServer(
+  app,
+  [
+    listChangelogsByRepoHandler,
+    listReposByOwnerHandler,
+    getChangelogBySlugHandler,
+    startChangelogGenerationHandler,
+  ],
+  {
+    getContext: (c) => ({
+      db: c.get("db"),
+      resend: c.get("resend"),
+      anthropicClient: c.get("anthropicClient"),
+      openRouterProvider: c.get("openRouterProvider"),
+      voyageClient: c.get("voyageClient"),
+      discord: c.get("discord"),
+      slack: c.get("slack"),
+      changelogAppUrl: c.env.CHANGELOG_APP_URL,
+      workflow: c.get("workflow"),
+      betterAuthUrl: c.env.BETTER_AUTH_URL,
+      github: c.get("github"),
+      gitlab: c.get("gitlab"),
+      linear: c.get("linear"),
+    }),
+  },
+);
 
 export default {
   fetch: typedHandlersApp.fetch,
 };
 export type App = typeof app;
+
+export { ChangelogGenerationJobWorkflow } from "./workflows/github/changelog-generation-job";

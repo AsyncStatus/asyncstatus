@@ -16,7 +16,7 @@
     "cf-typegen": "wrangler types --env-interface Env"
   },
   "dependencies": {
-    "@asyncstatus/api": "workspace:*",
+    "@asyncstatus/changelog-api": "workspace:*",
     "@asyncstatus/dayjs": "workspace:*",
     "@asyncstatus/typed-handlers": "workspace:*",
     "@asyncstatus/ui": "workspace:*",
@@ -32,6 +32,9 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",
+    "react-hotkeys-hook": "5.1.0",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {

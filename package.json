@@ -23,7 +23,7 @@
       "drizzle-orm": "0.44.5",
       "drizzle-zod": "0.8.3",
       "drizzle-kit": "0.31.4",
-      "motion": "12.23.7",
+      "motion": "12.23.12",
       "react": "19.1.0",
       "react-dom": "19.1.0",
       "react-hook-form": "7.61.0",

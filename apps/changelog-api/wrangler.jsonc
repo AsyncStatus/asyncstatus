@@ -10,5 +10,12 @@
   },
   "placement": {
     "mode": "smart"
-  }
+  },
+  "workflows": [
+    {
+      "name": "changelog-generation-job",
+      "binding": "CHANGELOG_GENERATION_JOB_WORKFLOW",
+      "class_name": "ChangelogGenerationJobWorkflow"
+    }
+  ]
 }

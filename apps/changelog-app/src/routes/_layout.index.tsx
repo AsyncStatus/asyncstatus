@@ -15,8 +15,10 @@ export const Route = createFileRoute("/_layout/")({
 });
 
 function RouteComponent() {
+  const navigate = Route.useNavigate();
+
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-dvh relative">
       <BlueprintBackground />
       <NoiseBackground />
       <PaperTextureOverlay />
@@ -65,30 +67,76 @@ function RouteComponent() {
             <div className="absolute -right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-white/40 to-transparent"></div>
 
             <div className="text-center text-white relative">
-              <h1 className="text-5xl font-bold mb-2 mt-2">Changelog Generator</h1>
-              <p className="text-xl opacity-90 mb-10">
+              <h1 className="text-5xl font-bold mb-2 mt-2">Changelogs AI</h1>
+              <h2 className="text-xl opacity-90 mb-10">
                 Paste your repo. Get clean release notes. Done.
-              </p>
+              </h2>
 
               <div className="mb-6 max-w-md mx-auto">
-                <div className="relative flex items-stretch bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg overflow-hidden">
+                <form
+                  className="relative flex items-stretch bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg overflow-hidden"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const ownerAndRepo = formData.get("ownerAndRepo") as string;
+                    const [owner, repo] = ownerAndRepo.split("/");
+                    console.log(owner, repo);
+                    if (owner && repo) {
+                      navigate({
+                        to: "/$owner/$repo",
+                        params: { owner, repo },
+                      });
+                      return;
+                    }
+                    if (owner && !repo) {
+                      navigate({
+                        to: "/$owner",
+                        params: { owner },
+                      });
+                      return;
+                    }
+                    navigate({
+                      to: "/$owner",
+                      params: { owner: "asyncstatus" },
+                    });
+                  }}
+                >
                   <div className="relative flex items-center w-full">
                     <p className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 select-none pointer-events-none">
                       github.com/
                     </p>
                     <input
-                      type="url"
+                      name="ownerAndRepo"
                       placeholder="asyncstatus/asyncstatus"
                       className="flex-1 bg-transparent pl-[6.64rem] pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-inset min-h-[48px]"
+                      onPaste={(e) => {
+                        const raw = e.clipboardData.getData("text");
+                        let text = raw.trim();
+                        if (text.startsWith("@")) text = text.slice(1).trim();
+                        text = text.replace(/^https?:\/\//i, "").replace(/^www\./i, "");
+                        if (text.startsWith("github.com/")) {
+                          text = text.slice("github.com/".length);
+                        }
+                        text = text.split(/[?#]/)[0] ?? "";
+                        text = text.replace(/\.git$/i, "");
+                        const parts = text.split("/").filter(Boolean);
+                        if (parts.length >= 2) {
+                          text = `${parts[0]}/${parts[1]}`;
+                        }
+                        if (text !== raw) {
+                          e.preventDefault();
+                          e.currentTarget.value = text;
+                        }
+                      }}
                     />
                   </div>
                   <button
-                    type="button"
+                    type="submit"
                     className="px-4 bg-white/20 hover:bg-white/30 transition-colors border-l border-white/30 group flex items-center justify-center min-w-[48px]"
                   >
                     <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform" />
                   </button>
-                </div>
+                </form>
               </div>
 
               <div className="flex justify-center space-x-4 text-sm opacity-70">

@@ -2,7 +2,10 @@
   "name": "@asyncstatus/changelog-api",
   "private": true,
   "type": "module",
-  "exports": {},
+  "exports": {
+    "./filters": "./src/lib/filters.ts",
+    "./typed-handlers/changelog": "./src/typed-handlers/changelog-contracts.ts"
+  },
   "scripts": {
     "dev": "TZ=UTC wrangler dev --test-scheduled --port 8788",
     "dev:remote": "wrangler dev --remote",

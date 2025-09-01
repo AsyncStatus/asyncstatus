@@ -3,7 +3,6 @@
 import { Toaster } from "@asyncstatus/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { lazy, useEffect } from "react";
 import { z } from "zod/v4";
 import { NoiseBackground } from "../components/noise-background";
 import globalsCss from "../globals.css?url";
@@ -17,19 +16,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Changelog Generator" },
     ],
-    scripts: [
-      {
-        src: "/dark-mode.js",
-        type: "text/javascript",
-        crossOrigin: "anonymous",
-      },
-    ],
     links: [
       { rel: "stylesheet", href: globalsCss },
-      {
-        url: "/favicon.ico",
-        sizes: "32x32",
-      },
+      { url: "/favicon.ico", sizes: "32x32" },
       { url: "/icon.svg", type: "image/svg+xml" },
       {
         rel: "preload",
@@ -64,15 +53,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootComponent() {
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    document.documentElement.classList.toggle(
-      "dark",
-      localStorage.theme === "dark" ||
-        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches),
-    );
-  }, []);
-
   return (
     <RootDocument>
       <Outlet />
@@ -82,40 +62,16 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className="w-full h-full">
+    <html lang="en" className="w-full h-full">
       <head>
         <HeadContent />
       </head>
       <body className="w-full h-full relative">
         {children}
         <NoiseBackground />
-        {/* <Suspense>
-          <TanStackRouterDevtools position="bottom-right" />
-        </Suspense>
-        <Suspense>
-          <ReactQueryDevtools />
-        </Suspense> */}
         <Toaster />
         <Scripts />
       </body>
     </html>
   );
 }
-
-const TanStackRouterDevtools =
-  import.meta.env.NODE_ENV === "production"
-    ? () => null
-    : lazy(() =>
-        import("@tanstack/react-router-devtools").then((res) => ({
-          default: res.TanStackRouterDevtools,
-        })),
-      );
-
-const ReactQueryDevtools =
-  import.meta.env.NODE_ENV === "production"
-    ? () => null
-    : lazy(() =>
-        import("@tanstack/react-query-devtools").then((d) => ({
-          default: d.ReactQueryDevtools,
-        })),
-      );

@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout.index'
+import { Route as OwnerIndexRouteImport } from './routes/$owner/index'
 import { Route as errorErrorRouteImport } from './routes/(error)/error'
+import { Route as OwnerRepoIndexRouteImport } from './routes/$owner/$repo/index'
+import { Route as OwnerRepoFiltersIndexRouteImport } from './routes/$owner/$repo/$filters/index'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -22,37 +25,76 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const OwnerIndexRoute = OwnerIndexRouteImport.update({
+  id: '/$owner/',
+  path: '/$owner/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const errorErrorRoute = errorErrorRouteImport.update({
   id: '/(error)/error',
   path: '/error',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerRepoIndexRoute = OwnerRepoIndexRouteImport.update({
+  id: '/$owner/$repo/',
+  path: '/$owner/$repo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerRepoFiltersIndexRoute = OwnerRepoFiltersIndexRouteImport.update({
+  id: '/$owner/$repo/$filters/',
+  path: '/$owner/$repo/$filters/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/error': typeof errorErrorRoute
+  '/$owner': typeof OwnerIndexRoute
   '/': typeof LayoutIndexRoute
+  '/$owner/$repo': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/$filters': typeof OwnerRepoFiltersIndexRoute
 }
 export interface FileRoutesByTo {
   '/error': typeof errorErrorRoute
+  '/$owner': typeof OwnerIndexRoute
   '/': typeof LayoutIndexRoute
+  '/$owner/$repo': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/$filters': typeof OwnerRepoFiltersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/(error)/error': typeof errorErrorRoute
+  '/$owner/': typeof OwnerIndexRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/$owner/$repo/': typeof OwnerRepoIndexRoute
+  '/$owner/$repo/$filters/': typeof OwnerRepoFiltersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/error' | '/'
+  fullPaths:
+    | '/error'
+    | '/$owner'
+    | '/'
+    | '/$owner/$repo'
+    | '/$owner/$repo/$filters'
   fileRoutesByTo: FileRoutesByTo
-  to: '/error' | '/'
-  id: '__root__' | '/_layout' | '/(error)/error' | '/_layout/'
+  to: '/error' | '/$owner' | '/' | '/$owner/$repo' | '/$owner/$repo/$filters'
+  id:
+    | '__root__'
+    | '/_layout'
+    | '/(error)/error'
+    | '/$owner/'
+    | '/_layout/'
+    | '/$owner/$repo/'
+    | '/$owner/$repo/$filters/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
   errorErrorRoute: typeof errorErrorRoute
+  OwnerIndexRoute: typeof OwnerIndexRoute
+  OwnerRepoIndexRoute: typeof OwnerRepoIndexRoute
+  OwnerRepoFiltersIndexRoute: typeof OwnerRepoFiltersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -71,11 +113,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/$owner/': {
+      id: '/$owner/'
+      path: '/$owner'
+      fullPath: '/$owner'
+      preLoaderRoute: typeof OwnerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(error)/error': {
       id: '/(error)/error'
       path: '/error'
       fullPath: '/error'
       preLoaderRoute: typeof errorErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$owner/$repo/': {
+      id: '/$owner/$repo/'
+      path: '/$owner/$repo'
+      fullPath: '/$owner/$repo'
+      preLoaderRoute: typeof OwnerRepoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$owner/$repo/$filters/': {
+      id: '/$owner/$repo/$filters/'
+      path: '/$owner/$repo/$filters'
+      fullPath: '/$owner/$repo/$filters'
+      preLoaderRoute: typeof OwnerRepoFiltersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -95,6 +158,9 @@ const LayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   errorErrorRoute: errorErrorRoute,
+  OwnerIndexRoute: OwnerIndexRoute,
+  OwnerRepoIndexRoute: OwnerRepoIndexRoute,
+  OwnerRepoFiltersIndexRoute: OwnerRepoFiltersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -5,6 +5,7 @@ import { createOpenRouter, type OpenRouterProvider } from "@openrouter/ai-sdk-pr
 import type { Context } from "hono";
 import { Resend } from "resend";
 import { VoyageAIClient } from "voyageai";
+import type { ChangelogGenerationJobWorkflowParams } from "../workflows/github/changelog-generation-job";
 
 export type Bindings = {
   NODE_ENV: string;
@@ -42,6 +43,7 @@ export type Bindings = {
   DISCORD_CLIENT_SECRET: string;
   DISCORD_BOT_TOKEN: string;
   DISCORD_PUBLIC_KEY: string;
+  CHANGELOG_GENERATION_JOB_WORKFLOW: Workflow<ChangelogGenerationJobWorkflowParams>;
 };
 
 export type Variables = {
@@ -51,7 +53,9 @@ export type Variables = {
   anthropicClient: Anthropic;
   voyageClient: VoyageAIClient;
   openRouterProvider: OpenRouterProvider;
-  workflow: {};
+  workflow: {
+    changelogGenerationJob: Workflow<ChangelogGenerationJobWorkflowParams>;
+  };
   slack: {
     appId: string;
     clientId: string;
@@ -140,7 +144,9 @@ export async function createContext(c: Context<HonoEnv>) {
       publicKey: c.env.DISCORD_PUBLIC_KEY,
     },
     openRouterProvider,
-    workflow: {},
+    workflow: {
+      changelogGenerationJob: c.env.CHANGELOG_GENERATION_JOB_WORKFLOW,
+    },
   };
 }
 

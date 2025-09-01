@@ -1,9 +1,13 @@
-export function VignetteOverlay() {
+import { cn } from "@asyncstatus/ui/lib/utils";
+
+export function VignetteOverlay(props: { className?: string }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-20 mix-blend-multiply"
-      style={{ opacity: 0.3 }}
+      className={cn(
+        "pointer-events-none fixed inset-0 z-20 mix-blend-multiply opacity-30",
+        props.className,
+      )}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
