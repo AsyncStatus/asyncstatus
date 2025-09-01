@@ -52,7 +52,7 @@ function RouteComponent() {
       <ChangelogHeader owner={owner} showBigHeader={Boolean(repos.data?.length > 0)} />
 
       <div className="min-h-[100dvh]">
-        <main className="grid grid-cols-1 gap-4 md:grid-cols-2 max-w-3xl mx-auto">
+        <main className="grid grid-cols-1 gap-4 md:grid-cols-2 max-w-3xl mx-auto max-sm:px-4">
           {repos.data?.map((repo) => (
             <div
               key={repo.id}
@@ -67,8 +67,8 @@ function RouteComponent() {
                 {repo.repoName}
               </motion.p>
 
-              <div className="flex-1 flex flex-col gap-1 text-muted-foreground">
-                <p className="text-sm truncate" title={repo.description}>
+              <div className="flex-1 flex flex-col gap-1 text-muted-foreground max-sm:gap-4">
+                <p className="text-sm line-clamp-2" title={repo.description}>
                   {repo.description}
                 </p>
 
@@ -112,7 +112,7 @@ function RouteComponent() {
                 </div>
               </div>
 
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="w-full max-sm:mt-4">
                 <Link to="/$owner/$repo" params={{ owner, repo: repo.repoName }}>
                   See changelogs
                   <ArrowRightIcon className="size-4" />

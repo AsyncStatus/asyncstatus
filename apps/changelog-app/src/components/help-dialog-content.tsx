@@ -1,21 +1,33 @@
 import { SiGithub } from "@asyncstatus/ui/brand-icons";
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
-import { DialogContent, DialogHeader, DialogTitle } from "@asyncstatus/ui/components/dialog";
+import { Button } from "@asyncstatus/ui/components/button";
+import {
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@asyncstatus/ui/components/dialog";
 
 export function HelpDialogContent() {
   return (
-    <DialogContent className="sm:max-w-xl w-full rounded-3xl p-12" hideCloseButton>
-      <DialogHeader className="text-center items-center">
-        <DialogTitle className="text-3xl font-bold mb-6">What is Changelogs.ai?</DialogTitle>
+    <DialogContent
+      className="sm:max-w-xl w-full overflow-y-auto rounded-3xl p-12 max-sm:py-4 max-sm:px-4 max-sm:inset-0 max-sm:translate-0 max-sm:max-w-none m-0 max-sm:w-full max-sm:h-[calc(100vh-2rem)]"
+      hideCloseButton
+    >
+      <DialogHeader className="text-center items-center max-sm:m-0! max-sm:p-0!">
+        <DialogTitle className="text-3xl font-bold mb-6 max-sm:my-4">
+          What is Changelogs AI?
+        </DialogTitle>
       </DialogHeader>
 
       <div className="prose prose-neutral">
         <p className="text-pretty text-xl text-black/80">
-          <span className="text-black">Changelogs.ai</span> is a tool that generates changelogs for
+          <span className="text-black">Changelogs AI</span> is a tool that generates changelogs for
           your projects, based on your commit messages, pull requests, issues and more.
         </p>
 
-        <p className="text-pretty text-xl text-black/80 mt-10!">
+        <p className="text-pretty text-xl text-black/80 mt-10! max-sm:mt-18!">
           It's <span className="text-black">open-source</span>,{" "}
           <span className="text-black">mostly free to use</span> and powered by{" "}
           <a
@@ -40,7 +52,7 @@ export function HelpDialogContent() {
           .
         </p>
 
-        <p className="text-pretty text-xl text-black/80 mt-10!">
+        <p className="text-pretty text-xl text-black/80 mt-10! max-sm:mt-18!">
           We're a team of 2 people (
           <a href="mailto:kacper@asyncstatus.com" className="text-blue-500">
             Kacper
@@ -54,9 +66,17 @@ export function HelpDialogContent() {
           that.
         </p>
 
-        <p className="text-pretty text-xl text-black/80 mt-10!">No standup. Just progress.</p>
+        <p className="text-pretty text-xl text-black/80 mt-10! max-sm:mt-18!">
+          No standup. Just progress.
+        </p>
         <Handwriting />
       </div>
+
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline">Close</Button>
+        </DialogClose>
+      </DialogFooter>
     </DialogContent>
   );
 }

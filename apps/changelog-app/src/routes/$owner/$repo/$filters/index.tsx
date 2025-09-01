@@ -167,7 +167,7 @@ function RouteComponent() {
         )}
 
         {mostRecentChangelog && (
-          <motion.div className="prose prose-neutral dark:prose-invert prose-base mx-auto pb-24">
+          <motion.div className="prose prose-neutral dark:prose-invert prose-base mx-auto pb-24 max-sm:px-4">
             <Markdown>{mostRecentChangelog?.content}</Markdown>
           </motion.div>
         )}

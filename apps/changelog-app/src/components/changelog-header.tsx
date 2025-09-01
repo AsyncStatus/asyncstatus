@@ -70,7 +70,7 @@ export function ChangelogHeader({
       </Dialog>
 
       <motion.div
-        className="fixed top-0 w-full max-w-3xl left-0 right-0 mx-auto z-50 rounded-3xl border border-border bg-white/70 backdrop-blur-sm shadow-2xl/10"
+        className="fixed top-0 w-full max-w-3xl will-change-auto left-0 right-0 mx-auto z-50 rounded-3xl border border-border bg-white/70 backdrop-blur-sm shadow-2xl/10"
         style={{ top: fixedHeaderTop }}
       >
         <div className="flex items-center justify-between w-full h-full px-3.5 py-2">
@@ -117,7 +117,7 @@ export function ChangelogHeader({
 
           <div className="flex items-center gap-2">
             {filters && (
-              <p className="text-xs">
+              <p className="text-xs max-sm:hidden">
                 {dateRange &&
                   `${dateRange.start.format("MMM D, YYYY")} - ${dateRange.end.format("MMM D, YYYY")}`}
                 {commitRange && `${commitRange.start}..${commitRange.end}`}
@@ -171,7 +171,7 @@ export function ChangelogHeader({
       {showBigHeader && (
         <motion.header
           style={{ opacity: headerOpacity, scale: headerScale }}
-          className="relative text-center flex flex-col gap-0.5 items-center justify-center min-h-64 mx-auto max-w-3xl backdrop-blur-sm border border-blue-300/30 rounded-3xl bg-background/10 p-8 py-12 mb-12 mt-12 shadow-2xl/25"
+          className="relative text-center flex will-change-auto flex-col gap-0.5 items-center justify-center min-h-64 mx-auto max-w-3xl backdrop-blur-sm border border-blue-300/30 rounded-3xl bg-background/10 p-8 py-12 mb-12 mt-12 max-sm:m-1 max-sm:mb-12 shadow-2xl/25"
         >
           <div className="absolute left-4 top-4">
             <Link
@@ -185,7 +185,12 @@ export function ChangelogHeader({
 
           <button
             className="absolute right-0 top-0 p-4"
-            onClick={() => setHelpDialogOpen(true)}
+            onClick={() => {
+              setHelpDialogOpen(true);
+              if (window.scrollY < 250) {
+                window.scrollTo({ top: 250, behavior: "smooth" });
+              }
+            }}
             type="button"
           >
             <HelpCircle className="size-4 text-white/70 hover:text-white/50 active:text-white/50 focus:text-white/50 transition-colors duration-75" />
@@ -216,7 +221,7 @@ export function ChangelogHeader({
           <motion.h1
             layout="position"
             layoutId="changelog-header"
-            className="text-3xl font-bold text-white text-shadow-xs"
+            className="text-3xl max-sm:text-2xl font-bold text-white text-shadow-xs"
           >
             <Link
               to="/$owner"
@@ -234,7 +239,7 @@ export function ChangelogHeader({
                   layoutId={`${repo}-header`}
                   to="/$owner/$repo"
                   params={{ owner, repo }}
-                  className="text-white hover:text-white/70 active:text-white/70 focus:text-white/70 transition-colors duration-75"
+                  className="text-white max-sm:break-all hover:text-white/70 active:text-white/70 focus:text-white/70 transition-colors duration-75"
                 >
                   {repo}
                 </MotionLink>{" "}
@@ -247,7 +252,7 @@ export function ChangelogHeader({
             <motion.h2
               layout="position"
               layoutId={`changelog-${slug}-subheader`}
-              className="text-lg text-white/70"
+              className="text-lg text-white/70 max-sm:text-base max-sm:mt-1"
             >
               {dateRange &&
                 `${dateRange.start.format("MMM D, YYYY")} - ${dateRange.end.format("MMM D, YYYY")}`}

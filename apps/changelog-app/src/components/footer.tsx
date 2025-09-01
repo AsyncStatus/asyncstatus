@@ -16,7 +16,7 @@ export function Footer() {
     <div className="max-w-3xl mx-auto pb-12">
       <motion.footer
         style={{ opacity: footerOpacity, scale: footerScale }}
-        className="relative border border-border rounded-3xl shadow-2xl/25"
+        className="relative will-change-auto border border-border rounded-3xl shadow-2xl/25"
       >
         <BlueprintBackground4 />
         <DustOverlay className="opacity-10 absolute inset-0 rounded-xl overflow-hidden" />
@@ -26,7 +26,7 @@ export function Footer() {
 
         <div className="flex items-start justify-between p-4">
           <div className="flex flex-col">
-            <p className="text-2xl font-medium text-white">Changelogs.ai</p>
+            <p className="text-2xl font-medium text-white">Changelogs AI</p>
             <p className="text-white/70 text-base">Generate changelogs for your projects.</p>
           </div>
 
@@ -60,7 +60,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-1 mt-24 pb-2">
+        <div className="flex flex-col items-center justify-center text-center gap-1 mt-24 pb-2 px-2">
           <a
             href="https://asyncstatus.com"
             target="_blank"

@@ -124,7 +124,7 @@ function RouteComponent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto max-sm:px-4">
           {changelogsByRepo?.data?.changelogs.map((changelog, index) => {
             const rangeStart = changelog.rangeStart ? dayjs(changelog.rangeStart) : undefined;
             const rangeEnd = changelog.rangeEnd ? dayjs(changelog.rangeEnd) : undefined;
@@ -158,13 +158,13 @@ function RouteComponent() {
                     {commitStart} - {commitEnd}
                   </motion.p>
                 )}
-                <div className="relative text-muted-foreground my-1 mb-2 line-clamp-7">
+                <div className="relative text-muted-foreground my-1 mb-2 line-clamp-7 max-sm:mt-4">
                   <Markdown size="sm" variant="primary">
                     {tldr}
                   </Markdown>
                   <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-background to-transparent" />
                 </div>
-                <div className="text-xl text-muted-foreground">
+                <div className="text-xl text-muted-foreground max-sm:mt-4">
                   <Button asChild variant={index === 0 ? "default" : "outline"} className="w-full">
                     <Link
                       to="/$owner/$repo/$filters"
