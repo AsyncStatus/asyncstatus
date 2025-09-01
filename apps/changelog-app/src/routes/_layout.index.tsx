@@ -6,6 +6,7 @@ import { BlueprintBackground } from "@/components/blueprint-background";
 import { DustOverlay } from "@/components/dust-overlay";
 import { NoiseBackground } from "@/components/noise-background";
 import { PaperTextureOverlay } from "@/components/paper-texture-overlay";
+import { RepoCard } from "@/components/repo-card";
 import { VignetteOverlay } from "@/components/vignette-overlay";
 
 const LightRays = lazy(() => import("@/components/light-rays-2"));
@@ -53,9 +54,9 @@ function RouteComponent() {
         </Suspense>
       </div>
 
-      <div className="relative z-50 flex items-center justify-center min-h-screen p-8">
+      <div className="relative z-50 flex flex-col items-center justify-center min-h-screen p-8 max-sm:p-2 mt-56">
         <div className="relative max-w-3xl w-full">
-          <div className="relative backdrop-blur-sm border border-white/30 rounded-3xl bg-background/10 p-8 py-12 shadow-2xl">
+          <div className="relative backdrop-blur-sm border border-white/30 rounded-3xl bg-background/10 p-8 py-12 max-sm:p-2 max-sm:py-12 shadow-2xl">
             <div className="absolute -top-6 -left-6 w-4 h-4 border-l-2 border-t-2 border-white/30"></div>
             <div className="absolute -top-6 -right-6 w-4 h-4 border-r-2 border-t-2 border-white/30"></div>
             <div className="absolute -bottom-6 -left-6 w-4 h-4 border-l-2 border-b-2 border-white/30"></div>
@@ -67,12 +68,15 @@ function RouteComponent() {
             <div className="absolute -right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-white/40 to-transparent"></div>
 
             <div className="text-center text-white relative">
-              <h1 className="text-5xl font-bold mb-2 mt-2">Changelogs AI</h1>
-              <h2 className="text-xl opacity-90 mb-10">
+              <h1 className="text-5xl font-bold mb-2 mt-2 max-sm:mb-4 max-sm:text-3xl">
+                Changelogs AI
+              </h1>
+              <h2 className="text-xl opacity-90 mb-10 max-sm:text-lg">
                 Paste your repo. Get clean release notes. Done.
               </h2>
 
               <div className="mb-6 max-w-md mx-auto">
+                <p className="sm:hidden text-white/60 text-xs mb-2 text-left">github.com/</p>
                 <form
                   className="relative flex items-stretch bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg overflow-hidden"
                   onSubmit={(e) => {
@@ -80,7 +84,6 @@ function RouteComponent() {
                     const formData = new FormData(e.currentTarget);
                     const ownerAndRepo = formData.get("ownerAndRepo") as string;
                     const [owner, repo] = ownerAndRepo.split("/");
-                    console.log(owner, repo);
                     if (owner && repo) {
                       navigate({
                         to: "/$owner/$repo",
@@ -102,13 +105,13 @@ function RouteComponent() {
                   }}
                 >
                   <div className="relative flex items-center w-full">
-                    <p className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 select-none pointer-events-none">
+                    <p className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 select-none pointer-events-none max-sm:hidden">
                       github.com/
                     </p>
                     <input
                       name="ownerAndRepo"
                       placeholder="asyncstatus/asyncstatus"
-                      className="flex-1 bg-transparent pl-[6.64rem] pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-inset min-h-[48px]"
+                      className="flex-1 bg-transparent pl-[6.64rem] max-sm:pl-4 pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-inset min-h-[48px]"
                       onPaste={(e) => {
                         const raw = e.clipboardData.getData("text");
                         let text = raw.trim();
@@ -139,10 +142,14 @@ function RouteComponent() {
                 </form>
               </div>
 
-              <div className="flex justify-center space-x-4 text-sm opacity-70">
-                <span>• AI powered</span>
-                <span>• Zero setup</span>
-                <span>• Actually good</span>
+              <div className="flex justify-center space-x-4 text-sm opacity-70 max-sm:hidden">
+                <span className="max-sm:text-lg">• AI powered</span>
+                <span className="max-sm:text-lg">• Zero setup</span>
+                <span className="max-sm:text-lg">• Actually good</span>
+              </div>
+
+              <div className="opacity-70 text-lg px-4 text-pretty sm:hidden">
+                AI powered • Zero setup • Actually good
               </div>
             </div>
           </div>
@@ -156,6 +163,48 @@ function RouteComponent() {
           >
             Powered by <AsyncStatusLogo className="size-3" /> AsyncStatus
           </a>
+        </div>
+
+        <div className="mt-24 grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+          <RepoCard
+            owner="asyncstatus"
+            repo="asyncstatus"
+            description="Async status updates for remote startups."
+            stargazersCount={11}
+            watchersCount={1}
+            forksCount={0}
+            openIssuesCount={0}
+          />
+
+          <RepoCard
+            owner="over-sh"
+            repo="bun"
+            description="ncredibly fast JavaScript runtime, bundler, test runner, and package manager – all in one"
+            stargazersCount={80156}
+            watchersCount={575}
+            forksCount={3296}
+            openIssuesCount={5328}
+          />
+
+          <RepoCard
+            owner="tinygrad"
+            repo="teenygrad"
+            description="If tinygrad wasn't small enough for you..."
+            stargazersCount={736}
+            watchersCount={11}
+            forksCount={102}
+            openIssuesCount={6}
+          />
+
+          <RepoCard
+            owner="patroninc"
+            repo="patron"
+            description="An open source Patreon alternative with lower fees designed for creators who publish ongoing sequential content like books, podcasts, and comics."
+            stargazersCount={59}
+            watchersCount={2}
+            forksCount={2}
+            openIssuesCount={1}
+          />
         </div>
       </div>
     </div>

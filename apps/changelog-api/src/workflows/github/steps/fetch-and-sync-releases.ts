@@ -21,7 +21,7 @@ export async function fetchAndSyncReleases({
   owner,
   repo,
 }: FetchAndSyncReleasesParams) {
-  const baseParams = { owner, repo, per_page: 100 } satisfies ListReleasesParameters;
+  const baseParams = { owner, repo, per_page: 10 } satisfies ListReleasesParameters;
 
   for await (const page of octokit.paginate.iterator(
     "GET /repos/{owner}/{repo}/releases",

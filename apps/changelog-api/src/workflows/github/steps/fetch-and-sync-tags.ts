@@ -16,7 +16,7 @@ type FetchAndSyncTagsParams = {
 };
 
 export async function fetchAndSyncTags({ octokit, db, owner, repo }: FetchAndSyncTagsParams) {
-  const baseParams = { owner, repo, per_page: 100 } satisfies ListTagsParameters;
+  const baseParams = { owner, repo, per_page: 50 } satisfies ListTagsParameters;
 
   for await (const page of octokit.paginate.iterator(
     "GET /repos/{owner}/{repo}/tags",

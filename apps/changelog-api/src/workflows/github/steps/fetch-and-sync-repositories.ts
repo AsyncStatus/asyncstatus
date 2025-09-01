@@ -24,7 +24,7 @@ export async function fetchAndSyncRepositories({
   const isOrg = user.data.type === "Organization";
 
   const baseParams = {
-    per_page: 100,
+    per_page: 50,
     type: "all",
     sort: "updated",
     direction: "desc",

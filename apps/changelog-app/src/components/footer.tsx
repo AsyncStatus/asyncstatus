@@ -13,7 +13,7 @@ export function Footer() {
   const footerScale = useTransform(scrollYProgress, [0, 0.655, 0.965], [0.85, 0.9, 1]);
 
   return (
-    <div className="max-w-3xl mx-auto pb-12">
+    <div className="max-w-3xl mx-auto pb-12 mt-8">
       <motion.footer
         style={{ opacity: footerOpacity, scale: footerScale }}
         className="relative will-change-auto border border-border rounded-3xl shadow-2xl/25"

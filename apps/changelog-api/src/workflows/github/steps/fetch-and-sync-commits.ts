@@ -29,7 +29,7 @@ export async function fetchAndSyncCommits({
   const baseParams = {
     owner,
     repo,
-    per_page: 100,
+    per_page: 50,
     ...(since ? { since: since.toISOString() } : {}),
     ...(until ? { until: until.toISOString() } : {}),
     ...(headSha ? { sha: headSha } : {}),

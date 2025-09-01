@@ -26,7 +26,7 @@ export async function fetchAndSyncPullRequests({
   const baseParams = {
     owner,
     repo,
-    per_page: 100,
+    per_page: 10,
     state: "all",
     sort: "updated",
     direction: "desc",
