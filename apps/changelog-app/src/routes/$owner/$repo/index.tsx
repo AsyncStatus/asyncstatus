@@ -81,6 +81,7 @@ function RouteComponent() {
       { owner, repo },
       {
         placeholderData: keepPreviousData,
+        throwOnError: false,
         refetchInterval(query) {
           if (
             query.state.data?.changelogGenerationJobs?.some(
@@ -119,9 +120,39 @@ function RouteComponent() {
 
       <main className="min-h-[100dvh]">
         {mostRecentChangelogGenerationJob && (
-          <div className="text-center h-dvh flex items-center justify-center w-full">
-            <h1 className="text-5xl">{mostRecentChangelogJobStatus}</h1>
-          </div>
+          <motion.div className="text-center h-dvh flex items-center justify-center w-full">
+            <motion.h1
+              layout
+              layoutId="changelog-header"
+              className="text-7xl"
+              initial={{
+                scale: 1,
+                opacity: 1,
+              }}
+              animate={{
+                scale: [1, 0.9, 1],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                scale: {
+                  duration: 3.6,
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  ease: [0.5, 1, 0.89, 1],
+                },
+                opacity: {
+                  duration: 3.6,
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  ease: [0.5, 1, 0.89, 1],
+                },
+                ease: [0.5, 1, 0.89, 1],
+                duration: 0.25,
+              }}
+            >
+              {mostRecentChangelogJobStatus}
+            </motion.h1>
+          </motion.div>
         )}
 
         <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto max-sm:px-4">

@@ -44,7 +44,11 @@ export const Route = createFileRoute("/$owner/")({
 function RouteComponent() {
   const { owner } = Route.useParams();
   const repos = useQuery(
-    typedQueryOptions(listReposByOwnerContract, { owner }, { placeholderData: keepPreviousData }),
+    typedQueryOptions(
+      listReposByOwnerContract,
+      { owner },
+      { placeholderData: keepPreviousData, throwOnError: false },
+    ),
   );
 
   return (
