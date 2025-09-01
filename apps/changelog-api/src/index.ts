@@ -25,7 +25,13 @@ const app = new Hono<HonoEnv>()
         if (origin.endsWith("asyncstatus.com")) {
           return origin;
         }
-        return "https://changelog.asyncstatus.com";
+        if (origin.endsWith("changelogs.ai")) {
+          return origin;
+        }
+        if (origin.endsWith("chlgs.ai")) {
+          return origin;
+        }
+        return "https://changelogs.ai";
       },
       allowHeaders: [
         "Content-Type",

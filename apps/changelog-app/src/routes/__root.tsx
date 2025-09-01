@@ -14,12 +14,45 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Changelog Generator" },
+      { title: "Changelogs AI - Paste your repo. Get clean release notes. Done." },
+      {
+        name: "description",
+        content: "Paste your repo. Get clean release notes. Done.",
+      },
+      { name: "robots", content: "index,follow" },
+      { name: "theme-color", content: "#0B5FFF" },
+      // Open Graph
+      { property: "og:title", content: "Changelogs AI" },
+      {
+        property: "og:description",
+        content: "Paste your repo. Get clean release notes. Done.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Changelogs AI" },
+      { property: "og:locale", content: "en_US" },
+      { property: "og:url", content: "https://changelogs.ai/" },
+      { property: "og:image", content: "https://changelogs.ai/opengraph-image.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Changelogs AI banner" },
+      // Twitter
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Changelogs AI" },
+      {
+        name: "twitter:description",
+        content: "Paste your repo. Get clean release notes. Done.",
+      },
+      { name: "twitter:image", content: "https://changelogs.ai/opengraph-image.jpg" },
+      { name: "twitter:image:alt", content: "Changelogs AI banner" },
     ],
     links: [
       { rel: "stylesheet", href: globalsCss },
       { url: "/favicon.ico", sizes: "32x32" },
       { url: "/icon.svg", type: "image/svg+xml" },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "canonical", href: "https://changelogs.ai/" },
+      { rel: "shortlink", href: "https://chlgs.ai/" },
+      // og-imgage
       {
         rel: "preload",
         href: "/ABCFavorit-Regular.woff2",
