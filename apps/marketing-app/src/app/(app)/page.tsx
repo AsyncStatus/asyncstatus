@@ -9,7 +9,7 @@ import { Pricing } from "../components/pricing";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
 import { BrandCTA, ValueDescriptions } from "../components/brand-copy";
-import { BrandComplianceMonitor } from "../components/brand-compliance-monitor";
+
 
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
@@ -56,9 +56,7 @@ export default async function Page(props: {
             <Link href="#team" className="hover:text-foreground">
               Use cases
             </Link>
-            <Link href="#remote-culture" className="hover:text-foreground">
-              Remote culture
-            </Link>
+
             <Link href="#pricing" className="hover:text-foreground">
               Pricing
             </Link>
@@ -229,16 +227,7 @@ export default async function Page(props: {
           </p>
         </section>
 
-        <section id="remote-culture" className="mt-36">
-          <div className="mb-12 text-center">
-            <h3 className="text-center text-6xl font-bold max-sm:text-5xl">
-              Build a strong remote culture
-            </h3>
-            <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              Drop standup meetings. Keep team transparency. Give everyone back their focus time.
-            </h3>
-          </div>
-        </section>
+
 
         <section id="pricing">
           <Pricing />
@@ -313,7 +302,6 @@ export default async function Page(props: {
       </main>
 
       <Footer />
-      <BrandComplianceMonitor />
     </>
   );
 }
