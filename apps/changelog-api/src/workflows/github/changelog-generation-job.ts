@@ -218,7 +218,7 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
             toCommitSha: job.toCommitSha ?? undefined,
             rangeStart: job.rangeStart?.toISOString() ?? undefined,
             rangeEnd: job.rangeEnd?.toISOString() ?? undefined,
-            model: "openai/gpt-5",
+            model: "openai/gpt-5-mini",
             octokit,
             openRouterProvider,
           });
