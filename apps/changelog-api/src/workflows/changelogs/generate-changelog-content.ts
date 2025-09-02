@@ -49,7 +49,7 @@ Return Markdown content only.`,
 
   const { text } = await generateText({
     model: openRouterProvider(model),
-    maxSteps: 120,
+    maxSteps: 30,
     system: systemPrompt,
     messages,
     toolChoice: "auto",
