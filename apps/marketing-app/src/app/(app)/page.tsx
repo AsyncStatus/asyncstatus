@@ -8,6 +8,8 @@ import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
+import { BrandCTA, ValueDescriptions } from "../components/brand-copy";
+import { BrandComplianceMonitor } from "../components/brand-compliance-monitor";
 
 import { peopleSummary } from "./people-summary";
 import { PersonSelect } from "./person-select";
@@ -127,8 +129,7 @@ export default async function Page(props: {
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-        Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools.  Or you can write it yourself. Either way, no
-          one has to talk about it at 9:30 a.m.
+          Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools. Or write them yourself. Either way, no one has to talk about it at 9:30 a.m.
         </h3>
 
 
@@ -163,7 +164,7 @@ export default async function Page(props: {
               href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
               className="hover:text-foreground"
             >
-              <span>Generate status updates automatically</span>
+              <BrandCTA variant="Secondary" />
             </Link>
           </Button>
 
@@ -197,8 +198,7 @@ export default async function Page(props: {
               Calculate your savings
             </h3>
             <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              See how much time and money your team can save by replacing synchronous standups with
-              AsyncStatus.
+              See how much time and money your team saves by dropping standups for async updates.
             </h3>
           </div>
           <SavingsCalculator />
@@ -235,8 +235,7 @@ export default async function Page(props: {
               Build a strong remote culture
             </h3>
             <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              Replace standup meetings with clear, async updates. Give people focus time without
-              losing visibility or momentum.
+              Drop standup meetings. Keep team transparency. Give everyone back their focus time.
             </h3>
           </div>
         </section>
@@ -314,6 +313,7 @@ export default async function Page(props: {
       </main>
 
       <Footer />
+      <BrandComplianceMonitor />
     </>
   );
 }

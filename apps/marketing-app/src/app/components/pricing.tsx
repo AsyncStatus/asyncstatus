@@ -32,7 +32,7 @@ export function Pricing() {
               <span className="font-bold text-5xl">$9</span>
             </CardHeader>
             <CardDescription className="text-center text-balance">
-              For small teams and trying out AsyncStatus. 14 days free trial.
+              For small teams trying AsyncStatus. 14-day free trial.
             </CardDescription>
             <CardContent className="flex-1">
               <ul className="mt-7 space-y-2.5 text-sm">
@@ -83,7 +83,7 @@ export function Pricing() {
               <span className="font-bold text-5xl">$49</span>
             </CardHeader>
             <CardDescription className="text-center w-11/12 mx-auto text-balance">
-              For teams that want to get started with AsyncStatus. 14 days free trial.
+              For teams ready to drop standups. 14-day free trial.
             </CardDescription>
             <CardContent className="flex-1">
               <ul className="mt-7 space-y-2.5 text-sm">
@@ -132,8 +132,8 @@ export function Pricing() {
               <CardTitle className="mb-7">Enterprise</CardTitle>
               <span className="font-bold text-3xl">Schedule a call</span>
             </CardHeader>
-            <CardDescription className="text-center  w-11/12 mx-auto">
-              For bigger teams and enterprises that need advanced features.
+            <CardDescription className="text-center w-11/12 mx-auto">
+              For larger teams that need enterprise features and dedicated support.
             </CardDescription>
             <CardContent>
               <ul className="mt-7 space-y-2.5 text-sm">

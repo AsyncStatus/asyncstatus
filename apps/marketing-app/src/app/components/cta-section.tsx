@@ -1,5 +1,6 @@
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
+import { BrandCTA } from "./brand-copy";
 
 export function CtaSection() {
   return (
@@ -7,9 +8,9 @@ export function CtaSection() {
       <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
         <h2 className="text-4xl font-bold text-balance sm:text-5xl">Done with standups?</h2>
         <p className="text-muted-foreground mt-6 text-lg text-balance sm:text-xl">
-          Remote teams are already saving hundreds of hours with async updates.
+          Remote teams are already saving hundreds of hours by dropping standups.
           <br />
-          Join and help us shape how work gets shared.
+          Join them and reclaim your morning focus time.
         </p>
         <div className="mt-6 flex flex-col items-center gap-2">
           <Link
@@ -17,7 +18,7 @@ export function CtaSection() {
             className="hover:text-foreground"
           >
             <Button size="lg">
-              <span>Turn activity into updates</span>
+              <BrandCTA />
             </Button>
           </Link>
         </div>

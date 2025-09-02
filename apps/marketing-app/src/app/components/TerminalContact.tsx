@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FiCheckCircle } from "react-icons/fi";
+import { CheckIcon } from "@asyncstatus/ui/icons";
 import {
   ChangeEvent,
   Dispatch,
@@ -126,7 +126,7 @@ const PreviousQuestions = ({ questions }: PreviousQuestionProps) => {
                 )}
               </p>
               <p className="text-emerald-300">
-                <FiCheckCircle className="inline-block mr-2" />
+                <CheckIcon className="inline-block mr-2" />
                 <span>{q.value}</span>
               </p>
             </Fragment>
@@ -182,7 +182,7 @@ const Summary = ({ questions, setQuestions }: SummaryProps) => {
       <p>Look good?</p>
       {complete ? (
         <p className="text-emerald-300">
-          <FiCheckCircle className="inline-block mr-2" />
+          <CheckIcon className="inline-block mr-2" />
           <span>Sent! We'll get back to you ASAP 😎</span>
         </p>
       ) : (
