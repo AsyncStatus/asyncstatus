@@ -20,8 +20,9 @@ export async function fetchAndSyncRepositories({
   db,
   owner,
 }: FetchAndSyncRepositoriesParams) {
-  const user = await octokit.rest.users.getByUsername({ username: owner });
-  const isOrg = user.data.type === "Organization";
+  // @TODO: this call has really low rate limits, so we're just assuming it's an org for now
+  // const user = await octokit.rest.users.getByUsername({ username: owner });
+  const isOrg = true;
 
   const baseParams = {
     per_page: 50,

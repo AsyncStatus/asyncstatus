@@ -38,6 +38,11 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       throw new Error("Changelog generation job not found");
     }
 
+    const basicAuth = btoa(`${this.env.GITHUB_CLIENT_ID}:${this.env.GITHUB_CLIENT_SECRET}`);
+    const AuthenticatedOctokit = Octokit.defaults({
+      request: { headers: { authorization: `Basic ${basicAuth}` } },
+    });
+
     const owner = job.repoOwner;
     const repo = job.repoName;
     const since = job.rangeStart ?? undefined;
@@ -57,12 +62,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing repositories",
           statusOnError: "Failed to sync repositories",
+          canSkip: true,
         });
         await report(() => fetchAndSyncRepositories({ octokit, db, owner }));
       },
@@ -73,13 +79,14 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
 
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing contributors",
           statusOnError: "Failed to sync contributors",
+          canSkip: true,
         });
         await report(() => fetchAndSyncContributors({ octokit, db, owner, repo }));
       },
@@ -90,12 +97,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing commits",
           statusOnError: "Failed to sync commits",
+          canSkip: true,
         });
         await report(() =>
           fetchAndSyncCommits({ octokit, db, owner, repo, since, until, headSha }),
@@ -108,12 +116,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing tags",
           statusOnError: "Failed to sync tags",
+          canSkip: true,
         });
         await report(() => fetchAndSyncTags({ octokit, db, owner, repo }));
       },
@@ -124,12 +133,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing releases",
           statusOnError: "Failed to sync releases",
+          canSkip: true,
         });
         await report(() => fetchAndSyncReleases({ octokit, db, owner, repo }));
       },
@@ -140,12 +150,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing pull requests",
           statusOnError: "Failed to sync pull requests",
+          canSkip: true,
         });
         await report(() => fetchAndSyncPullRequests({ octokit, db, owner, repo, since }));
       },
@@ -156,12 +167,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       { retries: { limit: 3, delay: 30, backoff: "exponential" }, timeout: 30000 },
       async () => {
         const db = createDb(this.env);
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Syncing issues",
           statusOnError: "Failed to sync issues",
+          canSkip: true,
         });
         await report(() => fetchAndSyncIssues({ octokit, db, owner, repo, since }));
       },
@@ -177,6 +189,7 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
           jobId,
           status: "Linking PRs and issues",
           statusOnError: "Failed to link PRs and issues",
+          canSkip: true,
         });
         await report(() => linkPrsAndIssues({ db, owner, repo }));
       },
@@ -188,12 +201,13 @@ export class ChangelogGenerationJobWorkflow extends WorkflowEntrypoint<
       async () => {
         const db = createDb(this.env);
         const openRouterProvider = createOpenRouter({ apiKey: this.env.OPENROUTER_API_KEY });
-        const octokit = new Octokit();
+        const octokit = new AuthenticatedOctokit();
         const report = createReportStatusFn({
           db,
           jobId,
           status: "Generating changelog",
           statusOnError: "Failed to generate changelog",
+          canSkip: false,
         });
         await report(async () => {
           const changelogContent = await generateChangelogContent({

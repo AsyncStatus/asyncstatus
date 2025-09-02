@@ -19,7 +19,7 @@ export async function fetchAndSyncContributors({
 }: FetchAndSyncContributorsParams) {
   for await (const contributors of octokit.paginate.iterator(
     "GET /repos/{owner}/{repo}/contributors",
-    { owner, repo, per_page: 100 },
+    { owner, repo, per_page: 10 },
   )) {
     const now = new Date();
 

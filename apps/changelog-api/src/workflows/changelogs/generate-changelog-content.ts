@@ -9,11 +9,6 @@ import { getChangelogJobTool } from "../tools/get-changelog-job-tool";
 import { getGithubCommitChangesTool } from "../tools/get-github-commit-changes-tool";
 import { getGithubFileTool } from "../tools/get-github-file-tool";
 import { listChangelogEventsTool } from "../tools/list-changelog-events-tool";
-import { listGithubCommitsTool } from "../tools/list-github-commits-tool";
-import { listGithubIssuesTool } from "../tools/list-github-issues-tool";
-import { listGithubPullRequestsTool } from "../tools/list-github-pull-requests-tool";
-import { listGithubReleasesTool } from "../tools/list-github-releases-tool";
-import { listGithubTagsTool } from "../tools/list-github-tags-tool";
 import { systemPrompt } from "./system-prompt";
 
 export type GenerateChangelogContentOptions = {
@@ -59,11 +54,12 @@ Return Markdown content only.`,
     messages,
     toolChoice: "auto",
     tools: {
-      listGithubCommits: listGithubCommitsTool(octokit),
-      listGithubPullRequests: listGithubPullRequestsTool(octokit),
-      listGithubIssues: listGithubIssuesTool(octokit),
-      listGithubTags: listGithubTagsTool(octokit),
-      listGithubReleases: listGithubReleasesTool(octokit),
+      // @TODO: those should be available in events either way
+      // listGithubCommits: listGithubCommitsTool(octokit),
+      // listGithubPullRequests: listGithubPullRequestsTool(octokit),
+      // listGithubIssues: listGithubIssuesTool(octokit),
+      // listGithubTags: listGithubTagsTool(octokit),
+      // listGithubReleases: listGithubReleasesTool(octokit),
       compareGithubCommits: compareGithubCommitsTool(octokit),
       getGithubCommitChanges: getGithubCommitChangesTool(octokit),
       getGithubFile: getGithubFileTool(octokit),

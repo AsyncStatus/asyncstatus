@@ -57,6 +57,12 @@ export const Route = createFileRoute("/$owner/$repo/$filters/")({
       (changelogGenerationJobs.length === 0 ||
         changelogGenerationJobs.some((job) => job.state === "error"))
     ) {
+      if (
+        changelogGenerationJobs.some((job) => job.state === "running" || job.state === "queued")
+      ) {
+        return { changelogs, changelogGenerationJobs };
+      }
+
       const nextChangelogGenerationJob = await typedContractFetch(
         startChangelogGenerationContract,
         {

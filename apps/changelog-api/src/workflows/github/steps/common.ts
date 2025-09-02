@@ -7,6 +7,7 @@ type CreateReportStatusFnParams = {
   jobId: string;
   status: string;
   statusOnError: string;
+  canSkip?: boolean;
 };
 
 export function createReportStatusFn({
@@ -14,6 +15,7 @@ export function createReportStatusFn({
   jobId,
   status,
   statusOnError,
+  canSkip = false,
 }: CreateReportStatusFnParams) {
   return async (fn: () => Promise<void>) => {
     await db
@@ -32,6 +34,7 @@ export function createReportStatusFn({
         .set({ updatedAt: new Date() })
         .where(eq(schema.changelogGenerationJob.id, jobId));
     } catch (error) {
+      console.error(error);
       await db
         .update(schema.changelogGenerationJob)
         .set({
@@ -42,6 +45,9 @@ export function createReportStatusFn({
           metadata: { humanReadableStatus: statusOnError },
         })
         .where(eq(schema.changelogGenerationJob.id, jobId));
+      if (canSkip) {
+        return;
+      }
       throw error;
     }
   };

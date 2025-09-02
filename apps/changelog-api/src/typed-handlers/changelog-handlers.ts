@@ -1,6 +1,6 @@
 import * as schema from "@asyncstatus/db";
 import { TypedHandlersError, typedHandler } from "@asyncstatus/typed-handlers";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { TypedHandlersContext } from "../lib/env";
 import { getCommitRange, getDateRange } from "../lib/filters";
@@ -133,7 +133,10 @@ export const startChangelogGenerationHandler = typedHandler<
   const existingJob = await db.query.changelogGenerationJob.findFirst({
     where: and(
       eq(schema.changelogGenerationJob.inputUrl, input.url.toString()),
-      eq(schema.changelogGenerationJob.state, "queued"),
+      or(
+        eq(schema.changelogGenerationJob.state, "queued"),
+        eq(schema.changelogGenerationJob.state, "running"),
+      ),
     ),
   });
   if (existingJob) {

@@ -1,7 +1,7 @@
 import * as schema from "@asyncstatus/db";
 import type { Db } from "@asyncstatus/db/create-db";
 import { tool } from "ai";
-import { and, asc, between, desc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, between, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 
 export function listChangelogEventsTool(db: Db) {
@@ -50,7 +50,7 @@ export function listChangelogEventsTool(db: Db) {
       }
 
       if (params.sourceTypes && params.sourceTypes.length > 0) {
-        // simple OR using IN is not defined here; we can filter post-query for simplicity
+        conditions.push(inArray(schema.changelogGithubEvent.sourceType, params.sourceTypes));
       }
 
       const rows = await db
@@ -79,15 +79,7 @@ export function listChangelogEventsTool(db: Db) {
         )
         .limit(params.limit);
 
-      const filtered = params.sourceTypes
-        ? rows.filter((r) =>
-            (params.sourceTypes ?? []).includes(
-              r.sourceType as (typeof params.sourceTypes)[number],
-            ),
-          )
-        : rows;
-
-      return filtered;
+      return rows;
     },
   });
 }
