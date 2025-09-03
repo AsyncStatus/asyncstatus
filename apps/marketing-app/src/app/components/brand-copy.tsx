@@ -9,14 +9,14 @@ import React from 'react';
 
 // Primary value propositions
 export const PrimaryHeadlines = {
-  MainHero: "Standup meetings suck",
+  MainHero: "Automate status updates",
   AlternativeHero: "Drop your standups",
   ProblemFocused: "Done with standups?",
 } as const;
 
 // Descriptive copy that explains our solution
 export const ValueDescriptions = {
-  AutomaticUpdates: "Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools. Or write them yourself. Either way, no one has to talk about it at 9:30 a.m.",
+  AutomaticUpdates: "Generate status updates by monitoring your team's activity in code, Slack, and other... Or write them yourself. Either way, no one has to talk about it at 9:30 a.m. ",
   RemoteCulture: "Drop standup meetings. Keep team transparency. Give everyone back their focus time.",
   TimeSavings: "See how much time and money your team saves by dropping standups for async updates.",
 } as const;

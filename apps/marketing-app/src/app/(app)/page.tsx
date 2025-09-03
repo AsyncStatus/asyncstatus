@@ -118,16 +118,16 @@ export default async function Page(props: {
 
         <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
-            <span>Standup meetings suck</span>
+            <span>Automate status updates</span>
           </span>
-          <span aria-hidden="true">Standup meetings suck</span>
+          <span aria-hidden="true">Automate status updates</span>
         </h2>
         <h2 className="hidden text-center text-5xl font-bold max-sm:block">
-          Standup meetings suck
+          Automate status updates
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Automatically generate status updates by monitoring your team's activity in code, Slack, and other tools. Or write them yourself. Either way, no one has to talk about it at 9:30 a.m.
+          Generate status updates by monitoring your team's activity in code, Slack, and other... Or write them yourself. Either way, no one has to talk about it at 9:30 a.m. 
         </h3>
 
 
@@ -173,16 +173,61 @@ export default async function Page(props: {
         </div>
         </section>
 
+        {/* How it works section */}
+        <section className="mt-36 max-sm:mt-24">
+          <div className="mb-16 text-center max-sm:mb-12">
+            <h3 className="text-center text-6xl font-bold max-sm:text-4xl">
+              How it works
+            </h3>
+            <h4 className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
+              Get your team aligned without the meetings
+            </h4>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-sm:gap-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                1
+              </div>
+              <div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  Connect your tools
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  You connect your tools (GitHub, Slack) which takes less than 5 minutes
+                </p>
+              </div>
+            </div>
 
-        {/* <img
-          src="/hero-light.webp"
-          alt="AsyncStatus app screenshot"
-          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
-        /> */}
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                2
+              </div>
+              <div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  We generate updates automatically
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  We listen for updates from your tools and generate status updates from your team's activity.
+                </p>
+              </div>
+            </div>
 
-
-
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                3
+              </div>
+              <div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  Optimize meetings
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  Your team can optionally adjust their status updates.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section id="team">
           <TargetAudience />
