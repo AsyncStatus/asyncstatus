@@ -11,17 +11,9 @@ import { TargetAudience } from "../components/target-audience";
 import { BrandCTA, ValueDescriptions } from "../components/brand-copy";
 
 
-import { peopleSummary } from "./people-summary";
-import { PersonSelect } from "./person-select";
 
-export default async function Page(props: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const searchParams = await props.searchParams;
-  const person =
-    typeof searchParams.person === "string"
-      ? (searchParams.person ?? "frontend-developer")
-      : "frontend-developer";
+
+export default async function Page() {
 
   return (
     <>
@@ -276,71 +268,6 @@ export default async function Page(props: {
         </section>
 
         <CtaSection />
-
-        <div className="mt-36 flex flex-col items-center">
-          <div className="relative w-full max-w-6xl">
-            <div className="flex items-center justify-between">
-              <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
-                <div className="inline-flex items-center gap-0.5 max-sm:gap-1.5">
-                  <span className="text-lg">Standup for</span>
-                  <PersonSelect defaultValue="frontend-developer" value={person} />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-12">
-              <div>
-                <h4 className="text-muted-foreground mb-3 text-sm font-medium">In the meeting</h4>
-                <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground/90 text-lg text-balance">
-                    {(() => {
-                      const fullText = peopleSummary[person].standupText;
-                      const words = fullText.split(/\s+/);
-                      if (words.length <= 100) {
-                        return fullText;
-                      } else {
-                        return (
-                          <>
-                            {words.slice(0, 100).join(" ")}
-                            <span className="text-foreground">
-                              {" "}
-                              and {words.length - 100} more words.
-                            </span>
-                          </>
-                        );
-                      }
-                    })()}
-                  </p>
-                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm">
-                    <span>{peopleSummary[person].meetingDetails.time}</span>
-                    <span>·</span>
-                    <span>
-                      {peopleSummary[person].meetingDetails.peopleListening} people listening
-                    </span>
-                    <span>·</span>
-                    <span>{peopleSummary[person].meetingDetails.peopleTyping} people typing</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-muted-foreground mb-3 text-sm font-medium">
-                  What actually happened
-                </h4>
-                <div className="flex flex-col gap-2">
-                  {peopleSummary[person].summary.map((summary, index) => (
-                    <div key={summary} className="flex items-start gap-4">
-                      <span className="text-primary mt-1 text-sm font-medium">0{index + 1}</span>
-                      <div className="flex-1">
-                        <p className="text-lg">{summary}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </main>
 
       <Footer />
