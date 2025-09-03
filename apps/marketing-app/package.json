@@ -14,8 +14,8 @@
   "dependencies": {
     "@asyncstatus/api": "workspace:*",
     "@asyncstatus/dayjs": "workspace:*",
-    "@asyncstatus/ui": "workspace:*",
     "@asyncstatus/typed-handlers": "workspace:*",
+    "@asyncstatus/ui": "workspace:*",
     "@opennextjs/cloudflare": "1.6.5",
     "framer-motion": "12.23.7",
     "next": "15.4.6",

@@ -2,6 +2,7 @@ import { Button } from "@asyncstatus/ui/components/button";
 import { BarChartIcon, CodeIcon, RocketIcon } from "@asyncstatus/ui/icons";
 import Link from "next/link";
 import { WaitlistDialog } from "./waitlist-dialog";
+import { BrandCTA } from "./brand-copy";
 
 export function TargetAudience() {
   const audiences = [
@@ -9,9 +10,9 @@ export function TargetAudience() {
       role: "Engineers",
       description: "Less reporting, more coding.",
       benefits: [
-        "Your commits and PRs write your updates for you, no extra steps required.",
+        "Your commits and PRs write your updates for you—no extra steps required.",
         "Stop interrupting your morning just to repeat what you did yesterday.",
-        "Your work stays clear and visible without effort or explanation.",
+        "Your work stays visible to the team without constant explanation.",
       ],
       icon: CodeIcon,
       borderClass: "border-blue-200/70 dark:border-blue-800/30",
@@ -23,9 +24,9 @@ export function TargetAudience() {
       role: "Product Managers",
       description: "Instant clarity, zero chasing.",
       benefits: [
-        "Immediately understand who's moving ahead and who's stuck, no questions asked.",
-        "Notice small problems early, before they become large ones.",
-        "Automatically keep everyone updated so you don't have to.",
+        "Immediately see who's moving ahead and who's stuck—no chasing required.",
+        "Spot blockers early, before they derail your timeline.",
+        "Keep stakeholders informed without constant status requests.",
       ],
       icon: BarChartIcon,
       borderClass: "border-purple-200/70 dark:border-purple-800/30",
@@ -37,8 +38,8 @@ export function TargetAudience() {
       role: "Founders",
       description: "See progress, skip meetings.",
       benefits: [
-        "Clearly see who's stuck without awkward conversations or check-ins.",
-        "Your team naturally stays transparent without reminders or hassle.",
+        "See exactly who's stuck without awkward one-on-ones or check-ins.",
+        "Your team stays transparent without constant reminders or follow-ups.",
         "Spend your time building, not sitting in meetings you don't need.",
       ],
       icon: RocketIcon,
@@ -96,7 +97,7 @@ export function TargetAudience() {
             href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
             className="hover:text-foreground"
           >
-            <span>Turn activity into updates</span>
+            <BrandCTA />
           </Link>
         </Button>
       </div>
