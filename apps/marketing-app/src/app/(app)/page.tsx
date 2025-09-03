@@ -177,11 +177,8 @@ export default async function Page(props: {
         <section className="mt-36 max-sm:mt-24">
           <div className="mb-16 text-center max-sm:mb-12">
             <h3 className="text-center text-6xl font-bold max-sm:text-4xl">
-              How it works
+              How it works?
             </h3>
-            <h4 className="text-muted-foreground mt-6 text-xl text-balance max-sm:text-lg">
-              Get your team aligned without the meetings
-            </h4>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-sm:gap-6">
@@ -219,7 +216,7 @@ export default async function Page(props: {
               </div>
               <div>
                 <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
-                  Optimize meetings
+                  You are always up to date
                 </h5>
                 <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
                   Your team can optionally adjust their status updates.
