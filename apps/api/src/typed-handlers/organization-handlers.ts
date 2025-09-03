@@ -181,6 +181,35 @@ export const createOrganizationHandler = typedHandler<
       });
     }
 
+    // Create default team with organization name + "team"
+    const defaultTeam = await tx
+      .insert(schema.team)
+      .values({
+        id: generateId(),
+        name: `${name} team`,
+        organizationId,
+        createdByMemberId: newMember[0].id,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    if (!defaultTeam || !defaultTeam[0]) {
+      throw new TypedHandlersError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to create default team",
+      });
+    }
+
+    // Add the owner to the default team
+    await tx
+      .insert(schema.teamMembership)
+      .values({
+        id: generateId(),
+        teamId: defaultTeam[0].id,
+        memberId: newMember[0].id,
+      });
+
     await tx
       .update(schema.user)
       .set({ activeOrganizationSlug: newOrganization[0].slug })
@@ -189,6 +218,7 @@ export const createOrganizationHandler = typedHandler<
     return {
       organization: newOrganization[0],
       member: newMember[0],
+      team: defaultTeam[0],
     };
   });
 
