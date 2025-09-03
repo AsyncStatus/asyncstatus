@@ -131,7 +131,6 @@ export default async function Page(props: {
         </h3>
 
 
-        <section id="how-it-works">
         <video
           className="mt-8 w-full rounded-lg max-sm:mt-6 aspect-[2.4/1]"
           autoPlay
@@ -171,10 +170,9 @@ export default async function Page(props: {
             No credit card required. Cancel anytime.
           </p>
         </div>
-        </section>
 
         {/* How it works section */}
-        <section className="mt-36 max-sm:mt-24">
+        <section id="how-it-works" className="mt-36 max-sm:mt-24">
           <div className="mb-16 text-center max-sm:mb-12">
             <h3 className="text-center text-6xl font-bold max-sm:text-4xl">
               How it works?
