@@ -131,6 +131,7 @@ export default async function Page(props: {
         </h3>
 
 
+        <section id="how-it-works">
         <video
           className="mt-8 w-full rounded-lg max-sm:mt-6 aspect-[2.4/1]"
           autoPlay
@@ -170,6 +171,7 @@ export default async function Page(props: {
             No credit card required. Cancel anytime.
           </p>
         </div>
+        </section>
 
 
 
