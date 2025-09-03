@@ -107,6 +107,35 @@ export const slackIntegrationCallbackHandler = typedHandler<
             });
           }
 
+          // Create default team with organization name + "team"
+          const [defaultTeam] = await tx
+            .insert(schema.team)
+            .values({
+              id: generateId(),
+              name: `${name} team`,
+              organizationId: newOrganization.id,
+              createdByMemberId: newMember.id,
+              createdAt: now.toDate(),
+              updatedAt: now.toDate(),
+            })
+            .returning();
+
+          if (!defaultTeam) {
+            throw new TypedHandlersError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create default team",
+            });
+          }
+
+          // Add the owner to the default team
+          await tx
+            .insert(schema.teamMembership)
+            .values({
+              id: generateId(),
+              teamId: defaultTeam.id,
+              memberId: newMember.id,
+            });
+
           await tx
             .update(schema.user)
             .set({
@@ -117,7 +146,7 @@ export const slackIntegrationCallbackHandler = typedHandler<
             })
             .where(eq(schema.user.id, session.user.id));
 
-          return { organization: newOrganization, member: newMember };
+          return { organization: newOrganization, member: newMember, team: defaultTeam };
         });
 
         const slackIntegration = await db.query.slackIntegration.findFirst({
