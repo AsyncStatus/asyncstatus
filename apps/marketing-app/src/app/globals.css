@@ -15,7 +15,8 @@
   }
 
   body {
-    letter-spacing: -0.0225em;
+    @apply bg-neutral-200 text-foreground;
+    letter-spacing: -0.035em;
     font-family: var(--font-favorit), system-ui, sans-serif;
   }
 }
