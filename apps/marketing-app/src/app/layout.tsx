@@ -1,9 +1,9 @@
 import "./globals.css";
 
+import { SquircleNoScript } from "@squircle-js/react";
 import type { Metadata } from "next";
 import { Noto_Sans } from "next/font/google";
 import localFont from "next/font/local";
-
 import { PostHogProvider } from "./providers";
 
 const favorit = localFont({
@@ -54,6 +54,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${favorit.variable} ${noto.variable}`}>
+        <SquircleNoScript />
         <PostHogProvider>{props.children}</PostHogProvider>
       </body>
     </html>
