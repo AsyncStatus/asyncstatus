@@ -119,7 +119,7 @@ export default async function Page() {
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Generate status updates by monitoring your team's activity in code, Slack, and other... Or write them yourself. Either way, no one has to talk about it at 9:30 a.m. 
+        Generate status updates by monitoring your team's activity in code, Slack, and others. Or write them yourself.
         </h3>
 
 
