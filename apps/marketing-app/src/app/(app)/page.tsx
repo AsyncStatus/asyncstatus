@@ -180,10 +180,10 @@ export default async function Page() {
               </div>
               <div>
                 <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
-                  Connect to your work
+                  Connect to your workflow
                 </h5>
                 <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
-                  You Connect to your work (GitHub, Slack) which takes less than 5 minutes
+                  Connect to your work (GitHub, Slack) which takes less than 5 minutes
                 </p>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default async function Page() {
                   You are always up to date
                 </h5>
                 <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
-                  Your team can optionally adjust their status updates.
+                  Receive updates from your team. Don't worry about obsolete info in ticketing systems.
                 </p>
               </div>
             </div>

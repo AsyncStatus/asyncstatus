@@ -10,7 +10,7 @@ export function TargetAudience() {
       role: "Engineers",
       description: "Less reporting, more coding.",
       benefits: [
-        "Your commits and PRs write your updates for you—no extra steps required.",
+        "Your commits and PRs write your updates for you-no extra steps required.",
         "Stop interrupting your morning just to repeat what you did yesterday.",
         "Your work stays visible to the team without constant explanation.",
       ],
@@ -24,7 +24,7 @@ export function TargetAudience() {
       role: "Product Managers",
       description: "Instant clarity, zero chasing.",
       benefits: [
-        "Immediately see who's moving ahead and who's stuck—no chasing required.",
+        "Immediately see who's moving ahead and who's stuck, no chasing required.",
         "Spot blockers early, before they derail your timeline.",
         "Keep stakeholders informed without constant status requests.",
       ],
