@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { CtaSection } from "../components/cta-section";
 import { Footer } from "../components/footer";
+import { IntegrationsList } from "../components/integrations-list";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
 import SavingsCalculator from "../components/savings-calculator";
@@ -107,6 +108,7 @@ export default async function Page() {
           that value their time.
         </h3> */}
 
+        <IntegrationsList />
 
         <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
@@ -114,7 +116,7 @@ export default async function Page() {
           </span>
           <span aria-hidden="true">Automate status updates</span>
         </h2>
-        <h2 className="hidden text-center text-5xl font-bold max-sm:block">
+        <h2 className="hidden text-center text-5xl font-bold max-sm:block max-sm:mt-6">
           Automate status updates
         </h2>
 
@@ -178,10 +180,10 @@ export default async function Page() {
               </div>
               <div>
                 <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
-                  Connect your tools
+                  Connect to your work
                 </h5>
                 <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
-                  You connect your tools (GitHub, Slack) which takes less than 5 minutes
+                  You Connect to your work (GitHub, Slack) which takes less than 5 minutes
                 </p>
               </div>
             </div>

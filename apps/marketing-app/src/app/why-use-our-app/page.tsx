@@ -97,7 +97,7 @@ export default function WhyToUseOurAppPage() {
 
             <div className="bg-card border-border rounded-lg border p-6">
               <div className="text-primary text-2xl font-bold mb-3">2 mins</div>
-              <h3 className="text-xl font-semibold mb-2">To connect your tools</h3>
+              <h3 className="text-xl font-semibold mb-2">To Connect to your work</h3>
               <p className="text-muted-foreground">
                 Git, Jira, Slack. Done. We pull your updates automatically. Your team keeps working.
               </p>

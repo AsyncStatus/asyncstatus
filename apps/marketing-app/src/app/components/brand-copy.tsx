@@ -23,7 +23,7 @@ export const ValueDescriptions = {
 // Call-to-action copy
 export const CTACopy = {
   Primary: "Turn activity into updates",
-  Secondary: "Generate status updates automatically", 
+  Secondary: "Connect to your work", 
   Specific: "Drop your standups",
 } as const;
 
