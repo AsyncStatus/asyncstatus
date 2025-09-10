@@ -1,6 +1,7 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
+import { BrandCTA } from "./brand-copy";
 
 export function Footer() {
   return (
@@ -13,9 +14,9 @@ export function Footer() {
               <span className="text-lg font-medium">AsyncStatus</span>
             </Link>
             <p className="text-muted-foreground text-sm">
-              Async status updates for remote startups.
+              Drop your standups. Keep your team aligned.
               <br />
-              Built for high-agency teams that value their time.
+              Built for remote teams that value focus time.
             </p>
           </div>
 
@@ -49,7 +50,7 @@ export function Footer() {
                     href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
                     className="hover:text-foreground"
                   >
-                    <span>Turn activity into updates</span>
+                    <BrandCTA />
                   </Link>
                 </Button>
               </div>

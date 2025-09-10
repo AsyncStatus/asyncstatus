@@ -1,30 +1,20 @@
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button } from "@asyncstatus/ui/components/button";
 import Link from "next/link";
-import { BetaMessage } from "../components/beta-message";
-import { ConnectCard } from "../components/connect-card";
+
 import { CtaSection } from "../components/cta-section";
-import { FeaturesList } from "../components/features-list";
 import { Footer } from "../components/footer";
-import { GenerateCard } from "../components/generate-card";
+import { IntegrationsList } from "../components/integrations-list";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
-import { ReviewCard } from "../components/review-card";
 import SavingsCalculator from "../components/savings-calculator";
 import { TargetAudience } from "../components/target-audience";
-import { TrackCard } from "../components/track-card";
-import { UseItYourWay } from "../components/use-it-your-way";
-import { peopleSummary } from "./people-summary";
-import { PersonSelect } from "./person-select";
+import { BrandCTA, ValueDescriptions } from "../components/brand-copy";
 
-export default async function Page(props: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const searchParams = await props.searchParams;
-  const person =
-    typeof searchParams.person === "string"
-      ? (searchParams.person ?? "frontend-developer")
-      : "frontend-developer";
+
+
+
+export default async function Page() {
 
   return (
     <>
@@ -56,12 +46,10 @@ export default async function Page(props: {
             <Link href="#how-it-works" className="hover:text-foreground">
               How it works
             </Link>
-            <Link href="#features" className="hover:text-foreground">
-              Features
-            </Link>
             <Link href="#team" className="hover:text-foreground">
               Use cases
             </Link>
+
             <Link href="#pricing" className="hover:text-foreground">
               Pricing
             </Link>
@@ -120,57 +108,25 @@ export default async function Page(props: {
           that value their time.
         </h3> */}
 
-        <div className="flex justify-center pt-16 pb-12 max-sm:pt-16 max-sm:pb-12">
-          <a
-            href="https://www.producthunt.com/products/async-status-updates-for-remote-startups?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-asyncstatus"
-            target="_blank"
-            rel="noopener"
-          >
-            {/** biome-ignore lint/performance/noImgElement: it's a product hunt badge */}
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=999509&theme=neutral&t=1754045157676"
-              alt="AsyncStatus - Don&#0039;t&#0032;join&#0032;another&#0032;9&#0058;30am&#0032;standup&#0032;meeting&#0032;ever&#0032;again&#0046; | Product Hunt"
-              style={{ width: "187.5px", height: "40.5px" }}
-              width="187.5"
-              height="40.5"
-            />
-          </a>
-        </div>
+        <IntegrationsList />
 
         <h2 className="text-fit mr-[2.5vw] text-center font-bold max-sm:hidden">
           <span>
-            <span>Standup meetings suck</span>
+            <span>Automate status updates</span>
           </span>
-          <span aria-hidden="true">Standup meetings suck</span>
+          <span aria-hidden="true">Automate status updates</span>
         </h2>
-        <h2 className="hidden text-center text-5xl font-bold max-sm:block">
-          Standup meetings suck
+        <h2 className="hidden text-center text-5xl font-bold max-sm:block max-sm:mt-6">
+          Automate status updates
         </h2>
 
         <h3 className="text-muted-foreground mt-6 text-center text-2xl leading-normal text-balance max-md:text-lg max-sm:text-base">
-          Your team already pushed code, closed tickets, replied in threads, fixed small things no
-          one asked them to. We turn it into an update. Or you can write it yourself. Either way, no
-          one has to talk about it at 9:30 a.m.
+        Generate status updates by monitoring your team's activity in code, Slack, and others. Or write them yourself.
         </h3>
 
-        <div className="mt-14 flex flex-col items-center justify-center max-sm:mt-6">
-          <Button size="lg" asChild>
-            <Link
-              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-              className="hover:text-foreground"
-            >
-              <span>Turn activity into updates</span>
-            </Link>
-          </Button>
 
-          <p className="text-muted-foreground text-xs mt-2">
-            No credit card required. Cancel anytime.
-          </p>
-        </div>
-
-        {/* aspect-[2.4/1] */}
         <video
-          className="mt-36 w-full rounded-lg max-sm:mt-16 aspect-[2.4/1]"
+          className="mt-8 w-full rounded-lg max-sm:mt-6 aspect-[2.4/1]"
           autoPlay
           loop
           muted
@@ -181,7 +137,7 @@ export default async function Page(props: {
           Your browser does not support the video tag.
         </video>
 
-        <div className="flex justify-center mt-12 gap-4 max-sm:flex-col">
+        <div className="flex justify-center mt-8 gap-4 max-sm:flex-col">
           <Button variant="secondary" asChild>
             <Link href="https://youtu.be/y_Hl0rVJHKs" target="_blank">
               <span>Watch intro video</span>
@@ -194,110 +150,81 @@ export default async function Page(props: {
           </Button>
         </div>
 
-        {/* <img
-          src="/hero-light.webp"
-          alt="AsyncStatus app screenshot"
-          className="border-border mt-36 w-full rounded-lg border max-sm:mt-16"
-        /> */}
+        <div className="mt-14 flex flex-col items-center justify-center">
+          <Button size="lg" asChild>
+            <Link
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
+              className="hover:text-foreground"
+            >
+              <BrandCTA variant="Secondary" />
+            </Link>
+          </Button>
 
-        <div className="mt-36 flex flex-col items-center">
-          <div className="relative w-full max-w-6xl">
-            <div className="flex items-center justify-between">
-              <div className="bg-background border-border rounded-lg border px-4 py-2 max-sm:w-full">
-                <div className="inline-flex items-center gap-0.5 max-sm:gap-1.5">
-                  <span className="text-lg">Standup for</span>
-                  <PersonSelect defaultValue="frontend-developer" value={person} />
-                </div>
+          <p className="text-muted-foreground text-xs mt-2">
+            No credit card required. Cancel anytime.
+          </p>
+        </div>
+
+        {/* How it works section */}
+        <section id="how-it-works" className="mt-36 max-sm:mt-24">
+          <div className="mb-16 text-center max-sm:mb-12">
+            <h3 className="text-center text-6xl font-bold max-sm:text-4xl">
+              How it works?
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-sm:gap-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                1
+              </div>
+              <div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  Connect to your workflow
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  Connect to your work (GitHub, Slack) which takes less than 5 minutes
+                </p>
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col gap-12">
-              <div>
-                <h4 className="text-muted-foreground mb-3 text-sm font-medium">In the meeting</h4>
-                <div className="border-border/40 bg-muted/30 rounded-lg border p-4">
-                  <p className="text-muted-foreground/90 text-lg text-balance">
-                    {(() => {
-                      const fullText = peopleSummary[person].standupText;
-                      const words = fullText.split(/\s+/);
-                      if (words.length <= 100) {
-                        return fullText;
-                      } else {
-                        return (
-                          <>
-                            {words.slice(0, 100).join(" ")}
-                            <span className="text-foreground">
-                              {" "}
-                              and {words.length - 100} more words.
-                            </span>
-                          </>
-                        );
-                      }
-                    })()}
-                  </p>
-                  <div className="text-muted-foreground mt-3 flex items-center gap-3 text-sm">
-                    <span>{peopleSummary[person].meetingDetails.time}</span>
-                    <span>·</span>
-                    <span>
-                      {peopleSummary[person].meetingDetails.peopleListening} people listening
-                    </span>
-                    <span>·</span>
-                    <span>{peopleSummary[person].meetingDetails.peopleTyping} people typing</span>
-                  </div>
-                </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                2
               </div>
-
               <div>
-                <h4 className="text-muted-foreground mb-3 text-sm font-medium">
-                  What actually happened
-                </h4>
-                <div className="flex flex-col gap-2">
-                  {peopleSummary[person].summary.map((summary, index) => (
-                    <div key={summary} className="flex items-start gap-4">
-                      <span className="text-primary mt-1 text-sm font-medium">0{index + 1}</span>
-                      <div className="flex-1">
-                        <p className="text-lg">{summary}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  We generate updates automatically
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  We listen for updates from your tools and generate status updates from your team's activity.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full font-bold text-lg mb-4 max-sm:h-10 max-sm:w-10 max-sm:text-base max-sm:mb-3">
+                3
+              </div>
+              <div>
+                <h5 className="text-xl font-semibold mb-3 max-sm:text-lg max-sm:mb-2">
+                  You are always up to date
+                </h5>
+                <p className="text-muted-foreground text-lg leading-relaxed max-sm:text-base">
+                  Receive updates from your team. Don't worry about obsolete info in ticketing systems.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-
-        <h3 className="mt-36 text-center text-6xl font-bold max-sm:text-5xl" id="how-it-works">
-          How it works
-        </h3>
-        <div className="mt-24 grid grid-cols-1 gap-8 max-sm:gap-12 sm:grid-cols-2 md:gap-12">
-          <ConnectCard />
-          <TrackCard />
-          <GenerateCard />
-          <ReviewCard />
-        </div>
-
-        <UseItYourWay />
+        </section>
 
         <section id="team">
           <TargetAudience />
         </section>
 
-        <section id="features">
-          <FeaturesList />
-        </section>
 
-        <section id="early-stage">
-          <BetaMessage />
-          <div className="flex justify-center mt-12">
-            <Button size="lg" asChild>
-              <Link
-                href={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up`}
-                className="hover:text-foreground"
-              >
-                <span>Turn activity into updates</span>
-              </Link>
-            </Button>
-          </div>
-        </section>
+
+
 
         <section id="calculator" className="mt-36">
           <div className="mb-12 text-center">
@@ -305,8 +232,7 @@ export default async function Page(props: {
               Calculate your savings
             </h3>
             <h3 className="text-muted-foreground mt-6 text-xl text-pretty">
-              See how much time and money your team can save by replacing synchronous standups with
-              AsyncStatus.
+              See how much time and money your team saves by dropping standups for async updates.
             </h3>
           </div>
           <SavingsCalculator />
@@ -336,6 +262,8 @@ export default async function Page(props: {
             simply monthly savings × 12. Your numbers update live as you move the sliders.
           </p>
         </section>
+
+
 
         <section id="pricing">
           <Pricing />
