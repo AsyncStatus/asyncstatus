@@ -2,14 +2,6 @@
 
 import { AsyncStatusLogo } from "@asyncstatus/ui/components/async-status-logo";
 import { Button, buttonVariants } from "@asyncstatus/ui/components/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@asyncstatus/ui/components/navigation-menu";
 import { ArrowRightIcon } from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import { motion, useScroll, useTransform } from "motion/react";
@@ -33,12 +25,12 @@ export function Header() {
   const linesOpacity = useTransform(scrollY, [-100, 0, 45], [1, 1, 0]);
   const createAccountButtonBackgroundColor = useTransform(
     scrollY,
-    [-100, 535, 540],
+    [-100, 475, 480],
     ["#ffffff", "#ffffff", "#0D54D9"],
   );
   const createAccountButtonTextColor = useTransform(
     scrollY,
-    [-100, 535, 540],
+    [-100, 475, 480],
     ["#000000", "#000000", "#ffffff"],
   );
 

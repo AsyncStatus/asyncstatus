@@ -32,7 +32,11 @@ export function CopyButton(props: { text: string }) {
       type="button"
       onClick={copy}
     >
-      {copied ? <CopyCheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
+      {copied ? (
+        <CopyCheckIcon className="size-3.5 hover:scale-105 transition-transform" />
+      ) : (
+        <CopyIcon className="size-3.5 hover:scale-105 transition-transform" />
+      )}
     </button>
   );
 }

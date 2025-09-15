@@ -1,6 +1,5 @@
 import {
   NotSiMicrosoftTeams,
-  SiDiscogs,
   SiDiscord,
   SiFigma,
   SiGithub,
@@ -9,6 +8,7 @@ import {
   SiSlack,
 } from "@asyncstatus/ui/brand-icons";
 import { Button } from "@asyncstatus/ui/components/button";
+import { ExternalLink } from "@asyncstatus/ui/icons";
 import Link from "next/link";
 import { CopyButton } from "../components/copy-button";
 import { Header } from "../components/header";
@@ -26,7 +26,7 @@ export default async function Page() {
           <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
           <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
 
-          <div className="relative w-full bg-radial from-white from-65% overflow-hidden to-neutral-100 p-4 py-24 pt-18 rounded-4xl shadow-2xl/5 border border-border">
+          <div className="relative w-full bg-radial from-white from-65% overflow-hidden to-neutral-100 p-4 py-26 pt-18 rounded-4xl shadow-2xl/5 border border-border">
             <div
               className="absolute inset-0 z-0 mix-blend-darken"
               style={{
@@ -51,7 +51,7 @@ export default async function Page() {
             <div className="flex flex-col items-center relative z-20 justify-center gap-4 mt-6">
               <h1 className="text-5xl text-center font-bold leading-[1.125]">
                 AI Agents that <br />
-                keep you updated.
+                update your team.
               </h1>
               <h2 className="text-2xl text-muted-foreground text-center leading-[1.43]">
                 Turn what you build into status updates, <br />
@@ -62,34 +62,117 @@ export default async function Page() {
             <div className="mt-6 max-w-lg mx-auto relative z-20">
               <RepoInput />
             </div>
+
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                className="group text-muted-foreground/65 group-hover:text-muted-foreground focus:text-muted-foreground active:text-muted-foreground font-normal"
+              >
+                <Link href="https://changelogs.ai/asyncstatus/asyncstatus" target="_blank">
+                  <span>See what we shipped this week</span>
+                  <ExternalLink className="size-3 group-hover:scale-110 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
 
         <section className="relative">
-          <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300"></div>
+          <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300 z-10"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300 z-10"></div>
 
-          <div className="relative p-3.5 max-w-6xl mx-auto w-full">
-            <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
+          <div className="relative max-w-6xl mx-auto w-full">
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
 
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base text-muted-foreground">Want to try locally?</h3>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-white px-2.5 py-1 pr-1 rounded-md font-mono">
-                  <code className="font-semibold">brew install asyncstatus/tap/cli</code>
+            <div className="flex flex-wrap items-center justify-between h-full">
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+                <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  Want to try locally?
+                </h3>
+                <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground bg-white/40 group-hover:bg-white group-hover:text-foreground transition-colors px-2.5 py-[3px] pr-1 rounded-md w-full font-mono">
+                  <code>brew install asyncstatus/tap/cli</code>
                   <CopyButton text="brew install asyncstatus/tap/cli" />
                 </div>
+                <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
+                <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
               </div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base text-muted-foreground">Have private repos?</h3>
-                <Button asChild variant="outline" size="sm">
+
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+                <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  Have private repos?
+                </h3>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-white/40 group-hover:bg-white/75 transition-colors text-muted-foreground group-hover:text-foreground"
+                >
                   <Link href="/">
                     <SiGithub className="size-4" />
                     Continue with GitHub
                   </Link>
                 </Button>
+                <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
+                <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
               </div>
+
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+                <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  API access?
+                </h3>
+                <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground bg-white/40 group-hover:bg-white group-hover:text-foreground transition-colors px-2.5 py-[3px] pr-1 rounded-md w-full font-mono">
+                  <code>npm i @asyncstatus/changelogs</code>
+                  <CopyButton text="npm i @asyncstatus/changelogs" />
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
+                <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative">
+          <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300 z-10"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300 z-10"></div>
+
+          <div className="max-w-6xl mx-auto w-full flex flex-wrap items-start justify-center">
+            <div className="relative flex-1 p-3.5">
+              <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
+              <div className="absolute -right-px top-0 bottom-0 w-px bg-neutral-300"></div>
+
+              <div className="p-3.5">
+                <h3 className="text-lg leading-relaxed">Agentic updates</h3>
+                <p className="text-muted-foreground text-sm">
+                  Pulls commits, Linear issues, Slack messages, and Figma updates into status
+                  reports you can share with your team or publish as public links.
+                </p>
+              </div>
+
+              <img
+                src="/slack-usage.jpg"
+                alt="Integrations"
+                className="mt-3.5 w-full h-1/2 rounded-2xl border border-border"
+              />
+            </div>
+
+            <div className="relative flex-1 p-3.5 h-full">
+              <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
+
+              <div className="p-3.5">
+                <h3 className="text-lg leading-relaxed">Developer CLI</h3>
+                <p className="text-muted-foreground text-sm">
+                  Generates status updates from git in {"<"}1min. No setup or permissions required.
+                  Share them instantly with your manager.
+                </p>
+              </div>
+
+              <div className="relative w-full mt-3.5 bg-radial from-white from-65% overflow-hidden to-neutral-100 p-4 py-26 pt-18 rounded-4xl border border-border"></div>
             </div>
           </div>
         </section>
