@@ -20,13 +20,13 @@ export default async function Page() {
       <Header />
 
       <main>
-        <section className="relative p-3.5 max-w-6xl mx-auto w-full">
+        <section className="relative p-1 sm:p-3.5 max-w-6xl mx-auto w-full">
           <div className="absolute top-0 left-0 right-0 h-px bg-neutral-300"></div>
           <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300"></div>
           <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
           <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
 
-          <div className="relative w-full bg-radial from-white from-65% overflow-hidden to-neutral-100 p-4 py-26 pt-18 rounded-4xl shadow-2xl/5 border border-border">
+          <div className="relative w-full bg-radial from-white from-65% overflow-hidden to-neutral-100 px-1 py-12 sm:px-4 sm:py-26 sm:pt-18 rounded-4xl shadow-2xl/5 border border-border">
             <div
               className="absolute inset-0 z-0 mix-blend-darken"
               style={{
@@ -49,12 +49,12 @@ export default async function Page() {
             </div>
 
             <div className="flex flex-col items-center relative z-20 justify-center gap-4 mt-6">
-              <h1 className="text-5xl text-center font-bold leading-[1.125]">
+              <h1 className="text-4xl text-center font-bold leading-[1.125] sm:text-5xl">
                 AI Agents that <br />
                 update your team.
               </h1>
-              <h2 className="text-2xl text-muted-foreground text-center leading-[1.43]">
-                Turn what you build into status updates, <br />
+              <h2 className="text-xl text-muted-foreground text-center leading-[1.43] sm:text-2xl">
+                Turn what you build into status updates, <br className="hidden sm:block" />
                 release notes, changelogs and more.
               </h2>
             </div>
@@ -139,7 +139,7 @@ export default async function Page() {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300 z-10"></div>
 
           <div className="max-w-6xl mx-auto w-full flex flex-wrap items-start justify-center">
-            <div className="relative flex-1 p-3.5">
+            <div className="relative flex-1 p-3.5 min-w-xs">
               <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
               <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
               <div className="absolute -right-px top-0 bottom-0 w-px bg-neutral-300"></div>
@@ -159,7 +159,7 @@ export default async function Page() {
               />
             </div>
 
-            <div className="relative flex-1 p-3.5 h-full">
+            <div className="relative flex-1 p-3.5 h-full min-w-xs">
               <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
               <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
               <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
