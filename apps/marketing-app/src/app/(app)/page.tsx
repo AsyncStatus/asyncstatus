@@ -8,6 +8,7 @@ import { IntegrationsList } from "../components/integrations-list";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
 import SavingsCalculator from "../components/savings-calculator";
+import { GmailNotification } from "../components/gmail-notification";
 import { TargetAudience } from "../components/target-audience";
 import { BrandCTA, ValueDescriptions } from "../components/brand-copy";
 
@@ -18,6 +19,7 @@ export default async function Page() {
 
   return (
     <>
+      <GmailNotification />
       <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
