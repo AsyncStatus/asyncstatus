@@ -50,8 +50,8 @@ export default async function Page() {
 
             <div className="flex flex-col items-center relative z-20 justify-center gap-4 mt-6">
               <h1 className="text-4xl text-center font-bold leading-[1.125] sm:text-5xl">
-                AI Agents that <br />
-                update your team.
+                AI agents that <br />
+                update your team
               </h1>
               <h2 className="text-xl text-muted-foreground text-center leading-[1.43] sm:text-2xl">
                 Turn what you build into status updates, <br className="hidden sm:block" />
@@ -88,19 +88,19 @@ export default async function Page() {
             <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
 
             <div className="flex flex-wrap items-center justify-between h-full">
-              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-2 hover:bg-neutral-200 transition-colors">
                 <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                   Want to try locally?
                 </h3>
                 <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground bg-white/40 group-hover:bg-white group-hover:text-foreground transition-colors px-2.5 py-[3px] pr-1 rounded-md w-full font-mono">
-                  <code>brew install asyncstatus/tap/cli</code>
-                  <CopyButton text="brew install asyncstatus/tap/cli" />
+                  <code>brew install asyncstatus/cli</code>
+                  <CopyButton text="brew install asyncstatus/cli" />
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
                 <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
               </div>
 
-              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-2 hover:bg-neutral-200 transition-colors">
                 <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                   Have private repos?
                 </h3>
@@ -119,13 +119,13 @@ export default async function Page() {
                 <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
               </div>
 
-              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-1 hover:bg-neutral-200 transition-colors">
+              <div className="group relative flex-1 p-3.5 flex flex-col items-center justify-center gap-2 hover:bg-neutral-200 transition-colors">
                 <h3 className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                   API access?
                 </h3>
                 <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground bg-white/40 group-hover:bg-white group-hover:text-foreground transition-colors px-2.5 py-[3px] pr-1 rounded-md w-full font-mono">
-                  <code>npm i @asyncstatus/changelogs</code>
-                  <CopyButton text="npm i @asyncstatus/changelogs" />
+                  <code>npm install @asyncstatus/sdk</code>
+                  <CopyButton text="@asyncstatus/sdk" />
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300 z-10"></div>
                 <div className="absolute left-0 right-0 -top-px h-px bg-neutral-300 z-10"></div>
@@ -139,7 +139,7 @@ export default async function Page() {
           <div className="absolute bottom-0 left-0 right-0 h-px bg-neutral-300 z-10"></div>
 
           <div className="max-w-6xl mx-auto w-full flex flex-wrap items-start justify-center">
-            <div className="relative flex-1 p-3.5 min-w-xs">
+            <div className="relative flex-1 p-3.5 min-w-xs h-full">
               <div className="absolute -top-px left-0 right-0 h-px bg-neutral-300"></div>
               <div className="absolute left-0 top-0 bottom-0 w-px bg-neutral-300"></div>
               <div className="absolute -right-px top-0 bottom-0 w-px bg-neutral-300"></div>
@@ -147,7 +147,7 @@ export default async function Page() {
               <div className="p-3.5">
                 <h3 className="text-lg leading-relaxed">Agentic updates</h3>
                 <p className="text-muted-foreground text-sm">
-                  Pulls commits, Linear issues, Slack messages, and Figma updates into status
+                  Pulls GitHub commits, Linear issues, Slack messages, and Figma updates into status
                   reports you can share with your team or publish as public links.
                 </p>
               </div>
@@ -165,14 +165,90 @@ export default async function Page() {
               <div className="absolute right-0 top-0 bottom-0 w-px bg-neutral-300"></div>
 
               <div className="p-3.5">
-                <h3 className="text-lg leading-relaxed">Developer CLI</h3>
+                <h3 className="text-lg leading-relaxed">Local CLI</h3>
                 <p className="text-muted-foreground text-sm">
                   Generates status updates from git in {"<"}1min. No setup or permissions required.
                   Share them instantly with your manager.
                 </p>
               </div>
 
-              <div className="relative w-full mt-3.5 bg-radial from-white from-65% overflow-hidden to-neutral-100 p-4 py-26 pt-18 rounded-4xl border border-border"></div>
+              <div className="rounded-2xl border border-border bg-white h-full mt-3.5">
+                <div className="p-3 sm:p-4 text-xs sm:text-[13px] font-mono text-foreground/90 leading-relaxed">
+                  <div className="flex items-start gap-2">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>asyncstatus generate</span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ generating from git...</div>
+                    <div className="text-emerald-600"> ✓ generated status update</div>
+                    <div className="text-neutral-600">
+                      {"  share: "}
+                      <Link
+                        href="https://asyncstatus.com/s/abc123"
+                        target="_blank"
+                        className="underline underline-offset-2 hover:text-foreground"
+                      >
+                        https://asyncstatus.com/s/abc123
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 mt-3">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>asyncstatus progress "onboarding flow with modals"</span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ progress: onboarding flow with modals</div>
+                    <div className="text-emerald-600"> → saved</div>
+                  </div>
+
+                  <div className="flex items-start gap-2 mt-3">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>
+                      asyncstatus note "add a11y focus traps, refine step copy, track drop-offs"
+                    </span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ notes: add a11y focus traps, refine step copy, track drop-offs</div>
+                    <div className="text-emerald-600"> ✓ saved</div>
+                  </div>
+
+                  <div className="flex items-start gap-2 mt-3">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>asyncstatus mood "energized"</span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ mood: energized</div>
+                    <div className="text-emerald-600"> ✓ saved</div>
+                  </div>
+
+                  <div className="flex items-start gap-2 mt-3">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>asyncstatus blocker "waiting on design review"</span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ blocker: waiting on design review</div>
+                    <div className="text-emerald-600"> ✓ saved</div>
+                  </div>
+
+                  <div className="flex items-start gap-2 mt-3">
+                    <span className="select-none text-neutral-500">$</span>
+                    <span>asyncstatus list 7</span>
+                  </div>
+                  <div className="mt-1">
+                    <div>⧗ past 7 days</div>
+                    <div className="text-neutral-600"> 21 update(s)</div>
+                    <div> 1. Saturday, January 13</div>
+                    <div className="text-neutral-600"> Tobi (tobi@asyncstatus.com)</div>
+                    <div className="text-neutral-600"> Engineering Team</div>
+                    <div className="text-neutral-600"> ✓1 →1 ✗0</div>
+                    <div className="text-neutral-600"> • set up integration tests</div>
+                    <div className="text-neutral-600"> • working on CI caching for pnpm</div>
+                    <div className="text-neutral-600"> mood productive</div>
+                    <div className="text-neutral-600"> 12:10</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

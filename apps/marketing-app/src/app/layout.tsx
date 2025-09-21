@@ -22,8 +22,8 @@ const noto = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Async status updates for remote startups",
-  description: "Made for high-agency teams that value their time.",
+  title: "AI agents that update your team",
+  description: "Turn what you build into status updates, release notes, changelogs and more.",
   metadataBase: new URL("https://asyncstatus.com"),
   icons: [
     {

@@ -1,3 +1,4 @@
+import { SiGithub } from "@asyncstatus/ui/brand-icons";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -7,112 +8,94 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@asyncstatus/ui/components/navigation-menu";
+import {
+  BookOpen,
+  Briefcase,
+  Code2,
+  FileText,
+  GitCommit,
+  ListChecks,
+  Megaphone,
+  Palette,
+} from "@asyncstatus/ui/icons";
 import { cn } from "@asyncstatus/ui/lib/utils";
 import Link from "next/link";
 import React from "react";
-
-const components: { title: string; href: string; description: string }[] = [
-  {
-    title: "Alert Dialog",
-    href: "/docs/primitives/alert-dialog",
-    description:
-      "A modal dialog that interrupts the user with important content and expects a response.",
-  },
-  {
-    title: "Hover Card",
-    href: "/docs/primitives/hover-card",
-    description: "For sighted users to preview content available behind a link.",
-  },
-  {
-    title: "Progress",
-    href: "/docs/primitives/progress",
-    description:
-      "Displays an indicator showing the completion progress of a task, typically displayed as a progress bar.",
-  },
-  {
-    title: "Scroll-area",
-    href: "/docs/primitives/scroll-area",
-    description: "Visually or semantically separates content.",
-  },
-  {
-    title: "Tabs",
-    href: "/docs/primitives/tabs",
-    description:
-      "A set of layered sections of content—known as tab panels—that are displayed one at a time.",
-  },
-  {
-    title: "Tooltip",
-    href: "/docs/primitives/tooltip",
-    description:
-      "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
-  },
-];
 
 export function Navbar() {
   return (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Features</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Use cases</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                    href="/"
+            <div className="grid gap-4 p-1 pt-2 md:w-[500px] lg:w-[700px] lg:grid-cols-2">
+              <div>
+                <div className="px-1 text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                  By workflow
+                </div>
+                <ul className="mt-2 grid gap-3">
+                  <ListItem
+                    icon={ListChecks}
+                    href="/use-cases/status-updates"
+                    title="Status updates"
                   >
-                    <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
-                    <p className="text-sm leading-tight text-muted-foreground">
-                      Beautifully designed components built with Radix UI and Tailwind CSS.
-                    </p>
-                  </a>
-                </NavigationMenuLink>
-              </li>
-              <ListItem href="/docs" title="Introduction">
-                Re-usable components built using Radix UI and Tailwind CSS.
-              </ListItem>
-              <ListItem href="/docs/installation" title="Installation">
-                How to install dependencies and structure your app.
-              </ListItem>
-              <ListItem href="/docs/primitives/typography" title="Typography">
-                Styles for headings, paragraphs, lists...etc
-              </ListItem>
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+                    Turn activity from the tools you use into status updates for your team.
+                  </ListItem>
+                  <ListItem icon={FileText} href="/use-cases/summaries" title="Summaries">
+                    Summarize any activity and get a quick overview of what's happening.
+                  </ListItem>
+                  <ListItem icon={Megaphone} href="/use-cases/release-notes" title="Release notes">
+                    Non-technical release notes for your GitHub and GitLab repositories.
+                  </ListItem>
+                  <ListItem icon={GitCommit} href="/use-cases/changelogs" title="Changelogs">
+                    Technical changelogs for your GitHub and GitLab repositories.
+                  </ListItem>
+                </ul>
+              </div>
 
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild href="/#use-cases" className={navigationMenuTriggerStyle()}>
-            <Link href="/#use-cases">Use cases</Link>
-          </NavigationMenuLink>
+              <div>
+                <div className="px-1 text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                  By audience
+                </div>
+                <ul className="mt-2 grid gap-3">
+                  <ListItem icon={Code2} href="/for/engineering" title="Engineering teams">
+                    Automate status updates and changelogs from GitHub, Linear, and Slack.
+                  </ListItem>
+                  <ListItem icon={Palette} href="/for/product-design" title="Product & Design">
+                    Cross-tool summaries across Figma, Linear, and Slack to keep roadmaps moving.
+                  </ListItem>
+                  <ListItem icon={SiGithub} href="/for/open-source" title="Open source projects">
+                    Keep contributors aligned with public changelogs and community updates.
+                  </ListItem>
+                  <ListItem icon={Briefcase} href="/for/agencies" title="Agencies & consultancies">
+                    Client-ready updates and shareable weekly summaries with zero manual prep.
+                  </ListItem>
+                </ul>
+              </div>
+            </div>
+          </NavigationMenuContent>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
           <NavigationMenuTrigger>Developer</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-              <li className="row-span-3">
-                <NavigationMenuLink asChild>
-                  <a
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                    href="/"
-                  >
-                    <div className="mb-2 mt-4 text-lg font-medium">shadcn/ui</div>
-                    <p className="text-sm leading-tight text-muted-foreground">
-                      Beautifully designed components built with Radix UI and Tailwind CSS.
-                    </p>
-                  </a>
-                </NavigationMenuLink>
-              </li>
-              <ListItem href="/docs" title="Introduction">
-                Re-usable components built using Radix UI and Tailwind CSS.
+            <ul className="grid gap-3 p-1 md:w-[400px] lg:w-[500px]">
+              <ListItem icon={Code2} href="/docs/cli" title="Quick start">
+                It takes less {"<"}1min to generate and share your first local status update.
               </ListItem>
-              <ListItem href="/docs/installation" title="Installation">
-                How to install dependencies and structure your app.
+              <ListItem icon={BookOpen} href="/docs" title="Documentation">
+                Reference and code examples for the AsyncStatus SDK and CLI.
               </ListItem>
-              <ListItem href="/docs/primitives/typography" title="Typography">
-                Styles for headings, paragraphs, lists...etc
+              <ListItem
+                href="https://github.com/asyncstatus/asyncstatus"
+                target="_blank"
+                title="Open source"
+                icon={SiGithub}
+              >
+                <span className="inline-flex items-center gap-2">
+                  We're open source. Check out our source code on GitHub and contribute.
+                </span>
               </ListItem>
             </ul>
           </NavigationMenuContent>
@@ -128,8 +111,12 @@ export function Navbar() {
   );
 }
 
-const ListItem = React.forwardRef<React.ElementRef<"a">, React.ComponentPropsWithoutRef<"a">>(
-  ({ className, title, children, ...props }, ref) => {
+type ListItemProps = React.ComponentPropsWithoutRef<"a"> & {
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+};
+
+const ListItem = React.forwardRef<React.ElementRef<"a">, ListItemProps>(
+  ({ className, title, children, icon: Icon, ...props }, ref) => {
     return (
       <li>
         <NavigationMenuLink asChild>
@@ -141,8 +128,11 @@ const ListItem = React.forwardRef<React.ElementRef<"a">, React.ComponentPropsWit
             )}
             {...props}
           >
-            <div className="text-sm font-medium leading-none">{title}</div>
-            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</p>
+            <div className="flex items-center gap-1 text-base font-medium leading-none">
+              {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
+              <span>{title}</span>
+            </div>
+            <p className="line-clamp-3 text-sm leading-snug text-muted-foreground">{children}</p>
           </a>
         </NavigationMenuLink>
       </li>
