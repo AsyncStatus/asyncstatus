@@ -507,6 +507,95 @@ export class SendSummariesWorkflow extends WorkflowEntrypoint<
       },
     );
 
+    // Step 2.5: Check if we should skip sending due to empty data
+    const shouldSkip = await step.do("check-if-should-skip", async () => {
+      const scheduleConfig = initData.scheduleConfig as schema.ScheduleConfigSendSummaries;
+      const skipEmptyNotifications = scheduleConfig.skipEmptyNotifications ?? true;
+
+      if (!skipEmptyNotifications) {
+        return false; // Don't skip if the option is disabled
+      }
+
+      // Check if all summaries are empty (no generalSummary and no items in arrays)
+      const hasAnyData = generatedSummaries.some((summary) => {
+        const content = summary.content as any;
+
+        // Check if there's a general summary with content
+        if (content.generalSummary && content.generalSummary.trim().length > 0) {
+          return true;
+        }
+
+        // Check for any array content (userSummaries, repoSummaries, channelSummaries, etc.)
+        const arrayFields = [
+          "userSummaries",
+          "items",
+          "repoSummaries",
+          "projectSummaries",
+          "channelSummaries",
+          "teamSummaries",
+        ];
+
+        for (const field of arrayFields) {
+          if (Array.isArray(content[field]) && content[field].length > 0) {
+            return true;
+          }
+        }
+
+        return false;
+      });
+
+      return !hasAnyData; // Skip if there's no data
+    });
+
+    // If we should skip, mark as completed and exit early
+    if (shouldSkip) {
+      await step.do("finalize-skipped-execution", async () => {
+        await db
+          .update(schema.scheduleRun)
+          .set({
+            status: "completed",
+            executionCount: initData.scheduleRunExecutionCount + 1,
+            executionMetadata: {
+              skipped: true,
+              reason: "No updates or activity found",
+              completedAt: new Date().toISOString(),
+            },
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.scheduleRun.id, scheduleRunId));
+
+        // Schedule next execution if schedule is still active
+        if (initData.scheduleIsActive) {
+          const scheduleForNextExecution = {
+            id: initData.scheduleId,
+            config: initData.scheduleConfig,
+            name: initData.scheduleName,
+            isActive: initData.scheduleIsActive,
+          };
+
+          const nextExecutionTime = calculateNextScheduleExecution(scheduleForNextExecution as any);
+
+          if (nextExecutionTime) {
+            await db.insert(schema.scheduleRun).values({
+              id: generateId(),
+              scheduleId: initData.scheduleId,
+              createdByMemberId: initData.scheduleRunCreatedByMemberId,
+              status: "pending",
+              nextExecutionAt: nextExecutionTime,
+              executionCount: 0,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+
+            console.log(`✅ Scheduled next execution for ${nextExecutionTime.toISOString()}`);
+          }
+        }
+
+        console.log("⏭️ Skipped sending summaries: No updates or activity found");
+      });
+      return; // Exit the workflow early
+    }
+
     // Step 3: Resolve delivery targets
     const deliveryTargets = await step.do("resolve-delivery-targets", async () => {
       const config = initData.scheduleConfig as schema.ScheduleConfigSendSummaries;

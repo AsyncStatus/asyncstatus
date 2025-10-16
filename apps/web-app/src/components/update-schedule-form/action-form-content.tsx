@@ -6,6 +6,8 @@ import type {
   updateScheduleContract,
 } from "@asyncstatus/api/typed-handlers/schedule";
 import { Button } from "@asyncstatus/ui/components/button";
+import { Checkbox } from "@asyncstatus/ui/components/checkbox";
+import { Label } from "@asyncstatus/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -178,6 +180,28 @@ export function ActionFormContent(props: ActionFormContentProps) {
         )}
       </div>
 
+      {configName === "sendSummaries" && (
+        <FormField
+          control={form.control}
+          name="config.skipEmptyNotifications"
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="skip-empty-notifications"
+                checked={field.value ?? true}
+                onCheckedChange={field.onChange}
+              />
+              <Label
+                htmlFor="skip-empty-notifications"
+                className="text-sm font-normal text-muted-foreground cursor-pointer"
+              >
+                Skip sending notification if no updates or activity found
+              </Label>
+            </div>
+          )}
+        />
+      )}
+
       {!isAddingGenerateFor && (
         <FormField
           control={form.control}
@@ -255,6 +279,10 @@ function getDefaultConfigBasedOnName(
           previousConfig?.name === "remindToPostUpdates" || previousConfig?.name === "sendSummaries"
             ? previousConfig?.deliveryMethods
             : [{ type: "organization", value: organizationSlug }],
+        skipEmptyNotifications:
+          previousConfig?.name === "sendSummaries"
+            ? previousConfig?.skipEmptyNotifications ?? true
+            : true,
       } satisfies ScheduleConfigSendSummaries;
   }
 }

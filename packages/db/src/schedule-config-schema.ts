@@ -199,6 +199,7 @@ export const ScheduleConfigSendSummaries = z.strictObject({
   dayOfMonth: z.number().min(1).max(28).optional(), // 1-28 for monthly
   summaryFor: z.array(ScheduleConfigSummaryFor.or(z.undefined())),
   deliveryMethods: z.array(ScheduleConfigDeliveryMethod.or(z.undefined())),
+  skipEmptyNotifications: z.boolean().default(true), // Skip sending if no data/updates found
 });
 export type ScheduleConfigSendSummaries = z.infer<typeof ScheduleConfigSendSummaries>;
 
@@ -574,6 +575,10 @@ export const ScheduleConfigSendSummariesV3 = z3
       .array(ScheduleConfigDeliveryMethodV3)
       .default([])
       .describe("Where summaries should be delivered (email, Slack, Discord, etc.)"),
+    skipEmptyNotifications: z3
+      .boolean()
+      .default(true)
+      .describe("Skip sending notifications if no data/updates are found"),
   })
   .strict()
   .describe("Configuration for sending team summaries");
