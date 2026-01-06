@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { CtaSection } from "../components/cta-section";
 import { Footer } from "../components/footer";
+import { ElectricFrame } from "../components/electric-frame";
 import { IntegrationsList } from "../components/integrations-list";
 import { MobileMenu } from "../components/mobile-menu";
 import { Pricing } from "../components/pricing";
@@ -21,18 +22,7 @@ export default async function Page() {
       <header className="sticky top-3 z-50 mx-3 flex items-center justify-between gap-2 p-4.5 py-2.5 pr-2.5 max-sm:pr-4.5">
         <div className="border-border bg-background/80 absolute top-0 left-0 h-full w-full rounded-lg border backdrop-blur-[12px]" />
 
-        {/* Progressive blur overlays - stronger towards top */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 -translate-y-24">
-          <div className="from-background/80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[2px]" />
-          <div className="from-background/80 mask-top-20 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[4px]" />
-          <div className="from-background/80 mask-top-40 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[8px]" />
-          <div className="from-background/80 mask-top-60 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[16px]" />
-          <div className="from-background/80 mask-top-80 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[32px]" />
-          <div className="from-background/80 mask-top-100 absolute inset-0 bg-gradient-to-b to-transparent backdrop-blur-[48px]" />
-        </div>
 
-        {/* Bottom blur - subtle */}
-        <div className="from-background/60 pointer-events-none absolute right-0 -bottom-2 left-0 h-2 bg-gradient-to-b to-transparent backdrop-blur-[1px]" />
 
         <div className="z-10 flex items-center gap-8">
           <div className="flex flex-col">
@@ -125,17 +115,19 @@ export default async function Page() {
         </h3>
 
 
-        <video
-          className="mt-8 w-full rounded-lg max-sm:mt-6 aspect-[2.4/1]"
-          autoPlay
-          loop
-          muted
-          playsInline
-          controls
-        >
-          <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <ElectricFrame className="mt-8 max-sm:mt-6">
+          <video
+            className="w-full aspect-[2.4/1]"
+            autoPlay
+            loop
+            muted
+            playsInline
+            controls
+          >
+            <source src="https://cdn.asyncstatus.com/AsyncStatusAd.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </ElectricFrame>
 
         <div className="flex justify-center mt-8 gap-4 max-sm:flex-col">
           <Button variant="secondary" asChild>
